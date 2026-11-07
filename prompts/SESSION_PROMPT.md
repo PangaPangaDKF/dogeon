@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 2.0 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 2.1 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -97,7 +97,15 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 26. **Audit contracts with split lenses + PoC refuter** — funds lens and state/DoS lens, a verifier that writes forge PoCs,
     then fix with regression tests and re-run the game e2e on a fresh anvil. Check the fix itself for new value flows (D-022).
 
+27. **Never inline multi-line docs/code in `node -e "…"` or bash strings** — backticks and quotes get executed (D-023).
+    Write the snippet to a file with the Write tool, then run it.
+28. **Inject code by slicing or `split/join`, never `.replace(str, code)`** — `$$` in a replacement string becomes `$` (D-024).
+29. **Fact-check user-supplied descriptions of third parties** before they become game text (Relotto was not a lottery, Noah is not a
+    "Solana fork"). Say what changed and why in the reply.
+30. **Look at the art** — `node tests/sprites.mjs index.html out.png` and Read the PNG before calling sprites done.
+
 ## Changelog
+- 2.1 (2026-11-07) — Practices 27-30 from Phase 4 (D-023, D-024). MASTER_PROMPT C9 partner NPC template.
 - 2.0 (2026-11-07) — Practice 26 contract audit loop (D-022). Phase 3 complete.
 - 1.9 (2026-11-07) — Practice 25 economy lens (D-021).
 - 1.8 (2026-11-07) — Practice 24 (D-020).

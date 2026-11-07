@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {DogeItems} from "../src/DogeItems.sol";
 import {DogeDEX} from "../src/DogeDEX.sol";
+import {IPriceFeed} from "../src/IPriceFeed.sol";
+import {MockPriceFeed} from "../src/mocks/MockPriceFeed.sol";
 
 /// Tries to re-enter withdraw() from its receive hook.
 contract Reenterer {
@@ -34,6 +36,7 @@ contract Reenterer {
 contract DogeDEXTest is Test {
     DogeItems items;
     DogeDEX dex;
+    MockPriceFeed feed;
     address treasury = makeAddr("treasury");
     address alice = makeAddr("alice"); // crafter / seller / LP
     address bob = makeAddr("bob"); // buyer / swapper
@@ -42,7 +45,8 @@ contract DogeDEXTest is Test {
 
     function setUp() public {
         items = new DogeItems(FEE, treasury);
-        dex = new DogeDEX(items);
+        feed = new MockPriceFeed(7164240); // $0.0716 at 8 decimals (last RedStone DOGE value seen on Chikyu)
+        dex = new DogeDEX(items, IPriceFeed(address(feed)));
         vm.deal(alice, 100 ether);
         vm.deal(bob, 100 ether);
         vm.prank(alice);
@@ -345,5 +349,39 @@ contract DogeDEXTest is Test {
         assertEq(p1.length, 2);
         assertEq(p2.length, 1);
         assertEq(p3.length, 0);
+    }
+
+    // ---------------- RedStone oracle views (D-024) ----------------
+    function test_OracleFreshStaleBroken() public {
+        (uint256 p, uint256 upd, bool fresh) = dex.dogeUsd();
+        assertEq(p, 7164240);
+        assertEq(upd, block.timestamp);
+        assertTrue(fresh);
+        vm.warp(block.timestamp + 2 days); // RedStone heartbeat is 24 h
+        (p,, fresh) = dex.dogeUsd();
+        assertEq(p, 7164240);
+        assertFalse(fresh, "older than ORACLE_MAX_AGE");
+        feed.set(7164240, block.timestamp, true); // feed reverts like RedStone does on stale data
+        (p, upd, fresh) = dex.dogeUsd();
+        assertEq(p + upd, 0);
+        assertFalse(fresh, "a reverting feed never breaks the DEX");
+        feed.set(-1, block.timestamp, false);
+        (p,, fresh) = dex.dogeUsd();
+        assertEq(p, 0);
+        assertFalse(fresh);
+    }
+
+    function test_NoOracleConfigured() public {
+        DogeDEX bare = new DogeDEX(items, IPriceFeed(address(0)));
+        (uint256 p,, bool fresh) = bare.dogeUsd();
+        assertEq(p, 0);
+        assertFalse(fresh);
+    }
+
+    function test_PoolTvlUsd() public {
+        uint256[] memory ids = _fish(alice, 2);
+        vm.prank(alice);
+        dex.addLiquidity{value: 10 ether}(ids, 0);
+        assertEq(dex.poolTvlUsd(FISH_KEY), 2 * 10 * 7164240); // 20 DOGE of value * $0.0716 (8 dec)
     }
 }

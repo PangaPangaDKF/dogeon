@@ -5,12 +5,13 @@ description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bi
 
 # DOGEON — game context skill
 
-Version: 2.0 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 2.1 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #1 (user):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
 improve `prompts/SESSION_PROMPT.md` + this skill → update `CLAUDE.md`/`CONTEXT.md` → commit. Never batch features.
 
-**Current phase:** Phase 3 "Doge Chain" — `prompts/PHASE3_BRIEF.md` (survival: rest cap, bag, skills, fishing; real web3 on DogeOS Chikyū).
+**Current phase:** Phase 4 "The Grand Heist" — `prompts/PHASE4_BRIEF.md` (Heist lore, partner NPCs, Sphinx DeFi hub, RedStone).
+Phase 3 "Doge Chain" (`prompts/PHASE3_BRIEF.md`) is complete: survival + real web3 on DogeOS Chikyū.
 
 ## 1. The game in one breath
 Top-down action RPG, Sega Genesis look (320×224, 16×16 tiles, outlined chunky pixels, blue dialog boxes),
@@ -50,6 +51,10 @@ Dev: `node tests/serve.mjs` + `anvil` + deploy, open `http://localhost:8080/?cha
 (`e.sent && !e.reverted` = keep). Reset `chainData` on account/chain change. Review every item path for duplication.
 **Audited contract API (D-022):** `addLiquidity(ids,minShares)`, `removeLiquidity(key,amt,minItems,minDoge)`, `activeListings(offset,limit)`,
 `listedCount()`; first LP = 1e18 shares/item, min 0.001 DOGE; sells with payout 0 revert. Always pass slippage guards from the game.
+**Phase 4 (D-024):** lore = DogeOS Grand Heist (Fat Cats, factions Demolition Dogs / Kernel Crew / Barkitects). Camp NPCs: Sphinx (DeFi hub),
+Elder (Heist), Wrenchpaw (forge), Cloverheart (Relotto), Noah (trynoah.ai), Bitget Wallet Card. Links only via `openLink()` from a menu
+row, URL printed too. RedStone DOGE/USD: DogeDEX `dogeUsd()` (never reverts) → feed → adapter last push; mark STALE past 24 h; the oracle
+is display/safety only, never the swap price. Partner text must be sourced; no partnership claims without a source.
 **Feature ledger:** every feature also gets a row in `MASTER_PROMPT.md` §G (user rule).
 **Web3 refs (IT-3/IT-4):** user-supplied avaxskills.com index — use only chain-agnostic EVM skills (`evm-foundry`, `nft-basics`,
 `security`, `audit`, `testing`, `evm-wallet-integration`); DogeOS is not Avalanche, so ignore subnet/Warp/Fuji specifics.

@@ -35,6 +35,57 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-024 · 2026-11-07 · Phase 4 "The Grand Heist": partner NPCs, Heist lore, Sphinx DeFi hub, RedStone oracle
+- Feature: DOGEON becomes a Grand Heist RPG with a DeFi + educational purpose. Three new camp NPCs drawn from the user's images
+  (Cloverheart for Relotto, Noah the AI cube for trynoah.ai, the Bitget Wallet Card). The Elder becomes the Keeper of the Heist:
+  story, the 3 factions' archive entries, JOIN, heist.dogeos.com. The Sphinx becomes the DogeOS DeFi hub: CONNECT (auto add + switch
+  testnet RPC), NFT market (swap + LP), faucet, stake/unstake, RedStone DOGE/USD, an 8-lesson SPHINX SCHOOL, dogeos.com, and docs.
+  DogeDEX reads DOGE/USD from RedStone. Title: "THE GRAND HEIST - POWERED BY DOGEOS".
+- Reference: user request (images `docs/art/npc-*.png`, heist.dogeos.com lore text, dogeos.com, docs.dogeos.com, RedStone blog +
+  docs, trynoah.ai, Bitget Wallet link); `prompts/PHASE4_BRIEF.md` v1.0 (the request rewritten as a brief).
+  Research workflow `wf_c2140321-d6d` (3 agents, primary sources, on-chain checks):
+  - RedStone DogeOS testnet: multi-feed adapter `0xB08342D907D2df47B6F73e25F4fa033978B344B1`, DOGE feed
+    `0x434F8D17c0301cfEa143dba912972E24B827C968`, BTC feed `0xe1df239Ac22E8a873B2a4dF975C8dfc3249350e4`, 8 decimals, 0.5% deviation /
+    24 h heartbeat (redstone-oracles-monorepo `relayer-manifests-multi-feed/dogeOsTestnetMultiFeed.json`). Checked on-chain:
+    `decimals()=8` and description OK, but **`latestRoundData()` reverts (stale data, ~51 h old)**. The adapter's
+    `getLastUpdateDetailsUnsafe("DOGE")` returns $0.0716424.
+  - DogeOS: official explorer https://dogeos-testnet.l2scan.co, faucet https://faucet.testnet.dogeos.com (42.069/day), docs say to
+    compile for the osaka target (our cancun bytecode is a subset).
+  - **Relotto** (relotto.app) is a recycling-rewards app (Ecopoints, rewards, games), not a lottery, and is not listed in the DogeOS
+    ecosystem → the story says what it is and makes no partnership claim. **Noah** is an AI no-code dApp builder ("single prompt"),
+    mostly deploying to Solana, **not a "Solana fork"**. DogeOS lists Noah AI in its ecosystem. **Bitget Wallet** supports custom
+    EVM networks, and its provider may be `window.bitkeep.ethereum`. The card is a real product (web3.bitget.com/card).
+- Files: `index.html`, `contracts/src/DogeDEX.sol`, `contracts/src/IPriceFeed.sol` (new), `contracts/src/mocks/MockPriceFeed.sol`
+  (new), `contracts/test/DogeDEX.t.sol` (+3), `contracts/script/Deploy.s.sol`, `contracts/deployments/31337.json`, `tests/sim.mjs`
+  (+4 scenarios, 15 checks; e2e +oracle), `tests/sprites.mjs` (new PNG sprite renderer), `docs/art/` (references + preview),
+  `prompts/PHASE4_BRIEF.md`, docs.
+- Code (`index.html`):
+  - Sprites: `SPR.clover` (buildChar: green hooded robe, glowing clover staff), `staticSpr()` for non-humanoids, `SPR.noah` (cube,
+    N screen, brain hologram), `SPR.bitget` (navy card, chip, eyes, cyan chevron, no third-party card-network logos).
+  - Map/NPCs: `PADS2` (beside the fire W/E, next to the Sphinx) + NPCS `lotto`, `noah`, `bitget`. Elder renamed "Keeper of the Heist".
+  - Links: `LINKS`, `shortUrl`, `openLink()` (opens only from a menu choice, `noopener`, URL always printed), `linkRow()`.
+  - Sphinx: `bankMenu()` hub (row order: connect, market, faucet, stake, unstake, swap whiskers, buy, oracle, school, dogeos, docs),
+    `SCHOOL` (wallet, RPC + testnet, faucet + gas, swap, LP + impermanent loss, stake, oracle, NFT), `schoolMenu()`, `lesson()`.
+  - Elder: `elderMenu()` (quest, story, factions, heist link, market report), `HEIST_STORY`, `FACTIONS` (+ weaknesses from the site),
+    `factionMenu()`, `P.faction`. `DOGE_LORE` rewritten as Heist lore. First talk still gives quest 1.
+  - Partners: `PARTNERS` (sourced stories + links), `partnerTalk()`, `partnerMenu()`.
+  - Oracle: `REDSTONE`, `oracle`, `refreshOracle()` (DogeDEX `dogeUsd()` → RedStone feed `latestRoundData` → adapter last push),
+    `oracleRow()` (STALE tag past 24 h), `oracleAge()`. `updMarket()` anchors the simulated market to the oracle price.
+    `eth()` also finds `window.bitkeep.ethereum`. `CHAIN.explorer` set to the official l2scan URL.
+- Code (contracts): `DogeDEX(items, IPriceFeed feed)` immutable `dogeUsdFeed`, `dogeUsd()` never reverts (missing / reverting /
+  ≤0 / older than `ORACLE_MAX_AGE=1 day` → `fresh=false`), `poolTvlUsd(key)`. These are views only: swap prices always come from
+  reserves. `Deploy.s.sol` feed: env `DOGE_USD_FEED`, else RedStone DOGE on Chikyu, else `MockPriceFeed` on anvil.
+- Why: the user's vision. Lore + education + real DeFi in one loop, and the oracle ties the in-game market to the real DOGE price.
+- Alternatives rejected: RedStone pull model (needs their SDK + gateway fetch in the browser → breaks no-library, no-fetch);
+  using the oracle as the AMM price (manipulable, and it's stale right now); faction stat perks (MVP rule); "solana fork" /
+  "lottery" wording (factually wrong per sources); copying the card-network logo onto the Bitget sprite.
+- Process: `String.replace` ate a `$` (`$$` is a replacement pattern) in the oracle label → practice 28 "inject code blocks by
+  slicing, or `split/join`, never `.replace(str, code)`". Also verify user-supplied descriptions of third parties before putting
+  them in game text (practice 29). New `tests/sprites.mjs` renders sprites to PNG so art can be reviewed without a browser.
+- Verify: sim `✓ 0 failed` seeds 4242/7 — 88 PASS (incl. anvil e2e with the oracle through DogeDEX); `forge test` 28 passed;
+  `ALL CHECKS PASSED`; sprite preview `docs/art/sprites-phase4-preview.png`.
+- Commit: this commit.
+
 ### D-023 · 2026-11-07 · Deploy helper: apply-deployment.mjs writes contract addresses into the game
 - Feature: the user's Chikyū deploy becomes forge script → `node contracts/apply-deployment.mjs` → checks → commit. No hand-editing.
 - Reference: user "if you need a wallet … skip that and continue"; D-018 README step 4 was manual.

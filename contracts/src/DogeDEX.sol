@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {DogeItems} from "./DogeItems.sol";
+import {IPriceFeed} from "./IPriceFeed.sol";
 
 /// @title The Sphinx DEX — player-made markets for DOGEON item NFTs, priced in native DOGE.
 /// @notice Nothing is for sale until a player creates it:
@@ -15,6 +16,10 @@ import {DogeItems} from "./DogeItems.sol";
 ///      entry points are nonReentrant. No admin: the deployer has no power over listings, pools or balances.
 contract DogeDEX is ReentrancyGuard {
     DogeItems public immutable items;
+    /// @notice RedStone DOGE/USD push feed (Chainlink-compatible). Display and USD views only: swap prices always come from
+    ///         the pool reserves, never from the oracle (D-024). address(0) = no oracle.
+    IPriceFeed public immutable dogeUsdFeed;
+    uint256 public constant ORACLE_MAX_AGE = 1 days; // RedStone DogeOS heartbeat is 24 h
     uint256 public constant FEE_BPS = 200; // 2% swap fee, kept by the pool (LPs)
     uint256 public constant BPS = 10_000;
     uint256 public constant SHARES_PER_ITEM = 1e18; // first LP: shares scale with items, so S >> y (audit D-022)
@@ -70,8 +75,9 @@ contract DogeDEX is ReentrancyGuard {
     error NothingToWithdraw();
     error TransferFailed();
 
-    constructor(DogeItems items_) {
+    constructor(DogeItems items_, IPriceFeed feed_) {
         items = items_;
+        dogeUsdFeed = feed_;
     }
 
     function keyOf(uint256 tokenId) public view returns (uint256) {
@@ -275,6 +281,27 @@ contract DogeDEX is ReentrancyGuard {
         proceeds[msg.sender] += payout;
         emit SwapSell(key, msg.sender, tokenId, payout);
         items.transferFrom(msg.sender, address(this), tokenId);
+    }
+
+    // ===================== oracle (RedStone) =====================
+
+    /// @notice DOGE/USD from the RedStone feed in feed decimals (8). Never reverts: a missing, reverting (stale), zero or
+    ///         old feed returns fresh=false so callers and the game can show "stale" instead of breaking.
+    function dogeUsd() public view returns (uint256 price, uint256 updatedAt, bool fresh) {
+        if (address(dogeUsdFeed) == address(0)) return (0, 0, false);
+        try dogeUsdFeed.latestRoundData() returns (uint80, int256 answer, uint256, uint256 upd, uint80) {
+            if (answer <= 0) return (0, upd, false);
+            fresh = upd <= block.timestamp && block.timestamp - upd <= ORACLE_MAX_AGE;
+            return (uint256(answer), upd, fresh);
+        } catch {
+            return (0, 0, false);
+        }
+    }
+
+    /// @notice Pool value in USD (feed decimals): 2 * DOGE reserve * price, since items are worth the DOGE side at spot.
+    function poolTvlUsd(uint256 key) external view returns (uint256) {
+        (uint256 p,,) = dogeUsd();
+        return (2 * _pools[key].doge * p) / 1e18;
     }
 
     // ===================== payouts =====================

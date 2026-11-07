@@ -1,7 +1,18 @@
-# DOGEON — The Cat Invasion
+# DOGEON — The Grand Heist
 
-A 16-bit top-down action RPG in one HTML file. You are a hammer-swinging Shiba. Half-human cats invaded.
-Survive, fish, craft, and trade your gear as NFTs on the **DogeOS Chikyū testnet**. Such hard. Much wow.
+A 16-bit top-down action RPG in one HTML file, set in the lore of the DogeOS **Grand Heist**: the Fat Cats hoard the doge world's
+value, and you take back what is yours. Survive, fish, craft, trade your gear as NFTs on the **DogeOS Chikyū testnet**, and learn
+DeFi by doing it. Such heist. Much wow.
+
+## Who is in camp
+| NPC | Where | What they do |
+|---|---|---|
+| The Sphinx | north pad | DogeOS DeFi hub: connect wallet (adds the testnet), NFT market (swap + LP), faucet, stake, RedStone DOGE/USD, Sphinx School (8 lessons), dogeos.com, docs |
+| Elder Shibe | west pad | Keeper of the Heist: quests, the Grand Heist story, factions (Demolition Dogs, Kernel Crew, Barkitects), heist.dogeos.com |
+| Wrenchpaw | east pad | forge: craft gear from monster parts, then mint it as an NFT |
+| Cloverheart | left of the fire | Relotto, the recycling app that rewards you (relotto.app) |
+| Noah (Model N-01) | right of the fire | trynoah.ai, the AI that builds a dApp from a single prompt |
+| Bitget Wallet Card | next to the Sphinx | Bitget Wallet download + card info; works as your wallet at the Sphinx |
 
 ## Play
 - **Offline:** double-click `index.html`. Everything works without a wallet.

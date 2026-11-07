@@ -108,6 +108,33 @@ SPR.bank=buildChar({head:'dog',pal:{...basePal,F:'#e8c030',C:'#fff0a0',K:'#e8c03
       rect(g,12,6,3,12,G);for(let y=6;y<18;y++)px(g,12+(y%2),y,y%2?G:Bl);}
     else{rect(g,3,2,10,4,G);for(let i=0;i<4;i++)rect(g,3,2+i,10,1,i%2?Bl:G);
       rect(g,1,6,3,12,Bl);rect(g,12,6,3,12,G);for(let y=6;y<18;y++){px(g,1+(y%2),y,y%2?Bl:G);px(g,12+(y%2),y,y%2?G:Bl);}}}});
+// ---- Phase 4 partner NPCs (D-024), drawn in code from the user's reference images in docs/art/ ----
+// Cloverheart (ReLotto): doge-orange shiba, green hooded robe, glowing clover emblem + clover staff
+SPR.clover=buildChar({head:'dog',pal:{...basePal,F:'#e8922c',C:'#fbe8c4',K:'#fbe8c4',T:'#2e8b3e',A:'#9cff7a',B:'#6a4a20',L:'#1e5a28'},
+  acc(g,d){const Hd='#1e5a28',Hl='#2e8b3e',St='#6a4a20',Cl='#48d848',Cg='#c8ffb8';
+    // four-leaf clover head with a soft glow: leaves at the 4 diagonals, bright heart in the middle
+    const staff=x=>{rect(g,x,5,1,14,St);for(const [dx,dy] of [[-1,0],[1,0],[-1,2],[1,2]])px(g,x+dx,dy+1,Cl);px(g,x,1,'#7cf07c');px(g,x,3,'#7cf07c');px(g,x-1,2,'#7cf07c');px(g,x+1,2,'#7cf07c');px(g,x,2,Cg);px(g,x,4,St);};
+    if(d==='down'){rect(g,1,6,2,8,Hd);rect(g,13,6,2,8,Hd);px(g,2,5,Hl);px(g,13,5,Hl);staff(14);}
+    else if(d==='right'){rect(g,2,6,2,8,Hd);px(g,3,5,Hl);staff(13);}
+    else{rect(g,1,4,14,4,Hd);rect(g,2,3,12,1,Hl);staff(1);}}});
+// a non-humanoid NPC: one 16x20 canvas used for every direction / frame (the NPC draw adds a gentle bob)
+function staticSpr(draw){const [c,g]=mk(16,20);draw(g);const f=[c,c,c];return {down:f,up:f,right:f,left:f};}
+// Noah (trynoah.ai): floating AI cube "MODEL N-01" with a holographic brain on top
+SPR.noah=staticSpr(g=>{const O='#0e1a24';
+  rect(g,5,0,6,3,'#9fd8ff');px(g,6,0,'#e0f4ff');px(g,9,1,'#e0f4ff');px(g,7,2,'#5ab0e8');px(g,8,1,'#5ab0e8'); // brain hologram
+  rect(g,1,4,14,13,O);rect(g,2,5,12,2,'#3a6474');rect(g,2,7,12,9,'#24404e');           // cube: top face + body
+  for(let y=8;y<15;y++)rect(g,4,y,8,1,y<10?'#f8d878':y<12?'#d8e8a8':'#9fd0ff');           // yellow -> blue screen
+  for(let y=9;y<14;y++){px(g,5,y,O);px(g,10,y,O);}px(g,6,10,O);px(g,7,11,O);px(g,8,12,O);px(g,9,13,O); // the N
+  rect(g,2,7,1,9,'#40e0ff');rect(g,13,7,1,9,'#ffd040');                                   // edge lights
+});
+// Bitget Wallet card: navy card body, cyan chevron, chip, eyes, little legs
+SPR.bitget=staticSpr(g=>{const O='#000c12',N='#00202c',Ln='#0b3a4a',Cy='#00f0ff';
+  rect(g,1,1,14,16,O);rect(g,2,2,12,14,N);for(let y=3;y<15;y+=3)rect(g,2,y,12,1,Ln);
+  rect(g,3,3,3,2,'#c8c8c8');px(g,4,3,'#909090');                                          // chip
+  px(g,9,4,'#fff');px(g,12,4,'#fff');px(g,9,5,O);px(g,12,5,O);                              // eyes
+  for(let i=0;i<4;i++){px(g,5+i,7+i,Cy);px(g,6+i,7+i,Cy);px(g,5+i,13-i,Cy);px(g,6+i,13-i,Cy);} // chevron >
+  rect(g,4,17,2,3,O);rect(g,10,17,2,3,O);
+});
 SPR.sage=buildChar({head:'dog',pal:{...basePal,F:'#a09890',C:'#d0ccc4',K:'#d0ccc4',T:'#c4a878',A:'#a08860',B:'#7a5a2a',L:'#3a3430',E:'#3a3030'},
   acc(g,d){const Wh='#e8e8e0',Gl='#c0e0ff',Gf='#4080a0',Cn='#7a4a1a';
     // white beard
@@ -245,6 +272,7 @@ const CX=40,CY=34;
 const CAMP={x0:33,y0:27,x1:47,y1:41};
 const FY=CY+4,MOS_Y=CY-1; // brazier row, coin mosaic centre row
 const PADS=[[CX,CAMP.y0+2],[CAMP.x0+3,CY],[CAMP.x1-3,CY]]; // N, W, E NPC pads
+const PADS2=[[CX-3,FY],[CX+3,FY],[CX+3,CY-3]]; // Phase 4 partner NPCs: beside the fire (W, E) and next to the Sphinx (D-024)
 const DUN={x0:26,y0:2,x1:54,y1:17};
 const GATE_ROW=9;
 const PONDS_EXTRA=[[54,25,3.5,2.5],[24,53,4,2.5]]; // [cx,cy,rx,ry] tiles: NE of the camp fence (outside it), south-west field
@@ -276,7 +304,7 @@ function genMap(){
   for(const d of [-2,2]){setT(CX+d,CAMP.y0,T.DOOR);setT(CX+d,CAMP.y1,T.DOOR);setT(CAMP.x0,CY+d,T.DOOR);setT(CAMP.x1,CY+d,T.DOOR);}
   for(const [x,y] of [[CAMP.x0+2,CAMP.y0+2],[CAMP.x1-2,CAMP.y0+2],[CAMP.x0+2,CAMP.y1-2],[CAMP.x1-2,CAMP.y1-2]])setT(x,y,T.TENT);
   for(const [x,y] of [[CX-3,CY-4],[CX+3,CY-4],[CX-3,CY+2],[CX+3,CY+2]])setT(x,y,T.CRYSTAL);
-  for(const [x,y] of PADS)setT(x,y,T.PAD);
+  for(const [x,y] of [...PADS,...PADS2])setT(x,y,T.PAD);
   setT(CX,FY,T.FIRE);
   // ruins
   for(let y=DUN.y0;y<=DUN.y1;y++)for(let x=DUN.x0;x<=DUN.x1;x++){const edge=x===DUN.x0||x===DUN.x1||y===DUN.y0||y===DUN.y1||y===DUN.y0+1;setT(x,y,edge?T.WALL:T.DFLOOR);}
@@ -340,7 +368,8 @@ function newMarket(){mkt={p:MARKET.start,hist:[MARKET.start],t:0,sent:0};}
 function updMarket(dt){
   mkt.t+=dt;if(mkt.t<1)return;mkt.t-=1;
   const n=(Math.random()+Math.random()+Math.random()-1.5)*2; // ~normal(0,1)
-  mkt.p=Math.max(MARKET.min,Math.min(MARKET.max,mkt.p*Math.exp(n*MARKET.vol+Math.log(MARKET.start/mkt.p)*MARKET.revert)));
+  const anchor=oracle.loaded?oracle.price:MARKET.start; // RedStone DOGE/USD when connected (D-024)
+  mkt.p=Math.max(Math.min(MARKET.min,anchor/5),Math.min(Math.max(MARKET.max,anchor*5),mkt.p*Math.exp(n*MARKET.vol+Math.log(anchor/mkt.p)*MARKET.revert)));
   mkt.hist.push(mkt.p);if(mkt.hist.length>MARKET.avgN)mkt.hist.shift();
   const avg=mkt.hist.reduce((a,b)=>a+b,0)/mkt.hist.length;
   mkt.sent=Math.max(-1,Math.min(1,Math.log(mkt.p/avg)/MARKET.sentScale));
@@ -360,11 +389,14 @@ let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=
 const NPCS=[
   {id:'merchant',name:'WRENCHPAW THE MECHANIC',spr:'merchant',x:PADS[2][0]*16+8,y:PADS[2][1]*16+8,hw:6,hh:4,dir:'down',met:false},
   {id:'bank',name:'THE GREAT SPHINX OF DOGE',spr:'bank',x:PADS[0][0]*16+8,y:PADS[0][1]*16+8,hw:6,hh:4,dir:'down',met:false},
-  {id:'quest',name:'ELDER SHIBE',spr:'sage',x:PADS[1][0]*16+8,y:PADS[1][1]*16+8,hw:6,hh:4,dir:'down',met:false}
+  {id:'quest',name:'ELDER SHIBE, KEEPER OF THE HEIST',spr:'sage',x:PADS[1][0]*16+8,y:PADS[1][1]*16+8,hw:6,hh:4,dir:'down',met:false},
+  {id:'lotto',name:'CLOVERHEART, THE LUCKY GUIDE',spr:'clover',x:PADS2[0][0]*16+8,y:PADS2[0][1]*16+8,hw:6,hh:4,dir:'down',met:false},
+  {id:'noah',name:'NOAH, THE AI BRAIN (MODEL N-01)',spr:'noah',x:PADS2[1][0]*16+8,y:PADS2[1][1]*16+8,hw:6,hh:4,dir:'down',met:false},
+  {id:'bitget',name:'THE BITGET WALLET CARD',spr:'bitget',x:PADS2[2][0]*16+8,y:PADS2[2][1]*16+8,hw:6,hh:4,dir:'down',met:false}
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,credits:{}};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,credits:{},faction:null};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<FIELD_POP;i++)spawnEnemy('field');
@@ -498,9 +530,9 @@ function updEnemy(e,dt){
 // ================= CHAIN (DogeOS Chikyu testnet, EIP-1193, no library) =================
 // Verified 2026-11-07: eth_chainId on CHAIN.rpc returns 0x5fdaf3 (6281971). The game makes NO network call
 // itself: everything goes through the player's wallet (window.ethereum), and only after they press CONNECT.
-const CHAIN={id:'0x5fdaf3',name:'DogeOS Chikyu Testnet',rpc:'https://rpc.testnet.dogeos.com',explorer:'https://blockscout.testnet.dogeos.com',faucet:'FAUCET.TESTNET.DOGEOS.COM'};
+const CHAIN={id:'0x5fdaf3',name:'DogeOS Chikyu Testnet',rpc:'https://rpc.testnet.dogeos.com',explorer:'https://dogeos-testnet.l2scan.co',faucet:'FAUCET.TESTNET.DOGEOS.COM'};
 const wallet={connected:false,addr:null,bal:null,chainOk:false,busy:false,msg:'',hooked:false};
-function eth(){try{return (typeof window!=='undefined'&&window.ethereum)||null;}catch(e){return null;}}
+function eth(){try{return (typeof window!=='undefined'&&(window.ethereum||(window.bitkeep&&window.bitkeep.ethereum)))||null;}catch(e){return null;}} // Bitget Wallet: window.bitkeep.ethereum
 const shortAddr=a=>a?a.slice(0,6)+'..'+a.slice(-4):'';
 function walletErr(err){const c=err&&err.code;if(c===4001)return 'YOU REJECTED IT IN THE WALLET.';if(c===-32002)return 'WALLET REQUEST PENDING. OPEN YOUR WALLET.';return 'WALLET ERROR: '+String((err&&err.message)||err).slice(0,40).toUpperCase();}
 function setWalletMsg(m){wallet.msg=m;if(ui&&ui.type==='menu'&&ui.chain)ui.msg=m;}
@@ -525,7 +557,7 @@ async function connectWallet(){
     const acc=await e.request({method:'eth_requestAccounts'});if(!acc||!acc.length)throw new Error('no account');
     wallet.addr=acc[0];hookWallet(e);
     await switchChain();await refreshBal();
-    wallet.connected=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));setWalletMsg(wallet.chainOk?`CONNECTED TO ${DEV_LOCAL?'LOCAL ANVIL':'CHIKYU'}. SUCH CHAIN. WOW.`:'CONNECTED, BUT ON THE WRONG NETWORK.');
+    wallet.connected=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));refreshOracle();setWalletMsg(wallet.chainOk?`CONNECTED TO ${DEV_LOCAL?'LOCAL ANVIL':'CHIKYU'}. SUCH CHAIN. WOW.`:'CONNECTED, BUT ON THE WRONG NETWORK.');
     return true;
   }catch(err){setWalletMsg(walletErr(err));return false;}
   finally{wallet.busy=false;}
@@ -541,8 +573,8 @@ function walletRows(){
 // dev: open with ?chain=local to use a local anvil chain (contracts/README.md); Chikyu addresses go in CONTRACTS after deploy
 const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catch(e){return false;}})();
 if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
-const CONTRACTS={'0x5fdaf3':{items:'',dex:''},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'}};
-const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7'};
+const CONTRACTS={'0x5fdaf3':{items:'',dex:''},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'}};
+const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',poolTvlUsd:'25da0b68',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7'};
 const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
 const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50],LIST_PAGE=100,LIST_MAX=500; // sell / LP presets in DOGE, picked with A/D in the market menu
 const W32=n=>BigInt(n).toString(16).padStart(64,'0'),A32=a=>String(a).toLowerCase().replace(/^0x/,'').padStart(64,'0');
@@ -660,9 +692,10 @@ function talk(n){
     if(!n.met){n.met=true;openDialog(n,['Wrenchpaw here. I forge gear from monster parts.','Bring me ORB, SCRAP, HORN or STEEL from fallen foes.','I burn the materials and craft upgrades. No refunds. Very forge.'],()=>shopMenu(n));}
     else shopMenu(n);
   }else if(n.id==='bank'){
-    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX. Powered by DogeOS.','Swap your whiskers for DOGE, or trade DOGE for upgrades.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','This is a SIMULATED DEX. No real transactions. Much wow.'],()=>bankMenu(n));}
+    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX, door to DogeOS. I connect your wallet, add the DogeOS testnet and teach you DeFi.','Swap your whiskers for DOGE, or trade DOGE for upgrades.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','This is a SIMULATED DEX. No real transactions. Much wow.'],()=>bankMenu(n));}
     else bankMenu(n);
-  }else questTalk(n);
+  }else if(n.id==='quest'){if(state.stage===0)questTalk(n);else elderMenu(n);}
+  else partnerTalk(n);
 }
 const RECIPES=[
   {name:'HAMMER LV2',nft:[1,2],need:{steel:2,scrap:1},req:()=>P.sword<2,act:()=>{P.sword=2;return `HAMMER LV2! DMG ${SWORD_DMG[2]}. VERY FORGE.`;}},
@@ -684,27 +717,122 @@ function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
   for(const f in FOOD_TYPE)if(bagCount(f))o.push({label:`PRESERVE ${FOODS[f].name} AS NFT (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(FOOD_TYPE[f],1,f);return wallet.msg;}});
   o.push({label:`INVENTORY: ORB ${P.orb} SCRAP ${P.scrap} HORN ${P.horn} STEEL ${P.steel}`,act:()=>'THOSE ARE YOUR MATERIALS.'});
   o.push({label:'LEAVE',act:null});return o;});ui.chain=true;}
-function bankMenu(n){openMenu(n,'THE SPHINX DEX',()=>{
+// ---- Phase 4 "The Grand Heist" (D-024): links, Sphinx DeFi hub + school, Elder heist lore + factions, partner NPCs ----
+const LINKS={bitgetCard:'https://web3.bitget.com/card',relottoApp:'https://app.relotto.app',dogeos:'https://www.dogeos.com/',docs:'https://docs.dogeos.com/en/getting-started/overview',faucet:'https://faucet.testnet.dogeos.com',
+  heist:'https://heist.dogeos.com/',redstone:'https://www.redstone.finance/',noah:'https://trynoah.ai/',bitget:'https://web3.bitget.com/pt-BR/wallet-download',relotto:'https://relotto.app/'};
+// links open only on an explicit menu choice; the URL is printed too, so it still works when popups are blocked
+const shortUrl=u=>String(u).replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'').toUpperCase();
+function openLink(url){if(!url)return 'LINK COMING SOON.';try{window.open(url,'_blank','noopener,noreferrer');}catch(e){}return 'LINK: '+shortUrl(url).slice(0,56);}
+const linkRow=(label,url)=>({label,act:()=>openLink(url)});
+// lessons are dialog pages; the last page (or ESC) returns to the menu they came from
+function lesson(n,pages,back){openDialog(n,pages,back);}
+const SCHOOL=[
+  ['WALLET',['A wallet holds your keys. Keys prove you own your coins and items.','Never share your seed phrase. Not with a sphinx, not with a cat. Never.','MetaMask, Bitget Wallet and other EVM wallets all work at my door.']],
+  ['RPC + TESTNET',['An RPC is the door your wallet uses to talk to a chain.','DogeOS Chikyu is the testnet, chain id 6281971. Its DOGE is free and has no value, so it is safe to learn.','Pick CONNECT and I add the network to your wallet for you. One click. Much easy.']],
+  ['FAUCET + GAS',['Every transaction costs a small fee called gas, paid in DOGE.','A faucet gives free testnet DOGE for gas. Get some before you mint or trade.']],
+  ['SWAP',['A swap trades one asset for another at the price of a pool.','Bigger trades move the price more. That is slippage. I always protect you with a limit.']],
+  ['LIQUIDITY POOL',['A pool holds two things: here, items and DOGE. Liquidity providers deposit both and get shares.','Traders pay a 2% fee that stays in the pool, so LPs earn. The price follows x times y equals k.','Risk: when prices move you can end with more of the cheaper side. That is impermanent loss.']],
+  ['STAKE',['Staking locks coins to earn a reward. My vault keeps your DOGE safe when you fall and pays 1% when you unstake.','This vault is part of the game, not the chain. On DogeOS, real staking lives in its apps.']],
+  ['ORACLE (REDSTONE)',['Contracts cannot see the outside world. An oracle brings real prices on-chain.','RedStone posts signed DOGE and BTC prices on the DogeOS testnet, so swaps and other DeFi built here have real prices.','My DEX reads DOGE/USD from RedStone. Trade prices still come from the pool itself; the oracle is for display and safety.']],
+  ['NFT',['An NFT is a token with its own id. Your crafted gear and preserved fish are NFTs you truly own.','Owning gear NFTs means wearing them. Sell them, pool them, or eat the fish. Your call.']],
+];
+function schoolMenu(n){openMenu(n,'SPHINX SCHOOL: DEFI 101',()=>[...SCHOOL.map(([t,pages])=>({label:'LESSON: '+t,act:()=>{lesson(n,pages,()=>schoolMenu(n));return '';}})),{label:'BACK',act:()=>{bankMenu(n);return '';}}]);}
+// the Sphinx: DogeOS DeFi hub. Connect (auto add + switch DogeOS testnet), LP + swap, faucet, stake, oracle, links, school
+function bankMenu(n){openMenu(n,'THE SPHINX DEX - DOGEOS DEFI HUB',()=>{
   const yld=Math.floor(P.bank*0.01);
   return[
-  ...walletRows(), // real wallet on DogeOS Chikyu (D-016); no wallet -> simulated label
-  ...(wallet.connected?[{label:'NFT MARKET: LISTINGS + LP POOLS',act:()=>{marketMenu(n);return '';}}]:[]),
+  ...walletRows(), // CONNECT adds + switches to DogeOS Chikyu (D-016)
+  {label:'NFT MARKET: SWAP + LIQUIDITY POOLS',act:()=>{marketMenu(n);return '';}},
+  linkRow('GET TESTNET DOGE (FAUCET)',LINKS.faucet),
+  {label:`STAKE ${P.doge} DOGE IN THE VAULT (+1%)`,act:()=>{if(!P.doge)return 'NO DOGE TO STAKE.';P.bank+=P.doge;P.doge=0;return 'STAKED. SAFE WHEN YOU FALL. EARNS 1%.';}},
+  {label:`UNSTAKE ${P.bank}+${yld} DOGE`,act:()=>{if(!P.bank)return 'NOTHING STAKED.';const t=P.bank+yld;P.doge+=t;P.bank=0;return `UNSTAKED ${t} DOGE (${yld} REWARD). TO THE MOON.`;}},
   {label:`SWAP ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'NO WHISKERS TO SWAP.';P.doge+=P.whisk*3;const m=`SWAPPED ${P.whisk} WHISKERS FOR ${P.whisk*3} DOGE.`;P.whisk=0;return m;}},
   {label:`BUY BONE CHARM (50 DOGE)`,act:P.hpUps>=3?()=>'MAX CHARMS ALREADY.':()=>{if(P.doge<50)return 'NOT ENOUGH DOGE.';P.doge-=50;P.hpUps++;P.maxHp+=15;return 'BONE CHARM BOUGHT! +15 MAX HP.';}},
   {label:`BUY MOON BISCUIT (40 DOGE)`,act:P.mpUps>=2?()=>'MAX BISCUITS ALREADY.':()=>{if(P.doge<40)return 'NOT ENOUGH DOGE.';P.doge-=40;P.mpUps++;P.maxMp+=10;return 'MOON BISCUIT BOUGHT! +10 MAX MP.';}},
-  {label:`ADD TO POOL (${P.doge} DOGE AVAIL)`,act:()=>{if(!P.doge)return 'NO DOGE TO ADD.';P.bank+=P.doge;P.doge=0;return 'POOLED. SAFE ON DEATH. EARNS YIELD.';}},
-  {label:`REMOVE FROM POOL (${P.bank}+${yld} YIELD)`,act:()=>{if(!P.bank)return 'POOL IS EMPTY.';const t=P.bank+yld;P.doge+=t;P.bank=0;return `WITHDREW ${t} DOGE (${yld} YIELD). TO THE MOON.`;}},
+  oracleRow(),
+  {label:'SPHINX SCHOOL: DEFI 101 LESSONS',act:()=>{schoolMenu(n);return '';}},
+  linkRow('DOGEOS.COM: THE APP + COMMUNITY',LINKS.dogeos),
+  linkRow('BUILD ON DOGEOS (DEVELOPER DOCS)',LINKS.docs),
   ...(wallet.connected?[{label:'DISCONNECT WALLET',act:()=>{disconnectWallet();return wallet.msg;}}]:[]),
-  {label:'LEAVE',act:null}];});ui.chain=true;}
-const DOGE_LORE=[
-  'In the old days, one DOGE bought a whole tent. Now it buys a whisker.',
-  'The first doge was mined on a cold winter night. Very genesis. Much wow.',
-  'They say the Cat Lord hoards a mountain of DOGE beneath the ruins.',
-  'A wise shiba once said: buy the dip. Then the dip dipped.',
-  'DOGE was meant to be funny. Then it became serious. Then funny again.',
-  'The blockchain never forgets. But the Elder sometimes does.',
-  'Every transaction tells a story. Most of them are "I sold too early."',
-  'To the moon, they said. We are still on the launchpad.'
+  {label:'LEAVE',act:null}];});ui.chain=true;refreshOracle().catch(()=>{});}
+// ---- RedStone DOGE/USD oracle (D-024). Feeds from redstone-oracles-monorepo dogeOsTestnetMultiFeed.json, checked on-chain ----
+const REDSTONE={'0x5fdaf3':{feed:'0x434F8D17c0301cfEa143dba912972E24B827C968',adapter:'0xB08342D907D2df47B6F73e25F4fa033978B344B1'}};
+const DOGE_FEED_ID='444f4745'.padEnd(64,'0'); // bytes32("DOGE")
+const ORACLE_MAX_AGE=86400; // RedStone DogeOS heartbeat: 24 h
+const oracle={price:0,updated:0,src:'',loaded:false};
+const oracleStale=()=>!oracle.loaded||Date.now()/1000-oracle.updated>ORACLE_MAX_AGE;
+// order: our DogeDEX view -> the RedStone feed -> the RedStone adapter's last pushed value (works even when stale)
+async function refreshOracle(){
+  if(!wallet.connected||!wallet.chainOk)return;
+  const set=(p8,ts,src)=>{if(p8>0n){oracle.price=Number(p8)/1e8;oracle.updated=Number(ts);oracle.src=src;oracle.loaded=true;}};
+  const c=addrs(),rs=REDSTONE[CHAIN.id];
+  try{if(c.dex){const w=words(await ecall(c.dex,SEL.dogeUsd));if(w[0]>0n){set(w[0],w[1],'DOGEDEX');return;}}}catch(e){}
+  if(!rs)return;
+  try{const w=words(await ecall(rs.feed,'feaf968c'));set(w[1],w[3],'FEED');return;}catch(e){} // reverts while RedStone data is stale
+  try{const w=words(await ecall(rs.adapter,'729bfda4'+DOGE_FEED_ID));set(w[2],w[0]/1000n,'LAST PUSH');}catch(e){}
+}
+function oracleAge(){const h=Math.max(0,Math.round((Date.now()/1000-oracle.updated)/3600));return h<48?h+'H AGO':Math.round(h/24)+'D AGO';}
+function oracleRow(){
+  if(!oracle.loaded)return {label:'REDSTONE ORACLE: CONNECT TO READ DOGE/USD',act:()=>{refreshOracle().then(()=>setWalletMsg(oracle.loaded?'ORACLE READ. SUCH PRICE.':'NO ORACLE ON THIS CHAIN YET.'));return wallet.connected?'READING REDSTONE...':'CONNECT YOUR WALLET FIRST.';}};
+  return {label:`REDSTONE DOGE/USD $${oracle.price.toFixed(4)}${oracleStale()?' (STALE)':''}`,act:()=>{refreshOracle();return `SOURCE: ${oracle.src}. UPDATED ${oracleAge()}. THE GAME MARKET FOLLOWS IT.`;}};
+}
+// the Elder: keeper of the Grand Heist (heist.dogeos.com)
+const FACTIONS=[
+  {id:'demo',name:'DEMOLITION DOGS',motto:'Breaking down the doors, spread the signal.',entry:['[ARCHIVE ENTRY #001] Demolition Dogs are the frontlines.','They run social quests and spread the signal. The Fat Cats are counting on silence, so they make sure every bark is heard around the world.']},
+  {id:'kernel',name:'KERNEL CREW',motto:'Amplify the signal. Arm the troops.',entry:['[ARCHIVE ENTRY #002] Kernel Crew are the content creators, educators and culture shapers of the Heist.','They create the guides, threads and culture pieces that educate and motivate the doge army to mobilize.','Known weakness: squirrels.']},
+  {id:'bark',name:'BARKITECTS',motto:'Go on-chain and execute.',entry:['[ARCHIVE ENTRY #003] The Barkitects are the users trained and comfortable with the apps.','They complete quests that bring their doge on-chain: into games, DeFi and beyond. The Sphinx trains them.','Known weakness: going full degen.']},
+];
+const HEIST_STORY=['The Fat Cats took the value of the doge world and locked it in their vaults. They count on our silence.',
+  'This is the Grand Heist: the largest community activation in Dogecoin history. We take back what is ours.',
+  'Shibes complete quests and earn collectible items by using the apps of the growing DogeOS ecosystem.',
+  'Every great heist needs a crew: Demolition Dogs, Kernel Crew and Barkitects. Find where you belong.',
+  'The operation is live. No fat cats. No squirrels. No excuses. Add your paw to the pile at HEIST.DOGEOS.COM.'];
+const factionOf=()=>FACTIONS.find(f=>f.id===P.faction);
+function factionMenu(n){openMenu(n,'THE HEIST ARCHIVES: FACTIONS',()=>{const o=[];
+  for(const f of FACTIONS){o.push({label:`READ: ${f.name}`,act:()=>{lesson(n,[f.motto,...f.entry],()=>factionMenu(n));return '';}});
+    o.push({label:P.faction===f.id?`  YOUR CREW: ${f.name}`:`  JOIN ${f.name}`,act:()=>{P.faction=f.id;sfx(660,0.2,'triangle',0.05,300);return `WELCOME TO THE ${f.name}. ADD YOUR PAW TO THE PILE.`;}});}
+  o.push({label:'BACK',act:()=>{elderMenu(n);return '';}});return o;});}
+function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>[
+  {label:`QUEST: ${questText()}`,act:()=>{questTalk(n);return '';}},
+  {label:'THE GRAND HEIST (STORY)',act:()=>{lesson(n,HEIST_STORY,()=>elderMenu(n));return '';}},
+  {label:`FACTIONS${factionOf()?' (YOU: '+factionOf().name+')':''}`,act:()=>{factionMenu(n);return '';}},
+  linkRow('JOIN THE HEIST: HEIST.DOGEOS.COM',LINKS.heist),
+  {label:'DOGE MARKET REPORT',act:()=>{const pc=Math.round(mkt.sent*MARKET.sentScale*100);return `DOGE $${mkt.p.toFixed(3)} (${pc>=0?'+':''}${pc}%) ${pc>2?'BULL: FIGHTERS HIT HARDER':pc<-2?'BEAR: CATS HIT HARDER':'FLAT'}`;}},
+  {label:'LEAVE',act:null}]);}
+// partner NPCs: first talk = story, then a menu with the story + link (texts sourced in D-024)
+const PARTNERS={ // stories are factual (sources in docs/DECISIONS.md D-024); no claim of official DogeOS partnership unless sourced
+  lotto:{title:'CLOVERHEART: RELOTTO',story:['Need a map or a lucky charm, traveler? I am Cloverheart, the clover guide of the Dogeon.',
+    'My clover grows where shibes recycle. Lucky shibes know the trick: Relotto, the recycling app that rewards you.',
+    'Trade your recyclables with recyclers and earn Ecopoints. Spend them on rewards and gift cards, or play games to level up.',
+    'Recycle, earn, play. Small acts add up, like every bark in the Heist. Find it at RELOTTO.APP.'],
+    links:[['OPEN RELOTTO.APP','relotto'],['OPEN THE RELOTTO WEB APP','relottoApp']]},
+  noah:{title:'NOAH: MODEL N-01',story:['Beep. I am Noah, a super AI brain in a box. Model N-01.',
+    'Describe your dApp idea in a single prompt and I build it: frontend, smart contracts, backend and wallet hookup.',
+    'Today my builders mostly ship on Solana, and more chains are on the way.',
+    'DogeOS lists me in its ecosystem: build dApps by chatting with AI. Barkitects who want to build, start at TRYNOAH.AI.'],
+    links:[['OPEN TRYNOAH.AI','noah']]},
+  bitget:{title:'BITGET WALLET CARD',story:['Swipe right, shibe. I am the Bitget Wallet Card.',
+    'Bitget Wallet is a multi-chain wallet for phone and Chrome. It can add custom EVM networks, like the DogeOS testnet.',
+    'Connect it at the Sphinx and the DogeOS testnet is added for you. Same door as MetaMask.',
+    'The card: top up with USDT, USDC, ETH or SOL and spend where card payments work. 50+ countries. ID check required.',
+    'Fees and rewards vary by region. Always read the terms first. Very careful. Much smart.'],
+    links:[['DOWNLOAD BITGET WALLET','bitget'],['ABOUT THE BITGET WALLET CARD','bitgetCard']]},
+};
+function partnerTalk(n){const p=PARTNERS[n.id];if(!p)return;
+  if(!n.met){n.met=true;openDialog(n,p.story,()=>partnerMenu(n));}else partnerMenu(n);}
+function partnerMenu(n){const p=PARTNERS[n.id];openMenu(n,p.title,()=>[
+  {label:'HEAR THE STORY AGAIN',act:()=>{openDialog(n,p.story,()=>partnerMenu(n));return '';}},
+  ...p.links.map(([label,k])=>linkRow(label,LINKS[k])),
+  {label:'LEAVE',act:null}]);}
+const DOGE_LORE=[ // Grand Heist lore (heist.dogeos.com), told by the Elder (D-024)
+  'Take back what is yours. The Fat Cats hid the value of the doge world in their vaults.',
+  'The Fat Cats are counting on silence. Every bark we make is heard around the world.',
+  'Every great heist needs a crew. Demolition Dogs, Kernel Crew, Barkitects. Where do you belong?',
+  'The Cat Lord is the fattest cat of all. He sits on the vault beneath the northern ruins.',
+  'No fat cats. No squirrels. No excuses. This is our moment.',
+  'Barkitects go on-chain and execute. The Sphinx will teach you how.',
+  'Every shibe who shows up is part of the greatest mobilisation in doge history.',
+  'Add your paw to the pile. Much heist. Very wow.'
 ];
 function questTalk(n){
   const s=state.stage;
@@ -936,7 +1064,7 @@ function drawTitle(){
   const s=5,tw=6*6*s-s,x=Math.round((W-tw)/2),y=22;
   for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2],[-2,-2],[2,2],[-2,2],[2,-2]])logo(x+dx,y+dy,s,'#1a0a00','#1a0a00');
   logo(x,y+3,s,'#8a4008','#8a4008');logo(x,y,s,'#f8c838','#fff4b0');
-  textC('- THE CAT INVASION - POWERED BY DOGE',W/2,y+44,'#ffe8c0',1);
+  textC('- THE GRAND HEIST - POWERED BY DOGEOS',W/2,y+44,'#ffe8c0',1);
   const b=Math.round(Math.sin(time*4));
   ctx.drawImage(SPR.hero.down[0],W/2-24,96+b,48,60);
   ctx.drawImage(SPR.ninja.left[Math.floor(time*5)%2],W/2+44,108,32,40);

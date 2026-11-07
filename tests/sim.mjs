@@ -37,7 +37,8 @@ function makeSandbox(opts = {}) {
     location: { search: opts.search || '' },
     performance: { now: () => 0 },
     innerWidth: 960, innerHeight: 672,
-    window: opts.eth ? { ethereum: opts.eth } : {}, // no AudioContext -> sfx() hits its try/catch and stays silent
+    // no AudioContext -> sfx() hits its try/catch and stays silent; window.open is a spy (links never leave the test)
+    window: Object.assign(opts.eth ? { ethereum: opts.eth } : {}, opts.bitkeep ? { bitkeep: { ethereum: opts.bitkeep } } : {}, { __opened: [], open(u) { this.__opened.push(u); return null; } }),
     document: { getElementById: () => fakeCanvas(), createElement: () => fakeCanvas() },
     addEventListener: (type, fn) => { (listeners[type] ||= []).push(fn); },
     requestAnimationFrame: () => 0,
@@ -64,6 +65,7 @@ globalThis.__api = {
   tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
   chainData, chainReady, refreshChain, mintNft, useNft, listNft, buyListing, delistNft, addLp, buyPool, sellPool, removeLp, withdrawProceeds,
   swordLv, armorLv, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
+  LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
 };`;
 
 function boot(seed, opts) {
@@ -118,6 +120,9 @@ function randomPlay(api, frames, name, rnd = Math.random) {
   }
   return { maxParts };
 }
+
+// put the open menu's cursor on the first row whose label matches re (row order is free to change)
+function selectRow(api, re) { const ui = api.get().ui, i = ui.build().findIndex(r => re.test(r.label)); if (i < 0) throw new Error(`no row ${re}: ` + ui.build().map(r => r.label).join(' | ')); ui.sel = i; }
 
 // ---------- scenarios ----------
 scenario('boot + title -> play', () => {
@@ -190,7 +195,7 @@ scenario('economy: bank + shop flows', () => {
   g.P.whisk = 10;
   const bank = g.NPCS.find(n => n.id === 'bank');
   bank.met = true; api.talk(bank);
-  api.press('s'); api.step(DT); // move to SWAP option (index 1)
+  selectRow(api, /^SWAP .* WHISKERS/);
   api.press('e'); api.step(DT); // exchange
   if (api.get().P.doge !== 30 || api.get().P.whisk !== 0) fail('bank exchange', `expected 30 DOGE/0 whiskers, got ${api.get().P.doge}/${api.get().P.whisk}`);
   else pass('bank exchange', '10 whiskers -> 30 DOGE');
@@ -304,8 +309,7 @@ scenario('pool: deposit safe on death, withdraw with yield', () => {
   g.P.doge = 100;
   const bank = g.NPCS.find(n => n.id === 'bank');
   bank.met = true; api.talk(bank);
-  // navigate to ADD TO POOL (index 4)
-  for (let i = 0; i < 4; i++) { api.press('s'); api.step(DT); }
+  selectRow(api, /^STAKE /); // the vault (was ADD TO POOL)
   api.press('e'); api.step(DT);
   if (g.P.bank !== 100 || g.P.doge !== 0) fail('pool deposit', `expected bank=100 doge=0, got bank=${g.P.bank} doge=${g.P.doge}`);
   else pass('pool deposit', '100 DOGE pooled');
@@ -488,7 +492,7 @@ function mockEth({ known = false, reject = false } = {}) {
         case 'eth_chainId': return chain;
         case 'eth_getBalance': return '0x' + (42069n * 10n ** 15n).toString(16); // 42.069 DOGE
         case 'wallet_revokePermissions': return null;
-        case 'eth_call': return m.callResult; // '0x' = no contract at that address
+        case 'eth_call': if (typeof m.callResult === 'function') return m.callResult(params[0]); return m.callResult; // '0x' = no contract at that address
         case 'eth_sendTransaction': m.sent.push(params[0]); return '0x' + 'ab'.repeat(32);
         case 'eth_getTransactionReceipt': if (m.receipt === 'throw') throw { code: -32603, message: 'rpc hiccup' }; return { status: m.receipt === 'revert' ? '0x0' : '0x1' };
       }
@@ -507,8 +511,8 @@ await scenarioAsync('wallet: no wallet -> offline label, game unaffected', async
   const api = boot(SEED + 17); startGame(api);
   const ui = openSphinx(api), rows = ui.build();
   if (!/OFFLINE/.test(rows[0].label)) fail('offline label', `row 0 = "${rows[0].label}"`);
-  else if (!/SWAP/.test(rows[1].label)) fail('offline layout', `SWAP moved: row 1 = "${rows[1].label}"`);
-  else pass('offline label', `"${rows[0].label}", SWAP still row 1`);
+  else if (!rows.some(r => /^NFT MARKET/.test(r.label)) || !rows.some(r => /FAUCET/.test(r.label))) fail('offline layout', rows.map(r => r.label).join(' | '));
+  else pass('offline label', `"${rows[0].label}", market + faucet rows present`);
   api.press('e'); api.step(DT); await flush();
   if (api.wallet.connected) fail('offline connect', 'connected with no provider');
   else pass('offline connect', `msg "${api.get().ui.msg}"`);
@@ -576,6 +580,9 @@ await scenarioAsync('chain e2e on local anvil: mint, equip, eat, list/buy, LP po
   if (!api.chainReady() || !api.chainData.loaded) throw new Error(`not ready: connected=${api.wallet.connected} msg=${api.wallet.msg}`);
   const P = api.get().P, inv0 = api.chainData.inv.length;
   pass('e2e connect', `anvil ${api.wallet.addr.slice(0, 8)}.., fee ${Number(api.chainData.fee) / 1e18} DOGE, ${inv0} NFTs held`);
+  for (let i = 0; i < 50 && !api.oracle.loaded; i++) await new Promise(r => setTimeout(r, 20));
+  if (api.oracle.src !== 'DOGEDEX' || Math.abs(api.oracle.price - 0.0716424) > 1e-9) fail('e2e oracle', JSON.stringify(api.oracle));
+  else pass('e2e oracle', `DogeDEX.dogeUsd() -> $${api.oracle.price} (RedStone-compatible mock feed on anvil)`);
 
   // forge credit -> mint hammer lv4 NFT -> owning it raises the effective hammer level
   P.sword = 4; api.addCredit(1, 4); // as if just forged: minting moves it on chain (P.sword -> 3)
@@ -782,6 +789,93 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   eth.handlers.accountsChanged(['0x00000000000000000000000000000000000000b0']); await flush();
   if (before !== 4 || api.swordLv() !== 1 || cd.inv.length) fail('account switch', `before ${before} after ${api.swordLv()} inv ${cd.inv.length}`);
   else pass('account switch', 'new account: old NFTs dropped, hammer LV4 -> LV1');
+});
+
+// ---------- Phase 4 "The Grand Heist" (D-024): partner NPCs, Sphinx hub, Elder heist lore, RedStone oracle ----------
+const npc = (api, id) => api.get().NPCS.find(n => n.id === id);
+function readDialog(api) { const pages = []; for (let i = 0; i < 20 && api.get().ui && api.get().ui.type === 'dialog'; i++) { pages.push(api.get().ui.pages[api.get().ui.idx]); api.get().ui.chars = 999; api.press('e'); api.step(DT); } return pages; }
+
+scenario('partner NPCs: Cloverheart (Relotto), Noah, Bitget Wallet Card tell their story and open their links', () => {
+  const api = boot(SEED + 28); startGame(api);
+  const want = { lotto: [/RELOTTO/i, 'https://relotto.app/'], noah: [/single prompt/i, 'https://trynoah.ai/'], bitget: [/Bitget Wallet/i, 'https://web3.bitget.com/pt-BR/wallet-download'] };
+  for (const [id, [storyRe, url]] of Object.entries(want)) {
+    const n = npc(api, id);
+    if (!n || !api.inCampT(Math.floor(n.x / 16), Math.floor(n.y / 16))) { fail(`npc ${id}`, 'missing or outside the camp'); continue; }
+    api.talk(n); const pages = readDialog(api);
+    const ui = api.get().ui;
+    if (!pages.some(p => storyRe.test(p)) || !ui || ui.type !== 'menu') { fail(`npc ${id}`, `story/menu wrong: ${pages.join(' / ')}`); continue; }
+    const rows = ui.build(), link = rows.find(r => r.label !== 'LEAVE' && !/STORY/.test(r.label));
+    const msg = link.act();
+    if (!api.opened().includes(url) || !/^LINK: /.test(msg)) fail(`npc ${id}`, `opened ${api.opened()} msg ${msg}`);
+    else pass(`npc ${id}`, `${n.name}: ${pages.length} story pages, "${link.label}" -> ${url}`);
+    api.get().ui = null;
+  }
+  const solid = ['lotto', 'noah', 'bitget'].map(id => npc(api, id)).every(n => api.get().P && Math.abs(n.x - api.get().P.x) + Math.abs(n.y - api.get().P.y) > 0);
+  if (!solid) fail('npc spots', 'an NPC sits on the spawn point'); else pass('npc spots', 'beside the fire and next to the Sphinx, clear of the spawn');
+});
+
+scenario('Sphinx = DogeOS DeFi hub: connect, market, faucet, stake, oracle, school, dogeos.com, docs', () => {
+  const api = boot(SEED + 29); startGame(api);
+  const bank = npc(api, 'bank'); bank.met = true; api.talk(bank);
+  const labels = api.get().ui.build().map(r => r.label);
+  const need = [/^WALLET: OFFLINE|^CONNECT WALLET/, /^NFT MARKET: SWAP \+ LIQUIDITY/, /FAUCET/, /^STAKE /, /^UNSTAKE /, /REDSTONE/, /SPHINX SCHOOL/, /^DOGEOS\.COM/, /DEVELOPER DOCS/];
+  const missing = need.filter(re => !labels.some(l => re.test(l)));
+  if (missing.length) fail('hub rows', `missing ${missing.join(', ')} in: ${labels.join(' | ')}`); else pass('hub rows', `${labels.length} rows incl. connect, market, faucet, stake, oracle, school, links`);
+  for (const [re, url] of [[/FAUCET/, api.LINKS.faucet], [/^DOGEOS\.COM/, api.LINKS.dogeos], [/DEVELOPER DOCS/, api.LINKS.docs]]) api.get().ui.build().find(r => re.test(r.label)).act();
+  const o = api.opened();
+  if (!o.includes('https://faucet.testnet.dogeos.com') || !o.includes('https://www.dogeos.com/') || !o.includes('https://docs.dogeos.com/en/getting-started/overview')) fail('hub links', o.join(' '));
+  else pass('hub links', 'faucet, dogeos.com and docs open');
+  api.get().ui.build().find(r => /SPHINX SCHOOL/.test(r.label)).act();
+  const school = api.get().ui;
+  if (school.title !== 'SPHINX SCHOOL: DEFI 101' || school.build().length !== api.SCHOOL.length + 1) throw new Error('school menu');
+  school.build().find(r => /LIQUIDITY POOL/.test(r.label)).act();
+  const pages = readDialog(api);
+  if (!pages.some(p => /impermanent loss/i.test(p)) || !api.get().ui || api.get().ui.title !== 'SPHINX SCHOOL: DEFI 101') fail('school', `pages: ${pages.join(' / ')}`);
+  else pass('school', `${api.SCHOOL.length} lessons; LP lesson read, back in the school menu`);
+});
+
+scenario('Elder = Keeper of the Heist: story, factions, join, heist.dogeos.com', () => {
+  const api = boot(SEED + 30); startGame(api);
+  const g = api.get(); g.state.stage = 1; // after the first quest talk the Elder opens his menu
+  api.talk(npc(api, 'quest'));
+  const ui = api.get().ui;
+  if (!ui || ui.title !== 'ELDER SHIBE: KEEPER OF THE HEIST') throw new Error('elder menu did not open: ' + (ui && ui.title));
+  ui.build().find(r => /GRAND HEIST/.test(r.label)).act();
+  const story = readDialog(api);
+  if (!story.some(p => /Fat Cats/.test(p)) || !story.some(p => /HEIST\.DOGEOS\.COM/.test(p))) fail('heist story', story.join(' / ')); else pass('heist story', `${story.length} pages, Fat Cats + heist.dogeos.com`);
+  api.get().ui.build().find(r => /^FACTIONS/.test(r.label)).act();
+  const rows = api.get().ui.build();
+  if (rows.filter(r => /^READ: /.test(r.label)).length !== 3) throw new Error('3 factions expected');
+  rows.find(r => /JOIN BARKITECTS/.test(r.label)).act();
+  if (g.P.faction !== 'bark') fail('join faction', `faction ${g.P.faction}`); else pass('join faction', 'joined the Barkitects');
+  api.get().ui.build().find(r => r.label === 'BACK').act();
+  api.get().ui.build().find(r => /HEIST\.DOGEOS\.COM/.test(r.label)).act();
+  if (!api.opened().includes('https://heist.dogeos.com/')) fail('heist link', api.opened().join(' ')); else pass('heist link', 'heist.dogeos.com opens');
+});
+
+await scenarioAsync('RedStone oracle on Chikyu: stale feed falls back to the last pushed value; Bitget provider works', async () => {
+  // RedStone's DOGE feed reverts while stale (seen live 2026-11-07); the adapter's getLastUpdateDetailsUnsafe still answers
+  const eth = mockEth({ known: true });
+  const tsMs = BigInt(Date.now() - 51 * 3600e3), w = n => BigInt(n).toString(16).padStart(64, '0');
+  eth.callResult = c => {
+    const to = c.to.toLowerCase(), sel = c.data.slice(2, 10);
+    if (to === '0x434f8d17c0301cfea143dba912972e24b827c968' && sel === 'feaf968c') throw { code: 3, message: 'execution reverted', data: '0x4f319ffe' };
+    if (to === '0xb08342d907d2df47b6f73e25f4fa033978b344b1' && sel === '729bfda4') return '0x' + w(tsMs) + w(tsMs / 1000n) + w(7164240);
+    return '0x';
+  };
+  const api = boot(SEED + 31, { bitkeep: eth, realTimers: true }); startGame(api); // Bitget-only provider (window.bitkeep.ethereum)
+  if (api.eth() !== eth) fail('bitget provider', 'eth() did not find window.bitkeep.ethereum'); else pass('bitget provider', 'window.bitkeep.ethereum detected');
+  openSphinx(api); selectRow(api, /^CONNECT WALLET/); api.press('e'); api.step(DT); await flush(); await idle(api);
+  for (let i = 0; i < 30 && !api.oracle.loaded; i++) await flush();
+  const o = api.oracle;
+  if (!o.loaded || Math.abs(o.price - 0.0716424) > 1e-9 || o.src !== 'LAST PUSH') fail('oracle fallback', JSON.stringify(o));
+  else pass('oracle fallback', `$${o.price} from ${o.src} (feed reverted as stale)`);
+  const row = api.get().ui.build().find(r => /REDSTONE DOGE\/USD/.test(r.label));
+  if (!row || !/REDSTONE DOGE\/USD \$0\.0716 \(STALE\)/.test(row.label)) fail('oracle row', row ? row.label : 'missing'); else pass('oracle row', `"${row.label}"`);
+  api.get().ui = null;
+  for (let f = 0; f < 60 * 120; f++) api.step(DT); // 2 minutes of market ticks
+  const p = api.get().mkt.p;
+  if (p < 0.0716424 / 5 || p > 0.0716424 * 5) fail('market anchor', `price ${p} drifted outside the oracle band`); else pass('market anchor', `game DOGE $${p.toFixed(4)} drifts around the RedStone price`);
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

@@ -195,3 +195,13 @@ Update this table in the same commit as each feature (user RULE #1).
 | P3 fix | IT-5 review fixes: mint moves crafted items on chain (no dupes), no refund on unknown tx outcome, account switch resets NFTs, `0x` = "deploy first", drained pools re-creatable, true row messages, `#`/`^` glyphs | `creditOk/takeOffChain/putBack`, `etx` `.sent/.reverted`, `resetChainData()`, `ecall` 0x guard, `marketMenu` shares filter, `FONT` | D-021 |
 | P3 audit | Contract audit fixes: no zero-share LP theft (1e18 shares/item first LP, MIN_FIRST_DOGE, ZeroShares, minShares, ZeroPayout), removeLiquidity slippage, ERC721Enumerable inventory, paginated listings | `DogeDEX.addLiquidity(ids,minShares)`, `removeLiquidity(key,amt,minItems,minDoge)`, `activeListings(offset,limit)`, `listedCount()`, `DogeItems is ERC721Enumerable`; game `SEL`, `addLp/removeLp` guards, `LIST_PAGE` | D-022 |
 | P3 tool | Deploy helper writes deployed addresses into `CONTRACTS` after checking contract code on the RPC | `contracts/apply-deployment.mjs` | D-023 |
+| P4 | **The Grand Heist**: partner NPCs (Cloverheart/Relotto, Noah/trynoah.ai, Bitget Wallet Card), Elder = Heist lore + factions + heist.dogeos.com, Sphinx = DogeOS DeFi hub (connect + RPC, LP/swap, faucet, stake, RedStone oracle, school, dogeos.com, docs), DogeDEX RedStone `dogeUsd()` | `SPR.clover/noah/bitget`, `staticSpr`, `PADS2`, `LINKS`, `openLink/linkRow`, `bankMenu` hub, `SCHOOL/schoolMenu`, `elderMenu/factionMenu/FACTIONS/HEIST_STORY`, `PARTNERS/partnerTalk/partnerMenu`, `REDSTONE/oracle/refreshOracle/oracleRow`; `DogeDEX.dogeUsd/poolTvlUsd`, `IPriceFeed`, `MockPriceFeed`; `tests/sprites.mjs` | D-024 |
+
+### C9. Partner / ecosystem NPC (Phase 4)
+```
+NPC: <name> for <app> (<url>). Reference image: docs/art/<file>.
+Steps: research the app from primary sources first (what it is, chains, relation to DogeOS) and correct the brief if a claim
+is wrong; draw an original 16x20 sprite (buildChar or staticSpr) from the image without third-party logos; add a PARTNERS entry
+(3-5 factual story lines <= 120 chars, links[] rows); place it on a PADS2 tile; add a sim scenario that reads the story and
+asserts window.open got the URL; render tests/sprites.mjs and look at the PNG before committing.
+```

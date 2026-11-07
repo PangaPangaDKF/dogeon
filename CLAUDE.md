@@ -17,7 +17,7 @@
 installed: `find-skills`, `caveman*`, `game-design-theory`, `pixel-art-sprites`, `balance-check`, `game-design-document`).
 
 ## 1. What this is
-DOGEON ("The Cat Invasion") is a 16-bit top-down action RPG MVP in the style of the Sega Genesis
+DOGEON ("The Grand Heist", Phase 4) is a 16-bit top-down action RPG set in the DogeOS Grand Heist lore, with a DeFi + educational purpose. MVP in the style of the Sega Genesis
 game *Crusader of Centy*. The hero is an original half-human Shiba Inu ("doge" look: orange fur,
 cream face, cream eyebrow dots, red headband). Enemies are half-human cats. NPCs are Shiba people
 with distinct outfits. Tone: tryhard (hard but fair), with doge-speak jokes ("such X, much Y, wow").
@@ -59,6 +59,7 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 | COMBAT | `hurtPlayer()` (armor, i-frames, knockback, death, bear-market dmg boost), `respawn()` (death penalty: 50% DOGE + all whiskers + all materials), `attack()` hammer swing, `bark()` "WOW" projectile, `damageEnemy()` (uses `ai` field for knockback), `killEnemy()` (drops material via `e.def.mat` + quest counters + boss victory), `shootBone()` |
 | ENEMY AI | `updEnemy(e,dt)`: knockback → states `wander / chase / wind / dash`. Uses `e.def.ai||e.type` for behaviour: archer/frog kite + shoot, brute/bull wind up then dash, boss shoots spreads and summons below 50% HP |
 | CHAIN | DogeOS Chikyū via EIP-1193, no library: `CHAIN{id 0x5fdaf3, rpc, explorer, faucet}`, `wallet{connected,addr,bal,chainOk,busy,msg}`, `eth()`, `connectWallet()`, `switchChain()` (switch → add on error), `refreshBal()`, `hookWallet()` (accountsChanged/chainChanged), `disconnectWallet()`, `walletRows()` (Sphinx row 0), `setWalletMsg()` (async result → open menu with `ui.chain`). **Items on chain (D-019):** `DEV_LOCAL` (`?chain=local` = anvil), `CONTRACTS{chainId:{items,dex}}`, `SEL` selectors, ABI `W32 A32 words arrAt unpack toWei fromWei`, `ecall etx`, `chainData`, `refreshChain()`, `chainAct()`, `ensureApproved()`, `mintNft useNft listNft delistNft buyListing addLp removeLp buyPool sellPool withdrawProceeds`, `swordLv() armorLv()`, `addCredit()`, `chainBlockRow()`, `marketMenu()` |
+| PHASE 4 (in UI) | `LINKS`, `openLink()` (menu action only, `noopener`, URL printed), `linkRow()`, `SCHOOL` + `schoolMenu()` + `lesson()`, `bankMenu()` = Sphinx DeFi hub, RedStone `REDSTONE`/`oracle`/`refreshOracle()`/`oracleRow()`, `FACTIONS`/`HEIST_STORY`/`elderMenu()`/`factionMenu()`, `PARTNERS`/`partnerTalk()`/`partnerMenu()`. Sprites `SPR.clover/noah/bitget`, `staticSpr()`; pads `PADS2` |
 | UI | `ui` is `null`, `{type:'dialog'}` or `{type:'menu'}`. `openDialog(npc, pages, onEnd)`, `openMenu(npc, title, buildFn)`, `talk()`, `shopMenu()` (forge: RECIPES burn materials), `bankMenu()` (Sphinx DEX: wallet, swap, buy, pool), `questTalk()` (Elder: market report + lore + quests), `invMenu()` (I/Tab: bag, eat, cook near fire, skills), `updateUI()` |
 | UPDATE | `update(dt)`: title → UI (pauses world) → death timer → rest → movement → attack/bark/talk → enemies → projectiles → items → respawn timer → camera |
 | RENDER | `drawTiles`, `drawChar` (shadow + sprite + tint), `drawFire`, `drawWorld` (y-sorted entities, "F" hint near water), `drawSlash`, `drawFishing` (line, float, catch bar), `drawHUD`, `box`, `drawUI`, `logo`, `drawTitle`, `render` |
@@ -91,7 +92,9 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
   (`swordLv/armorLv`, never read `P.sword/P.armor` directly for combat). Eating a food NFT burns it. The Sphinx NFT MARKET is empty until a
   player lists or creates a pool. NFTs are not lost on death (they live on chain); carried DOGE/materials still are.
   On-chain features are additive; the core loop never needs a wallet.
-- **NPCs:** Sphinx (bank) = DEX, Elder (quest) = market report + lore + quests, Mechanic (merchant) = forge. On pads N/W/E.
+- **NPCs:** Sphinx (bank) = DogeOS DeFi hub (connect + RPC, NFT market LP/swap, faucet, stake, RedStone oracle, school, dogeos.com, docs), Elder (quest) = Keeper of the Heist (quest, story, factions, heist.dogeos.com), Mechanic (merchant) = forge. On pads N/W/E. Partners on `PADS2`: Cloverheart (Relotto), Noah (trynoah.ai), Bitget Wallet Card.
+- **Links + partners (D-024):** links open only from a menu row via `openLink()`; partner stories must be factual and sourced; no "official partner" claims without a source.
+- **Oracle (D-024):** RedStone DOGE/USD is display/safety only (and anchors the simulated market when connected); swap prices always come from pool reserves.
 - **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+40 DOGE) → 2 slay 3 brutes (+80 DOGE,
   opens ruins gate) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 DOGE).
 - **Enemy populations:** field 22 (`FIELD_POP`), ruins lower hall 6 (`DUN_POP`), respawn one every 3 s (`SPAWN_EVERY`) out of view. Types: alley, archer, frog, ninja, bull, knight, brute.

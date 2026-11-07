@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {DogeItems} from "../src/DogeItems.sol";
 import {DogeDEX} from "../src/DogeDEX.sol";
+import {IPriceFeed} from "../src/IPriceFeed.sol";
+import {MockPriceFeed} from "../src/mocks/MockPriceFeed.sol";
 
 /// Deploys DogeItems (0.1 DOGE mint fee, fees to the deployer) and DogeDEX, then writes
 /// deployments/<chainId>.json so the game config can be updated.
@@ -17,7 +19,11 @@ contract Deploy is Script {
         vm.startBroadcast();
         address deployer = msg.sender;
         items = new DogeItems(fee, vm.envOr("TREASURY", deployer));
-        dex = new DogeDEX(items);
+        // RedStone DOGE/USD: env DOGE_USD_FEED wins; Chikyu defaults to RedStone's feed; local anvil gets a mock
+        address feed = vm.envOr("DOGE_USD_FEED", address(0));
+        if (feed == address(0) && block.chainid == 6281971) feed = 0x434F8D17c0301cfEa143dba912972E24B827C968;
+        if (feed == address(0) && block.chainid == 31337) feed = address(new MockPriceFeed(7164240));
+        dex = new DogeDEX(items, IPriceFeed(feed));
         vm.stopBroadcast();
 
         console.log("DogeItems", address(items));
@@ -26,6 +32,7 @@ contract Deploy is Script {
         vm.serializeUint(j, "chainId", block.chainid);
         vm.serializeUint(j, "mintFee", fee);
         vm.serializeAddress(j, "items", address(items));
+        vm.serializeAddress(j, "dogeUsdFeed", address(dex.dogeUsdFeed()));
         string memory out = vm.serializeAddress(j, "dex", address(dex));
         vm.writeJson(out, string.concat("deployments/", vm.toString(block.chainid), ".json"));
     }

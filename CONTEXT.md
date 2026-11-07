@@ -16,6 +16,22 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
+## 0a. RESUME HERE — Phase 4 "The Grand Heist" (built in D-024)
+
+**Brief:** `prompts/PHASE4_BRIEF.md` v1.1 (all acceptance boxes ticked). The user's vision: DOGEON = Grand Heist lore RPG with DeFi + education.
+- New NPCs (sprites from `docs/art/npc-*.png`, preview `docs/art/sprites-phase4-preview.png`): Cloverheart → Relotto (relotto.app, a recycling-rewards app,
+  NOT a lottery, not in the DogeOS ecosystem list), Noah → trynoah.ai (AI dApp builder, NOT a "Solana fork"; listed on dogeos.com/ecosystem),
+  Bitget Wallet Card → web3.bitget.com/pt-BR/wallet-download + /card. Positions `PADS2`: beside the fire (37,38)/(43,38), by the Sphinx (43,31).
+- Elder = Keeper of the Heist (story, factions + weaknesses, JOIN → `P.faction`, heist.dogeos.com). Sphinx = DogeOS DeFi hub + SPHINX SCHOOL (8 lessons).
+- RedStone on DogeOS testnet: DOGE feed 0x434F8D17c0301cfEa143dba912972E24B827C968, adapter 0xB08342D907D2df47B6F73e25F4fa033978B344B1 (8 dec, 24 h heartbeat).
+  On 2026-11-07 the feed was STALE (latestRoundData reverts), so the game falls back to the adapter's `getLastUpdateDetailsUnsafe("DOGE")` and marks it STALE.
+  DogeDEX `dogeUsd()` (0x435a3613) never reverts. Local anvil now deploys MockPriceFeed: items 0x5FbDB2315678afecb367f032d93F642f64180aa3,
+  feed 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512, **dex 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0** (written by `node contracts/apply-deployment.mjs 31337`).
+- Still a USER step: deploy to Chikyū (`contracts/README.md`), then `node contracts/apply-deployment.mjs`.
+- Tests: 88 sim PASS (incl. anvil e2e + oracle) + 28 forge. Versions: SESSION_PROMPT v2.1, skill v2.1, DECISIONS to D-024. Art check: `node tests/sprites.mjs index.html out.png`.
+
+---
+
 ## 0. RESUME HERE — Phase 3 "Doge Chain" IN PROGRESS
 
 **Brief:** `prompts/PHASE3_BRIEF.md` (goals G1–G9, 10 resolved ambiguities, 10 acceptance boxes). Read it first.
