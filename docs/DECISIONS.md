@@ -35,6 +35,19 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-012 · 2026-11-07 · IT-6: Sphinx DEX, Elder lore, Mechanic forge + DOGE everywhere
+- What:
+  - **Sphinx DEX** (replaces old bank): WALLET panel (simulated, shows fake address + DogeOS Chikyū testnet), SWAP whiskers→DOGE, BUY items (Bone Charm/Moon Biscuit) with DOGE, ADD TO POOL / REMOVE FROM POOL with 1% yield. Pooled DOGE safe on death.
+  - **Elder**: now opens with market price report + rotating doge lore (8 stories) before quest dialog. Lore rotates every 20 s.
+  - **Mechanic forge** (replaces old shop): 7 RECIPES that burn materials (ORB/SCRAP/HORN/STEEL) to craft hammer upgrades, armor, charms, biscuits. Shows inventory count. Missing-materials message.
+  - NPC intro dialogs rewritten to match new roles.
+  - Death dialog mentions lost materials + pool advice.
+  - Title: "POWERED BY DOGE" added to subtitle.
+- Why: User's G2 (web3 UI simulated), G3 (Elder market/lore), G4 (crafter). All UI only, no network calls.
+- Tool: Claude Code (Opus 4.6). Test fix: bank menu now has wallet at index 0, so the sim navigates to index 1 for the swap test.
+- Alternatives rejected: Real AMM math for the pool (cut by scope rule). Price chart visualization (not requested in MVP).
+- Verify: `0 failed, 0 warnings (seed 4242)`.
+
 ### D-011 · 2026-11-07 · IT-5: frog, ninja, bull, knight enemies + material drops
 - What:
   - 4 new enemy sprites: frog mage (teal, lily hat, purple orb staff), ninja shiba (black gi, red scarf, daggers), green candle bull (dark hide, green→orange horns, spiked collar), blue-tunic knight (red headband, sword, crown emblem).

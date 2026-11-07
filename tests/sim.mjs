@@ -184,6 +184,7 @@ scenario('economy: bank + shop flows', () => {
   g.P.whisk = 10;
   const bank = g.NPCS.find(n => n.id === 'bank');
   bank.met = true; api.talk(bank);
+  api.press('s'); api.step(DT); // move to SWAP option (index 1)
   api.press('e'); api.step(DT); // exchange
   if (api.get().P.doge !== 30 || api.get().P.whisk !== 0) fail('bank exchange', `expected 30 DOGE/0 whiskers, got ${api.get().P.doge}/${api.get().P.whisk}`);
   else pass('bank exchange', '10 whiskers -> 30 DOGE');

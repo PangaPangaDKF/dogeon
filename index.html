@@ -397,7 +397,7 @@ function respawn(){
   projs=[];
   for(const e of enemies){if(e.boss){e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}}
   enemies=enemies.filter(e=>e.zone!=='boss'||e.boss);
-  openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE and ${lw} whiskers. Store DOGE in the vault to keep it safe!`]);
+  openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE, ${lw} whiskers and all materials. Pool DOGE at the Sphinx to keep it safe!`]);
 }
 function attack(){
   P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
@@ -463,33 +463,61 @@ function openMenu(npc,title,build){ui={type:'menu',npc,title,build,sel:0,msg:''}
 function talk(n){
   n.dir=dirOf(P.x-n.x,P.y-n.y);
   if(n.id==='merchant'){
-    if(!n.met){n.met=true;openDialog(n,['Such customer. Very welcome. Wow.','I am Barksley. I sell steel, armor and charms. No potions. No snacks.','Out here you heal ONLY by resting. Hold R inside the camp fence.'],()=>shopMenu(n));}
+    if(!n.met){n.met=true;openDialog(n,['Wrenchpaw here. I forge gear from monster parts.','Bring me ORB, SCRAP, HORN or STEEL from fallen foes.','I burn the materials and craft upgrades. No refunds. Very forge.'],()=>shopMenu(n));}
     else shopMenu(n);
   }else if(n.id==='bank'){
-    if(!n.met){n.met=true;openDialog(n,['Greetings. I am Sir Hodl, keeper of the Vault.','Bring me cat whiskers. I exchange each one for 3 DOGE.','If the cats defeat you, you drop half the DOGE you carry. DOGE in my vault is safe. Always hodl.'],()=>bankMenu(n));}
+    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX. Powered by DogeOS.','Swap your whiskers for DOGE, or trade DOGE for upgrades.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','This is a SIMULATED DEX. No real transactions. Much wow.'],()=>bankMenu(n));}
     else bankMenu(n);
   }else questTalk(n);
 }
+const RECIPES=[
+  {name:'HAMMER LV2',need:{steel:2,scrap:1},req:()=>P.sword<2,act:()=>{P.sword=2;return `HAMMER LV2! DMG ${SWORD_DMG[2]}. VERY FORGE.`;}},
+  {name:'HAMMER LV3',need:{steel:3,horn:2},req:()=>P.sword>=2&&P.sword<3,act:()=>{P.sword=3;return `HAMMER LV3! DMG ${SWORD_DMG[3]}. MUCH POWER.`;}},
+  {name:'HAMMER LV4',need:{steel:5,horn:3,orb:2},req:()=>P.sword>=3&&P.sword<4,act:()=>{P.sword=4;return `HAMMER LV4! DMG ${SWORD_DMG[4]}. WOW.`;}},
+  {name:'DOGE ARMOR LV1',need:{steel:2,horn:1},req:()=>P.armor<1,act:()=>{P.armor=1;return `ARMOR LV1! -${ARMOR_RED[1]*100}% DMG.`;}},
+  {name:'DOGE ARMOR LV2',need:{steel:4,scrap:2,horn:2},req:()=>P.armor>=1&&P.armor<2,act:()=>{P.armor=2;return `ARMOR LV2! -${ARMOR_RED[2]*100}% DMG. SUCH PROTECT.`;}},
+  {name:'BONE CHARM (+15 HP)',need:{orb:2,scrap:1},req:()=>P.hpUps<3,act:()=>{P.hpUps++;P.maxHp+=15;return 'MAX HP UP! REST TO FILL IT.';}},
+  {name:'MOON BISCUIT (+10 MP)',need:{orb:1,horn:1},req:()=>P.mpUps<2,act:()=>{P.mpUps++;P.maxMp+=10;return 'MAX MP UP! REST TO FILL IT.';}}
+];
 function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
-  if(P.sword<4)o.push({label:`SHARPER SWORD LV${P.sword+1} (DMG ${SWORD_DMG[P.sword+1]})`,cost:SWORD_COST[P.sword+1],act:()=>{P.sword++;return 'MUCH SHARP. VERY STAB.';}});
-  if(P.armor<2)o.push({label:`DOGE ARMOR LV${P.armor+1} (-${ARMOR_RED[P.armor+1]*100}% DMG)`,cost:ARMOR_COST[P.armor+1],act:()=>{P.armor++;return 'SUCH PROTECT. WOW.';}});
-  if(P.hpUps<3)o.push({label:'BONE CHARM (+15 MAX HP)',cost:50+30*P.hpUps,act:()=>{P.hpUps++;P.maxHp+=15;return 'MAX HP UP! REST TO FILL IT.';}});
-  if(P.mpUps<2)o.push({label:'MOON BISCUIT (+10 MAX MP)',cost:40+25*P.mpUps,act:()=>{P.mpUps++;P.maxMp+=10;return 'MAX MP UP! REST TO FILL IT.';}});
+  for(const r of RECIPES){if(!r.req())continue;
+    const parts=Object.entries(r.need).map(([k,v])=>`${v} ${k.toUpperCase()}`).join('+');
+    const has=Object.entries(r.need).every(([k,v])=>P[k]>=v);
+    o.push({label:`${r.name} [${parts}]`,act:has?()=>{for(const [k,v] of Object.entries(r.need))P[k]-=v;return r.act();}:()=>'NOT ENOUGH MATERIALS. HUNT MORE.'});}
+  o.push({label:`INVENTORY: ORB ${P.orb} SCRAP ${P.scrap} HORN ${P.horn} STEEL ${P.steel}`,act:()=>'THOSE ARE YOUR MATERIALS.'});
   o.push({label:'LEAVE',act:null});return o;});}
-function bankMenu(n){openMenu(n,'THE SPHINX DEX',()=>[
-  {label:`EXCHANGE ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'YOU HAVE NO WHISKERS.';P.doge+=P.whisk*3;const m=`+${P.whisk*3} DOGE. VERY TRADE.`;P.whisk=0;return m;}},
-  {label:`DEPOSIT ALL DOGE (${P.doge})`,act:()=>{if(!P.doge)return 'NOTHING TO DEPOSIT.';P.bank+=P.doge;P.doge=0;return 'DEPOSITED. SUCH SAFE.';}},
-  {label:`WITHDRAW ALL DOGE (${P.bank})`,act:()=>{if(!P.bank)return 'YOUR VAULT IS EMPTY.';P.doge+=P.bank;P.bank=0;return 'WITHDRAWN. SPEND WISELY.';}},
-  {label:'LEAVE',act:null}]);}
+function bankMenu(n){openMenu(n,'THE SPHINX DEX',()=>{
+  const yld=Math.floor(P.bank*0.01);
+  return[
+  {label:'--- WALLET (SIMULATED DOGEOS) ---',act:()=>`ADDR: DOGE...${Math.floor(Math.random()*9999).toString(16)} | BAL: ${P.doge} DOGE | POOL: ${P.bank} | NET: CHIKYU TESTNET`},
+  {label:`SWAP ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'NO WHISKERS TO SWAP.';P.doge+=P.whisk*3;const m=`SWAPPED ${P.whisk} WHISKERS FOR ${P.whisk*3} DOGE.`;P.whisk=0;return m;}},
+  {label:`BUY BONE CHARM (50 DOGE)`,act:P.hpUps>=3?()=>'MAX CHARMS ALREADY.':()=>{if(P.doge<50)return 'NOT ENOUGH DOGE.';P.doge-=50;P.hpUps++;P.maxHp+=15;return 'BONE CHARM BOUGHT! +15 MAX HP.';}},
+  {label:`BUY MOON BISCUIT (40 DOGE)`,act:P.mpUps>=2?()=>'MAX BISCUITS ALREADY.':()=>{if(P.doge<40)return 'NOT ENOUGH DOGE.';P.doge-=40;P.mpUps++;P.maxMp+=10;return 'MOON BISCUIT BOUGHT! +10 MAX MP.';}},
+  {label:`ADD TO POOL (${P.doge} DOGE AVAIL)`,act:()=>{if(!P.doge)return 'NO DOGE TO ADD.';P.bank+=P.doge;P.doge=0;return 'POOLED. SAFE ON DEATH. EARNS YIELD.';}},
+  {label:`REMOVE FROM POOL (${P.bank}+${yld} YIELD)`,act:()=>{if(!P.bank)return 'POOL IS EMPTY.';const t=P.bank+yld;P.doge+=t;P.bank=0;return `WITHDREW ${t} DOGE (${yld} YIELD). TO THE MOON.`;}},
+  {label:'LEAVE',act:null}];})}
+const DOGE_LORE=[
+  'In the old days, one DOGE bought a whole tent. Now it buys a whisker.',
+  'The first doge was mined on a cold winter night. Very genesis. Much wow.',
+  'They say the Cat Lord hoards a mountain of DOGE beneath the ruins.',
+  'A wise shiba once said: buy the dip. Then the dip dipped.',
+  'DOGE was meant to be funny. Then it became serious. Then funny again.',
+  'The blockchain never forgets. But the Elder sometimes does.',
+  'Every transaction tells a story. Most of them are "I sold too early."',
+  'To the moon, they said. We are still on the launchpad.'
+];
 function questTalk(n){
   const s=state.stage;
-  if(s===0)openDialog(n,['...Young pup. The cats have risen. They took every field around our camp.','Outside the fence they hunt you. Inside, they cannot touch you. That is the old law.','Prove yourself. Slay 8 cats and return to me.'],()=>{state.stage=1;P.kills=0;toast('NEW QUEST: SLAY 8 CATS');});
-  else if(s===1&&P.kills<8)openDialog(n,[`${P.kills}/8 cats. Keep fighting. When hurt, rest by the fire.`]);
-  else if(s===1)openDialog(n,['Very fight. Much brave. Take these 40 DOGE.','Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{P.doge+=40;state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
-  else if(s===2&&P.bruteKills<3)openDialog(n,[`Brutes slain: ${P.bruteKills}/3. They lurk far from camp and in the ruins.`]);
-  else if(s===2)openDialog(n,['You crushed the brutes! 80 DOGE is yours.','I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD.','Sharpen your sword with Barksley first. The Lord throws storms of fishbones.'],()=>{P.doge+=80;state.stage=3;state.gateOpen=true;toast('THE RUINS GATE IS OPEN!');sfx(80,0.6,'sawtooth',0.06,40);});
-  else if(s===3)openDialog(n,['The Cat Lord waits beyond the iron gate, north of camp. Do not go in hurt.']);
-  else openDialog(n,['You did it. Such hero. Much legend. The camp is safe... for now.','Many cats still roam out there. Hunt them if you wish.']);
+  const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;
+  const mktLine=`DOGE IS $${mkt.p.toFixed(3)} (${up?'+':''}${pc}% ${pc>2?'BULL':pc<-2?'BEAR':'FLAT'}). ${up?'GOOD TIMES FOR FIGHTERS.':'BE CAREFUL. ENEMIES GROW STRONGER.'}`;
+  const lore=DOGE_LORE[Math.floor(time/20)%DOGE_LORE.length];
+  if(s===0)openDialog(n,[mktLine,lore,'...Young pup. The cats have risen. They took every field around our camp.','Outside the fence they hunt you. Inside, they cannot touch you. That is the old law.','Prove yourself. Slay 8 cats and return to me.'],()=>{state.stage=1;P.kills=0;toast('NEW QUEST: SLAY 8 CATS');});
+  else if(s===1&&P.kills<8)openDialog(n,[mktLine,lore,`${P.kills}/8 cats. Keep fighting. When hurt, rest by the fire.`]);
+  else if(s===1)openDialog(n,[mktLine,'Very fight. Much brave. Take these 40 DOGE.','Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{P.doge+=40;state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
+  else if(s===2&&P.bruteKills<3)openDialog(n,[mktLine,lore,`Brutes slain: ${P.bruteKills}/3. They lurk far from camp and in the ruins.`]);
+  else if(s===2)openDialog(n,[mktLine,'You crushed the brutes! 80 DOGE is yours.','I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD.','Forge your hammer at Wrenchpaw first. The Lord throws storms of fishbones.'],()=>{P.doge+=80;state.stage=3;state.gateOpen=true;toast('THE RUINS GATE IS OPEN!');sfx(80,0.6,'sawtooth',0.06,40);});
+  else if(s===3)openDialog(n,[mktLine,lore,'The Cat Lord waits beyond the iron gate, north of camp. Do not go in hurt.']);
+  else openDialog(n,[mktLine,lore,'You did it. Such hero. Much legend. The camp is safe... for now.','Many cats still roam out there. Hunt them if you wish.']);
 }
 function updateUI(dt){
   if(ui.type==='dialog'){
@@ -677,7 +705,7 @@ function drawTitle(){
   const s=5,tw=6*6*s-s,x=Math.round((W-tw)/2),y=22;
   for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2],[-2,-2],[2,2],[-2,2],[2,-2]])logo(x+dx,y+dy,s,'#1a0a00','#1a0a00');
   logo(x,y+3,s,'#8a4008','#8a4008');logo(x,y,s,'#f8c838','#fff4b0');
-  textC('- THE CAT INVASION -',W/2,y+44,'#ffe8c0',1);
+  textC('- THE CAT INVASION - POWERED BY DOGE',W/2,y+44,'#ffe8c0',1);
   const b=Math.round(Math.sin(time*4));
   ctx.drawImage(SPR.hero.down[0],W/2-24,96+b,48,60);
   ctx.drawImage(SPR.ninja.left[Math.floor(time*5)%2],W/2+44,108,32,40);
