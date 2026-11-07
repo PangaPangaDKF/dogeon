@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 1.5 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 1.6 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -79,7 +79,12 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 19. **Seeded generators are fragile** — append new map features AFTER every RNG pass, then diff the map against the last
     approved commit (D-017: two ponds moved 1221 forest tiles).
 
+20. **Fuzz the money math** — a constant-product pool needs a fuzz invariant (k never drops, contract solvent); the first
+    failure was the test running out of funds, not the contract (D-018) — read the trace before "fixing" code.
+21. **Probe the chain before choosing a compiler target** — `eth_call` with tiny bytecode tells you which opcodes exist.
+
 ## Changelog
+- 1.6 (2026-11-07) — Practices 20-21 from IT-4 contracts (D-018).
 - 1.5 (2026-11-07) — Practice 19 seeded generators (D-017).
 - 1.4 (2026-11-07) — RULE #1 step 6 (MASTER_PROMPT ledger) + "skip what needs the user's wallet"; practices 17-18 (D-016).
 - 1.3 (2026-11-07) — Practices 14-16 from IT-2 fishing (renames in tests, non-vacuous tests, review-then-refute before commit).

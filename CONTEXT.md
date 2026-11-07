@@ -26,8 +26,8 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 | IT-1 | Rest cap 60% + inventory bag (I/Tab) + skill-by-use | ✅ D-014 `a9fa508` |
 | IT-2 | Fishing: `T.WATER` ponds in field, F to fish (3–5 s bar, hit/move cancels), RAW FISH → bag, cook at fire; field pop 18→22, spawn 4s→3s | ✅ D-015 `02adc15` (review fixes: D-017) |
 | IT-3 | Wallet: plain EIP-1193 `window.ethereum` (NO ethers.js, D-016), `wallet_switchEthereumChain`→`wallet_addEthereumChain` Chikyū, connect/balance/disconnect in Sphinx row 0, offline fallback | ✅ D-016 |
-| IT-4 ⏭ NEXT | `contracts/` Foundry (forge 1.5.1 installed at ~/.foundry/bin; build+test locally, deploy = user step): `DogeItems.sol` (ERC-721, `mint(to,itemType)` payable 0.1 DOGE fee) + `DogeDEX.sol` (`list/buy/delist` fixed price) | pending |
-| IT-5 | Wire: Mechanic forge → `mint()`; Sphinx → list/buy NFTs; no store until someone lists ("create LP"); wallet panel shows NFTs | pending |
+| IT-4 | `contracts/` Foundry: `DogeItems.sol` (ERC-721, `mint(to,type,level)` exact 0.1 DOGE fee, on-chain SVG, `inventoryOf`) + `DogeDEX.sol` (listings `list/buy/delist` + DOGE/item LP pools `addLiquidity/removeLiquidity/buyFromPool/sellToPool`, `withdraw`). 20 forge tests. Deployed on local anvil only (Chikyu deploy = user step, `contracts/README.md`) | ✅ D-018 |
+| IT-5 ⏭ NEXT | Wire game ↔ contracts (precomputed selectors, no ethers): `CONTRACTS` config per chain (31337 anvil + 6281971 empty until deployed); Mechanic forge → `mint()` after craft; Sphinx → listings + pools + withdraw; bag shows NFTs (`inventoryOf`); e2e test against anvil | pending |
 | IT-6 | Tests (rest cap, bag, skills, fishing, wallet-off fallback) + docs + balance | pending |
 
 **User's asks for Phase 3 (verbatim intent):** rest heals only a little · inventory · Tibia-style "get better by using it" (no level-up) ·
@@ -233,6 +233,7 @@ C:\Users\dulbi\dogeon\
 ├── index.html              ← THE GAME (~770 lines, everything in one file)
 ├── CLAUDE.md               ← project memory for Claude Code (rules, code map, invariants)
 ├── CONTEXT.md              ← THIS FILE (session context for continuation)
+├── contracts/            ← Foundry: src/DogeItems.sol, src/DogeDEX.sol, test/, script/Deploy.s.sol, README (lib/ gitignored)
 ├── docs/
 │   └── DECISIONS.md        ← decision log D-001…D-013 + open issues
 ├── prompts/
@@ -269,9 +270,11 @@ C:\Users\dulbi\dogeon\
 
 ## 9. What's next
 
-1. **IT-4 contracts** (D-017 review fixes are done) → IT-5 → IT-6, RULE #1 after each.
+1. **IT-5 wiring** → IT-6, RULE #1 after each. Anvil e2e: `anvil` + `forge script script/Deploy.s.sol --rpc-url local --broadcast --unlocked --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` → items `0x5FbDB2315678afecb367f032d93F642f64180aa3`, dex `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512` (deterministic on a fresh anvil).
 2. Later / not requested yet: open issues I-3…I-9, polish.
 
-Versions now: SESSION_PROMPT v1.4 · dogeon-game skill v1.4 · PHASE3_BRIEF v1.0 · DECISIONS up to D-017 · MASTER_PROMPT §F/§G. SESSION_PROMPT v1.5 · skill v1.5. Tests: 41 PASS.
+Versions now: SESSION_PROMPT v1.6 · dogeon-game skill v1.6 · PHASE3_BRIEF v1.0 · DECISIONS up to D-018 · MASTER_PROMPT §F/§G ledger. Tests: 41 sim PASS + 20 forge.
 Run for wallets: `node tests/serve.mjs` → http://localhost:8080 (MetaMask does not inject into file://).
+**Auto-resume:** a session cron job (CronCreate, hourly at :17, prompt "DOGEON auto-resume…") continues Phase 3 when the session is idle; it deletes itself when Phase 3 is done. Session-only: if Claude was restarted, re-create it (see dogeon-workflow-rules memory).
+Function selectors (cast sig): mint 0x352926a8 · burn 0x42966c68 · inventoryOf 0x7eaebb15 · mintFee 0x13966db5 · setApprovalForAll 0xa22cb465 · isApprovedForAll 0xe985e9c5 · list 0x50fd7367 · delist 0x964bc33f · buy 0xd96a094a · activeListings 0xd3a17f29 · addLiquidity 0x4de59aa3 · removeLiquidity 0x9d7de6b3 · buyFromPool 0x66c1dbf3 · sellToPool 0x0de77491 · withdraw 0x3ccfd60b · proceeds 0x35adde54 · allPools 0xc5c63e65 · poolInfo 0x81ea4ee7 · buyQuote 0x168585e5 · sellQuote 0xd7a2e4c9
 Note: `bash tests/check.sh` can exceed 30 s on Windows — run with a 120 s timeout, or `node tests/sim.mjs` directly.

@@ -10,9 +10,9 @@
    update this file / the skill if rules or architecture changed, then **commit** (Conventional Commits).
 4. If the prompt in `prompts/SESSION_PROMPT.md` or the skill could have prevented a mistake this session,
    improve it in the same commit. Note it in `docs/DECISIONS.md` under "Process".
-5. Test with the `terminal-testing` skill: `bash tests/check.sh` (Git Bash or Ubuntu/WSL) must pass.
+5. Test with the `terminal-testing` skill: `bash tests/check.sh` (Git Bash or Ubuntu/WSL) must pass (stage 4 = `forge test` on `contracts/`).
 
-**Project files:** `docs/DECISIONS.md` (history + open issues) · `prompts/SESSION_PROMPT.md` (session opener) ·
+**Project files:** `docs/DECISIONS.md` (history + open issues) · `contracts/` (Foundry: DogeItems ERC-721 + DogeDEX, see its README) · `prompts/SESSION_PROMPT.md` (session opener) ·
 `tests/check.sh`, `tests/sim.mjs` · skills in `.claude/skills/` (own: `dogeon-game`, `terminal-testing`;
 installed: `find-skills`, `caveman*`, `game-design-theory`, `pixel-art-sprites`, `balance-check`, `game-design-document`).
 

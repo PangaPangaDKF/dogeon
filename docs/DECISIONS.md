@@ -35,6 +35,40 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-018 · 2026-11-07 · Phase 3 IT-4: DogeItems (ERC-721 crafter mint) + DogeDEX (listings + DOGE/item LP pools)
+- Feature: on-chain economy. The Mechanic mints every crafted item as an NFT for an exact 0.1 DOGE fee. The Sphinx DEX lets
+  players sell NFTs at a fixed price, or create a DOGE/item liquidity pool that anyone can then swap against. No store and no
+  swap exist until a player creates one.
+- Reference: user request ("items are nfts that you mint, sell and create lp with doge coin, only playing you can get stuff and
+  there is not a store or a swap if you dont create it before and the crafter mints the gear or the food with a contract and a fee");
+  `prompts/PHASE3_BRIEF.md` G6–G8; user-supplied avaxskills.com `security` + `nft-basics` checklists (CEI, nonReentrant, events,
+  ids from 1, no silent overpayment).
+- Files (new): `contracts/foundry.toml`, `contracts/src/DogeItems.sol`, `contracts/src/DogeDEX.sol`, `contracts/test/DogeItems.t.sol`,
+  `contracts/test/DogeDEX.t.sol`, `contracts/script/Deploy.s.sol`, `contracts/README.md`, `contracts/.gitignore`,
+  `contracts/deployments/.gitkeep`. Changed: `tests/check.sh` (stage 4 `forge test`), docs.
+- Code:
+  - `DogeItems` (OZ v5.1 `ERC721`, `Ownable`, `ReentrancyGuard`): types 1 HAMMER (lv1-4), 2 ARMOR (lv1-2), 3 RAW FISH,
+    4 COOKED FISH, 5 BONE CHARM, 6 MOON BISCUIT; `mint(to,type,level)` payable, `msg.value == mintFee` exactly (`WrongFee`),
+    `maxLevel()`, ids from 1; `burn()` (owner/approved via `_update` auth); `withdrawFees()` (anyone, funds only to `treasury`);
+    `setMintFee/setTreasury` onlyOwner (no power over user NFTs); `inventoryOf(owner)` packed `id<<16|type<<8|level`;
+    `tokenURI` = base64 JSON + base64 SVG card, fully on-chain.
+  - `DogeDEX` (no admin, `ReentrancyGuard`, CEI, pull payments `proceeds` + `withdraw()`, plain `transferFrom` = no callbacks):
+    listings `list/delist/buy` (exact price) + `activeListings()` (packed, prices, sellers; O(1) swap-remove index);
+    pools keyed `type<<8|level`: `addLiquidity(ids[])` (first LP sets price, 1 share/wei; later LPs pay `ceil(n·x/y)`, excess →
+    proceeds), `removeLiquidity(key,shares)` pro-rata, `buyFromPool(key)` cost `ceil(x/(y-1))`+2%, last item never sold,
+    `sellToPool(id,minOut)` `floor(x/(y+1))`−2% with slippage guard; views `poolInfo`, `allPools`, `buyQuote`, `sellQuote`.
+  - Compiler: solc 0.8.24, `evm_version = cancun` — probed on Chikyu with `eth_call` (PUSH0, MCOPY, TLOAD all execute).
+  - `Deploy.s.sol`: no key in code; local `--unlocked`, Chikyu `--account dogeon` (encrypted Foundry keystore); writes
+    `deployments/<chainId>.json`. Selectors precomputed with `cast sig` for the IT-5 game wiring.
+- Why: real ownership and player-made markets on DogeOS; LP makes "create LP with DOGE" literal.
+- Alternatives rejected: own ERC-721 (security skill: prefer audited libs); ERC721Enumerable (gas on every transfer — a view scan
+  is fine on testnet); a game-server signature to prove crafting (needs a backend + key custody; documented limitation: on-chain
+  anyone who pays the fee can mint, the game only offers mint after a craft); royalties / protocol fee (MVP); upgradeable proxies.
+- Skipped (needs the user): deploying to Chikyu with a funded wallet → README steps. Deployed and smoke-tested on local anvil
+  (`mint` → `inventoryOf` = 65795 = id 1, HAMMER, lv 3).
+- Verify: `forge test` 20 passed (fuzz 512 runs: k never drops, DEX solvent; reentrancy on withdraw blocked); `ALL CHECKS PASSED`.
+- Commit: this commit.
+
 ### D-017 · 2026-11-07 · IT-2 review fixes: pond RNG reshuffle, facing-only cast, F while moving, ninja turf
 - Feature: fixes 6 findings that an adversarial review workflow confirmed (2 reviewers + 1 refuter, ultracode) on the IT-2 diff.
 - Reference: review workflow `wf_53729af6-6df` (6 REAL / 2 refuted); `prompts/PHASE3_BRIEF.md` ambiguities 3 + 10.

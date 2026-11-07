@@ -29,6 +29,14 @@ rm -rf "$tmp"
 echo "== 3. headless simulation =="
 if node tests/sim.mjs "$@"; then ok "simulation"; else bad "simulation (see FAIL lines above)"; fi
 
+echo "== 4. contracts (forge test) =="
+FORGE="$(command -v forge || echo "$HOME/.foundry/bin/forge")"
+if [ -x "$FORGE" ] || [ -x "$FORGE.exe" ]; then
+  if [ -d contracts/lib/openzeppelin-contracts ]; then
+    if (cd contracts && "$FORGE" test >/tmp/forge.txt 2>&1); then ok "forge test ($(grep -o '[0-9]* tests passed' /tmp/forge.txt | tail -1))"; else bad "forge test"; tail -20 /tmp/forge.txt; fi
+  else note "contracts/lib missing: see contracts/README.md setup"; fi
+else note "forge not installed: contracts not tested"; fi
+
 echo
 if [ "$fails" -eq 0 ]; then printf '\033[32mALL CHECKS PASSED\033[0m\n'; else printf '\033[31m%s CHECK(S) FAILED\033[0m\n' "$fails"; fi
 exit "$fails"
