@@ -55,7 +55,7 @@ globalThis.__api = {
   press(k) { pressed[k] = true; },
   hold(k, v) { keys[k] = v; },
   releaseAll() { for (const k in keys) keys[k] = false; },
-  inCampT, zoneOf, playerInCamp, talk, shopMenu, bankMenu, newGame,
+  inCampT, zoneOf, playerInCamp, talk, shopMenu, bankMenu, newGame, RECIPES, ETYPES,
   setScene(s) { scene = s; },
   ARMOR_RED, SWORD_DMG, CAMP, CX, CY,
 };`;
@@ -274,6 +274,69 @@ scenario('market: bounded random price, sentiment drives multipliers', () => {
   const bearHit = 999 - P.hp;
   if (bearHit !== 15) fail('bear damage', `10 dmg in full bear market should hit 15, hit ${bearHit}`);
   else pass('bear damage', '10 -> 15 at sentiment -1');
+});
+
+scenario('forge: craft with materials, reject on insufficient', () => {
+  const api = boot(SEED + 9);
+  startGame(api);
+  const g = api.get();
+  g.P.steel = 2; g.P.scrap = 1; g.P.sword = 1; // enough for HAMMER LV2
+  const mech = g.NPCS.find(n => n.id === 'merchant');
+  mech.met = true; api.talk(mech);
+  api.press('e'); api.step(DT); // craft HAMMER LV2
+  if (g.P.sword !== 2) fail('forge craft', `expected sword lv2, got ${g.P.sword}`);
+  else pass('forge craft', 'HAMMER LV2 crafted from 2 STEEL + 1 SCRAP');
+  if (g.P.steel !== 0 || g.P.scrap !== 0) fail('forge burn', `materials not burned: steel=${g.P.steel} scrap=${g.P.scrap}`);
+  else pass('forge burn', 'materials consumed');
+  api.press('escape'); api.step(DT);
+});
+
+scenario('pool: deposit safe on death, withdraw with yield', () => {
+  const api = boot(SEED + 10);
+  startGame(api);
+  const g = api.get();
+  g.P.doge = 100;
+  const bank = g.NPCS.find(n => n.id === 'bank');
+  bank.met = true; api.talk(bank);
+  // navigate to ADD TO POOL (index 4)
+  for (let i = 0; i < 4; i++) { api.press('s'); api.step(DT); }
+  api.press('e'); api.step(DT);
+  if (g.P.bank !== 100 || g.P.doge !== 0) fail('pool deposit', `expected bank=100 doge=0, got bank=${g.P.bank} doge=${g.P.doge}`);
+  else pass('pool deposit', '100 DOGE pooled');
+  // die and respawn — pool should be safe
+  api.press('escape'); api.step(DT);
+  g.P.x = 40 * 16 + 8; g.P.y = 50 * 16 + 8; g.P.inv = 0; g.P.hp = 1;
+  api.hurtPlayer(50, { x: g.P.x + 5, y: g.P.y });
+  for (let f = 0; f < 60 * 3; f++) api.step(DT);
+  if (api.get().P.bank !== 100) fail('pool safe on death', `expected bank=100 after death, got ${api.get().P.bank}`);
+  else pass('pool safe on death', 'pooled DOGE survives death');
+});
+
+scenario('new enemies spawn and drop materials', () => {
+  const api = boot(SEED + 11);
+  startGame(api);
+  const g = api.get();
+  const types = new Set(g.enemies.map(e => e.type));
+  const newTypes = ['frog', 'ninja', 'bull', 'knight'].filter(t => types.has(t));
+  if (newTypes.length < 2) fail('new enemy spawn', `only ${newTypes.length} new types spawned: ${[...types].join(',')}`);
+  else pass('new enemy spawn', `${newTypes.length} new types present: ${newTypes.join(',')}`);
+  // check ETYPEs have mat fields
+  const matTypes = Object.entries(api.ETYPES).filter(([,d]) => d.mat && d.mat !== 'whisk');
+  if (matTypes.length < 4) fail('material types', `expected 4+ material enemy types, got ${matTypes.length}`);
+  else pass('material types', `${matTypes.length} types drop non-whisker materials`);
+});
+
+scenario('death loses all materials', () => {
+  const api = boot(SEED + 12);
+  startGame(api);
+  const g = api.get();
+  g.P.orb = 5; g.P.scrap = 3; g.P.horn = 2; g.P.steel = 4;
+  g.P.x = 40 * 16 + 8; g.P.y = 50 * 16 + 8; g.P.inv = 0; g.P.hp = 1;
+  api.hurtPlayer(50, { x: g.P.x + 5, y: g.P.y });
+  for (let f = 0; f < 60 * 3; f++) api.step(DT);
+  const p = api.get().P;
+  if (p.orb || p.scrap || p.horn || p.steel) fail('death materials', `materials survived death: orb=${p.orb} scrap=${p.scrap} horn=${p.horn} steel=${p.steel}`);
+  else pass('death materials', 'all materials lost on death');
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

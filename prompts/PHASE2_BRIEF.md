@@ -83,14 +83,14 @@ and you loop (plan → build → test → log → commit → improve the prompt/
 - **IT-7** tests for every new rule, docs (CLAUDE.md, skill, DECISIONS), prompt v1.2.
 
 ## 7. Acceptance criteria
-- [ ] Hero, 3 NPCs and 4 new enemy types are visible, readable, animated in 4 directions.
-- [ ] Camp matches image 12's layout; enemies still can't enter; bones can't hit you inside.
-- [ ] HUD shows DOGE price with up/down colour; bear market visibly darkens/reddens the map; multipliers apply.
-- [ ] Sphinx: wallet panel (simulated), swap loot→DOGE, buy items with DOGE, create pool / add / remove.
-- [ ] Mechanic: recipes burn materials, show what is missing, grant gear.
-- [ ] Elder reports price + trend and tells rotating lore; quests 0→4 still completable.
-- [ ] R needs 3 s of stillness before healing; death respawns at 35% HP/MP.
-- [ ] `bash tests/check.sh` → ALL CHECKS PASSED, with new scenarios for market, rest, respawn, LP, forge, new enemies.
+- [x] Hero, 3 NPCs and 4 new enemy types are visible, readable, animated in 4 directions. (IT-4, IT-5)
+- [x] Camp matches image 12's layout; enemies still can't enter; bones can't hit you inside. (IT-1, IT-3)
+- [x] HUD shows DOGE price with up/down colour; bear market visibly darkens/reddens the map; multipliers apply. (IT-2)
+- [x] Sphinx: wallet panel (simulated), swap loot→DOGE, buy items with DOGE, create pool / add / remove. (IT-6)
+- [x] Mechanic: recipes burn materials, show what is missing, grant gear. (IT-6)
+- [x] Elder reports price + trend and tells rotating lore; quests 0→4 still completable. (IT-6)
+- [x] R needs 3 s of stillness before healing; death respawns at 35% HP/MP. (IT-2)
+- [x] `bash tests/check.sh` → ALL CHECKS PASSED, with new scenarios for market, rest, respawn, LP, forge, new enemies. (IT-7: 20 tests)
 
 ## 8. Definition of done (per iteration)
 Tests green → `docs/DECISIONS.md` entry → Conventional Commit → one improvement to this brief, the session prompt or the skill

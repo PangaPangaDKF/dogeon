@@ -47,15 +47,15 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 | AUDIO | `sfx(freq, dur, type, vol, slide)` |
 | INPUT | `keys` (held) and `pressed` (this frame only, cleared at end of `loop`). Helpers `kd()` held, `kp()` just pressed. Keys are lowercased `e.key` (`' '` = Space, `'arrowup'`, `'enter'`, `'escape'`) |
 | PIXEL FONT 3x5 | `FONT` glyph table (5 rows × 3-bit numbers), `text()`, `textC()` centered, `wrap()`. Uppercase only |
-| CHARACTER SPRITES | String templates `HEAD.dog/cat`, `TOP`, `LEGS`. `buildChar({head, pal, acc})` → `{down,up,right,left}[frame]` canvases. `SPR.hero/merchant/bank/sage/alley/archer/brute/boss`. Icons `SHADOW COIN WHISK YARN BONE` |
+| CHARACTER SPRITES | String templates `HEAD.dog/cat`, `TOP`, `LEGS`. `buildChar({head, pal, acc})` → `{down,up,right,left}[frame]` canvases. `SPR.hero/merchant/bank/sage/alley/archer/brute/boss/frog/ninja/bull/knight`. Icons `SHADOW COIN WHISK YARN BONE ORB_IC SCRAP_IC HORN_IC STEEL_IC` |
 | TILES | Tile ids `T.*`, `SOLID` set, procedural tile painters, atlas `TL` |
 | MAP | `MW=80, MH=60` tiles. `CAMP` (33..47, 27..41), fire at `CX=40, CY=34`. `DUN` ruins (26..54, 2..17), `GATE_ROW=9`. `genMap()` (seed 4242, deterministic). `tileCanvas()` picks the variant per tile |
-| GAME STATE | Balance tables `SWORD_DMG SWORD_COST ARMOR_RED ARMOR_COST`, enemy stats `ETYPES`, globals, `NPCS`, `newGame()`, `makeEnemy()`, `spawnEnemy(zone)`, `summon()` |
+| GAME STATE | Balance tables `SWORD_DMG SWORD_COST ARMOR_RED ARMOR_COST`, `MARKET` (price sim), `REST_DELAY RESPAWN_FRAC`, enemy stats `ETYPES` (with `ai` and `mat` fields), `RECIPES` (forge), globals, `NPCS`, `newGame()`, `makeEnemy()`, `spawnEnemy(zone)`, `summon()` |
 | COLLISION | `solidFor(tx,ty,ent)`, `blocked(ent,x,y)` (AABB vs tiles + NPCs for player), `move(ent,dx,dy)` (sub-stepped, corner sliding for the player), `overlap()`, `playerInCamp()`, `zoneOf()` → `'field' / 'dun' / 'boss'` |
 | FX | `puff()` particles, `floater()` damage text, `toast()`, `shake()` |
-| COMBAT | `hurtPlayer()` (armor, i-frames, knockback, death), `respawn()` (death penalty), `attack()` sword arc, `bark()` "WOW" projectile, `damageEnemy()`, `killEnemy()` (drops + quest counters + boss victory), `shootBone()` |
-| ENEMY AI | `updEnemy(e,dt)`: knockback → states `wander / chase / wind / dash`. Archer kites + shoots, brute winds up (flashes red) then dashes, boss shoots spreads and summons below 50% HP |
-| UI | `ui` is `null`, `{type:'dialog'}` or `{type:'menu'}`. `openDialog(npc, pages, onEnd)`, `openMenu(npc, title, buildFn)`, `talk()`, `shopMenu()`, `bankMenu()`, `questTalk()`, `updateUI()` |
+| COMBAT | `hurtPlayer()` (armor, i-frames, knockback, death, bear-market dmg boost), `respawn()` (death penalty: 50% DOGE + all whiskers + all materials), `attack()` hammer swing, `bark()` "WOW" projectile, `damageEnemy()` (uses `ai` field for knockback), `killEnemy()` (drops material via `e.def.mat` + quest counters + boss victory), `shootBone()` |
+| ENEMY AI | `updEnemy(e,dt)`: knockback → states `wander / chase / wind / dash`. Uses `e.def.ai||e.type` for behaviour: archer/frog kite + shoot, brute/bull wind up then dash, boss shoots spreads and summons below 50% HP |
+| UI | `ui` is `null`, `{type:'dialog'}` or `{type:'menu'}`. `openDialog(npc, pages, onEnd)`, `openMenu(npc, title, buildFn)`, `talk()`, `shopMenu()` (forge: RECIPES burn materials), `bankMenu()` (Sphinx DEX: wallet, swap, buy, pool), `questTalk()` (Elder: market report + lore + quests), `updateUI()` |
 | UPDATE | `update(dt)`: title → UI (pauses world) → death timer → rest → movement → attack/bark/talk → enemies → projectiles → items → respawn timer → camera |
 | RENDER | `drawTiles`, `drawChar` (shadow + sprite + tint), `drawFire`, `drawWorld` (y-sorted entities), `drawSlash`, `drawHUD`, `box`, `drawUI`, `logo`, `drawTitle`, `render` |
 | LOOP | `genMap()`, `requestAnimationFrame` loop, `dt` clamped to 0–0.05 s |
@@ -73,16 +73,17 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 New characters = new palette + `acc(g, dir, frame)` function that paints hats/weapons on top.
 
 ## 4. Game rules (design invariants — don't break these)
-- **Healing only by resting:** hold R inside the camp (+10 HP/s, +8 MP/s). No potions, no regen.
-- **Camp is fully safe:** enemies can't enter, can't damage you, projectiles stop at the fence.
-- **Death:** lose 50% of carried FUD and all whiskers, wake at the fire. Vault FUD is safe.
-- **Economy:** whisker = 3 FUD at Sir Hodl (bank). Barksley sells sword (Lv2 30, Lv3 80, Lv4 160),
-  armor (40, 110), Bone Charm +15 max HP (50/80/110), Moon Biscuit +10 max MP (40/65).
-  Max-stat items do **not** heal.
-- **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+40 FUD) → 2 slay 3 brutes (+80 FUD,
-  opens ruins gate) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 FUD).
-- **Enemy populations:** field 18, ruins lower hall 6, respawn one every 4 s out of view.
-- **Controls:** WASD/arrows move, Space/J slash, K/Q "WOW" bark (10 MP), E talk, hold R rest, Esc close.
+- **Healing only by resting:** hold R inside the camp for 3 s (REST_DELAY), then +10 HP/s, +8 MP/s. Moving resets. No potions, no regen.
+- **Camp is fully safe:** enemies can't enter, can't damage you, projectiles stop at the fence. `hurtPlayer` has a camp guard.
+- **Death:** lose 50% of carried DOGE, all whiskers, all materials. Wake at fire at 35% HP/MP (RESPAWN_FRAC). Pooled DOGE is safe.
+- **DOGE Market:** price random-walks once per second; sentiment = price vs 30 s average. Bear: enemy dmg +50%, speed +15%, dark-red overlay. Bull: player dmg +50%, speed +10%.
+- **Economy:** whisker = 3 DOGE at the Sphinx (swap). Sphinx DEX: swap, buy items, pool/unpool DOGE. Mechanic forge: burn materials (ORB/SCRAP/HORN/STEEL) via RECIPES to craft hammer upgrades, armor, charms.
+  Enemies drop materials: frog→ORB, ninja→SCRAP, bull→HORN, knight→STEEL; cats→WHISKERS; brutes→3 WHISKERS.
+- **NPCs:** Sphinx (bank) = DEX, Elder (quest) = market report + lore + quests, Mechanic (merchant) = forge. On pads N/W/E.
+- **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+40 DOGE) → 2 slay 3 brutes (+80 DOGE,
+  opens ruins gate) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 DOGE).
+- **Enemy populations:** field 18, ruins lower hall 6, respawn one every 4 s out of view. Types: alley, archer, frog, ninja, bull, knight, brute.
+- **Controls:** WASD/arrows move, Space/J slash (hammer swing), K/Q "WOW" bark (10 MP), E talk, hold R rest, Esc close.
 
 ## 5. Coding rules for this project
 - Keep everything in `index.html` until we decide to split (then: `src/*.js` as ES modules, no bundler).

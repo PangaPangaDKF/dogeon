@@ -35,6 +35,16 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-013 · 2026-11-07 · IT-7: tests, docs, prompt — Phase 2 complete
+- What:
+  - 6 new test scenarios (20 total): forge craft + burn, pool deposit + safe-on-death, new enemy spawn + material types, death materials loss.
+  - CLAUDE.md §3–§4 updated: new sprites, ETYPES with ai/mat, MARKET/REST/RESPAWN, RECIPES, forge/DEX/elder, DOGE economy, material drops, 7 enemy types.
+  - PHASE2_BRIEF.md §7: all 8 acceptance criteria checked off.
+  - sim.mjs harness exposes RECIPES and ETYPES.
+- Why: IT-7 = final iteration. Tests cover every new rule; docs keep future sessions accurate.
+- Tool: Claude Code (Opus 4.6).
+- Verify: `0 failed, 0 warnings (seed 4242)`, 20 PASS lines.
+
 ### D-012 · 2026-11-07 · IT-6: Sphinx DEX, Elder lore, Mechanic forge + DOGE everywhere
 - What:
   - **Sphinx DEX** (replaces old bank): WALLET panel (simulated, shows fake address + DogeOS Chikyū testnet), SWAP whiskers→DOGE, BUY items (Bone Charm/Moon Biscuit) with DOGE, ADD TO POOL / REMOVE FROM POOL with 1% yield. Pooled DOGE safe on death.
