@@ -35,6 +35,29 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-017 · 2026-11-07 · IT-2 review fixes: pond RNG reshuffle, facing-only cast, F while moving, ninja turf
+- Feature: fixes 6 findings that an adversarial review workflow confirmed (2 reviewers + 1 refuter, ultracode) on the IT-2 diff.
+- Reference: review workflow `wf_53729af6-6df` (6 REAL / 2 refuted); `prompts/PHASE3_BRIEF.md` ambiguities 3 + 10.
+- Files: `index.html`, `tests/sim.mjs` (+1 refill check, +1 scenario with 6 checks), docs.
+- Code (`index.html`):
+  - 🟠 **major** `genMap()`: `PONDS_EXTRA` was stamped in the first water pass, and `reserved()` treats water as reserved, so the
+    tree/scatter passes consumed a different number of `r()` calls → 1221 tiles of forest moved and unreachable pockets grew 21 → 55.
+    Now ponds are carved AFTER vegetation, and a ring (`d<2.2`) of TREE/BUSH/ROCK around each is cleared to GRASS.
+    Verified: vs `c06128e` only 81 tiles differ, all inside the pond rings.
+  - `startFish()`: `P.moving` → "STAND STILL TO FISH." (F while walking used to cast and auto-cancel next frame with a false
+    "THE FISH GOT AWAY"). Must face the water: `waterAt(P.dir)`; adjacent-but-not-facing → "FACE THE WATER TO FISH."
+    `findWater()` removed. "F" hint shows only when facing water.
+  - `waterAt('up')` throws the float 16 px further, the catch bar moves to `P.y-38` when facing up, so neither covers the head.
+  - `spawnEnemy()`: field spawn within `NINJA_WATER.r=4` tiles of water → `NINJA_WATER.p=0.25` extra chance of ninja.
+    New helper `nearWaterT(tx,ty,r)`.
+- Refuted (kept): no bag-space check at cast time (bag-full is handled at catch with its own message); CLAUDE.md drift (already fixed in 02adc15).
+- Why: the seeded map is part of the approved design (concept images); hard mode needs fair, readable rules.
+- Alternatives rejected: calling `r()` for reserved tiles too (would ALSO move the whole forest vs the approved layout).
+- Process: lesson → skill + SESSION_PROMPT practice 19 "seeded generators: append new map features after all RNG passes,
+  then diff the map against the last approved commit".
+- Verify: `✓ 0 failed, 0 warnings` at seeds 4242/7/99 — 41 PASS; `ALL CHECKS PASSED`.
+- Commit: this commit.
+
 ### D-016 · 2026-11-07 · Phase 3 IT-3: real wallet connect on DogeOS Chikyū (no library)
 - Feature: the Sphinx DEX's first row is now a real wallet. CONNECT asks the wallet for accounts, switches to DogeOS Chikyū
   (adds it on 4902), shows the short address and test-DOGE balance, follows account/network changes, and can DISCONNECT.

@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 1.4 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 1.5 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -76,7 +76,11 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
     before shipping (D-016). Never trust a copied chain id.
 18. **Prefer the platform over a library** — EIP-1193 `request()` did everything ethers.js would have in IT-3.
 
+19. **Seeded generators are fragile** — append new map features AFTER every RNG pass, then diff the map against the last
+    approved commit (D-017: two ponds moved 1221 forest tiles).
+
 ## Changelog
+- 1.5 (2026-11-07) — Practice 19 seeded generators (D-017).
 - 1.4 (2026-11-07) — RULE #1 step 6 (MASTER_PROMPT ledger) + "skip what needs the user's wallet"; practices 17-18 (D-016).
 - 1.3 (2026-11-07) — Practices 14-16 from IT-2 fishing (renames in tests, non-vacuous tests, review-then-refute before commit).
 - 1.2 (2026-11-07) — RULE #1 feature closeout (user). Practice 13: grep before naming new state (from D-014).

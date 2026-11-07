@@ -60,7 +60,7 @@ globalThis.__api = {
   ARMOR_RED, SWORD_DMG, CAMP, CX, CY,
   REST_CAP, SKILL_THRESH, skillLv, skillMul, BAG_SIZE, FOODS,
   addToBag, bagCount, bagRemove, invMenu,
-  tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows,
+  tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
 };`;
 
 function boot(seed, opts) {
@@ -420,6 +420,53 @@ scenario('enemy pressure: field population and spawn timer', () => {
   if (api.FIELD_POP !== 22 || api.SPAWN_EVERY !== 3) fail('pressure consts', `FIELD_POP=${api.FIELD_POP} SPAWN_EVERY=${api.SPAWN_EVERY}, brief says 22 / 3 s`);
   else if (n !== api.FIELD_POP) fail('field pop', `${n} field enemies at start, expected ${api.FIELD_POP}`);
   else pass('field pop', `${n} field enemies, refill every ${api.SPAWN_EVERY}s`);
+  // refill: remove 5 field cats, they come back one per SPAWN_EVERY and never above FIELD_POP (D-017)
+  const g = api.get(); g.P.x = api.CX * 16 + 8; g.P.y = (api.CY + 3) * 16 + 8; // stay in camp
+  let removed = 0; for (let i = g.enemies.length - 1; i >= 0 && removed < 5; i--) if (g.enemies[i].zone === 'field') { g.enemies.splice(i, 1); removed++; }
+  const count = () => api.get().enemies.filter(e => e.zone === 'field').length;
+  const c0 = count(); let maxSeen = 0;
+  for (let f = 0; f < 60 * (api.SPAWN_EVERY * 5 + 1); f++) { api.step(DT); maxSeen = Math.max(maxSeen, count()); }
+  if (c0 !== api.FIELD_POP - 5 || count() !== api.FIELD_POP || maxSeen > api.FIELD_POP) fail('refill', `start ${c0} -> end ${count()} (max ${maxSeen}), expected ${api.FIELD_POP - 5} -> ${api.FIELD_POP}`);
+  else pass('refill', `${c0} -> ${count()} in ${api.SPAWN_EVERY * 5 + 1}s, never above ${api.FIELD_POP}`);
+});
+
+scenario('fishing review fixes (D-017): tiers, facing, moving, reachable ponds, ninja turf', () => {
+  const api = boot(SEED + 20);
+  if (api.skillLv(5, 'fishing') !== 1 || api.skillLv(5, 'combat') !== 0 || api.skillLv(60, 'fishing') !== 4) fail('fish tiers', 'fishing tier table not used');
+  else pass('fish tiers', 'fishing tiers 5/15/30/60 separate from combat');
+  fishSetup(api);
+  const P = api.get().P; P.skills.fishing = 60;
+  api.press('f'); api.step(DT);
+  if (!P.fishing || P.fishDur > api.FISH_MAX / 1.32 + 1e-9) fail('fish speed', `fishing=${P.fishing} dur=${P.fishDur} at fishing XP 60`);
+  else pass('fish speed', `bar ${P.fishDur.toFixed(2)}s at max fishing tier`);
+  api.press('f'); api.step(DT); // reel in
+  P.dir = 'down'; api.press('f'); api.step(DT);
+  if (P.fishing) fail('facing', 'fished while facing away from the water');
+  else pass('facing', 'must face the water');
+  P.dir = 'up'; api.hold('d', true); api.press('f'); api.step(DT); api.step(DT); api.hold('d', false);
+  if (P.fishing || api.get().floats.some(f => /GOT AWAY/.test(f.t))) fail('F while moving', `fishing=${P.fishing}, false "got away" floater`);
+  else pass('F while moving', 'no cast, no false "got away"');
+  // every pond has walkable shore reachable from the camp (GATE counts as passable)
+  const W = api.MW, H = api.MH, seen = new Uint8Array(W * H), st = [[api.CX, api.CY + 3]]; seen[(api.CY + 3) * W + api.CX] = 1;
+  const walk = (x, y) => { const t = api.tile(x, y); return t === api.T.GATE || !api.SOLID.has(t); };
+  while (st.length) { const [x, y] = st.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy;
+    if (nx >= 0 && ny >= 0 && nx < W && ny < H && !seen[ny * W + nx] && walk(nx, ny)) { seen[ny * W + nx] = 1; st.push([nx, ny]); } } }
+  const pondSeen = new Uint8Array(W * H), shores = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { if (pondSeen[y * W + x] || api.tile(x, y) !== api.T.WATER) continue;
+    let reach = 0; const q = [[x, y]]; pondSeen[y * W + x] = 1;
+    while (q.length) { const [cx, cy] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const i = ny * W + nx;
+      if (api.tile(nx, ny) === api.T.WATER) { if (!pondSeen[i]) { pondSeen[i] = 1; q.push([nx, ny]); } } else if (seen[i]) reach++; } }
+    shores.push(reach); }
+  if (shores.some(s => s < 4)) fail('pond reach', `shore tiles reachable per pond: ${shores.join(',')}`);
+  else pass('pond reach', `reachable shore per pond: ${shores.join(',')}`);
+  // ninja bias: spawns near water are ninjas more often than spawns far from water
+  let wet = 0, wetN = 0, dry = 0, dryN = 0;
+  for (let i = 0; i < 2500; i++) { const g = api.get(); g.enemies.splice(0); g.P.x = -9999; api.spawnEnemy('field'); const e = g.enemies[0]; if (!e) continue;
+    const w = api.nearWaterT(Math.floor(e.x / 16), Math.floor(e.y / 16), api.NINJA_WATER.r); if (w) { wet++; if (e.type === 'ninja') wetN++; } else { dry++; if (e.type === 'ninja') dryN++; } }
+  const pw = wetN / Math.max(1, wet), pd = dryN / Math.max(1, dry);
+  if (wet < 50 || pw < pd + 0.1) fail('ninja turf', `ninja share near water ${(pw * 100).toFixed(0)}% (${wet}) vs dry ${(pd * 100).toFixed(0)}% (${dry})`);
+  else pass('ninja turf', `ninjas near water ${(pw * 100).toFixed(0)}% vs ${(pd * 100).toFixed(0)}% elsewhere`);
 });
 
 // ---------- Phase 3 IT-3: wallet on DogeOS Chikyu (D-016) ----------

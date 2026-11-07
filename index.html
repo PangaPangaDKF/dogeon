@@ -256,8 +256,7 @@ const inDunT=(x,y)=>x>=DUN.x0&&x<=DUN.x1&&y>=DUN.y0&&y<=DUN.y1;
 function genMap(){
   const r=mulberry(4242);
   for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const v=r();setT(x,y,v<0.05?T.FLOWER:v<0.11?T.TALL:T.GRASS);}
-  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(((x-64)/7)**2+((y-44)/4.5)**2<1)setT(x,y,T.WATER);if(((x-13)/4.5)**2+((y-46)/3.2)**2<1)setT(x,y,T.WATER);if(((x-12)/3.5)**2+((y-14)/3)**2<1)setT(x,y,T.WATER);
-    for(const [px,py,rx,ry] of PONDS_EXTRA)if(((x-px)/rx)**2+((y-py)/ry)**2<1)setT(x,y,T.WATER);} // fishing ponds (D-015)
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(((x-64)/7)**2+((y-44)/4.5)**2<1)setT(x,y,T.WATER);if(((x-13)/4.5)**2+((y-46)/3.2)**2<1)setT(x,y,T.WATER);if(((x-12)/3.5)**2+((y-14)/3)**2<1)setT(x,y,T.WATER);}
   const path=(x,y)=>{if(get(x,y)!==T.WATER)setT(x,y,T.DIRT);};
   for(let x=3;x<CAMP.x0;x++)for(let d=-1;d<=1;d++)path(x,CY+d+Math.round(Math.sin(x*0.3)*0.6));
   for(let x=CAMP.x1;x<MW-3;x++)for(let d=-1;d<=1;d++)path(x,CY+d+Math.round(Math.sin(x*0.25)*0.6));
@@ -266,6 +265,10 @@ function genMap(){
   const reserved=(x,y)=>{const t=get(x,y);if(t===T.DIRT||t===T.WATER)return true;if(x>=CAMP.x0-3&&x<=CAMP.x1+3&&y>=CAMP.y0-3&&y<=CAMP.y1+3)return true;if(x>=DUN.x0-2&&x<=DUN.x1+2&&y>=DUN.y0&&y<=DUN.y1+2)return true;return false;};
   for(let i=0;i<85;i++){const cx=r()*MW,cy=r()*MH,rad=1+r()*2.6,kind=r()<0.2?T.BUSH:T.TREE;for(let y=Math.floor(cy-rad-1);y<=cy+rad+1;y++)for(let x=Math.floor(cx-rad-1);x<=cx+rad+1;x++){if(x<0||y<0||x>=MW||y>=MH)continue;if(reserved(x,y))continue;if(Math.hypot(x-cx,y-cy)<rad+r()*0.7)setT(x,y,kind);}}
   for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const t=get(x,y);if((t===T.GRASS||t===T.TALL)&&!reserved(x,y)){const v=r();if(v<0.012)setT(x,y,T.ROCK);else if(v<0.022)setT(x,y,T.BUSH);}}
+  // fishing ponds (D-015) carved AFTER vegetation so the seeded RNG and the approved forest stay unchanged (D-017);
+  // a ring of trees/bushes/rocks around each is cleared so its shore stays reachable
+  for(const [px,py,rx,ry] of PONDS_EXTRA)for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){const d=((x-px)/rx)**2+((y-py)/ry)**2,t=get(x,y);
+    if(d<1)setT(x,y,T.WATER);else if(d<2.2&&(t===T.TREE||t===T.BUSH||t===T.ROCK))setT(x,y,T.GRASS);}
   for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(x<2||y<2||x>=MW-2||y>=MH-2)setT(x,y,T.TREE);}
   // camp
   for(let y=CAMP.y0;y<=CAMP.y1;y++)for(let x=CAMP.x0;x<=CAMP.x1;x++){const edge=x===CAMP.x0||x===CAMP.x1||y===CAMP.y0||y===CAMP.y1;const gap=Math.abs(x-CX)<=1||Math.abs(y-CY)<=1;setT(x,y,edge&&!gap?T.FENCE:T.STONE);}
@@ -309,12 +312,14 @@ const SKILL_THRESH={combat:[0,10,25,50,100],fishing:[0,5,15,30,60],bark:[0,8,20,
 function skillLv(xp,kind){const t=SKILL_THRESH[kind||'combat'];for(let i=t.length-1;i>=0;i--)if(xp>=t[i])return i;return 0;}
 function skillMul(xp,kind){return 1+skillLv(xp,kind)*SKILL_BONUS;}
 // fishing (D-015): bar length in seconds (divided by the fishing skill multiplier); enemy pressure
-const FISH_MIN=3,FISH_MAX=5,FIELD_POP=22,DUN_POP=6,SPAWN_EVERY=3;
-function waterAt(d){const v=DIRV[d],x=P.x+v[0]*(P.hw+6),y=P.y+v[1]*(P.hh+6);return get(Math.floor(x/16),Math.floor(y/16))===T.WATER?{x:x+v[0]*6,y:y+v[1]*6}:null;}
-function findWater(){for(const d of [P.dir,'up','down','left','right']){const w=waterAt(d);if(w){P.dir=d;return w;}}return null;}
+const FISH_MIN=3,FISH_MAX=5,FIELD_POP=22,DUN_POP=6,SPAWN_EVERY=3,NINJA_WATER={r:4,p:0.25}; // spawn within r tiles of water: +p chance of ninja
+function nearWaterT(tx,ty,r){for(let y=ty-r;y<=ty+r;y++)for(let x=tx-r;x<=tx+r;x++)if(get(x,y)===T.WATER)return true;return false;}
+// casting up throws the float 16 px further so it lands above the hero's head, not on it (D-017)
+function waterAt(d){const v=DIRV[d],x=P.x+v[0]*(P.hw+6),y=P.y+v[1]*(P.hh+6),o=d==='up'?16:6;return get(Math.floor(x/16),Math.floor(y/16))===T.WATER?{x:x+v[0]*o,y:y+v[1]*o}:null;}
 function startFish(){
-  const w=findWater();
-  if(!w){if(!toastMsg)toast('STAND NEXT TO WATER TO FISH (F)',1.5);return;}
+  if(P.moving){if(!toastMsg)toast('STAND STILL TO FISH.',1.2);return;} // F while walking used to cast and instantly cancel (D-017)
+  const w=waterAt(P.dir); // must FACE the water (PHASE3_BRIEF ambiguity 3)
+  if(!w){if(!toastMsg)toast(['up','down','left','right'].some(waterAt)?'FACE THE WATER TO FISH.':'STAND NEXT TO WATER TO FISH (F)',1.5);return;}
   P.fishing=true;P.fishT=0;P.fishDur=(FISH_MIN+Math.random()*(FISH_MAX-FISH_MIN))/skillMul(P.skills.fishing,'fishing');P.fishX=w.x;P.fishY=w.y;
   sfx(600,0.12,'triangle',0.04,-300);
 }
@@ -380,6 +385,7 @@ function spawnEnemy(zone){
     if(zone==='dun')type=r<0.2?'alley':r<0.35?'archer':r<0.5?'frog':r<0.65?'ninja':r<0.8?'knight':'brute';
     else if(dc<380)type=r<0.35?'alley':r<0.55?'ninja':r<0.75?'frog':'archer';
     else type=r<0.2?'alley':r<0.35?'archer':r<0.5?'frog':r<0.65?'ninja':r<0.8?'knight':r<0.9?'bull':'brute';
+    if(zone==='field'&&type!=='ninja'&&nearWaterT(tx,ty,NINJA_WATER.r)&&Math.random()<NINJA_WATER.p)type='ninja'; // ponds are ninja turf (ambiguity 10)
     enemies.push(makeEnemy(type,x,y,zone));return;
   }
 }
@@ -732,7 +738,7 @@ function drawWorld(){
     else drawChar(SPR.hero,P.dir,P.atkT>0?0:frameOf(P,P.moving),P.x,P.y+P.hh,1,ox,oy);
     if(P.atkT>0)drawSlash(ox,oy);
     if(P.fishing)drawFishing(ox,oy);
-    else if(!ui&&!P.resting&&['up','down','left','right'].some(waterAt)){const b=Math.round(Math.sin(time*6));text('F',P.x-1-ox,P.y-30+b-oy,'#80c0ff');}
+    else if(!ui&&!P.resting&&waterAt(P.dir)){const b=Math.round(Math.sin(time*6));text('F',P.x-1-ox,P.y-30+b-oy,'#80c0ff');}
   }});
   list.sort((a,b)=>a.y-b.y);for(const o of list)o.f();
   for(const p of projs){if(p.kind==='bone')ctx.drawImage(BONE[Math.floor(time*12)%2],Math.round(p.x-4-ox),Math.round(p.y-4-oy));else{const c=['#ffe040','#ff8040','#40e0ff'][Math.floor(time*14)%3];text('WOW',p.x-6-ox,p.y-3-oy,c,1,'#402000');}}
@@ -759,7 +765,7 @@ function drawFishing(ox,oy){
   const n=Math.max(1,Math.round(Math.hypot(bx-hx,by-hy)));ctx.fillStyle='#e8e8f0';
   for(let i=0;i<=n;i++){const t=i/n;ctx.fillRect(Math.round(hx+(bx-hx)*t),Math.round(hy+(by-hy)*t+Math.sin(t*Math.PI)*-3),1,1);}
   ctx.fillStyle='#000';ctx.fillRect(bx-2,by-2,4,4);ctx.fillStyle='#ff3030';ctx.fillRect(bx-1,by-1,2,1);ctx.fillStyle='#fff';ctx.fillRect(bx-1,by,2,1);
-  const x=Math.round(P.x-8-ox),y=Math.round(P.y-30-oy);ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,18,5);ctx.fillStyle='#08143a';ctx.fillRect(x,y,16,3);
+  const x=Math.round(P.x-8-ox),y=Math.round(P.y-(P.dir==='up'?38:30)-oy);ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,18,5);ctx.fillStyle='#08143a';ctx.fillRect(x,y,16,3);
   ctx.fillStyle='#60c0ff';ctx.fillRect(x,y,Math.ceil(16*Math.min(1,P.fishT/P.fishDur)),3);
 }
 function bar(x,y,w,v,max,c1,c2,bg){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,6);ctx.fillStyle=bg;ctx.fillRect(x,y,w,4);const f=Math.ceil(w*Math.max(0,v)/max);ctx.fillStyle=c1;ctx.fillRect(x,y,f,4);ctx.fillStyle=c2;ctx.fillRect(x,y,f,1);}

@@ -269,9 +269,9 @@ C:\Users\dulbi\dogeon\
 
 ## 9. What's next
 
-1. **D-017 IT-2 review fixes** (pond RNG reshuffle, F while moving, facing-only, up-cast drawing, ninja near water, tests) → **IT-4 contracts** → IT-5 → IT-6, RULE #1 after each.
+1. **IT-4 contracts** (D-017 review fixes are done) → IT-5 → IT-6, RULE #1 after each.
 2. Later / not requested yet: open issues I-3…I-9, polish.
 
-Versions now: SESSION_PROMPT v1.4 · dogeon-game skill v1.4 · PHASE3_BRIEF v1.0 · DECISIONS up to D-016 · MASTER_PROMPT §F/§G added. Tests: 34 PASS.
+Versions now: SESSION_PROMPT v1.4 · dogeon-game skill v1.4 · PHASE3_BRIEF v1.0 · DECISIONS up to D-017 · MASTER_PROMPT §F/§G. SESSION_PROMPT v1.5 · skill v1.5. Tests: 41 PASS.
 Run for wallets: `node tests/serve.mjs` → http://localhost:8080 (MetaMask does not inject into file://).
 Note: `bash tests/check.sh` can exceed 30 s on Windows — run with a 120 s timeout, or `node tests/sim.mjs` directly.
