@@ -23,7 +23,7 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 | Iter | Scope | Status |
 |------|-------|--------|
 | IT-0 | Phase 3 brief | ✅ `eaea704` |
-| IT-1 | Rest cap 60% + inventory bag (I/Tab) + skill-by-use | ✅ D-014 (commit after this file) |
+| IT-1 | Rest cap 60% + inventory bag (I/Tab) + skill-by-use | ✅ D-014 `a9fa508` |
 | IT-2 | Fishing: `T.WATER` ponds in field, F to fish (3–5 s bar, hit/move cancels), RAW FISH → bag, cook at fire; field pop 18→22, spawn 4s→3s | ⏭ NEXT |
 | IT-3 | Wallet: ethers v6 CDN `https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js`, `window.ethereum`, `wallet_addEthereumChain` DogeOS Chikyū, connect in Sphinx menu, graceful offline fallback | pending |
 | IT-4 | `contracts/` Foundry: `DogeItems.sol` (ERC-721, `mint(to,itemType)` payable 0.1 DOGE fee) + `DogeDEX.sol` (`list/buy/delist` fixed price) | pending |
@@ -72,7 +72,7 @@ Published artifact: https://claude.ai/artifact/SyvKSryRuYi2yPtHtHrHyy
 ## 3. Commit history (newest first)
 
 ```
-(next)  feat: Phase 3 IT-1 rest cap, inventory, skill-by-use
+a9fa508 feat: Phase 3 IT-1 rest cap, inventory bag, skill-by-use
 eaea704 docs(prompt): Phase 3 brief "Doge Chain"
 486267a docs: add CONTEXT.md for session continuity
 825f9c7 docs: IT-7 tests, CLAUDE.md, brief — Phase 2 complete
