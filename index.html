@@ -330,7 +330,7 @@ function updFish(dt){
   if(addToBag('raw_fish',1)){P.skills.fishing++;floater(P.x,P.y-24,'+1 RAW FISH','#80c0e0');sfx(900,0.15,'triangle',0.05,500);}
   else toast('BAG FULL! THE FISH GOT AWAY.',2);
 }
-const BAG_SIZE=12;
+const BAG_SIZE=12,MENU_ROWS=13;
 const FOODS={raw_fish:{name:'RAW FISH',heal:15,col:'#80c0e0'},cooked_fish:{name:'COOKED FISH',heal:25,col:'#f0a040'}};
 function addToBag(kind,qty){qty=qty||1;for(const s of P.bag){if(s.kind===kind&&s.qty<(FOODS[kind]?5:20)){const add=Math.min(qty,((FOODS[kind]?5:20))-s.qty);s.qty+=add;qty-=add;if(!qty)return true;}}while(qty>0&&P.bag.length<BAG_SIZE){const add=Math.min(qty,FOODS[kind]?5:20);P.bag.push({kind,qty:add});qty-=add;}return qty===0;}
 function bagCount(kind){let n=0;for(const s of P.bag)if(s.kind===kind)n+=s.qty;return n;}
@@ -364,7 +364,7 @@ const NPCS=[
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,credits:{}};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<FIELD_POP;i++)spawnEnemy('field');
@@ -421,7 +421,7 @@ function shake(t){shakeT=Math.max(shakeT,t);}
 // ================= COMBAT =================
 function hurtPlayer(d,src){
   if(P.iT>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
-  const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-ARMOR_RED[P.armor])));
+  const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-ARMOR_RED[armorLv()])));
   P.hp-=dmg;P.iT=0.9;P.resting=false;stopFish('LINE SNAPPED!'); // getting hit ruins the catch (D-015)
   const dx=P.x-src.x,dy=P.y-src.y,l=Math.hypot(dx,dy)||1;P.kbx=dx/l*190;P.kby=dy/l*190;
   floater(P.x,P.y-22,'-'+dmg,'#ff5050');shake(0.2);sfx(140,0.15,'sawtooth',0.07,-80);
@@ -438,13 +438,13 @@ function respawn(){
 function attack(){
   stopFish('REELED IN');P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
   const v=DIRV[P.dir],cx=P.x+v[0]*13,cy=P.y-5+v[1]*12,hw=v[0]?10:12,hh=v[0]?11:9;
-  const sdmg=Math.round(SWORD_DMG[P.sword]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat'));
+  const sdmg=Math.round(SWORD_DMG[swordLv()]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat'));
   let hit=false;for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh){damageEnemy(e,sdmg,v[0],v[1]);hit=true;}}
   if(hit)P.skills.combat++;
 }
 function bark(){
   if(P.mp<10){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return;}
-  stopFish('REELED IN');P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+P.sword*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')),hits:new Set()});
+  stopFish('REELED IN');P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+swordLv()*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')),hits:new Set()});
   sfx(500,0.25,'sawtooth',0.05,500);
 }
 function damageEnemy(e,dmg,kx,ky){
@@ -510,7 +510,7 @@ async function switchChain(){
   catch(err){
     if(err&&err.code===4001)throw err;
     // 4902 = chain unknown to the wallet (some wallets report it as -32603 or only in the message): add it, which also switches
-    await e.request({method:'wallet_addEthereumChain',params:[{chainId:CHAIN.id,chainName:CHAIN.name,nativeCurrency:{name:'Dogecoin',symbol:'DOGE',decimals:18},rpcUrls:[CHAIN.rpc],blockExplorerUrls:[CHAIN.explorer]}]});
+    await e.request({method:'wallet_addEthereumChain',params:[{chainId:CHAIN.id,chainName:CHAIN.name,nativeCurrency:{name:'Dogecoin',symbol:'DOGE',decimals:18},rpcUrls:[CHAIN.rpc],blockExplorerUrls:CHAIN.explorer?[CHAIN.explorer]:null}]});
   }
   wallet.chainOk=String(await e.request({method:'eth_chainId'})).toLowerCase()===CHAIN.id;
 }
@@ -525,7 +525,7 @@ async function connectWallet(){
     const acc=await e.request({method:'eth_requestAccounts'});if(!acc||!acc.length)throw new Error('no account');
     wallet.addr=acc[0];hookWallet(e);
     await switchChain();await refreshBal();
-    wallet.connected=true;setWalletMsg(wallet.chainOk?'CONNECTED TO CHIKYU. SUCH CHAIN. WOW.':'CONNECTED, BUT ON THE WRONG NETWORK.');
+    wallet.connected=true;refreshChain().catch(()=>{});setWalletMsg(wallet.chainOk?'CONNECTED TO CHIKYU. SUCH CHAIN. WOW.':'CONNECTED, BUT ON THE WRONG NETWORK.');
     return true;
   }catch(err){setWalletMsg(walletErr(err));return false;}
   finally{wallet.busy=false;}
@@ -537,6 +537,108 @@ function walletRows(){
   if(!wallet.connected)return [{label:wallet.busy?'CONNECTING... CHECK YOUR WALLET':'CONNECT WALLET (DOGEOS CHIKYU TESTNET)',act:()=>{connectWallet();return 'CHECK YOUR WALLET...';}}];
   return [{label:wallet.chainOk?`WALLET ${shortAddr(wallet.addr)} ${wallet.bal==null?'?':wallet.bal} DOGE`:'WRONG NETWORK - SWITCH TO CHIKYU',act:()=>{(wallet.chainOk?refreshBal():switchChain().then(refreshBal)).then(()=>setWalletMsg(`${wallet.bal} TEST DOGE. FAUCET: ${CHAIN.faucet}`)).catch(err=>setWalletMsg(walletErr(err)));return 'REFRESHING...';}}];
 }
+// ---- on-chain items (D-019): DogeItems + DogeDEX via precomputed selectors (`cast sig`), raw ABI, no library ----
+// dev: open with ?chain=local to use a local anvil chain (contracts/README.md); Chikyu addresses go in CONTRACTS after deploy
+const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catch(e){return false;}})();
+if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
+const CONTRACTS={'0x5fdaf3':{items:'',dex:''},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'}};
+const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'d3a17f29',addLiquidity:'4de59aa3',removeLiquidity:'9d7de6b3',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7'};
+const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
+const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50]; // sell / LP presets in DOGE, picked with A/D in the market menu
+const W32=n=>BigInt(n).toString(16).padStart(64,'0'),A32=a=>String(a).toLowerCase().replace(/^0x/,'').padStart(64,'0');
+const words=h=>{h=String(h||'0x').replace(/^0x/,'');const o=[];for(let i=0;i+64<=h.length;i+=64)o.push(BigInt('0x'+h.slice(i,i+64)));return o;};
+function arrAt(w,slot){const off=Number(w[slot]/32n),n=Number(w[off]);return w.slice(off+1,off+1+n);} // dynamic array whose byte offset sits in head word `slot`
+const toWei=d=>BigInt(Math.round(d*1e4))*10n**14n,fromWei=w=>Number(BigInt(w)/10n**14n)/1e4;
+const unpack=p=>({id:Number(p>>16n),type:Number((p>>8n)&255n),level:Number(p&255n)});
+const itemName=it=>(ITEM_TYPES[it.type]||'ITEM')+(it.type<=2?' LV'+it.level:'');
+const addrs=()=>CONTRACTS[CHAIN.id]||{};
+const chainReady=()=>wallet.connected&&wallet.chainOk&&!!addrs().items&&!!addrs().dex;
+const chainData={inv:[],listings:[],pools:[],proceeds:0n,fee:0n,approved:false,loaded:false};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function ecall(to,data){return eth().request({method:'eth_call',params:[{to,data:'0x'+data},'latest']});}
+async function etx(to,data,value){
+  const h=await eth().request({method:'eth_sendTransaction',params:[{from:wallet.addr,to,data:'0x'+data,value:'0x'+BigInt(value||0).toString(16)}]});
+  setWalletMsg('TX '+String(h).slice(0,10)+'.. MINING, MUCH WAIT');
+  for(let i=0;i<200;i++){const r=await eth().request({method:'eth_getTransactionReceipt',params:[h]});
+    if(r){if(r.status==='0x1'||r.status===1)return r;throw new Error('TX REVERTED');}await sleep(1500);}
+  throw new Error('TX NOT MINED YET, CHECK THE EXPLORER');
+}
+async function refreshChain(){
+  if(!chainReady())return;const c=addrs(),me=wallet.addr;
+  const [inv,lst,pls,pr,fee,ap]=await Promise.all([ecall(c.items,SEL.inventoryOf+A32(me)),ecall(c.dex,SEL.activeListings),ecall(c.dex,SEL.allPools),
+    ecall(c.dex,SEL.proceeds+A32(me)),ecall(c.items,SEL.mintFee),ecall(c.items,SEL.isApprovedForAll+A32(me)+A32(c.dex))]);
+  chainData.inv=arrAt(words(inv),0).map(unpack);
+  const lw=words(lst),lp=arrAt(lw,0),lpr=arrAt(lw,1),ls=arrAt(lw,2);
+  chainData.listings=lp.map((p,i)=>({...unpack(p),price:lpr[i],mine:ls[i]===BigInt(me)}));
+  const keys=arrAt(words(pls),0),pools=[];
+  for(const k of keys){const w=words(await ecall(c.dex,SEL.poolInfo+W32(k)+A32(me)));pools.push({key:k,type:Number(k>>8n),level:Number(k&255n),doge:w[0],n:Number(w[1]),shares:w[2],mine:w[3],buy:w[4],sell:w[5]});}
+  chainData.pools=pools;chainData.proceeds=words(pr)[0]||0n;chainData.fee=words(fee)[0]||0n;chainData.approved=(words(ap)[0]||0n)===1n;chainData.loaded=true;
+  await refreshBal();
+}
+// one chain action at a time; every result lands in the open menu via setWalletMsg
+async function chainAct(done,fn){
+  if(wallet.busy){setWalletMsg('WAIT, A TRANSACTION IS RUNNING.');return false;}
+  if(!chainReady()){setWalletMsg('CONNECT AT THE SPHINX (DOGEOS CHIKYU) FIRST.');return false;}
+  wallet.busy=true;setWalletMsg('CONFIRM IN YOUR WALLET...');
+  try{if(!chainData.loaded)await refreshChain();await fn();await refreshChain();setWalletMsg(done);sfx(990,0.12,'triangle',0.05,300);return true;}
+  catch(err){setWalletMsg(walletErr(err));return false;}
+  finally{wallet.busy=false;}
+}
+async function ensureApproved(){if(chainData.approved)return;setWalletMsg('STEP 1/2: LET THE SPHINX MOVE YOUR NFTS...');await etx(addrs().items,SEL.setApprovalForAll+A32(addrs().dex)+W32(1),0);chainData.approved=true;setWalletMsg('STEP 2/2: CONFIRM IN YOUR WALLET...');}
+const keyOfIt=it=>(BigInt(it.type)<<8n)|BigInt(it.level);
+const myFree=()=>chainData.inv; // inventoryOf only returns NFTs in the wallet (escrowed ones belong to the DEX)
+// owning a gear NFT = wearing it (D-019). Sold or listed NFTs stop counting at the next refresh.
+function nftBest(type){if(!chainReady())return 0;let b=0;for(const it of chainData.inv)if(it.type===type&&it.level>b)b=it.level;return b;}
+const swordLv=()=>Math.max(P.sword,Math.min(4,nftBest(1))),armorLv=()=>Math.max(P.armor,Math.min(2,nftBest(2)));
+function addCredit(t,l){const k=t+':'+l;P.credits[k]=(P.credits[k]||0)+1;}
+function mintNft(type,level,src){ // src 'credit' (crafted at the forge) or a bag food kind
+  return chainAct(`MINTED ${itemName({type,level})} NFT! TO THE MOON.`,async()=>{
+    const k=type+':'+level;
+    if(src==='credit'){if(!(P.credits[k]>0))throw new Error('CRAFT IT FIRST');}else if(!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
+    try{await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(type)+W32(level),chainData.fee);}
+    catch(e){if(src!=='credit')addToBag(src,1);throw e;}
+    if(src==='credit')P.credits[k]--;
+  });}
+function useNft(it){ // eat food / drink charm: burns the NFT, then applies the effect
+  const food=TYPE_FOOD[it.type];
+  if(food&&P.hp>=P.maxHp){setWalletMsg('HP IS FULL ALREADY.');return;}
+  if(it.type===5&&P.hpUps>=3||it.type===6&&P.mpUps>=2){setWalletMsg('MAXED ALREADY. SELL IT AT THE SPHINX.');return;}
+  chainAct(`USED ${itemName(it)} #${it.id}. SUCH NOM.`,async()=>{await etx(addrs().items,SEL.burn+W32(it.id),0);
+    if(food)P.hp=Math.min(P.maxHp,P.hp+FOODS[food].heal);else if(it.type===5){P.hpUps++;P.maxHp+=15;}else if(it.type===6){P.mpUps++;P.maxMp+=10;}});}
+const dex=()=>addrs().dex;
+function listNft(it,priceDoge){return chainAct(`LISTED #${it.id} FOR ${priceDoge} DOGE.`,async()=>{await ensureApproved();await etx(dex(),SEL.list+W32(it.id)+W32(toWei(priceDoge)),0);});}
+function delistNft(l){return chainAct(`DELISTED #${l.id}.`,()=>etx(dex(),SEL.delist+W32(l.id),0));}
+function buyListing(l){return chainAct(`BOUGHT ${itemName(l)} #${l.id}! WOW.`,()=>etx(dex(),SEL.buy+W32(l.id),l.price));}
+function addLp(ids,wei){return chainAct(`LP ADDED: ${ids.length} ITEMS. YOU ARE THE MARKET.`,async()=>{await ensureApproved();
+  await etx(dex(),SEL.addLiquidity+W32(32)+W32(ids.length)+ids.map(W32).join(''),wei);});}
+function removeLp(p){return chainAct('LP REMOVED. DOGE IS IN YOUR PROCEEDS.',()=>etx(dex(),SEL.removeLiquidity+W32(p.key)+W32(p.mine),0));}
+function buyPool(p){return chainAct(`SWAPPED ${fromWei(p.buy)} DOGE FOR 1 ${itemName(p)}.`,()=>etx(dex(),SEL.buyFromPool+W32(p.key),p.buy));}
+function sellPool(it,p){return chainAct(`SOLD #${it.id} FOR ${fromWei(p.sell)} DOGE (IN PROCEEDS).`,async()=>{await ensureApproved();await etx(dex(),SEL.sellToPool+W32(it.id)+W32(p.sell),0);});}
+function withdrawProceeds(){return chainAct('PROCEEDS SENT TO YOUR WALLET.',()=>etx(dex(),SEL.withdraw,0));}
+function chainBlockRow(){if(!eth())return 'NO WALLET: ON-CHAIN ITEMS NEED METAMASK.';if(!wallet.connected)return 'CONNECT YOUR WALLET AT THE SPHINX FIRST.';if(!wallet.chainOk)return 'WRONG NETWORK. SWITCH AT THE SPHINX.';if(!addrs().items)return 'NFT CONTRACTS NOT DEPLOYED ON CHIKYU YET.';return null;}
+const mktUI={price:{},lp:{}}; // per-row preset index for the market menu (NOT mkt = price sim)
+function marketMenu(n){openMenu(n,'SPHINX NFT MARKET',()=>{const o=[],blk=chainBlockRow();
+  if(blk){o.push({label:blk,act:()=>'SEE CONTRACTS/README.MD TO DEPLOY.'});o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;}
+  if(!chainData.loaded)o.push({label:'LOADING THE CHAIN...',act:()=>{refreshChain().catch(()=>{});return 'REFRESHING...';}});
+  if(chainData.proceeds>0n)o.push({label:`WITHDRAW PROCEEDS: ${fromWei(chainData.proceeds)} DOGE`,act:()=>{withdrawProceeds();return 'CONFIRM IN YOUR WALLET...';}});
+  for(const l of chainData.listings)o.push(l.mine?{label:`DELIST ${itemName(l)} #${l.id} (YOURS, ${fromWei(l.price)})`,act:()=>{delistNft(l);return 'CONFIRM IN YOUR WALLET...';}}
+    :{label:`BUY ${itemName(l)} #${l.id} FOR ${fromWei(l.price)} DOGE`,act:()=>{buyListing(l);return 'CONFIRM IN YOUR WALLET...';}});
+  for(const p of chainData.pools){const mine=myFree().filter(it=>keyOfIt(it)===p.key);
+    o.push({label:`POOL ${itemName(p)}: ${p.n} ITEMS / ${fromWei(p.doge)} DOGE`,act:()=>`SPOT ${(fromWei(p.doge)/Math.max(1,p.n)).toFixed(3)} DOGE. YOUR SHARE ${p.shares?Math.round(Number(p.mine*1000n/p.shares))/10:0}%.`});
+    if(p.buy>0n)o.push({label:` SWAP ${fromWei(p.buy)} DOGE -> 1 ${itemName(p)}`,act:()=>{buyPool(p);return 'CONFIRM IN YOUR WALLET...';}});
+    if(mine.length&&p.sell>0n)o.push({label:` SWAP 1 ${itemName(p)} -> ${fromWei(p.sell)} DOGE`,act:()=>{sellPool(mine[0],p);return 'CONFIRM IN YOUR WALLET...';}});
+    if(mine.length&&p.n>0){const need=(BigInt(mine.length)*p.doge+BigInt(p.n-1))/BigInt(p.n);
+      o.push({label:` ADD ${mine.length} ITEMS + ${fromWei(need)} DOGE AS LP`,act:()=>{addLp(mine.map(it=>it.id),need);return 'CONFIRM IN YOUR WALLET...';}});}
+    if(p.mine>0n)o.push({label:` REMOVE MY LP (${Math.round(Number(p.mine*1000n/p.shares))/10}%)`,act:()=>{removeLp(p);return 'CONFIRM IN YOUR WALLET...';}});}
+  const poolKeys=new Set(chainData.pools.map(p=>p.key)),groups={};
+  for(const it of myFree()){const k=String(keyOfIt(it));if(!poolKeys.has(keyOfIt(it)))(groups[k]=groups[k]||[]).push(it);
+    const pi=mktUI.price[it.id]??3,price=PRICES[pi];
+    o.push({label:`SELL #${it.id} ${itemName(it)} FOR < ${price} > DOGE`,adj:d=>{mktUI.price[it.id]=Math.max(0,Math.min(PRICES.length-1,pi+d));},act:()=>{listNft(it,price);return 'CONFIRM IN YOUR WALLET...';}});}
+  for(const k in groups){const g=groups[k],li=mktUI.lp[k]??3,amt=PRICES[li];
+    o.push({label:`CREATE POOL: ${g.length} ${itemName(g[0])} + < ${amt} > DOGE`,adj:d=>{mktUI.lp[k]=Math.max(0,Math.min(PRICES.length-1,li+d));},act:()=>{addLp(g.map(it=>it.id),toWei(amt));return 'CONFIRM IN YOUR WALLET...';}});}
+  if(chainData.loaded&&!chainData.listings.length&&!chainData.pools.length)o.push({label:'NO MARKET YET. LIST OR CREATE A POOL FIRST.',act:()=>'NOTHING IS SOLD UNTIL A PLAYER SELLS IT.'});
+  o.push({label:'REFRESH',act:()=>{refreshChain().then(()=>setWalletMsg('MARKET REFRESHED.')).catch(e=>setWalletMsg(walletErr(e)));return 'REFRESHING...';}});
+  o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));}
 
 // ================= UI (dialog / menus) =================
 function openDialog(npc,lines,onEnd){ui={type:'dialog',npc,pages:lines,idx:0,chars:0,onEnd};sfx(660,0.04,'square',0.03);}
@@ -552,25 +654,30 @@ function talk(n){
   }else questTalk(n);
 }
 const RECIPES=[
-  {name:'HAMMER LV2',need:{steel:2,scrap:1},req:()=>P.sword<2,act:()=>{P.sword=2;return `HAMMER LV2! DMG ${SWORD_DMG[2]}. VERY FORGE.`;}},
-  {name:'HAMMER LV3',need:{steel:3,horn:2},req:()=>P.sword>=2&&P.sword<3,act:()=>{P.sword=3;return `HAMMER LV3! DMG ${SWORD_DMG[3]}. MUCH POWER.`;}},
-  {name:'HAMMER LV4',need:{steel:5,horn:3,orb:2},req:()=>P.sword>=3&&P.sword<4,act:()=>{P.sword=4;return `HAMMER LV4! DMG ${SWORD_DMG[4]}. WOW.`;}},
-  {name:'DOGE ARMOR LV1',need:{steel:2,horn:1},req:()=>P.armor<1,act:()=>{P.armor=1;return `ARMOR LV1! -${ARMOR_RED[1]*100}% DMG.`;}},
-  {name:'DOGE ARMOR LV2',need:{steel:4,scrap:2,horn:2},req:()=>P.armor>=1&&P.armor<2,act:()=>{P.armor=2;return `ARMOR LV2! -${ARMOR_RED[2]*100}% DMG. SUCH PROTECT.`;}},
-  {name:'BONE CHARM (+15 HP)',need:{orb:2,scrap:1},req:()=>P.hpUps<3,act:()=>{P.hpUps++;P.maxHp+=15;return 'MAX HP UP! REST TO FILL IT.';}},
-  {name:'MOON BISCUIT (+10 MP)',need:{orb:1,horn:1},req:()=>P.mpUps<2,act:()=>{P.mpUps++;P.maxMp+=10;return 'MAX MP UP! REST TO FILL IT.';}}
+  {name:'HAMMER LV2',nft:[1,2],need:{steel:2,scrap:1},req:()=>P.sword<2,act:()=>{P.sword=2;return `HAMMER LV2! DMG ${SWORD_DMG[2]}. VERY FORGE.`;}},
+  {name:'HAMMER LV3',nft:[1,3],need:{steel:3,horn:2},req:()=>P.sword>=2&&P.sword<3,act:()=>{P.sword=3;return `HAMMER LV3! DMG ${SWORD_DMG[3]}. MUCH POWER.`;}},
+  {name:'HAMMER LV4',nft:[1,4],need:{steel:5,horn:3,orb:2},req:()=>P.sword>=3&&P.sword<4,act:()=>{P.sword=4;return `HAMMER LV4! DMG ${SWORD_DMG[4]}. WOW.`;}},
+  {name:'DOGE ARMOR LV1',nft:[2,1],need:{steel:2,horn:1},req:()=>P.armor<1,act:()=>{P.armor=1;return `ARMOR LV1! -${ARMOR_RED[1]*100}% DMG.`;}},
+  {name:'DOGE ARMOR LV2',nft:[2,2],need:{steel:4,scrap:2,horn:2},req:()=>P.armor>=1&&P.armor<2,act:()=>{P.armor=2;return `ARMOR LV2! -${ARMOR_RED[2]*100}% DMG. SUCH PROTECT.`;}},
+  {name:'BONE CHARM (+15 HP)',nft:[5,1],need:{orb:2,scrap:1},req:()=>P.hpUps<3,act:()=>{P.hpUps++;P.maxHp+=15;return 'MAX HP UP! REST TO FILL IT.';}},
+  {name:'MOON BISCUIT (+10 MP)',nft:[6,1],need:{orb:1,horn:1},req:()=>P.mpUps<2,act:()=>{P.mpUps++;P.maxMp+=10;return 'MAX MP UP! REST TO FILL IT.';}}
 ];
 function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
   for(const r of RECIPES){if(!r.req())continue;
     const parts=Object.entries(r.need).map(([k,v])=>`${v} ${k.toUpperCase()}`).join('+');
     const has=Object.entries(r.need).every(([k,v])=>P[k]>=v);
-    o.push({label:`${r.name} [${parts}]`,act:has?()=>{for(const [k,v] of Object.entries(r.need))P[k]-=v;return r.act();}:()=>'NOT ENOUGH MATERIALS. HUNT MORE.'});}
+    o.push({label:`${r.name} [${parts}]`,act:has?()=>{for(const [k,v] of Object.entries(r.need))P[k]-=v;if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act();}:()=>'NOT ENOUGH MATERIALS. HUNT MORE.'});}
+  // on-chain mint (D-019): only things you crafted (credits) or caught (bag food) can be minted
+  const fee=chainData.loaded?fromWei(chainData.fee)+' DOGE':'FEE';
+  for(const k in P.credits)if(P.credits[k]>0){const [t,l]=k.split(':').map(Number);o.push({label:`MINT ${itemName({type:t,level:l})} NFT x${P.credits[k]} (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(t,l,'credit');return 'CONFIRM IN YOUR WALLET...';}});}
+  for(const f in FOOD_TYPE)if(bagCount(f))o.push({label:`PRESERVE ${FOODS[f].name} AS NFT (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(FOOD_TYPE[f],1,f);return 'CONFIRM IN YOUR WALLET...';}});
   o.push({label:`INVENTORY: ORB ${P.orb} SCRAP ${P.scrap} HORN ${P.horn} STEEL ${P.steel}`,act:()=>'THOSE ARE YOUR MATERIALS.'});
-  o.push({label:'LEAVE',act:null});return o;});}
+  o.push({label:'LEAVE',act:null});return o;});ui.chain=true;}
 function bankMenu(n){openMenu(n,'THE SPHINX DEX',()=>{
   const yld=Math.floor(P.bank*0.01);
   return[
   ...walletRows(), // real wallet on DogeOS Chikyu (D-016); no wallet -> simulated label
+  ...(wallet.connected?[{label:'NFT MARKET: LISTINGS + LP POOLS',act:()=>{marketMenu(n);return '';}}]:[]),
   {label:`SWAP ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'NO WHISKERS TO SWAP.';P.doge+=P.whisk*3;const m=`SWAPPED ${P.whisk} WHISKERS FOR ${P.whisk*3} DOGE.`;P.whisk=0;return m;}},
   {label:`BUY BONE CHARM (50 DOGE)`,act:P.hpUps>=3?()=>'MAX CHARMS ALREADY.':()=>{if(P.doge<50)return 'NOT ENOUGH DOGE.';P.doge-=50;P.hpUps++;P.maxHp+=15;return 'BONE CHARM BOUGHT! +15 MAX HP.';}},
   {label:`BUY MOON BISCUIT (40 DOGE)`,act:P.mpUps>=2?()=>'MAX BISCUITS ALREADY.':()=>{if(P.doge<40)return 'NOT ENOUGH DOGE.';P.doge-=40;P.mpUps++;P.maxMp+=10;return 'MOON BISCUIT BOUGHT! +10 MAX MP.';}},
@@ -609,8 +716,10 @@ function invMenu(){
         if(s.kind==='raw_fish'&&nearFire)o.push({label:`COOK RAW FISH -> COOKED FISH`,act:()=>{if(!bagRemove('raw_fish',1))return 'NO RAW FISH.';if(!addToBag('cooked_fish',1)){addToBag('raw_fish',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED! MUCH DELICIOUS.';}});
       }else{const names={orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'CRAFTING MATERIAL. TAKE TO WRENCHPAW.'});}}
     const sk=P.skills,lv=k=>skillLv(sk[k],k);o.push({label:`SKILLS: COMBAT LV${lv('combat')} (${sk.combat}XP) BARK LV${lv('bark')} (${sk.bark}XP) FISH LV${lv('fishing')} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(lv('combat')*SKILL_BONUS*100)}% DMG  BARK +${Math.round(lv('bark')*SKILL_BONUS*100)}% DMG  FISH +${Math.round(lv('fishing')*SKILL_BONUS*100)}% SPD`});
+    if(chainReady())for(const it of chainData.inv){const f=TYPE_FOOD[it.type];
+      o.push({label:`NFT #${it.id} ${itemName(it)} `+(f?`[EAT +${FOODS[f].heal} HP, BURNS]`:it.type<=2?'(OWNED = EQUIPPED)':'[USE, BURNS]'),act:it.type<=2?()=>`ON-CHAIN GEAR. EFFECTIVE HAMMER LV${swordLv()} ARMOR LV${armorLv()}.`:()=>{useNft(it);return 'CONFIRM IN YOUR WALLET...';}});}
     if(!P.bag.length)o.push({label:'BAG IS EMPTY',act:()=>'HUNT MONSTERS OR CATCH FISH.'});
-    o.push({label:'CLOSE',act:null});return o;});}
+    o.push({label:'CLOSE',act:null});return o;});ui.chain=true;if(chainReady())refreshChain().catch(()=>{});}
 function updateUI(dt){
   if(ui.type==='dialog'){
     const page=ui.pages[ui.idx];ui.chars+=70*dt;
@@ -622,6 +731,7 @@ function updateUI(dt){
     const opts=ui.build();ui.sel=Math.min(ui.sel,opts.length-1);
     if(kp('arrowup','w')){ui.sel=(ui.sel+opts.length-1)%opts.length;sfx(440,0.03,'square',0.02);}
     if(kp('arrowdown','s')){ui.sel=(ui.sel+1)%opts.length;sfx(440,0.03,'square',0.02);}
+    if(opts[ui.sel]&&opts[ui.sel].adj){if(kp('arrowleft','a'))opts[ui.sel].adj(-1);if(kp('arrowright','d'))opts[ui.sel].adj(1);}
     if(kp('escape','q'))ui=null;
     else if(kp('e',' ','enter','j')){const o=opts[ui.sel];
       if(!o.act){ui=null;return;}
@@ -793,14 +903,15 @@ function drawUI(){
     lines.forEach((ln,i)=>{const take=Math.max(0,Math.min(ln.length,shown.length-used));text(ln.slice(0,take),tx,164+i*9,'#fff');used+=ln.length+1;});
     if(ui.chars>=page.length&&Math.floor(time*3)%2)text(ui.idx<ui.pages.length-1?'>>':'E',W-22,208,'#ffe040');
   }else{
-    const opts=ui.build(),h=44+opts.length*11;const y=Math.round((H-h)/2)+6;
+    const all=ui.build(),top=Math.max(0,Math.min(ui.sel-Math.floor(MENU_ROWS/2),all.length-MENU_ROWS)),opts=all.slice(top,top+MENU_ROWS),h=44+opts.length*11;const y=Math.round((H-h)/2)+6;
     box(30,y,260,h);
     textC(ui.title,W/2,y+6,'#ffe040');
     text(`CARRIED: ${P.doge} DOGE`,40,y+16,'#f8d050');text(`VAULT: ${P.bank}`,200,y+16,'#b0a060');
     ctx.fillStyle='#3848a0';ctx.fillRect(36,y+24,248,1);
-    opts.forEach((o,i)=>{const yy=y+29+i*11,sel=i===ui.sel;if(sel){ctx.fillStyle='#2a48d0';ctx.fillRect(36,yy-2,248,9);text('>',40,yy,'#ffe040');}
+    if(top>0)text('^',282,y+16,'#ffe040');if(top+MENU_ROWS<all.length)text('V',282,y+h-10,'#ffe040');
+    opts.forEach((o,i)=>{const yy=y+29+i*11,sel=i+top===ui.sel;if(sel){ctx.fillStyle='#2a48d0';ctx.fillRect(36,yy-2,248,9);text('>',40,yy,'#ffe040');}
       const afford=!o.cost||P.doge>=o.cost;text(o.label,48,yy,sel?'#fff':'#c8d0f0');if(o.cost)text(o.cost+' DOGE',280-(String(o.cost).length+4)*4,yy,afford?'#f8d050':'#a05050');});
-    text(ui.msg||'W/S SELECT   E BUY   ESC LEAVE',40,y+h-10,ui.msg?'#a0ffa0':'#8090c0');
+    text(ui.msg||(all[ui.sel]&&all[ui.sel].adj?'W/S SELECT  A/D PRICE  E OK  ESC LEAVE':'W/S SELECT   E BUY   ESC LEAVE'),40,y+h-10,ui.msg?'#a0ffa0':'#8090c0');
   }
 }
 const LOGO={D:['11110','10001','10001','10001','10001','10001','11110'],O:['01110','10001','10001','10001','10001','10001','01110'],G:['01110','10001','10000','10111','10001','10001','01111'],E:['11111','10000','10000','11110','10000','10000','11111'],N:['10001','11001','10101','10011','10001','10001','10001']};

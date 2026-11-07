@@ -35,6 +35,40 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-019 · 2026-11-07 · Phase 3 IT-5: game ↔ contracts (mint at the forge, NFTs in the bag, Sphinx NFT market + LP)
+- Feature: the on-chain loop is playable. Crafting at Wrenchpaw gives a **mint credit**, so you can mint that item as an NFT
+  (0.1 DOGE fee). Fish from the bag can be **preserved** as NFTs. The bag lists your NFTs: food NFTs can be eaten (burn → HP),
+  charm/biscuit NFTs can be used, and gear NFTs count as worn just by being owned. The Sphinx has a new **NFT MARKET**: buy and
+  delist listings, sell an NFT at a preset price (A/D), create a DOGE/item **LP pool** or add to one, swap DOGE↔item against a
+  pool, remove your LP, and withdraw proceeds. It shows "NO MARKET YET" until a player creates one.
+- Reference: user request (mint / sell / LP with DOGE, only playing gets you stuff, no store until someone creates it, crafter
+  mints with a fee); `prompts/PHASE3_BRIEF.md` G6–G8 + acceptance boxes IT-5; D-018 contract API.
+- Files: `index.html`, `tests/sim.mjs` (sandbox `realTimers`/`location`, +1 anvil e2e scenario with 10 checks), docs.
+- Code (`index.html`, CHAIN section, after `walletRows()`):
+  - Config: `DEV_LOCAL` (`?chain=local` → anvil `0x7a69`, `http://127.0.0.1:8545`), `CONTRACTS{chainId:{items,dex}}`
+    (Chikyu empty until the user deploys), `SEL` (20 selectors from `cast sig`), `ITEM_TYPES`, `FOOD_TYPE`/`TYPE_FOOD`, `PRICES`.
+  - ABI: `W32` uint word, `A32` address word, `words()` → BigInt words, `arrAt(w,slot)` dynamic array, `unpack()` packed item,
+    `toWei/fromWei` (4-decimal DOGE). RPC: `ecall()` = `eth_call`, `etx()` = `eth_sendTransaction` + receipt poll (1.5 s, 200 tries).
+  - State: `chainData{inv,listings,pools,proceeds,fee,approved,loaded}`, `refreshChain()` (6 parallel reads + `poolInfo` per pool),
+    `chainAct(doneMsg,fn)` (one tx at a time via `wallet.busy`, result → `setWalletMsg`), `ensureApproved()` (`setApprovalForAll` once).
+  - Actions: `mintNft(type,level,src)` (credit or bag food; food goes back to the bag if the tx fails), `useNft()` (burn → heal /
+    +maxHp / +maxMp), `listNft`, `delistNft`, `buyListing`, `addLp` (ABI-encoded `uint256[]`), `removeLp`, `buyPool`, `sellPool`
+    (minOut = quote), `withdrawProceeds`. `chainBlockRow()` explains why on-chain rows are disabled.
+  - Gameplay: `swordLv()` / `armorLv()` = max(crafted, best owned NFT) used in `attack`, `bark`, `hurtPlayer`; listed/sold NFTs
+    stop counting after the next refresh. `RECIPES[].nft=[type,level]`; crafting calls `addCredit()`; `P.credits{'t:l':n}`.
+  - UI: forge mint rows (credits + PRESERVE food), bag NFT rows, Sphinx row "NFT MARKET: LISTINGS + LP POOLS" (only when
+    connected, so offline row order is unchanged), `marketMenu()`, A/D `adj()` on rows, scrolling menus (`MENU_ROWS=13`, ^/V hints).
+- Why: delivers the user's core web3 ask on top of IT-3/IT-4 without adding a library.
+- Alternatives rejected: ethers.js (precomputed selectors + 6 helpers cover it); text input for prices (no keyboard text UI in
+  the pixel menus → presets); separate equip step for gear NFTs (owning = wearing is simpler and can't desync on transfer);
+  a game backend that signs crafts (needs a server + key; documented limitation in D-018).
+- Process: the new `mkt` market-UI state collided with the price sim's `mkt` (practice 13 again) and broke every test → caught
+  in one run. Practice 22: "name-collision grep loop for every new top-level name" (the closeout now runs it).
+  The e2e caught a wrong test assumption (pre-existing anvil NFTs) → tests read state, not assumptions.
+- Verify: sim `✓ 0 failed` at seeds 4242/7 — 51 PASS incl. anvil e2e (connect, mint+equip, preserve, eat, list, buy, LP, swap,
+  remove LP, withdraw, market menu); `forge test` 20 passed; `ALL CHECKS PASSED`.
+- Commit: this commit.
+
 ### D-018 · 2026-11-07 · Phase 3 IT-4: DogeItems (ERC-721 crafter mint) + DogeDEX (listings + DOGE/item LP pools)
 - Feature: on-chain economy. The Mechanic mints every crafted item as an NFT for an exact 0.1 DOGE fee. The Sphinx DEX lets
   players sell NFTs at a fixed price, or create a DOGE/item liquidity pool that anyone can then swap against. No store and no

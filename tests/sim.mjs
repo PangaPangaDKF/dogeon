@@ -33,7 +33,8 @@ function fakeCanvas() { return { width: 0, height: 0, style: {}, getContext: () 
 function makeSandbox(opts = {}) {
   const listeners = {};
   const sb = {
-    console, setTimeout: () => 0, clearTimeout() {},
+    console, setTimeout: opts.realTimers ? setTimeout : () => 0, clearTimeout() {},
+    location: { search: opts.search || '' },
     performance: { now: () => 0 },
     innerWidth: 960, innerHeight: 672,
     window: opts.eth ? { ethereum: opts.eth } : {}, // no AudioContext -> sfx() hits its try/catch and stays silent
@@ -61,6 +62,8 @@ globalThis.__api = {
   REST_CAP, SKILL_THRESH, skillLv, skillMul, BAG_SIZE, FOODS,
   addToBag, bagCount, bagRemove, invMenu,
   tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
+  chainData, chainReady, refreshChain, mintNft, useNft, listNft, buyListing, delistNft, addLp, buyPool, sellPool, removeLp, withdrawProceeds,
+  swordLv, armorLv, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id,
 };`;
 
 function boot(seed, opts) {
@@ -538,6 +541,100 @@ await scenarioAsync('wallet: user rejects -> stays offline with a clear message'
   const msg = api.get().ui && api.get().ui.msg;
   if (api.wallet.connected || !/REJECTED/.test(msg || '')) fail('reject', `connected=${api.wallet.connected} msg="${msg}"`);
   else pass('reject', `"${msg}"`);
+});
+
+// ---------- Phase 3 IT-5: game <-> contracts end-to-end on a local anvil chain (D-019) ----------
+// Needs: anvil on 127.0.0.1:8545 with contracts/script/Deploy.s.sol deployed (contracts/README.md). Skipped otherwise.
+const ANVIL = 'http://127.0.0.1:8545', ACCT = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
+async function rpc(method, params = []) {
+  const r = await fetch(ANVIL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
+  const j = await r.json(); if (j.error) throw Object.assign(new Error(j.error.message), { code: j.error.code }); return j.result;
+}
+function anvilEth() { // EIP-1193 provider backed by anvil's unlocked dev account
+  return { on() {}, async request({ method, params }) {
+    if (method === 'eth_requestAccounts' || method === 'eth_accounts') return [ACCT];
+    if (method === 'wallet_switchEthereumChain' || method === 'wallet_addEthereumChain' || method === 'wallet_revokePermissions') return null;
+    return rpc(method, params);
+  } };
+}
+async function anvilUp(items) { try { return (await rpc('eth_getCode', [items, 'latest'])).length > 2; } catch { return false; } }
+const idle = async api => { for (let i = 0; i < 400 && api.wallet.busy; i++) await new Promise(r => setTimeout(r, 25)); if (api.wallet.busy) throw new Error('chain action never finished: ' + api.wallet.msg); };
+const big = (k, v) => (typeof v === 'bigint' ? String(v) : v);
+
+await scenarioAsync('chain e2e on local anvil: mint, equip, eat, list/buy, LP pool, swap, withdraw', async () => {
+  const probe = boot(SEED + 21, { search: '?chain=local' });
+  const items = probe.CONTRACTS['0x7a69'].items;
+  if (!probe.DEV_LOCAL || probe.CHAIN_ID() !== '0x7a69') throw new Error('?chain=local did not select the anvil chain');
+  if (!(await anvilUp(items))) { console.log('  SKIP  chain e2e: anvil not running or contracts not deployed (see contracts/README.md)'); return; }
+  const api = boot(SEED + 21, { eth: anvilEth(), search: '?chain=local', realTimers: true });
+  startGame(api);
+  openSphinx(api); api.press('e'); api.step(DT); await flush();
+  for (let i = 0; i < 100 && !api.chainData.loaded; i++) await new Promise(r => setTimeout(r, 20));
+  if (!api.chainReady() || !api.chainData.loaded) throw new Error(`not ready: connected=${api.wallet.connected} msg=${api.wallet.msg}`);
+  const P = api.get().P, inv0 = api.chainData.inv.length;
+  pass('e2e connect', `anvil ${api.wallet.addr.slice(0, 8)}.., fee ${Number(api.chainData.fee) / 1e18} DOGE, ${inv0} NFTs held`);
+
+  // forge credit -> mint hammer lv4 NFT -> owning it raises the effective hammer level
+  P.sword = 1; api.addCredit(1, 4);
+  await api.mintNft(1, 4, 'credit'); await idle(api);
+  const ham = api.chainData.inv.filter(it => it.type === 1 && it.level === 4).pop();
+  if (!ham || P.credits['1:4'] !== 0 || api.swordLv() !== 4) fail('e2e mint+equip', `ham=${JSON.stringify(ham)} credit=${P.credits['1:4']} swordLv=${api.swordLv()} msg=${api.wallet.msg}`);
+  else pass('e2e mint+equip', `HAMMER LV4 #${ham.id} minted, effective hammer LV${api.swordLv()} with P.sword=1`);
+
+  // preserve 3 raw fish from the bag as NFTs; eat one (burn) for HP
+  api.addToBag('raw_fish', 3);
+  for (let i = 0; i < 3; i++) { await api.mintNft(3, 1, 'raw_fish'); await idle(api); }
+  const fish = api.chainData.inv.filter(it => it.type === 3);
+  if (api.bagCount('raw_fish') !== 0 || fish.length < 3) fail('e2e preserve', `bag=${api.bagCount('raw_fish')} fishNFTs=${fish.length} msg=${api.wallet.msg}`);
+  else pass('e2e preserve', `3 RAW FISH moved from bag to chain (${fish.length} fish NFTs held)`);
+  P.hp = 20; await api.useNft(fish[0]); await idle(api);
+  const fish2 = api.chainData.inv.filter(it => it.type === 3);
+  if (P.hp !== 35 || fish2.some(f => f.id === fish[0].id)) fail('e2e eat', `hp=${P.hp} stillHeld=${fish2.some(f => f.id === fish[0].id)} msg=${api.wallet.msg}`);
+  else pass('e2e eat', `burned #${fish[0].id}, hp 20 -> 35`);
+
+  // list the hammer -> it stops counting as equipped -> buy it back -> proceeds -> withdraw
+  await api.listNft(ham, 1); await idle(api);
+  const lst = api.chainData.listings.find(l => l.id === ham.id);
+  const otherHam = Math.max(1, ...api.chainData.inv.filter(it => it.type === 1).map(it => it.level)); // other hammers this account may hold
+  if (!lst || !lst.mine || api.swordLv() !== otherHam || api.chainData.inv.some(it => it.id === ham.id)) fail('e2e list', `listing=${JSON.stringify(lst, big)} swordLv=${api.swordLv()} msg=${api.wallet.msg}`);
+  else pass('e2e list', `#${ham.id} listed for 1 DOGE, escrowed -> effective hammer LV${otherHam} (best still held)`);
+  const pr0 = api.chainData.proceeds;
+  await api.buyListing(lst); await idle(api);
+  if (api.chainData.proceeds - pr0 !== 10n ** 18n || api.swordLv() !== 4) fail('e2e buy', `proceeds +${api.chainData.proceeds - pr0} swordLv=${api.swordLv()} msg=${api.wallet.msg}`);
+  else pass('e2e buy', 'bought back, seller proceeds +1 DOGE, hammer LV4 again');
+
+  // LP: create (or join) the RAW FISH pool with the remaining fish, swap 1 out, swap it back, remove LP
+  const key = (3n << 8n) | 1n, mine = api.chainData.inv.filter(it => it.type === 3).map(it => it.id);
+  const before = api.chainData.pools.find(p => p.key === key);
+  const need = before && before.n ? (BigInt(mine.length) * before.doge + BigInt(before.n - 1)) / BigInt(before.n) : 2n * 10n ** 18n;
+  await api.addLp(mine, need); await idle(api);
+  let pool = api.chainData.pools.find(p => p.key === key);
+  if (!pool || pool.mine === 0n || pool.n < 2) fail('e2e LP', `pool=${JSON.stringify(pool, big)} msg=${api.wallet.msg}`);
+  else pass('e2e LP', `RAW FISH pool: ${pool.n} items / ${Number(pool.doge) / 1e18} DOGE, my shares ${pool.mine}`);
+  await api.buyPool(pool); await idle(api);
+  const got = api.chainData.inv.filter(it => it.type === 3);
+  pool = api.chainData.pools.find(p => p.key === key);
+  if (!got.length) fail('e2e swap buy', `no fish after buyFromPool msg=${api.wallet.msg}`);
+  else pass('e2e swap buy', `bought #${got[0].id} from the pool, pool now ${pool.n} items`);
+  await api.sellPool(got[0], pool); await idle(api);
+  pool = api.chainData.pools.find(p => p.key === key);
+  await api.removeLp(pool); await idle(api);
+  pool = api.chainData.pools.find(p => p.key === key);
+  if (pool.mine !== 0n) fail('e2e remove LP', `still hold ${pool.mine} shares msg=${api.wallet.msg}`);
+  else pass('e2e remove LP', `swap back + remove LP ok, proceeds ${Number(api.chainData.proceeds) / 1e18} DOGE`);
+  const bal0 = BigInt(await rpc('eth_getBalance', [ACCT, 'latest']));
+  await api.withdrawProceeds(); await idle(api);
+  const bal1 = BigInt(await rpc('eth_getBalance', [ACCT, 'latest']));
+  if (api.chainData.proceeds !== 0n || bal1 <= bal0) fail('e2e withdraw', `proceeds=${api.chainData.proceeds} balance delta=${bal1 - bal0} msg=${api.wallet.msg}`);
+  else pass('e2e withdraw', `proceeds paid out (+${Number(bal1 - bal0) / 1e18} DOGE after gas)`);
+
+  // the market menu renders the live state without throwing, and labels fit the menu box
+  api.marketMenu(api.get().NPCS.find(n => n.id === 'bank')); await idle(api); await flush();
+  for (let i = 0; i < 50 && api.wallet.busy; i++) await flush();
+  const rows = api.get().ui.build();
+  if (!rows.some(r => /POOL RAW FISH/.test(r.label)) || rows.some(r => r.label.length > 58)) fail('e2e market menu', rows.map(r => r.label).join(' | '));
+  else pass('e2e market menu', `${rows.length} rows, longest ${Math.max(...rows.map(r => r.label.length))} chars`);
+  for (let f = 0; f < 5; f++) api.step(DT); // render the menu (scroll window) a few frames
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

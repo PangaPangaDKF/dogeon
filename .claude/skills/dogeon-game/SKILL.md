@@ -5,7 +5,7 @@ description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bi
 
 # DOGEON — game context skill
 
-Version: 1.6 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 1.7 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #1 (user):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
 improve `prompts/SESSION_PROMPT.md` + this skill → update `CLAUDE.md`/`CONTEXT.md` → commit. Never batch features.
@@ -43,6 +43,9 @@ MetaMask needs http://localhost (`node tests/serve.mjs`). Anything needing the u
 DogeItems types 1..6 + `inventoryOf` packed `id<<16|type<<8|level`; DogeDEX listings + pools key `type<<8|level`, pull payments.
 Game calls use precomputed selectors (`cast sig`), never ethers. Never put a private key in the repo; deploy = user step.
 Test locally: `anvil` + `forge script ... --unlocked`. `bash tests/check.sh` stage 4 runs `forge test`.
+**Game ↔ chain (D-019):** CHAIN section holds `CONTRACTS`, `SEL`, raw ABI helpers, `etx` (send+receipt), `chainAct` (one tx at a time),
+`refreshChain` → `chainData`. Gear NFT owned = worn (`swordLv/armorLv`). Mint needs a forge credit or bag food (only playing gets stuff).
+Dev: `node tests/serve.mjs` + `anvil` + deploy, open `http://localhost:8080/?chain=local`. Sim e2e runs when anvil is up.
 **Feature ledger:** every feature also gets a row in `MASTER_PROMPT.md` §G (user rule).
 **Web3 refs (IT-3/IT-4):** user-supplied avaxskills.com index — use only chain-agnostic EVM skills (`evm-foundry`, `nft-basics`,
 `security`, `audit`, `testing`, `evm-wallet-integration`); DogeOS is not Avalanche, so ignore subnet/Warp/Fuji specifics.

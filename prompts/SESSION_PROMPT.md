@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 1.6 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 1.7 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -83,7 +83,13 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
     failure was the test running out of funds, not the contract (D-018) — read the trace before "fixing" code.
 21. **Probe the chain before choosing a compiler target** — `eth_call` with tiny bytecode tells you which opcodes exist.
 
+22. **Collision loop for every new top-level name** — `for n in <names>; do grep -oE "(const|let|function) $nb" index.html | wc -l; done`
+    (D-019: a new `mkt` shadowed the price sim and failed all 22 scenarios).
+23. **End-to-end against a real local chain** — anvil + the real contracts + the real game code through a provider shim
+    found what unit tests could not (pre-existing chain state). Assert on state you read, not on assumed state.
+
 ## Changelog
+- 1.7 (2026-11-07) — Practices 22-23 from IT-5 wiring (D-019).
 - 1.6 (2026-11-07) — Practices 20-21 from IT-4 contracts (D-018).
 - 1.5 (2026-11-07) — Practice 19 seeded generators (D-017).
 - 1.4 (2026-11-07) — RULE #1 step 6 (MASTER_PROMPT ledger) + "skip what needs the user's wallet"; practices 17-18 (D-016).
