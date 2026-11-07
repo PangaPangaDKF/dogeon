@@ -35,6 +35,18 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-009 · 2026-11-07 · Camp redesign (image 12): plaza, doors, crystals, coin mosaic, NPC pads, Ð coin icon
+- What:
+  - New tile types: DOOR, CRYSTAL, PAD. Plaza slab tile with grid lines. Gold crystal tile, round stone pad, wooden door leaf.
+  - Camp layout: 4 corner tents, double doors on each fence side, gold crystals at 4 symmetric spots, 3 round pads (N/W/E).
+  - MOSAIC: 96×96 pre-rendered canvas with gold ring, gridded interior, and the dog head template at 4×. Drawn behind the brazier fire.
+  - NPCs repositioned onto PADS: sphinx (bank) → N pad, elder (sage) → W pad, merchant → E pad.
+  - HUD coin icon redrawn as a Ð (Dogecoin symbol).
+- Why: User's image 12 defines the camp layout; Ð coin references are wanted everywhere (v1.2 scope).
+- Tool: Claude Code (Opus 4.6). No new test scenarios needed — existing camp safety and economy tests cover the layout.
+- Alternatives rejected: Animated mosaic sparkle (too flashy for MVP). NPCs staying at old hard-coded positions (pads are the reference layout).
+- Verify: `0 failed, 0 warnings (seed 4242)`.
+
 ### D-008 · 2026-11-07 · Phase 2 core: DOGE market, rest delay, weaker respawn, FUD → DOGE
 - What:
   - `MARKET` table plus `updMarket()`, a random walk that ticks once per second with mild pull back to $0.25. Sentiment is price vs. its 30 s average, clamped to −1…+1.

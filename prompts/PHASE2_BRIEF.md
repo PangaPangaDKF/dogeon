@@ -9,6 +9,9 @@ work plan (iterations) → acceptance criteria → definition of done. Paste it 
 
 > **SCOPE RULE (user, v1.1): MVP only.** Build exactly the features listed, in the simplest form, in the existing
 > basic style. No extra effects, no extra systems, no polish passes. The hero must follow images 3/4 on our sprite template.
+> **v1.2 (user):** minimalist and light (cheap per frame, no big effects), robust, basic style, **hard mode**, web3 is UI only,
+> and **DOGE coin references + Ð art everywhere** (HUD, menus, camp, title). This overrides the old "no Dogecoin logo" guardrail;
+> art is still drawn in code.
 > If an idea is not in §3, don't build it. ("pvp" in the user's message read as **MVP**; ask before any player-vs-player work.)
 
 ## 1. Role
@@ -46,7 +49,7 @@ and you loop (plan → build → test → log → commit → improve the prompt/
 
 ## 4. Constraints (non-negotiable)
 - One file, zero deps, no `fetch`/network, no `alert/confirm/prompt`, no external images. Concept art is **redrawn** as code pixel art.
-- Original art only: the coin mosaic uses our own shiba face, **not** the Dogecoin "Ð" logo. No real wallet addresses, no real chain calls.
+- Art drawn in code only (no image files). DOGE / Ð coin references are wanted everywhere (v1.2). No real wallet addresses, no real chain calls.
 - Camp stays fully safe (fix I-1 first). Healing still only in camp. New numbers live in balance tables (`MARKET`, `REST`, `ECON`, `RECIPES`, `ETYPES`).
 - Every text line ≤ 75 chars, uppercase pixel font. Tests must pass on Git Bash and Ubuntu/WSL.
 

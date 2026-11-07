@@ -115,15 +115,16 @@ SPR.boss=buildChar({head:'cat',pal:{...catPal,F:'#ececf4',C:'#ffffff',K:'#ececf4
 
 // small icons
 const [SHADOW,sg]=mk(12,4);rect(sg,2,0,8,1,'rgba(0,0,0,.35)');rect(sg,0,1,12,2,'rgba(0,0,0,.35)');rect(sg,2,3,8,1,'rgba(0,0,0,.35)');
-const [COIN,cg]=mk(7,7);rect(cg,2,0,3,1,'#7a5010');rect(cg,1,1,5,5,'#f0c030');rect(cg,0,2,1,3,'#7a5010');rect(cg,6,2,1,3,'#7a5010');rect(cg,2,6,3,1,'#7a5010');px(cg,1,1,'#7a5010');px(cg,5,1,'#7a5010');px(cg,1,5,'#7a5010');px(cg,5,5,'#7a5010');rect(cg,3,2,1,3,'#fff0a0');px(cg,2,2,'#fff8c0');
+const [COIN,cg]=mk(7,7);rect(cg,2,0,3,1,'#7a5010');rect(cg,1,1,5,5,'#f0c030');rect(cg,0,2,1,3,'#7a5010');rect(cg,6,2,1,3,'#7a5010');rect(cg,2,6,3,1,'#7a5010');px(cg,1,1,'#7a5010');px(cg,5,1,'#7a5010');px(cg,1,5,'#7a5010');px(cg,5,5,'#7a5010');for(const [x,y] of [[2,1],[3,1],[2,2],[4,2],[1,3],[2,3],[3,3],[4,3],[2,4],[4,4],[2,5],[3,5]])px(cg,x,y,'#7a5010'); // Ð coin
 const [WHISK,wg]=mk(9,7);for(let i=0;i<9;i++){px(wg,i,1+((i>6)?1:0),'#e8e8f0');px(wg,i,3,'#d0d0dc');px(wg,i,5-((i>6)?1:0),'#e8e8f0');}rect(wg,0,1,2,5,'#8a8a9c');
 const [YARN,yg]=mk(9,9);for(let y=0;y<9;y++)for(let x=0;x<9;x++){const d=Math.hypot(x-4,y-4);if(d<4.5)px(yg,x,y,d>3.6?'#7a5010':((x+y)%3===0?'#fff0a0':'#f0c030'));}
 function makeBone(vert){const [c,g]=mk(9,9);const P=(x,y,col)=>vert?px(g,y,x,col):px(g,x,y,col);for(let x=1;x<7;x++)P(x,4,'#f4f4f4');for(const x of [2,4])for(const y of [2,3,5,6])P(x,y,'#dcdcdc');P(7,3,'#f4f4f4');P(7,4,'#f4f4f4');P(7,5,'#f4f4f4');P(8,4,'#f4f4f4');P(0,3,'#dcdcdc');P(0,5,'#dcdcdc');P(7,4,'#202020');return c;}
 const BONE=[makeBone(false),makeBone(true)];
 
 // ================= TILES =================
-const T={GRASS:0,FLOWER:1,TALL:2,DIRT:3,STONE:4,WATER:5,TREE:6,ROCK:7,FENCE:8,WALL:9,DFLOOR:10,GATE:11,TENT:12,FIRE:13,BUSH:14};
-const SOLID=new Set([T.WATER,T.TREE,T.ROCK,T.FENCE,T.WALL,T.GATE,T.TENT,T.FIRE,T.BUSH]);
+const T={GRASS:0,FLOWER:1,TALL:2,DIRT:3,STONE:4,WATER:5,TREE:6,ROCK:7,FENCE:8,WALL:9,DFLOOR:10,GATE:11,TENT:12,FIRE:13,BUSH:14,DOOR:15,CRYSTAL:16,PAD:17};
+const SOLID=new Set([T.WATER,T.TREE,T.ROCK,T.FENCE,T.WALL,T.GATE,T.TENT,T.FIRE,T.BUSH,T.DOOR,T.CRYSTAL]);
+function plaza(g){rect(g,0,0,16,16,'#b4b0a4');rect(g,0,15,16,1,'#8a867c');rect(g,15,0,1,16,'#8a867c');rect(g,0,0,15,1,'#ccc8bc');rect(g,0,0,1,15,'#c4c0b4');}
 function grassBase(g,seed){const r=mulberry(seed);rect(g,0,0,16,16,'#58b040');for(let i=0;i<16;i++)px(g,r()*16,r()*16,'#479a35');for(let i=0;i<7;i++)px(g,r()*16,r()*16,'#76cc56');for(let i=0;i<2;i++){const x=1+r()*12|0,y=2+r()*12|0;px(g,x,y,'#3a8a2c');px(g,x+2,y,'#3a8a2c');px(g,x+1,y+1,'#3a8a2c');}}
 function blob(g,cx,cy,rx,ry,cols,seed){const r=mulberry(seed);for(let y=0;y<16;y++)for(let x=0;x<16;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,d=Math.sqrt(dx*dx+dy*dy);if(d<1){let c=cols[2];if(d>1-1.2/Math.min(rx,ry))c=cols[0];else{const l=(-dx-dy);if(l>0.55)c=cols[3];else if(l<-0.5)c=cols[1];if(r()<0.13)c=cols[1];if(r()<0.05)c=cols[3];}px(g,x,y,c);}}}
 function tile(fn){const [c,g]=mk(16,16);fn(g);return c;}
@@ -132,7 +133,10 @@ const TL={
  flower:[4,5].map(s=>tile(g=>{grassBase(g,s*77);const r=mulberry(s*13);for(let i=0;i<3;i++){const x=2+r()*11|0,y=2+r()*11|0,pc=['#ffffff','#f86868','#f8a8f0','#a0c8ff'][r()*4|0];px(g,x-1,y,pc);px(g,x+1,y,pc);px(g,x,y-1,pc);px(g,x,y+1,pc);px(g,x,y,'#f8e040');}})),
  tall:[6,7].map(s=>tile(g=>{grassBase(g,s*55);const r=mulberry(s*31);for(let i=0;i<7;i++){const x=1+r()*14|0,h=3+r()*4|0;rect(g,x,14-h,1,h,'#2e7826');px(g,x,13-h,'#6cc04c');}})),
  dirt:[8,9].map(s=>tile(g=>{const r=mulberry(s*17);rect(g,0,0,16,16,'#c89c5e');for(let i=0;i<14;i++)px(g,r()*16,r()*16,'#ac844a');for(let i=0;i<8;i++)px(g,r()*16,r()*16,'#dcbc7c');const x=r()*13|0,y=r()*13|0;rect(g,x,y,2,2,'#9a7444');px(g,x,y,'#e8d0a0');})),
- stone:[tile(g=>{rect(g,0,0,16,16,'#948c7c');const sl=(x,y,w,h)=>{rect(g,x,y,w-1,h-1,'#b8b0a0');rect(g,x,y,w-1,1,'#d0c8b8');rect(g,x,y,1,h-1,'#ccc4b4');rect(g,x+1,y+h-2,w-2,1,'#a49c8c');};sl(0,0,8,8);sl(8,0,8,8);sl(-4,8,8,8);sl(4,8,8,8);sl(12,8,8,8);})],
+ stone:[tile(plaza)],
+ door:tile(g=>{grassBase(g,35);rect(g,3,0,10,16,'#4a2c10');rect(g,4,1,8,14,'#9a6a34');for(const x of [6,9])rect(g,x,1,1,14,'#6a4418');rect(g,4,4,8,1,'#5a3414');rect(g,4,11,8,1,'#5a3414');}),
+ crystal:tile(g=>{plaza(g);rect(g,4,13,8,2,'rgba(0,0,0,.25)');rect(g,5,4,6,10,'#7a5010');rect(g,6,3,4,11,'#f0c030');rect(g,6,4,2,9,'#fff0a0');px(g,7,2,'#7a5010');px(g,8,2,'#7a5010');}),
+ pad:tile(g=>{plaza(g);for(let y=0;y<16;y++)for(let x=0;x<16;x++){const d=Math.hypot(x-7.5,y-7.5);if(d<7.5)px(g,x,y,d>6.3?'#7c786e':'#a8a49a');}}),
  water:[0,1].map(f=>tile(g=>{rect(g,0,0,16,16,'#2f6cc8');for(let i=0;i<6;i++)px(g,(i*5+3)%16,(i*7+f*3)%16,'#2458a8');for(let i=0;i<4;i++){const y=(i*4+f*2)%16,x0=(i*7+f*4)%16;for(let k=0;k<4;k++)px(g,(x0+k)%16,y+(k===1||k===2?0:1),'#6aaaf2');}})),
  tree:[11,12].map(s=>tile(g=>{grassBase(g,s);blob(g,8,8,8.2,8.2,['#123614','#226a24','#2f8a2c','#5cbc44'],s*7);})),
  rock:[tile(g=>{grassBase(g,21);rect(g,3,13,11,2,'rgba(0,0,0,.25)');blob(g,8,9,6.5,5.2,['#34343c','#6a6a74','#8c8c96','#c0c0ca'],5);})],
@@ -142,15 +146,23 @@ const TL={
  wall:[tile(g=>{rect(g,0,0,16,16,'#3a3248');for(let r=0;r<4;r++){const y=r*4,off=(r%2)*4;for(let bx=-8;bx<16;bx+=8){rect(g,bx+off+1,y+1,6,3,'#6a6080');rect(g,bx+off+1,y+1,6,1,'#8a80a0');rect(g,bx+off+1,y+3,6,1,'#544a68');}}})],
  dfloor:[41,42].map(s=>tile(g=>{const r=mulberry(s);rect(g,0,0,16,16,'#5e4c3e');rect(g,0,0,16,1,'#3e3028');rect(g,0,8,16,1,'#3e3028');rect(g,0,0,1,8,'#3e3028');rect(g,8,8,1,8,'#3e3028');rect(g,1,1,15,1,'#705c4a');rect(g,0,9,16,1,'#705c4a');for(let i=0;i<6;i++)px(g,r()*16,r()*16,'#76624e');for(let i=0;i<4;i++)px(g,r()*16,r()*16,'#46382c');})),
  gate:null,
- tent:[tile(g=>{grassBase(g,51);for(let y=3;y<15;y++){const hw=Math.floor((y-3)*0.62)+1;rect(g,8-hw,y,hw,1,'#c8b488');rect(g,8,y,hw,1,'#e8d8b0');px(g,8-hw-1,y,'#4a3018');px(g,8+hw,y,'#4a3018');}rect(g,2,15,13,1,'#4a3018');for(let y=9;y<15;y++){const hw=Math.floor((y-9)*0.5);rect(g,8-hw,y,hw*2+1,1,'#3a2814');}px(g,8,2,'#6a4018');px(g,8,1,'#d83030');px(g,9,1,'#d83030');})],
- fire:[tile(g=>{rect(g,0,0,16,16,'#948c7c');rect(g,1,1,14,14,'#a49c8c');for(let i=0;i<10;i++){const a=i/10*6.283,x=8+Math.cos(a)*6,y=8.5+Math.sin(a)*5.5;rect(g,Math.round(x)-1,Math.round(y)-1,3,2,'#5a5a62');px(g,Math.round(x)-1,Math.round(y)-1,'#9a9aa4');}rect(g,4,9,8,2,'#5a3414');rect(g,5,8,6,1,'#7a4a20');rect(g,6,7,4,5,'#2a1a10');})]
+ tent:[tile(g=>{plaza(g);for(let y=3;y<15;y++){const hw=Math.floor((y-3)*0.62)+1;rect(g,8-hw,y,hw,1,'#c8b488');rect(g,8,y,hw,1,'#e8d8b0');px(g,8-hw-1,y,'#4a3018');px(g,8+hw,y,'#4a3018');}rect(g,2,15,13,1,'#4a3018');for(let y=9;y<15;y++){const hw=Math.floor((y-9)*0.5);rect(g,8-hw,y,hw*2+1,1,'#3a2814');}px(g,8,2,'#6a4018');px(g,8,1,'#d83030');px(g,9,1,'#d83030');})],
+ fire:[tile(g=>{plaza(g);rect(g,3,8,10,5,'#7a5010');rect(g,4,8,8,4,'#f0c030');rect(g,4,8,8,1,'#fff0a0');rect(g,6,13,4,2,'#7a5010');rect(g,5,7,6,2,'#2a1a10');})]
 };
 TL.gate=[tile(g=>{g.drawImage(TL.dfloor[0],0,0);for(const x of [1,5,9,13]){rect(g,x,0,2,16,'#2a2a38');rect(g,x,0,1,16,'#9a9ab0');}rect(g,0,3,16,2,'#2a2a38');rect(g,0,3,16,1,'#a0a0b8');rect(g,0,11,16,2,'#2a2a38');rect(g,0,11,16,1,'#a0a0b8');})];
+// camp coin mosaic: gold ring + our own shiba face (HEAD.dog template at 4x). Not the Dogecoin logo.
+const MOSAIC=(()=>{const [c,g]=mk(96,96);
+  for(let y=0;y<96;y++)for(let x=0;x<96;x++){const d=Math.hypot(x-47.5,y-47.5);if(d<48)px(g,x,y,d>46?'#7a5010':d>41?(y<44?'#fff0a0':'#f0c030'):d>40?'#7a5010':((x%6===0||y%6===0)?'#d8a028':'#e8b838'));}
+  const pal={O:'#5a3410',F:'#e8922c',C:'#fbe8c4',P:'#f0a0a0',E:'#1a0e08',N:'#1a0e08'};
+  HEAD.dog.down.forEach((row,y)=>{for(let x=0;x<16;x++){const col=pal[row[x]];if(col)rect(g,16+x*4,28+y*4,4,4,col);}});
+  return c;})();
 
 // ================= MAP =================
 const MW=80,MH=60;
 const CX=40,CY=34;
 const CAMP={x0:33,y0:27,x1:47,y1:41};
+const FY=CY+4,MOS_Y=CY-1; // brazier row, coin mosaic centre row
+const PADS=[[CX,CAMP.y0+2],[CAMP.x0+3,CY],[CAMP.x1-3,CY]]; // N, W, E NPC pads
 const DUN={x0:26,y0:2,x1:54,y1:17};
 const GATE_ROW=9;
 const map=new Uint8Array(MW*MH);
@@ -173,8 +185,12 @@ function genMap(){
   for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(x<2||y<2||x>=MW-2||y>=MH-2)setT(x,y,T.TREE);}
   // camp
   for(let y=CAMP.y0;y<=CAMP.y1;y++)for(let x=CAMP.x0;x<=CAMP.x1;x++){const edge=x===CAMP.x0||x===CAMP.x1||y===CAMP.y0||y===CAMP.y1;const gap=Math.abs(x-CX)<=1||Math.abs(y-CY)<=1;setT(x,y,edge&&!gap?T.FENCE:T.STONE);}
-  for(const [x,y] of [[CAMP.x0+2,CAMP.y0+2],[CAMP.x1-2,CAMP.y0+2],[CAMP.x0+2,CAMP.y1-2],[CAMP.x1-2,CAMP.y1-2],[CAMP.x0+4,CAMP.y0+2],[CAMP.x1-4,CAMP.y1-2]])setT(x,y,T.TENT);
-  setT(CX,CY,T.FIRE);
+  // camp layout (concept image 12): doors beside each gap, corner tents, crystals, NPC pads, brazier south of the coin
+  for(const d of [-2,2]){setT(CX+d,CAMP.y0,T.DOOR);setT(CX+d,CAMP.y1,T.DOOR);setT(CAMP.x0,CY+d,T.DOOR);setT(CAMP.x1,CY+d,T.DOOR);}
+  for(const [x,y] of [[CAMP.x0+2,CAMP.y0+2],[CAMP.x1-2,CAMP.y0+2],[CAMP.x0+2,CAMP.y1-2],[CAMP.x1-2,CAMP.y1-2]])setT(x,y,T.TENT);
+  for(const [x,y] of [[CX-3,CY-4],[CX+3,CY-4],[CX-3,CY+2],[CX+3,CY+2]])setT(x,y,T.CRYSTAL);
+  for(const [x,y] of PADS)setT(x,y,T.PAD);
+  setT(CX,FY,T.FIRE);
   // ruins
   for(let y=DUN.y0;y<=DUN.y1;y++)for(let x=DUN.x0;x<=DUN.x1;x++){const edge=x===DUN.x0||x===DUN.x1||y===DUN.y0||y===DUN.y1||y===DUN.y0+1;setT(x,y,edge?T.WALL:T.DFLOOR);}
   for(let x=CX-1;x<=CX+1;x++)setT(x,DUN.y1,T.DFLOOR);
@@ -193,6 +209,7 @@ function tileCanvas(tx,ty,t){
     case T.WALL:return TL.wall[0];case T.DFLOOR:return TL.dfloor[h%2];
     case T.GATE:return state.gateOpen?TL.dfloor[0]:TL.gate[0];
     case T.TENT:return TL.tent[0];case T.FIRE:return TL.fire[0];
+    case T.DOOR:return TL.door;case T.CRYSTAL:return TL.crystal;case T.PAD:return TL.pad;
   }
   return TL.grass[0];
 }
@@ -223,9 +240,9 @@ const ETYPES={
 };
 let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,scene='title',winT=0;
 const NPCS=[
-  {id:'merchant',name:'BARKSLEY THE MERCHANT',spr:'merchant',x:(CX-3)*16+8,y:CY*16+8,hw:6,hh:4,dir:'down',met:false},
-  {id:'bank',name:'SIR HODL, VAULT KEEPER',spr:'bank',x:(CX+3)*16+8,y:CY*16+8,hw:6,hh:4,dir:'down',met:false},
-  {id:'quest',name:'ELDER SHIBE',spr:'sage',x:CX*16+8,y:(CY-3)*16+8,hw:6,hh:4,dir:'down',met:false}
+  {id:'merchant',name:'BARKSLEY THE MERCHANT',spr:'merchant',x:PADS[2][0]*16+8,y:PADS[2][1]*16+8,hw:6,hh:4,dir:'down',met:false},
+  {id:'bank',name:'SIR HODL, VAULT KEEPER',spr:'bank',x:PADS[0][0]*16+8,y:PADS[0][1]*16+8,hw:6,hh:4,dir:'down',met:false},
+  {id:'quest',name:'ELDER SHIBE',spr:'sage',x:PADS[1][0]*16+8,y:PADS[1][1]*16+8,hw:6,hh:4,dir:'down',met:false}
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false};
@@ -486,10 +503,11 @@ function drawChar(spr,dir,fr,x,feetY,scale,ox,oy,tint){
   ctx.drawImage(c,sx,sy,16*scale,20*scale);
 }
 function drawFire(ox,oy){
-  const x=CX*16+8-Math.round(ox),y=CY*16+8-Math.round(oy);
+  ctx.drawImage(MOSAIC,CX*16+8-48-Math.round(ox),MOS_Y*16+8-48-Math.round(oy)); // floor decoration, walkable
+  const x=CX*16+8-Math.round(ox),y=FY*16+8-Math.round(oy);
   for(let i=0;i<14;i++){const h=5+Math.sin(time*14+i*1.7)*2+(i%3),w=i<7?i:13-i;const col=i<3||i>10?'#d83818':i<5||i>8?'#f88820':'#ffe060';ctx.fillStyle=col;ctx.fillRect(x-7+i,y+2-h-w*0.6,1,h+w*0.6);}
   ctx.fillStyle='#fff8c0';ctx.fillRect(x-1,y-3+Math.round(Math.sin(time*20)),2,3);
-  if(Math.random()<0.3)parts.push({x:CX*16+8+R(-4,4),y:CY*16+2,vx:R(-5,5),vy:R(-30,-15),life:R(0.3,0.7),col:'#ffb040'});
+  if(Math.random()<0.3)parts.push({x:CX*16+8+R(-4,4),y:FY*16+2,vx:R(-5,5),vy:R(-30,-15),life:R(0.3,0.7),col:'#ffb040'});
 }
 function drawWorld(){
   const sx=shakeT>0?R(-2,2):0,sy=shakeT>0?R(-2,2):0;
