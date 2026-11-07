@@ -7,9 +7,9 @@
 
 ## 1. What DOGEON is
 
-A single-file (~770 lines) vanilla JS Canvas top-down action RPG at `C:\Users\dulbi\dogeon\`.
+A single-file (~1000 lines) vanilla JS Canvas top-down action RPG at `C:\Users\dulbi\dogeon\`.
 16-bit Genesis aesthetic, 320×224, 16×16 tiles, 16×20 character sprites drawn in code.
-Zero dependencies, zero network calls. Opens by double-clicking `index.html`.
+Zero dependencies. The game itself makes no network calls; on-chain features go through the player's wallet (EIP-1193) after CONNECT. Opens by double-clicking `index.html` (wallets need `node tests/serve.mjs` → http://localhost:8080).
 
 **Theme:** hammer-wielding shiba doge vs half-human cats, with a simulated DOGE cryptocurrency market
 that changes game difficulty in real time. DOGE/Ð coin references are wanted **everywhere** (HUD, menus, camp mosaic, title).
@@ -85,11 +85,16 @@ Published artifact: https://claude.ai/artifact/SyvKSryRuYi2yPtHtHrHyy
 ## 3. Commit history (newest first)
 
 ```
-(IT-3) feat: Phase 3 IT-3 wallet connect — hash: `git log --oneline -3`
+2e830ea fix: IT-5 review findings — no craft duplication, safe refunds, account switch
+2024e7e feat: Phase 3 IT-6 survival tests, bag slots/materials, death empties bag, README
+5466ae4 feat: Phase 3 IT-5 game <-> contracts — forge mint, NFT bag, Sphinx NFT market + LP
+c602e24 feat(contracts): Phase 3 IT-4 DogeItems ERC-721 + DogeDEX listings and LP pools
+faeebbd fix: IT-2 review findings — pond RNG reshuffle, facing cast, ninja turf
+9d70cf9 feat: Phase 3 IT-3 real wallet connect on DogeOS Chikyu (no library)
 02adc15 feat: Phase 3 IT-2 fishing, per-skill tiers, enemy pressure 22/3s
 c06128e docs: pin IT-1 commit hash in CONTEXT.md
 a9fa508 feat: Phase 3 IT-1 rest cap, inventory bag, skill-by-use
-eaea704 docs(prompt): Phase 3 brief "Doge Chain"
+eaea704 docs(prompt): Phase 3 brief "Doge Chain" — real web3 + survival mechanics
 486267a docs: add CONTEXT.md for session continuity
 825f9c7 docs: IT-7 tests, CLAUDE.md, brief — Phase 2 complete
 a515ad1 feat: Sphinx DEX, Elder lore, Mechanic forge + DOGE references
@@ -101,7 +106,7 @@ d75608c fix: camp sanctuary guard and particle leak while UI is open
 afe32e0 docs(prompt): phase 2 brief + solidity/rust skills
 e4a4593 docs: decision log with first review and open issues
 63bc3b0 test: zero-dependency check script and headless game simulation
-db9225a chore(skills): add caveman, find-skills, game-design skills
+db9225a chore(skills): add caveman, find-skills, game-design skills and own dogeon-game + terminal-testing skills
 1f9abf8 docs: project memory, master prompt and living session prompt
 4281eb1 chore: DOGEON MVP baseline (index.html as delivered)
 ```
@@ -230,7 +235,8 @@ Exposes `__api` with: `get()`, `step(dt)`, `press(k)`, `hold(k,v)`, `talk()`, `M
 
 ```
 C:\Users\dulbi\dogeon\
-├── index.html              ← THE GAME (~770 lines, everything in one file)
+├── index.html              ← THE GAME (~1000 lines, everything in one file)
+├── README.md               ← player guide (controls, survival, web3 steps)
 ├── CLAUDE.md               ← project memory for Claude Code (rules, code map, invariants)
 ├── CONTEXT.md              ← THIS FILE (session context for continuation)
 ├── contracts/            ← Foundry: src/DogeItems.sol, src/DogeDEX.sol, test/, script/Deploy.s.sol, README (lib/ gitignored)
@@ -241,7 +247,8 @@ C:\Users\dulbi\dogeon\
 │   ├── PHASE3_BRIEF.md     ← Phase 3 prompt (v1.0, CURRENT)
 │   └── SESSION_PROMPT.md   ← living session opener
 ├── tests/
-│   ├── check.sh            ← static rules + syntax + sim (run with bash)
+│   ├── check.sh            ← static rules + syntax + sim + forge test (run with bash)
+│   ├── serve.mjs           ← localhost server for MetaMask (node tests/serve.mjs)
 │   └── sim.mjs             ← headless game simulation (343 lines, 20 scenarios)
 └── .claude/
     └── skills/             ← 30+ skills (dogeon-game, terminal-testing, solidity, rust, etc.)
