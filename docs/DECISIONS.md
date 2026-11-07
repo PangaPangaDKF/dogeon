@@ -35,6 +35,22 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-008 · 2026-11-07 · Phase 2 core: DOGE market, rest delay, weaker respawn, FUD → DOGE
+- What:
+  - `MARKET` table plus `updMarket()`, a random walk that ticks once per second with mild pull back to $0.25. Sentiment is price vs. its 30 s average, clamped to −1…+1.
+  - Falling price: enemy damage up to +50% (applied in `hurtPlayer`), enemy speed up to +15%, and a dark-red screen overlay. Rising price: player hammer/bark damage up to +50%, speed up to +10%.
+  - The HUD shows `DOGE $price` and `±% BULL/BEAR/FLAT` in place of SWORD/VAULT.
+  - Rest: holding R in camp waits `REST_DELAY`=3 s ("CATCHING BREATH… 3,2,1") before healing.
+  - Respawn: 35% HP/MP (`RESPAWN_FRAC`).
+  - The currency is renamed FUD → DOGE (variable `P.doge`).
+- Why: The user's Phase 2 request, G5–G7 in `prompts/PHASE2_BRIEF.md`.
+- Tool: Claude Code (Opus 5.5). 3 new sim scenarios: rest delay, respawn, market bounds plus bear damage 10→15.
+- Alternatives rejected:
+  - Trend events, regime pop-ups, a price chart, and an AMM pool with impermanent loss. Cut after the user asked for MVP scope ("no effects or extra development").
+  - A gold overlay for bull markets: not requested.
+- Verify: `0 failed, 0 warnings`.
+- Process: The user's mid-task note became the **MVP scope rule** in the brief (v1.1) and in memory.
+
 ### D-007 · 2026-11-07 · Fix I-1 (bone hits inside camp) and I-2 (particle leak during UI)
 - What: Bone collision skips the player when `playerInCamp()`. `hurtPlayer()` also returns early in camp, so no future damage source can break the sanctuary. `update()` keeps calling `updateParts(dt)` while a dialog or menu is open.
 - Why: Phase 2 (IT-1) must start from a safe camp. The sanctuary is a design pillar.

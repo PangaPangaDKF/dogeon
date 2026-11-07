@@ -1,11 +1,15 @@
 # DOGEON — Phase 2 Brief: "Market of Much Wow"
 
-Version 1.0 · 2026-11-07 · Built from the user's request + 12 concept images.
+Version 1.1 · 2026-11-07 · Built from the user's request + 12 concept images. v1.1: MVP scope rule (user feedback).
 This is an *enhanced prompt*: role → context → goals → constraints → resolved ambiguities →
 work plan (iterations) → acceptance criteria → definition of done. Paste it (or point to it with
 `@prompts/PHASE2_BRIEF.md`) to drive any session that continues Phase 2.
 
 ---
+
+> **SCOPE RULE (user, v1.1): MVP only.** Build exactly the features listed, in the simplest form, in the existing
+> basic style. No extra effects, no extra systems, no polish passes. The hero must follow images 3/4 on our sprite template.
+> If an idea is not in §3, don't build it. ("pvp" in the user's message read as **MVP**; ask before any player-vs-player work.)
 
 ## 1. Role
 You are the lead engineer and pixel artist of DOGEON. You ship in small, verified, committed iterations,
@@ -51,14 +55,17 @@ and you loop (plan → build → test → log → commit → improve the prompt/
 2. "BACK" = bank. The sphinx **replaces Sir Hodl** (vault) and **Barksley** (shop): items are bought with DOGE at the DEX.
 3. Currency **FUD → DOGE**. Prices are anchored in USD; at the start price $0.25 the old economy is identical (1 whisker = 3 DOGE).
    Rising price → items cost fewer DOGE, loot swaps for fewer DOGE. "Sell loot in dumps, buy gear in pumps."
-4. Liquidity pool = constant-product AMM DOGE/WHISK simulated locally, arbitraged to the market every second, earns fees,
-   **safe on death** (like the old vault) but suffers impermanent loss. Stake = plain safe vault with a tiny yield.
+4. Liquidity pool (MVP) = "CREATE POOL" once, then ADD / REMOVE DOGE. Pooled DOGE is **safe on death** (replaces the vault)
+   and earns a small fixed yield while you play. No AMM math, no chart (cut by the scope rule).
 5. Old doge = the Elder (quest giver keeps working) + market report + lore. Mechanic = forge: hammer upgrades and special gear.
 6. Hero weapon is a hammer: the "sword" upgrade track becomes "HAMMER" in all UI text (internal variable names kept to keep diffs small).
 7. New enemies drop materials: frog → ORB, ninja → SCRAP, bull → HORN, knight → STEEL; cats still drop WHISKERS.
    Death loses 50% carried DOGE and all whiskers + materials.
-8. Market effect = *sentiment* (price vs. its 45 s moving average) in −1…+1. Bear: enemy dmg up to +50%, speed +15%, screen dark-red overlay.
-   Bull: player dmg up to +50%, speed +10%, light gold HUD glow.
+8. Market = simple random walk ticking once per second. *Sentiment* = price vs. its 30 s average, in −1…+1.
+   Falling: enemy dmg up to +50%, speed +15%, one dark-red screen overlay. Rising: player dmg up to +50%, speed +10%.
+   No pop-ups, no extra effects.
+11. New enemies reuse existing AI behaviours (frog = ranged like archer, ninja = fast melee, bull = charger like brute,
+    knight = tough melee). No new AI states.
 9. Rest: hold R still for 3 s ("CATCHING BREATH" bar) before +10 HP/s, +8 MP/s. Moving or releasing resets it.
 10. Respawn at 35% HP and 35% MP.
 
@@ -76,7 +83,7 @@ and you loop (plan → build → test → log → commit → improve the prompt/
 - [ ] Hero, 3 NPCs and 4 new enemy types are visible, readable, animated in 4 directions.
 - [ ] Camp matches image 12's layout; enemies still can't enter; bones can't hit you inside.
 - [ ] HUD shows DOGE price with up/down colour; bear market visibly darkens/reddens the map; multipliers apply.
-- [ ] Sphinx: wallet panel, swap loot→DOGE, buy items with DOGE, create/add/remove LP, stake/unstake, price chart.
+- [ ] Sphinx: wallet panel (simulated), swap loot→DOGE, buy items with DOGE, create pool / add / remove.
 - [ ] Mechanic: recipes burn materials, show what is missing, grant gear.
 - [ ] Elder reports price + trend and tells rotating lore; quests 0→4 still completable.
 - [ ] R needs 3 s of stillness before healing; death respawns at 35% HP/MP.

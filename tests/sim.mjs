@@ -48,7 +48,8 @@ function makeSandbox() {
 // Harness appended to the game script so it shares the game's top-level scope.
 const HARNESS = String.raw`
 globalThis.__api = {
-  get: () => ({ scene, P, enemies, projs, items, parts, floats, ui, state, NPCS }),
+  get: () => ({ scene, P, enemies, projs, items, parts, floats, ui, state, NPCS, mkt }),
+  MARKET, REST_DELAY, RESPAWN_FRAC, hurtPlayer, respawn,
   set P_(v) { Object.assign(P, v); },
   step(dt) { update(dt); render(); for (const k in pressed) delete pressed[k]; },
   press(k) { pressed[k] = true; },
@@ -78,7 +79,7 @@ function checkFrame(api, name, f) {
   const g = api.get();
   if (!Number.isFinite(g.P.x) || !Number.isFinite(g.P.y)) throw new Error(`player position NaN at frame ${f}`);
   if (g.P.hp > g.P.maxHp + 1e-6) throw new Error(`hp ${g.P.hp} > maxHp ${g.P.maxHp} at frame ${f}`);
-  if (g.P.fud < 0 || g.P.bank < 0 || g.P.whisk < 0) throw new Error(`negative currency at frame ${f}`);
+  if (g.P.doge < 0 || g.P.bank < 0 || g.P.whisk < 0) throw new Error(`negative currency at frame ${f}`);
   for (const e of g.enemies) {
     const tx = Math.floor(e.x / 16), ty = Math.floor(e.y / 16);
     if (api.inCampT(tx, ty)) throw new Error(`${e.type} entered the camp at tile ${tx},${ty} (frame ${f})`);
@@ -184,11 +185,11 @@ scenario('economy: bank + shop flows', () => {
   const bank = g.NPCS.find(n => n.id === 'bank');
   bank.met = true; api.talk(bank);
   api.press('e'); api.step(DT); // exchange
-  if (api.get().P.fud !== 30 || api.get().P.whisk !== 0) fail('bank exchange', `expected 30 FUD/0 whiskers, got ${api.get().P.fud}/${api.get().P.whisk}`);
-  else pass('bank exchange', '10 whiskers -> 30 FUD');
+  if (api.get().P.doge !== 30 || api.get().P.whisk !== 0) fail('bank exchange', `expected 30 DOGE/0 whiskers, got ${api.get().P.doge}/${api.get().P.whisk}`);
+  else pass('bank exchange', '10 whiskers -> 30 DOGE');
   api.press('escape'); api.step(DT);
   const shop = g.NPCS.find(n => n.id === 'merchant');
-  shop.met = true; api.get().P.fud = 1000; api.get().P.armor = 1; api.talk(shop);
+  shop.met = true; api.get().P.doge = 1000; api.get().P.armor = 1; api.talk(shop);
   const labels = api.get().ui.build().map(o => o.label);
   // Menu row: label starts at x=48, price is right-aligned near x=250 -> keep labels <= 50 chars, no float noise.
   const bad = labels.filter(l => l.length > 50 || /\d\.\d{3,}/.test(l));
@@ -222,6 +223,56 @@ scenario('in-flight bone vs player standing just inside the camp gap', () => {
   for (let f = 0; f < 60; f++) api.step(DT);
   if (api.get().P.hp < hp0) fail('camp gap bone', `bone hit the player inside camp (hp ${hp0} -> ${api.get().P.hp}); bone hitbox reaches past the camp tile check`);
   else pass('camp gap bone', 'bone stopped at the camp edge');
+});
+
+scenario('rest needs REST_DELAY seconds of stillness before healing', () => {
+  const api = boot(SEED + 6);
+  startGame(api);
+  const P = api.get().P;
+  P.hp = 10; P.mp = 0; // player starts inside camp
+  api.hold('r', true);
+  for (let f = 0; f < Math.floor(60 * (api.REST_DELAY - 0.5)); f++) api.step(DT);
+  if (api.get().P.hp !== 10) fail('rest delay', `healed before the delay (hp ${api.get().P.hp})`);
+  else pass('rest delay', `no healing in the first ${api.REST_DELAY - 0.5}s`);
+  for (let f = 0; f < 60 * 2; f++) api.step(DT);
+  api.hold('r', false);
+  if (api.get().P.hp > 10) pass('rest heals', `hp 10 -> ${Math.round(api.get().P.hp)} after the delay`);
+  else fail('rest heals', 'no healing after the delay');
+});
+
+scenario('death respawns with reduced HP and MP', () => {
+  const api = boot(SEED + 7);
+  startGame(api);
+  const P = api.get().P;
+  P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.inv = 0; P.hp = 1; // outside camp
+  api.hurtPlayer(50, { x: P.x + 10, y: P.y });
+  for (let f = 0; f < 60 * 3; f++) api.step(DT);
+  const g = api.get();
+  const eHp = Math.ceil(g.P.maxHp * api.RESPAWN_FRAC), eMp = Math.floor(g.P.maxMp * api.RESPAWN_FRAC);
+  if (g.P.dead || g.P.hp !== eHp || g.P.mp !== eMp) fail('respawn', `expected hp ${eHp} mp ${eMp}, got ${g.P.hp}/${g.P.mp} dead=${g.P.dead}`);
+  else pass('respawn', `hp ${eHp}/${g.P.maxHp}, mp ${eMp}/${g.P.maxMp}`);
+});
+
+scenario('market: bounded random price, sentiment drives multipliers', () => {
+  const api = boot(SEED + 8);
+  startGame(api);
+  let lo = Infinity, hi = 0, minS = 0, maxS = 0;
+  api.get().P.x = 40 * 16 + 8; // stay in camp so we only measure the market
+  for (let f = 0; f < 60 * 600; f++) { // 10 minutes
+    api.step(DT);
+    const m = api.get().mkt;
+    lo = Math.min(lo, m.p); hi = Math.max(hi, m.p); minS = Math.min(minS, m.sent); maxS = Math.max(maxS, m.sent);
+    if (!(m.p >= api.MARKET.min && m.p <= api.MARKET.max) || Math.abs(m.sent) > 1) throw new Error(`price/sentiment out of bounds p=${m.p} s=${m.sent}`);
+  }
+  if (minS > -0.3 || maxS < 0.3) fail('market swings', `sentiment barely moves (${minS.toFixed(2)}..${maxS.toFixed(2)})`);
+  else pass('market', `price $${lo.toFixed(3)}..$${hi.toFixed(3)}, sentiment ${minS.toFixed(2)}..${maxS.toFixed(2)}`);
+  // bear market makes enemy hits stronger
+  const P = api.get().P;
+  P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.armor = 0; P.hp = P.maxHp = 999; P.inv = 0;
+  api.get().mkt.sent = -1; api.hurtPlayer(10, { x: P.x + 5, y: P.y });
+  const bearHit = 999 - P.hp;
+  if (bearHit !== 15) fail('bear damage', `10 dmg in full bear market should hit 15, hit ${bearHit}`);
+  else pass('bear damage', '10 -> 15 at sentiment -1');
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

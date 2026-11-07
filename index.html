@@ -47,7 +47,7 @@ const kp=(...ks)=>ks.some(k=>pressed[k]);
 // ================= PIXEL FONT 3x5 =================
 const FONT={A:[2,5,7,5,5],B:[6,5,6,5,6],C:[3,4,4,4,3],D:[6,5,5,5,6],E:[7,4,6,4,7],F:[7,4,6,4,4],G:[3,4,5,5,3],H:[5,5,7,5,5],I:[7,2,2,2,7],J:[1,1,1,5,2],K:[5,5,6,5,5],L:[4,4,4,4,7],M:[5,7,5,5,5],N:[6,5,5,5,5],O:[2,5,5,5,2],P:[6,5,6,4,4],Q:[2,5,5,6,3],R:[6,5,6,5,5],S:[3,4,2,1,6],T:[7,2,2,2,2],U:[5,5,5,5,7],V:[5,5,5,5,2],W:[5,5,7,7,5],X:[5,5,2,5,5],Y:[5,5,2,2,2],Z:[7,1,2,4,7],
 '0':[7,5,5,5,7],'1':[2,6,2,2,7],'2':[6,1,2,4,7],'3':[6,1,2,1,6],'4':[5,5,7,1,1],'5':[7,4,6,1,6],'6':[3,4,7,5,7],'7':[7,1,2,2,2],'8':[7,5,7,5,7],'9':[7,5,7,1,6],
-'.':[0,0,0,0,2],',':[0,0,0,2,4],'!':[2,2,2,0,2],'?':[6,1,2,0,2],':':[0,2,0,2,0],'-':[0,0,7,0,0],'+':[0,2,7,2,0],'/':[1,1,2,4,4],"'":[2,2,0,0,0],'(':[1,2,2,2,1],')':[4,2,2,2,4],'>':[4,2,1,2,4],'<':[1,2,4,2,1],'=':[0,7,0,7,0],'%':[5,1,2,4,5],'*':[0,5,2,5,0],'"':[5,5,0,0,0]};
+'.':[0,0,0,0,2],',':[0,0,0,2,4],'!':[2,2,2,0,2],'?':[6,1,2,0,2],':':[0,2,0,2,0],'-':[0,0,7,0,0],'+':[0,2,7,2,0],'/':[1,1,2,4,4],"'":[2,2,0,0,0],'(':[1,2,2,2,1],')':[4,2,2,2,4],'>':[4,2,1,2,4],'<':[1,2,4,2,1],'=':[0,7,0,7,0],'%':[5,1,2,4,5],'$':[3,6,2,3,6],'*':[0,5,2,5,0],'"':[5,5,0,0,0]};
 function textRaw(s,x,y,col,sc){ctx.fillStyle=col;let cx=x;for(const ch of s){const gl=FONT[ch];if(gl){for(let r=0;r<5;r++){const b=gl[r];for(let c=0;c<3;c++)if(b&(4>>c))ctx.fillRect(cx+c*sc,y+r*sc,sc,sc);}}cx+=4*sc;}}
 function text(s,x,y,col='#fff',sc=1,shadow='#000'){s=String(s).toUpperCase();x=Math.round(x);y=Math.round(y);if(shadow)textRaw(s,x+sc,y+sc,shadow,sc);textRaw(s,x,y,col,sc);}
 function textC(s,cx,y,col,sc=1,shadow='#000'){s=String(s);text(s,cx-(s.length*4*sc-sc)/2,y,col,sc,shadow);}
@@ -201,6 +201,20 @@ function tileCanvas(tx,ty,t){
 const DIRV={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0]};
 const ANG={right:0,down:Math.PI/2,left:Math.PI,up:-Math.PI/2};
 const SWORD_DMG=[0,5,8,12,18],SWORD_COST=[0,0,30,80,160],ARMOR_RED=[0,0.25,0.45],ARMOR_COST=[0,40,110];
+// market (simulated DOGE/USD price, ticks once per second) + rest/respawn rules
+const MARKET={start:0.25,min:0.05,max:1.5,vol:0.03,revert:0.02,avgN:30,sentScale:0.2,bearDmg:0.5,bearSpd:0.15,bullDmg:0.5,bullSpd:0.1};
+const REST_DELAY=3,REST_HP=10,REST_MP=8,RESPAWN_FRAC=0.35;
+let mkt;
+function newMarket(){mkt={p:MARKET.start,hist:[MARKET.start],t:0,sent:0};}
+function updMarket(dt){
+  mkt.t+=dt;if(mkt.t<1)return;mkt.t-=1;
+  const n=(Math.random()+Math.random()+Math.random()-1.5)*2; // ~normal(0,1)
+  mkt.p=Math.max(MARKET.min,Math.min(MARKET.max,mkt.p*Math.exp(n*MARKET.vol+Math.log(MARKET.start/mkt.p)*MARKET.revert)));
+  mkt.hist.push(mkt.p);if(mkt.hist.length>MARKET.avgN)mkt.hist.shift();
+  const avg=mkt.hist.reduce((a,b)=>a+b,0)/mkt.hist.length;
+  mkt.sent=Math.max(-1,Math.min(1,Math.log(mkt.p/avg)/MARKET.sentScale));
+}
+const bearF=()=>Math.max(0,-mkt.sent),bullF=()=>Math.max(0,mkt.sent);
 const ETYPES={
   alley:{hp:15,spd:48,dmg:6,drop:1,hw:5,hh:4,chase:120,spr:'alley'},
   archer:{hp:12,spd:34,dmg:5,drop:1,hw:5,hh:4,chase:150,spr:'archer'},
@@ -215,8 +229,8 @@ const NPCS=[
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,fud:0,bank:0,whisk:0,sword:1,armor:0,hpUps:0,mpUps:0,inv:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0};
-  enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,sword:1,armor:0,hpUps:0,mpUps:0,inv:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0};
+  enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<18;i++)spawnEnemy('field');
   for(let i=0;i<6;i++)spawnEnemy('dun');
@@ -271,28 +285,28 @@ function shake(t){shakeT=Math.max(shakeT,t);}
 // ================= COMBAT =================
 function hurtPlayer(d,src){
   if(P.inv>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
-  const dmg=Math.max(1,Math.round(d*(1-ARMOR_RED[P.armor])));
+  const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-ARMOR_RED[P.armor])));
   P.hp-=dmg;P.inv=0.9;P.resting=false;
   const dx=P.x-src.x,dy=P.y-src.y,l=Math.hypot(dx,dy)||1;P.kbx=dx/l*190;P.kby=dy/l*190;
   floater(P.x,P.y-22,'-'+dmg,'#ff5050');shake(0.2);sfx(140,0.15,'sawtooth',0.07,-80);
   if(P.hp<=0){P.hp=0;P.dead=true;P.deathT=2.2;sfx(300,0.8,'triangle',0.08,-260);puff(P.x,P.y-8,'#e8922c',16);}
 }
 function respawn(){
-  const lost=Math.floor(P.fud/2),lw=P.whisk;P.fud-=lost;P.whisk=0;
-  P.dead=false;P.hp=P.maxHp;P.mp=P.maxMp;P.x=CX*16+8;P.y=(CY+3)*16+8;P.inv=1.5;P.kbx=P.kby=0;P.dir='down';
+  const lost=Math.floor(P.doge/2),lw=P.whisk;P.doge-=lost;P.whisk=0;
+  P.dead=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.inv=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
   for(const e of enemies){if(e.boss){e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}}
   enemies=enemies.filter(e=>e.zone!=='boss'||e.boss);
-  openDialog(null,['You wake up by the campfire... the cats dragged you back.',`You lost ${lost} FUD and ${lw} whiskers. Store FUD in the vault to keep it safe!`]);
+  openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE and ${lw} whiskers. Store DOGE in the vault to keep it safe!`]);
 }
 function attack(){
   P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
   const v=DIRV[P.dir],cx=P.x+v[0]*13,cy=P.y-5+v[1]*12,hw=v[0]?10:12,hh=v[0]?11:9;
-  for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh)damageEnemy(e,SWORD_DMG[P.sword],v[0],v[1]);}
+  for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh)damageEnemy(e,Math.round(SWORD_DMG[P.sword]*(1+MARKET.bullDmg*bullF())),v[0],v[1]);}
 }
 function bark(){
   if(P.mp<10){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return;}
-  P.mp-=10;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:8+P.sword*3,hits:new Set()});
+  P.mp-=10;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+P.sword*3)*(1+MARKET.bullDmg*bullF())),hits:new Set()});
   sfx(500,0.25,'sawtooth',0.05,500);
 }
 function damageEnemy(e,dmg,kx,ky){
@@ -319,9 +333,9 @@ function updEnemy(e,dt){
   if(e.boss)aggro=!P.dead&&zoneOf(P.x,P.y)==='boss';
   if(e.zone==='boss'&&!e.boss)aggro=!P.dead&&!inCamp;
   const ux=(P.x-e.x)/(d||1),uy=(P.y-e.y)/(d||1);
-  let mx=0,my=0,spd=e.def.spd;
+  const bs=1+MARKET.bearSpd*bearF();let mx=0,my=0,spd=e.def.spd*bs;
   if(e.state==='wind'){e.t-=dt;if(e.t<=0){e.state='dash';e.t=0.45;e.dx=ux;e.dy=uy;sfx(110,0.25,'sawtooth',0.06,-50);}}
-  else if(e.state==='dash'){e.t-=dt;mx=e.dx;my=e.dy;spd=165;if(e.t<=0){e.state='chase';e.cool=1.6;}}
+  else if(e.state==='dash'){e.t-=dt;mx=e.dx;my=e.dy;spd=165*bs;if(e.t<=0){e.state='chase';e.cool=1.6;}}
   else if(aggro){
     e.state='chase';
     if(e.type==='archer'){if(d<62){mx=-ux;my=-uy;}else if(d>105){mx=ux;my=uy;}else{mx=-uy*0.6;my=ux*0.6;}if(e.cool<=0&&d<155){shootBone(e,ux,uy,95);e.cool=1.6+Math.random()*0.7;}}
@@ -351,7 +365,7 @@ function talk(n){
     if(!n.met){n.met=true;openDialog(n,['Such customer. Very welcome. Wow.','I am Barksley. I sell steel, armor and charms. No potions. No snacks.','Out here you heal ONLY by resting. Hold R inside the camp fence.'],()=>shopMenu(n));}
     else shopMenu(n);
   }else if(n.id==='bank'){
-    if(!n.met){n.met=true;openDialog(n,['Greetings. I am Sir Hodl, keeper of the Vault.','Bring me cat whiskers. I exchange each one for 3 FUD.','If the cats defeat you, you drop half the FUD you carry. FUD in my vault is safe. Always hodl.'],()=>bankMenu(n));}
+    if(!n.met){n.met=true;openDialog(n,['Greetings. I am Sir Hodl, keeper of the Vault.','Bring me cat whiskers. I exchange each one for 3 DOGE.','If the cats defeat you, you drop half the DOGE you carry. DOGE in my vault is safe. Always hodl.'],()=>bankMenu(n));}
     else bankMenu(n);
   }else questTalk(n);
 }
@@ -362,17 +376,17 @@ function shopMenu(n){openMenu(n,'BARKSLEY\'S WARES',()=>{const o=[];
   if(P.mpUps<2)o.push({label:'MOON BISCUIT (+10 MAX MP)',cost:40+25*P.mpUps,act:()=>{P.mpUps++;P.maxMp+=10;return 'MAX MP UP! REST TO FILL IT.';}});
   o.push({label:'LEAVE',act:null});return o;});}
 function bankMenu(n){openMenu(n,'THE VAULT OF SIR HODL',()=>[
-  {label:`EXCHANGE ${P.whisk} WHISKERS -> ${P.whisk*3} FUD`,act:()=>{if(!P.whisk)return 'YOU HAVE NO WHISKERS.';P.fud+=P.whisk*3;const m=`+${P.whisk*3} FUD. VERY TRADE.`;P.whisk=0;return m;}},
-  {label:`DEPOSIT ALL FUD (${P.fud})`,act:()=>{if(!P.fud)return 'NOTHING TO DEPOSIT.';P.bank+=P.fud;P.fud=0;return 'DEPOSITED. SUCH SAFE.';}},
-  {label:`WITHDRAW ALL FUD (${P.bank})`,act:()=>{if(!P.bank)return 'YOUR VAULT IS EMPTY.';P.fud+=P.bank;P.bank=0;return 'WITHDRAWN. SPEND WISELY.';}},
+  {label:`EXCHANGE ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'YOU HAVE NO WHISKERS.';P.doge+=P.whisk*3;const m=`+${P.whisk*3} DOGE. VERY TRADE.`;P.whisk=0;return m;}},
+  {label:`DEPOSIT ALL DOGE (${P.doge})`,act:()=>{if(!P.doge)return 'NOTHING TO DEPOSIT.';P.bank+=P.doge;P.doge=0;return 'DEPOSITED. SUCH SAFE.';}},
+  {label:`WITHDRAW ALL DOGE (${P.bank})`,act:()=>{if(!P.bank)return 'YOUR VAULT IS EMPTY.';P.doge+=P.bank;P.bank=0;return 'WITHDRAWN. SPEND WISELY.';}},
   {label:'LEAVE',act:null}]);}
 function questTalk(n){
   const s=state.stage;
   if(s===0)openDialog(n,['...Young pup. The cats have risen. They took every field around our camp.','Outside the fence they hunt you. Inside, they cannot touch you. That is the old law.','Prove yourself. Slay 8 cats and return to me.'],()=>{state.stage=1;P.kills=0;toast('NEW QUEST: SLAY 8 CATS');});
   else if(s===1&&P.kills<8)openDialog(n,[`${P.kills}/8 cats. Keep fighting. When hurt, rest by the fire.`]);
-  else if(s===1)openDialog(n,['Very fight. Much brave. Take these 40 FUD.','Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{P.fud+=40;state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
+  else if(s===1)openDialog(n,['Very fight. Much brave. Take these 40 DOGE.','Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{P.doge+=40;state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
   else if(s===2&&P.bruteKills<3)openDialog(n,[`Brutes slain: ${P.bruteKills}/3. They lurk far from camp and in the ruins.`]);
-  else if(s===2)openDialog(n,['You crushed the brutes! 80 FUD is yours.','I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD.','Sharpen your sword with Barksley first. The Lord throws storms of fishbones.'],()=>{P.fud+=80;state.stage=3;state.gateOpen=true;toast('THE RUINS GATE IS OPEN!');sfx(80,0.6,'sawtooth',0.06,40);});
+  else if(s===2)openDialog(n,['You crushed the brutes! 80 DOGE is yours.','I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD.','Sharpen your sword with Barksley first. The Lord throws storms of fishbones.'],()=>{P.doge+=80;state.stage=3;state.gateOpen=true;toast('THE RUINS GATE IS OPEN!');sfx(80,0.6,'sawtooth',0.06,40);});
   else if(s===3)openDialog(n,['The Cat Lord waits beyond the iron gate, north of camp. Do not go in hurt.']);
   else openDialog(n,['You did it. Such hero. Much legend. The camp is safe... for now.','Many cats still roam out there. Hunt them if you wish.']);
 }
@@ -390,8 +404,8 @@ function updateUI(dt){
     if(kp('escape','q'))ui=null;
     else if(kp('e',' ','enter','j')){const o=opts[ui.sel];
       if(!o.act){ui=null;return;}
-      if(o.cost&&P.fud<o.cost){ui.msg='NOT ENOUGH FUD. MUCH POOR.';sfx(110,0.12,'square',0.04);return;}
-      if(o.cost)P.fud-=o.cost;ui.msg=o.act();sfx(o.cost?990:780,0.08,'square',0.04,200);}
+      if(o.cost&&P.doge<o.cost){ui.msg='NOT ENOUGH DOGE. MUCH POOR.';sfx(110,0.12,'square',0.04);return;}
+      if(o.cost)P.doge-=o.cost;ui.msg=o.act();sfx(o.cost?990:780,0.08,'square',0.04,200);}
   }
 }
 
@@ -399,6 +413,7 @@ function updateUI(dt){
 function update(dt){
   time+=dt;
   if(scene==='title'){if(kp('enter',' ')){newGame();scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
+  updMarket(dt);
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
   if(winT>0)winT-=dt;
   shakeT=Math.max(0,shakeT-dt);
@@ -409,13 +424,14 @@ function update(dt){
   // rest
   if(kd('r')){if(inCamp){if(!P.resting){P.resting=true;sfx(330,0.2,'triangle',0.04);}}else if(!toastMsg)toast('YOU CAN ONLY REST INSIDE THE CAMP!',1.5);}
   else P.resting=false;
-  if(P.resting){P.hp=Math.min(P.maxHp,P.hp+10*dt);P.mp=Math.min(P.maxMp,P.mp+8*dt);}
+  if(P.resting){P.restT=(P.restT||0)+dt;if(P.restT>=REST_DELAY){P.hp=Math.min(P.maxHp,P.hp+REST_HP*dt);P.mp=Math.min(P.maxMp,P.mp+REST_MP*dt);}}
+  else P.restT=0;
   // move
   let vx=0,vy=0;
   if(!P.resting){if(kd('arrowleft','a'))vx-=1;if(kd('arrowright','d'))vx+=1;if(kd('arrowup','w'))vy-=1;if(kd('arrowdown','s'))vy+=1;}
   const l=Math.hypot(vx,vy);P.moving=l>0;
   if(l){vx/=l;vy/=l;if(P.atkT<=0){if(vx&&!vy)P.dir=vx>0?'right':'left';else if(vy&&!vx)P.dir=vy>0?'down':'up';else if(!(DIRV[P.dir][0]===Math.sign(vx)&&DIRV[P.dir][0])&&!(DIRV[P.dir][1]===Math.sign(vy)&&DIRV[P.dir][1]))P.dir=vy>0?'down':'up';}P.anim+=dt;}
-  const spd=P.atkT>0?45:82;
+  const spd=(P.atkT>0?45:82)*(1+MARKET.bullSpd*bullF());
   move(P,(vx*spd+P.kbx)*dt,(vy*spd+P.kby)*dt);
   const k=Math.pow(0.0005,dt);P.kbx*=k;P.kby*=k;
   P.inv-=dt;P.atkT-=dt;P.atkCd-=dt;
@@ -439,7 +455,7 @@ function update(dt){
   // items
   for(const it of items){it.t+=dt;it.life-=dt;const d=dist(it.x,it.y,P.x,P.y);
     if(d<24){const s=130*dt/(d||1);it.x+=(P.x-it.x)*Math.min(1,s);it.y+=(P.y-it.y)*Math.min(1,s);}
-    if(d<8){it.life=0;if(it.kind==='whisk'){P.whisk++;floater(P.x,P.y-24,'+1 WHISKER','#e0e0ff');sfx(1200,0.05,'square',0.03,400);}else{P.fud+=150;floater(P.x,P.y-24,'+150 FUD','#f0c030');toast('GOLDEN YARN! +150 FUD',3);sfx(880,0.4,'triangle',0.06,600);}}}
+    if(d<8){it.life=0;if(it.kind==='whisk'){P.whisk++;floater(P.x,P.y-24,'+1 WHISKER','#e0e0ff');sfx(1200,0.05,'square',0.03,400);}else{P.doge+=150;floater(P.x,P.y-24,'+150 DOGE','#f0c030');toast('GOLDEN YARN! +150 DOGE',3);sfx(880,0.4,'triangle',0.06,600);}}}
   items=items.filter(i=>i.life>0);
   // respawn
   spawnT-=dt;if(spawnT<=0){spawnT=4;let f=0,dn=0;for(const e of enemies){if(e.zone==='field')f++;else if(e.zone==='dun')dn++;}if(f<18)spawnEnemy('field');if(dn<6)spawnEnemy('dun');}
@@ -516,10 +532,11 @@ function drawHUD(){
   text('HP',3,3,'#ff6060');bar(14,3,64,P.hp,P.maxHp,'#e83030','#ff9090','#3a0808');text(`${Math.ceil(P.hp)}/${P.maxHp}`,82,3,'#fff');
   text('MP',3,10,'#60a0ff');bar(14,10,64,P.mp,P.maxMp,'#3070f0','#90c0ff','#08143a');text(`${Math.floor(P.mp)}/${P.maxMp}`,82,10,'#fff');
   ctx.drawImage(WHISK,118,2);text('x'+P.whisk,129,3,'#e0e0ff');
-  ctx.drawImage(COIN,119,9);text(P.fud+' FUD',129,10,'#f8d050');
-  text('SWORD '+P.sword,168,3,'#c0d0ff');text('VAULT '+P.bank,168,10,'#b0a060');
+  ctx.drawImage(COIN,119,9);text(P.doge+' DOGE',129,10,'#f8d050');
+  const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;
+  text('DOGE $'+mkt.p.toFixed(3),168,3,'#f8d050');text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');
   text('QUEST',222,3,'#ffe040');text(questText(),222,10,'#fff');
-  if(!P.dead&&playerInCamp()&&!ui){const t=P.resting?'RESTING... HP/MP RECOVERING':'SAFE CAMP - HOLD R TO REST';textC(t,W/2,H-9,P.resting?'#a0ffa0':'#c8e8ff');}
+  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):P.resting?'RESTING... HP/MP RECOVERING':'SAFE CAMP - HOLD R TO REST';textC(t,W/2,H-9,P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
 function drawUI(){
@@ -536,10 +553,10 @@ function drawUI(){
     const opts=ui.build(),h=44+opts.length*11;const y=Math.round((H-h)/2)+6;
     box(30,y,260,h);
     textC(ui.title,W/2,y+6,'#ffe040');
-    text(`CARRIED: ${P.fud} FUD`,40,y+16,'#f8d050');text(`VAULT: ${P.bank}`,200,y+16,'#b0a060');
+    text(`CARRIED: ${P.doge} DOGE`,40,y+16,'#f8d050');text(`VAULT: ${P.bank}`,200,y+16,'#b0a060');
     ctx.fillStyle='#3848a0';ctx.fillRect(36,y+24,248,1);
     opts.forEach((o,i)=>{const yy=y+29+i*11,sel=i===ui.sel;if(sel){ctx.fillStyle='#2a48d0';ctx.fillRect(36,yy-2,248,9);text('>',40,yy,'#ffe040');}
-      const afford=!o.cost||P.fud>=o.cost;text(o.label,48,yy,sel?'#fff':'#c8d0f0');if(o.cost)text(o.cost+' FUD',280-(String(o.cost).length+4)*4,yy,afford?'#f8d050':'#a05050');});
+      const afford=!o.cost||P.doge>=o.cost;text(o.label,48,yy,sel?'#fff':'#c8d0f0');if(o.cost)text(o.cost+' DOGE',280-(String(o.cost).length+4)*4,yy,afford?'#f8d050':'#a05050');});
     text(ui.msg||'W/S SELECT   E BUY   ESC LEAVE',40,y+h-10,ui.msg?'#a0ffa0':'#8090c0');
   }
 }
@@ -568,6 +585,8 @@ function render(){
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   if(scene==='title'){drawTitle();return;}
   drawWorld();
+  // falling DOGE price: darker, redder world
+  if(bearF()>0){ctx.fillStyle=`rgba(70,0,0,${(0.45*bearF()).toFixed(3)})`;ctx.fillRect(0,0,W,H);}
   // ruins ambience
   if(zoneOf(P.x,P.y)!=='field'){ctx.fillStyle='rgba(20,0,40,0.22)';ctx.fillRect(0,0,W,H);}
   if(P.dead){const a=Math.min(1,(2.2-P.deathT)/1.5);ctx.fillStyle=`rgba(60,0,0,${a*0.75})`;ctx.fillRect(0,0,W,H);textC('YOU WERE DEFEATED',W/2,H/2-10,'#ff5050',2);textC('SUCH SAD. MUCH OUCH.',W/2,H/2+8,'#ffc0c0');}
