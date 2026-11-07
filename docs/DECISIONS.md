@@ -35,6 +35,19 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-011 · 2026-11-07 · IT-5: frog, ninja, bull, knight enemies + material drops
+- What:
+  - 4 new enemy sprites: frog mage (teal, lily hat, purple orb staff), ninja shiba (black gi, red scarf, daggers), green candle bull (dark hide, green→orange horns, spiked collar), blue-tunic knight (red headband, sword, crown emblem).
+  - 4 new ETYPEs: frog (ranged/archer AI, drops ORB), ninja (fast melee, drops SCRAP), bull (charger/brute AI, drops HORN), knight (tough melee, drops STEEL). Each uses `ai` field to reuse existing AI behaviours.
+  - Material item icons (ORB_IC, SCRAP_IC, HORN_IC, STEEL_IC) + pickup logic + render.
+  - Player tracks `P.orb, P.scrap, P.horn, P.steel`. Death zeroes all materials.
+  - Spawn mix updated: field and dungeon both spawn all 6 enemy types with varied probabilities. Bulls and brutes are rarer.
+  - Title screen shows all new enemies.
+- Why: User's concept images 2, 5-6, 7-9, 10-11. Reusing AI keeps it MVP.
+- Tool: Claude Code (Opus 4.6). `ai` field on ETYPES lets new types share archer/brute logic without new AI states.
+- Alternatives rejected: Custom AI per enemy (scope creep). Separate spawn tables per zone (unnecessary complexity).
+- Verify: `0 failed, 0 warnings (seed 4242)`.
+
 ### D-010 · 2026-11-07 · Sprites IT-4: hammer hero, sphinx, elder, mechanic + hammer swing
 - What:
   - Hero redesigned: brown open vest (T), cream chest (A), blue pants (L), rope belt (B), sleepy half-closed eyes (acc overpaints top eye pixels with fur), barrel hammer on shoulder (acc draws handle+barrel per direction).

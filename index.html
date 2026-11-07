@@ -135,12 +135,68 @@ SPR.boss=buildChar({head:'cat',pal:{...catPal,F:'#ececf4',C:'#ffffff',K:'#ececf4
     if(d==='up'){rect(g,3,12,10,8,'#3a1050');rect(g,4,12,8,7,'#6a2a9a');crown(4);}
     else if(d==='right'){rect(g,0,12,4,8,'#3a1050');crown(5);}
     else{rect(g,1,12,2,8,'#3a1050');rect(g,13,12,2,8,'#3a1050');crown(4);}}});
+// frog mage: teal skin, lily-pad hat, green cloak, purple orb staff
+SPR.frog=buildChar({head:'cat',pal:{...catPal,O:'#0a2020',F:'#28a088',C:'#60d0a8',K:'#28a088',T:'#1a6838',A:'#28803a',B:'#2a5030',L:'#1a4828',N:'#28a088',R:'#e0e040',E:'#0a2020',P:'#60d0a8',W:'#60d0a8'},
+  acc(g,d){// yellow spots
+    if(d==='down'){px(g,4,4,'#e0d040');px(g,11,5,'#e0d040');px(g,6,8,'#e0d040');}
+    // lily pad hat
+    const Lp='#2a8a3a',Ld='#1a6a2a';
+    if(d==='down'||d==='up'){rect(g,2,2,12,3,Lp);rect(g,3,2,10,1,Ld);rect(g,4,4,8,1,Ld);}
+    else{rect(g,4,2,10,3,Lp);rect(g,5,2,8,1,Ld);}
+    // purple orb staff
+    const St='#6a4a2a',Ob='#a040e0',Oh='#d080ff';
+    if(d==='down'){rect(g,13,10,1,10,St);rect(g,12,8,3,3,Ob);px(g,13,9,Oh);}
+    else if(d==='right'){rect(g,13,10,1,10,St);rect(g,12,8,3,3,Ob);px(g,13,9,Oh);}
+    else{rect(g,2,10,1,10,St);rect(g,1,8,3,3,Ob);px(g,2,9,Oh);}}});
+// ninja shiba: dark orange fur, black gi, red scarf, twin daggers
+SPR.ninja=buildChar({head:'dog',pal:{...basePal,F:'#c06820',C:'#f0b870',K:'#c06820',T:'#1a1a1a',A:'#1a1a1a',B:'#c02020',L:'#1a1a1a'},
+  acc(g,d){const Sc='#d03030',Dg='#c0c8d0',Dh='#808890';
+    // red scarf trailing
+    if(d==='down'){rect(g,5,9,6,1,Sc);rect(g,4,10,2,3,Sc);rect(g,10,10,2,3,Sc);}
+    else if(d==='right'){rect(g,0,9,5,1,Sc);rect(g,0,10,3,2,Sc);}
+    else{rect(g,5,9,6,1,Sc);rect(g,11,10,3,2,Sc);}
+    // twin daggers
+    if(d==='down'){px(g,2,14,Dg);px(g,1,15,Dg);px(g,13,14,Dg);px(g,14,15,Dg);}
+    else if(d==='right'){rect(g,12,13,3,1,Dg);px(g,14,12,Dh);}
+    else{px(g,2,14,Dg);px(g,13,14,Dg);}
+    // angry eyes (fangs)
+    if(d==='down'){px(g,6,10,'#fff');px(g,9,10,'#fff');}}});
+// green candle bull: dark hide, green horns, red eyes, spiked collar
+SPR.bull=buildChar({head:'cat',pal:{...catPal,O:'#0a0a0a',F:'#2a2a30',C:'#4a4a54',K:'#2a2a30',T:'#1a3a1a',A:'#2a5a2a',B:'#4a4a4a',L:'#1a1a20',R:'#ff2020',E:'#ff2020',N:'#2a2a30',P:'#3a3a44',W:'#2a2a30'},
+  acc(g,d){const Hn1='#30c040',Hn2='#e09020',Sp='#808080',Cl='#a03030';
+    // gradient horns (green base -> orange tip)
+    if(d==='down'){rect(g,1,2,3,2,Hn1);px(g,1,1,Hn2);px(g,2,0,Hn2);rect(g,12,2,3,2,Hn1);px(g,14,1,Hn2);px(g,13,0,Hn2);}
+    else if(d==='right'){rect(g,10,2,3,2,Hn1);px(g,12,1,Hn2);px(g,11,0,Hn2);}
+    else{rect(g,3,2,3,2,Hn1);px(g,3,1,Hn2);px(g,4,0,Hn2);rect(g,10,2,3,2,Hn1);px(g,12,1,Hn2);px(g,11,0,Hn2);}
+    // spiked collar
+    if(d==='down'||d==='up'){rect(g,3,10,10,1,Cl);for(let x=4;x<13;x+=2)px(g,x,9,Sp);}
+    else{rect(g,5,10,8,1,Cl);for(let x=6;x<13;x+=2)px(g,x,9,Sp);}
+    // iron bracers
+    rect(g,d==='right'?2:1,15,3,2,'#606068');rect(g,d==='right'?10:11,15,3,2,'#606068');}});
+// blue-tunic shiba knight: red headband, blue tunic with crown, sword
+SPR.knight=buildChar({head:'dog',pal:{...basePal,F:'#d09030',C:'#f8d8a0',K:'#f8d8a0',T:'#2050b0',A:'#f0c030',B:'#5a3a1a',L:'#3a2820'},
+  acc(g,d){const Hb='#d02020',Sw='#c8d0d8',Sh='#808890';
+    // red headband
+    if(d==='down'||d==='up')rect(g,2,5,12,1,Hb);
+    else rect(g,4,5,10,1,Hb);
+    // crown emblem on tunic
+    if(d==='down'){px(g,7,12,'#f0c030');px(g,8,12,'#f0c030');px(g,7,11,'#f0c030');}
+    // sword
+    if(d==='down'){rect(g,14,11,1,7,Sw);px(g,14,10,Sh);px(g,13,11,'#8a6a2a');px(g,15,11,'#8a6a2a');}
+    else if(d==='right'){rect(g,13,11,1,7,Sw);px(g,13,10,Sh);px(g,12,11,'#8a6a2a');px(g,14,11,'#8a6a2a');}
+    else{rect(g,2,11,1,7,Sw);px(g,2,10,Sh);px(g,1,11,'#8a6a2a');px(g,3,11,'#8a6a2a');}}});
 
 // small icons
 const [SHADOW,sg]=mk(12,4);rect(sg,2,0,8,1,'rgba(0,0,0,.35)');rect(sg,0,1,12,2,'rgba(0,0,0,.35)');rect(sg,2,3,8,1,'rgba(0,0,0,.35)');
 const [COIN,cg]=mk(7,7);rect(cg,2,0,3,1,'#7a5010');rect(cg,1,1,5,5,'#f0c030');rect(cg,0,2,1,3,'#7a5010');rect(cg,6,2,1,3,'#7a5010');rect(cg,2,6,3,1,'#7a5010');px(cg,1,1,'#7a5010');px(cg,5,1,'#7a5010');px(cg,1,5,'#7a5010');px(cg,5,5,'#7a5010');for(const [x,y] of [[2,1],[3,1],[2,2],[4,2],[1,3],[2,3],[3,3],[4,3],[2,4],[4,4],[2,5],[3,5]])px(cg,x,y,'#7a5010'); // Ð coin
 const [WHISK,wg]=mk(9,7);for(let i=0;i<9;i++){px(wg,i,1+((i>6)?1:0),'#e8e8f0');px(wg,i,3,'#d0d0dc');px(wg,i,5-((i>6)?1:0),'#e8e8f0');}rect(wg,0,1,2,5,'#8a8a9c');
 const [YARN,yg]=mk(9,9);for(let y=0;y<9;y++)for(let x=0;x<9;x++){const d=Math.hypot(x-4,y-4);if(d<4.5)px(yg,x,y,d>3.6?'#7a5010':((x+y)%3===0?'#fff0a0':'#f0c030'));}
+// material drop icons
+const [ORB_IC,og]=mk(7,7);for(let y=0;y<7;y++)for(let x=0;x<7;x++){const d=Math.hypot(x-3,y-3);if(d<3.5)px(og,x,y,d<1.5?'#d080ff':d<2.5?'#a040e0':'#6020a0');}
+const [SCRAP_IC,scg]=mk(7,7);rect(scg,1,1,5,5,'#808890');rect(scg,2,2,3,3,'#c0c8d0');px(scg,3,0,'#606068');px(scg,0,3,'#606068');px(scg,6,3,'#606068');px(scg,3,6,'#606068');
+const [HORN_IC,hig]=mk(7,7);rect(hig,2,0,3,7,'#30c040');rect(hig,3,0,1,3,'#e09020');px(hig,1,5,'#30c040');px(hig,5,5,'#30c040');
+const [STEEL_IC,sti]=mk(7,7);rect(sti,1,1,5,5,'#a0a8b0');rect(sti,2,2,3,3,'#d0d8e0');px(sti,3,0,'#707880');px(sti,3,6,'#707880');
+const MAT_ICONS={orb:ORB_IC,scrap:SCRAP_IC,horn:HORN_IC,steel:STEEL_IC};
 function makeBone(vert){const [c,g]=mk(9,9);const P=(x,y,col)=>vert?px(g,y,x,col):px(g,x,y,col);for(let x=1;x<7;x++)P(x,4,'#f4f4f4');for(const x of [2,4])for(const y of [2,3,5,6])P(x,y,'#dcdcdc');P(7,3,'#f4f4f4');P(7,4,'#f4f4f4');P(7,5,'#f4f4f4');P(8,4,'#f4f4f4');P(0,3,'#dcdcdc');P(0,5,'#dcdcdc');P(7,4,'#202020');return c;}
 const BONE=[makeBone(false),makeBone(true)];
 
@@ -256,9 +312,13 @@ function updMarket(dt){
 }
 const bearF=()=>Math.max(0,-mkt.sent),bullF=()=>Math.max(0,mkt.sent);
 const ETYPES={
-  alley:{hp:15,spd:48,dmg:6,drop:1,hw:5,hh:4,chase:120,spr:'alley'},
-  archer:{hp:12,spd:34,dmg:5,drop:1,hw:5,hh:4,chase:150,spr:'archer'},
-  brute:{hp:48,spd:28,dmg:12,drop:3,hw:6,hh:5,chase:130,spr:'brute'},
+  alley:{hp:15,spd:48,dmg:6,drop:1,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
+  archer:{hp:12,spd:34,dmg:5,drop:1,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
+  frog:{hp:14,spd:32,dmg:6,drop:1,hw:5,hh:4,chase:150,spr:'frog',mat:'orb',ai:'archer'},
+  ninja:{hp:18,spd:62,dmg:8,drop:1,hw:5,hh:4,chase:130,spr:'ninja',mat:'scrap'},
+  bull:{hp:55,spd:26,dmg:14,drop:1,hw:6,hh:5,chase:130,spr:'bull',mat:'horn',ai:'brute'},
+  knight:{hp:35,spd:38,dmg:10,drop:1,hw:5,hh:4,chase:120,spr:'knight',mat:'steel'},
+  brute:{hp:48,spd:28,dmg:12,drop:3,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
   boss:{hp:320,spd:38,dmg:12,drop:0,hw:10,hh:7,chase:999,spr:'boss',boss:true}
 };
 let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,scene='title',winT=0;
@@ -269,7 +329,7 @@ const NPCS=[
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,sword:1,armor:0,hpUps:0,mpUps:0,inv:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,inv:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<18;i++)spawnEnemy('field');
@@ -287,9 +347,9 @@ function spawnEnemy(zone){
     if(P&&dist(x,y,P.x,P.y)<170)continue;
     if(blocked({hw:7,hh:6,enemy:true},x,y))continue;
     const dc=dist(x,y,CX*16+8,CY*16+8),r=Math.random();let type;
-    if(zone==='dun')type=r<0.4?'alley':r<0.7?'archer':'brute';
-    else if(dc<380)type=r<0.7?'alley':'archer';
-    else type=r<0.45?'alley':r<0.72?'archer':'brute';
+    if(zone==='dun')type=r<0.2?'alley':r<0.35?'archer':r<0.5?'frog':r<0.65?'ninja':r<0.8?'knight':'brute';
+    else if(dc<380)type=r<0.35?'alley':r<0.55?'ninja':r<0.75?'frog':'archer';
+    else type=r<0.2?'alley':r<0.35?'archer':r<0.5?'frog':r<0.65?'ninja':r<0.8?'knight':r<0.9?'bull':'brute';
     enemies.push(makeEnemy(type,x,y,zone));return;
   }
 }
@@ -332,7 +392,7 @@ function hurtPlayer(d,src){
   if(P.hp<=0){P.hp=0;P.dead=true;P.deathT=2.2;sfx(300,0.8,'triangle',0.08,-260);puff(P.x,P.y-8,'#e8922c',16);}
 }
 function respawn(){
-  const lost=Math.floor(P.doge/2),lw=P.whisk;P.doge-=lost;P.whisk=0;
+  const lost=Math.floor(P.doge/2),lw=P.whisk;P.doge-=lost;P.whisk=0;P.orb=0;P.scrap=0;P.horn=0;P.steel=0;
   P.dead=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.inv=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
   for(const e of enemies){if(e.boss){e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}}
@@ -350,14 +410,15 @@ function bark(){
   sfx(500,0.25,'sawtooth',0.05,500);
 }
 function damageEnemy(e,dmg,kx,ky){
-  e.hp-=dmg;e.flash=0.12;const m=e.boss?0.15:e.type==='brute'?(e.state==='dash'?0:0.45):1;e.kbx=kx*210*m;e.kby=ky*210*m;
-  if(e.state==='wind'&&e.type==='brute'&&dmg>=10){e.state='chase';e.cool=1.2;}
+  e.hp-=dmg;e.flash=0.12;const ai=e.def.ai||e.type;const m=e.boss?0.15:ai==='brute'?(e.state==='dash'?0:0.45):1;e.kbx=kx*210*m;e.kby=ky*210*m;
+  if(e.state==='wind'&&ai==='brute'&&dmg>=10){e.state='chase';e.cool=1.2;}
   floater(e.x,e.y-(e.boss?42:22),dmg,'#ffffff');sfx(240,0.06,'square',0.05,-120);
   if(e.hp<=0)killEnemy(e);
 }
 function killEnemy(e){
   e.dead=true;puff(e.x,e.y-6,'#d8d8e8',14);sfx(180,0.25,'square',0.05,-150);
-  for(let i=0;i<e.def.drop;i++)items.push({x:e.x+R(-7,7),y:e.y+R(-4,4),kind:'whisk',life:18,t:Math.random()*3});
+  const mat=e.def.mat||'whisk';
+  for(let i=0;i<e.def.drop;i++)items.push({x:e.x+R(-7,7),y:e.y+R(-4,4),kind:mat,life:18,t:Math.random()*3});
   if(state.stage===1){P.kills++;if(P.kills===8)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(state.stage===2&&e.type==='brute'){P.bruteKills++;if(P.bruteKills===3)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});state.won=true;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
@@ -377,9 +438,9 @@ function updEnemy(e,dt){
   if(e.state==='wind'){e.t-=dt;if(e.t<=0){e.state='dash';e.t=0.45;e.dx=ux;e.dy=uy;sfx(110,0.25,'sawtooth',0.06,-50);}}
   else if(e.state==='dash'){e.t-=dt;mx=e.dx;my=e.dy;spd=165*bs;if(e.t<=0){e.state='chase';e.cool=1.6;}}
   else if(aggro){
-    e.state='chase';
-    if(e.type==='archer'){if(d<62){mx=-ux;my=-uy;}else if(d>105){mx=ux;my=uy;}else{mx=-uy*0.6;my=ux*0.6;}if(e.cool<=0&&d<155){shootBone(e,ux,uy,95);e.cool=1.6+Math.random()*0.7;}}
-    else if(e.type==='brute'){mx=ux;my=uy;if(d<72&&e.cool<=0){e.state='wind';e.t=0.55;}}
+    e.state='chase';const ai=e.def.ai||e.type;
+    if(ai==='archer'){if(d<62){mx=-ux;my=-uy;}else if(d>105){mx=ux;my=uy;}else{mx=-uy*0.6;my=ux*0.6;}if(e.cool<=0&&d<155){shootBone(e,ux,uy,95);e.cool=1.6+Math.random()*0.7;}}
+    else if(ai==='brute'){mx=ux;my=uy;if(d<72&&e.cool<=0){e.state='wind';e.t=0.55;}}
     else if(e.boss){mx=ux;my=uy;const enr=e.hp<e.maxHp/2;if(d<30){mx=-ux*0.3;my=-uy*0.3;}
       if(e.cool<=0){const a0=Math.atan2(uy,ux),n=enr?7:5;for(let i=0;i<n;i++){const a=a0+(i-(n-1)/2)*0.3;shootBone(e,Math.cos(a),Math.sin(a),88);}e.cool=enr?1.7:2.5;}
       if(enr){spd=52;e.summonT-=dt;if(e.summonT<=0){e.summonT=8;summon(e);}}}
@@ -392,7 +453,7 @@ function updEnemy(e,dt){
   if(mx||my){const hw=move(e,mx*spd*dt,my*spd*dt);e.dir=dirOf(mx,my);e.anim+=dt;
     if(hw&&e.state==='wander')e.t=0;
     if(hw&&e.state==='dash'){e.state='chase';e.cool=1.6;shake(0.15);puff(e.x,e.y,'#a89070',6);}}
-  if(aggro&&(e.type==='archer'||e.state==='wind'))e.dir=dirOf(ux,uy);
+  if(aggro&&((e.def.ai||e.type)==='archer'||e.state==='wind'))e.dir=dirOf(ux,uy);
   if(!P.dead&&!inCamp&&overlap(e,P,2))hurtPlayer(e.state==='dash'?Math.round(e.def.dmg*1.4):e.def.dmg,e);
 }
 
@@ -495,7 +556,9 @@ function update(dt){
   // items
   for(const it of items){it.t+=dt;it.life-=dt;const d=dist(it.x,it.y,P.x,P.y);
     if(d<24){const s=130*dt/(d||1);it.x+=(P.x-it.x)*Math.min(1,s);it.y+=(P.y-it.y)*Math.min(1,s);}
-    if(d<8){it.life=0;if(it.kind==='whisk'){P.whisk++;floater(P.x,P.y-24,'+1 WHISKER','#e0e0ff');sfx(1200,0.05,'square',0.03,400);}else{P.doge+=150;floater(P.x,P.y-24,'+150 DOGE','#f0c030');toast('GOLDEN YARN! +150 DOGE',3);sfx(880,0.4,'triangle',0.06,600);}}}
+    if(d<8){it.life=0;if(it.kind==='whisk'){P.whisk++;floater(P.x,P.y-24,'+1 WHISKER','#e0e0ff');sfx(1200,0.05,'square',0.03,400);}
+      else if(it.kind==='yarn'){P.doge+=150;floater(P.x,P.y-24,'+150 DOGE','#f0c030');toast('GOLDEN YARN! +150 DOGE',3);sfx(880,0.4,'triangle',0.06,600);}
+      else{const names={orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL'},cols={orb:'#d080ff',scrap:'#c0c8d0',horn:'#60e060',steel:'#a0a8b0'};P[it.kind]++;floater(P.x,P.y-24,'+1 '+names[it.kind],cols[it.kind]);sfx(1100,0.05,'square',0.03,300);}}}
   items=items.filter(i=>i.life>0);
   // respawn
   spawnT-=dt;if(spawnT<=0){spawnT=4;let f=0,dn=0;for(const e of enemies){if(e.zone==='field')f++;else if(e.zone==='dun')dn++;}if(f<18)spawnEnemy('field');if(dn<6)spawnEnemy('dun');}
@@ -537,7 +600,7 @@ function drawWorld(){
   const ox=cam.x+sx,oy=cam.y+sy;
   drawTiles(ox,oy);
   drawFire(ox,oy);
-  for(const it of items){if(it.life<4&&Math.floor(it.life*8)%2)continue;const bob=Math.round(Math.sin(it.t*5)*1.5);const img=it.kind==='whisk'?WHISK:YARN;ctx.drawImage(SHADOW,Math.round(it.x-6-ox),Math.round(it.y+1-oy));ctx.drawImage(img,Math.round(it.x-img.width/2-ox),Math.round(it.y-6+bob-oy));}
+  for(const it of items){if(it.life<4&&Math.floor(it.life*8)%2)continue;const bob=Math.round(Math.sin(it.t*5)*1.5);const img=it.kind==='whisk'?WHISK:it.kind==='yarn'?YARN:(MAT_ICONS[it.kind]||WHISK);ctx.drawImage(SHADOW,Math.round(it.x-6-ox),Math.round(it.y+1-oy));ctx.drawImage(img,Math.round(it.x-img.width/2-ox),Math.round(it.y-6+bob-oy));}
   const list=[];
   for(const n of NPCS)list.push({y:n.y,f:()=>{const near=dist(n.x,n.y,P.x,P.y)<40;const d=near?dirOf(P.x-n.x,P.y-n.y):'down';drawChar(SPR[n.spr],d,0,n.x,n.y+n.hh+Math.round(Math.sin(time*2+n.x)*0.6),1,ox,oy);if(near&&!ui){const b=Math.round(Math.sin(time*6));text('E',n.x-1-ox,n.y-30+b-oy,'#ffe040');}}});
   for(const e of enemies)list.push({y:e.y,f:()=>{
@@ -617,9 +680,10 @@ function drawTitle(){
   textC('- THE CAT INVASION -',W/2,y+44,'#ffe8c0',1);
   const b=Math.round(Math.sin(time*4));
   ctx.drawImage(SPR.hero.down[0],W/2-24,96+b,48,60);
-  ctx.drawImage(SPR.alley.left[Math.floor(time*4)%2],W/2+44,108,32,40);
-  ctx.drawImage(SPR.brute.left[0],W/2+76,104-b,32,40);
-  ctx.drawImage(SPR.archer.right[Math.floor(time*4)%2],W/2-110,108,32,40);
+  ctx.drawImage(SPR.ninja.left[Math.floor(time*5)%2],W/2+44,108,32,40);
+  ctx.drawImage(SPR.bull.left[0],W/2+76,104-b,32,40);
+  ctx.drawImage(SPR.frog.right[Math.floor(time*3)%2],W/2-110,108,32,40);
+  ctx.drawImage(SPR.knight.right[0],W/2-80,108,16,20);ctx.drawImage(SPR.alley.left[0],W/2+30,118,16,20);
   ctx.drawImage(SPR.merchant.down[0],10,180,16,20);ctx.drawImage(SPR.bank.down[0],28,180,16,20);ctx.drawImage(SPR.sage.down[0],46,180,16,20);
   if(Math.floor(time*2.5)%2)textC('PRESS ENTER',W/2,162,'#ffffff',2);
   textC('WASD/ARROWS MOVE   SPACE/J SLASH   K/Q "WOW" BARK (10 MP)',W/2,190,'#a0b0e0');
