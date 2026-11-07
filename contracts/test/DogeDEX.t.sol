@@ -67,7 +67,7 @@ contract DogeDEXTest is Test {
         vm.prank(alice);
         dex.list(id, 2 ether);
         assertEq(items.ownerOf(id), address(dex), "escrowed");
-        (uint256[] memory packed, uint256[] memory prices, address[] memory sellers) = dex.activeListings();
+        (uint256[] memory packed, uint256[] memory prices, address[] memory sellers) = dex.activeListings(0, 100);
         assertEq(packed.length, 1);
         assertEq(packed[0], (id << 16) | (1 << 8) | 3);
         assertEq(prices[0], 2 ether);
@@ -80,7 +80,7 @@ contract DogeDEXTest is Test {
         dex.buy{value: 2 ether}(id);
         assertEq(items.ownerOf(id), bob);
         assertEq(dex.proceeds(alice), 2 ether);
-        (packed,,) = dex.activeListings();
+        (packed,,) = dex.activeListings(0, 100);
         assertEq(packed.length, 0);
 
         uint256 before = alice.balance;
@@ -124,12 +124,12 @@ contract DogeDEXTest is Test {
         dex.list(c, 3 ether);
         dex.delist(a); // removes from the middle-of-array path
         vm.stopPrank();
-        (uint256[] memory packed, uint256[] memory prices,) = dex.activeListings();
+        (uint256[] memory packed, uint256[] memory prices,) = dex.activeListings(0, 100);
         assertEq(packed.length, 2);
         assertEq(prices[0] + prices[1], 5 ether);
         vm.prank(bob);
         dex.buy{value: 3 ether}(c);
-        (packed,,) = dex.activeListings();
+        (packed,,) = dex.activeListings(0, 100);
         assertEq(packed.length, 1);
         assertEq(packed[0] >> 16, b);
     }
@@ -148,7 +148,7 @@ contract DogeDEXTest is Test {
     function test_CreatePoolBuySellRemove() public {
         uint256[] memory ids = _fish(alice, 4);
         vm.prank(alice);
-        uint256 shares = dex.addLiquidity{value: 4 ether}(ids); // 4 fish + 4 DOGE -> 1 DOGE/fish spot
+        uint256 shares = dex.addLiquidity{value: 4 ether}(ids, 0); // 4 fish + 4 DOGE -> 1 DOGE/fish spot
         assertEq(shares, 4 ether);
         (uint256 x, uint256 y, uint256 s,,,) = dex.poolInfo(FISH_KEY, alice);
         assertEq(x, 4 ether);
@@ -175,7 +175,7 @@ contract DogeDEXTest is Test {
         assertGt(x, 4 ether, "fees accrued to LPs");
 
         vm.prank(alice);
-        dex.removeLiquidity(FISH_KEY, shares);
+        dex.removeLiquidity(FISH_KEY, shares, 0, 0);
         assertEq(items.balanceOf(alice), 4);
         assertEq(dex.proceeds(alice), x);
         (x, y, s,,,) = dex.poolInfo(FISH_KEY, alice);
@@ -185,13 +185,13 @@ contract DogeDEXTest is Test {
     function test_SecondLPRatio() public {
         uint256[] memory a = _fish(alice, 2);
         vm.prank(alice);
-        dex.addLiquidity{value: 2 ether}(a);
+        dex.addLiquidity{value: 2 ether}(a, 0);
         uint256[] memory b = _fish(bob, 1);
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSelector(DogeDEX.NotEnoughDoge.selector, 0.5 ether, 1 ether));
-        dex.addLiquidity{value: 0.5 ether}(b);
+        dex.addLiquidity{value: 0.5 ether}(b, 0);
         vm.prank(bob);
-        uint256 minted = dex.addLiquidity{value: 1.5 ether}(b);
+        uint256 minted = dex.addLiquidity{value: 1.5 ether}(b, 0);
         assertEq(minted, 1 ether);
         assertEq(dex.proceeds(bob), 0.5 ether);
     }
@@ -199,7 +199,7 @@ contract DogeDEXTest is Test {
     function test_CannotBuyLastItem() public {
         uint256[] memory ids = _fish(alice, 1);
         vm.prank(alice);
-        dex.addLiquidity{value: 1 ether}(ids);
+        dex.addLiquidity{value: 1 ether}(ids, 0);
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSelector(DogeDEX.PoolTooThin.selector, FISH_KEY));
         dex.buyFromPool{value: 10 ether}(FISH_KEY);
@@ -211,7 +211,7 @@ contract DogeDEXTest is Test {
         ids[1] = _mint(alice, 4, 1);
         vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(DogeDEX.MixedPool.selector, ids[1], FISH_KEY));
-        dex.addLiquidity{value: 1 ether}(ids);
+        dex.addLiquidity{value: 1 ether}(ids, 0);
     }
 
     function test_WithdrawReentrancyBlocked() public {
@@ -235,7 +235,7 @@ contract DogeDEXTest is Test {
         uint256 d = bound(seedDoge, 0.01 ether, 20 ether);
         uint256[] memory ids = _fish(alice, n);
         vm.prank(alice);
-        dex.addLiquidity{value: d}(ids);
+        dex.addLiquidity{value: d}(ids, 0);
         uint256[] memory held = new uint256[](32);
         uint256 h;
         for (uint256 i; i < 24; i++) {
@@ -258,5 +258,92 @@ contract DogeDEXTest is Test {
             assertGe(x * y, k0, "k dropped");
             assertGe(address(dex).balance, x + dex.proceeds(bob), "insolvent");
         }
+    }
+
+    // ---------------- audit regressions (D-022) ----------------
+    /// Audit H-1: attacker seeds a dust pool, inflates y with free sells, victim deposit mints 0 shares -> must now be impossible.
+    function test_Audit_ZeroShareTheftBlocked() public {
+        address eve = makeAddr("eve");
+        uint256 minFirst = dex.MIN_FIRST_DOGE(); // read before vm.prank (an external call would consume the prank)
+        vm.deal(eve, 10 ether);
+        vm.prank(eve);
+        items.setApprovalForAll(address(dex), true);
+        uint256[] memory e1 = _fish(eve, 1);
+        vm.prank(eve);
+        vm.expectRevert(abi.encodeWithSelector(DogeDEX.NotEnoughDoge.selector, 1, minFirst));
+        dex.addLiquidity{value: 1}(e1, 0); // dust pool refused
+        vm.prank(eve);
+        dex.addLiquidity{value: minFirst}(e1, 0);
+        // eve drains to 1 share: pool keeps 1 item, ~0 DOGE
+        uint256 s = dex.lpShares(FISH_KEY, eve);
+        vm.prank(eve);
+        dex.removeLiquidity(FISH_KEY, s - 1, 0, 0);
+        // free sells (payout 0) are refused, so y cannot be inflated
+        uint256[] memory e2 = _fish(eve, 1);
+        vm.prank(eve);
+        vm.expectRevert(DogeDEX.ZeroPayout.selector);
+        dex.sellToPool(e2[0], 0);
+        // victim deposit gets a fair, non-zero share and can demand a minimum
+        uint256[] memory v = _fish(alice, 5);
+        (,, uint256 S0,,,) = dex.poolInfo(FISH_KEY, alice);
+        vm.prank(alice);
+        uint256 minted = dex.addLiquidity{value: 1 ether}(v, 5 * S0);
+        assertGt(minted, 0);
+        vm.prank(eve);
+        dex.removeLiquidity(FISH_KEY, 1, 0, 0);
+        assertEq(items.balanceOf(eve), 2, "eve: her unsold fish + her own 1/6 of the pool, not alice's");
+        uint256 sa = dex.lpShares(FISH_KEY, alice);
+        vm.prank(alice);
+        dex.removeLiquidity(FISH_KEY, sa, 5, 0);
+        assertEq(items.balanceOf(alice), 5, "alice gets all 5 of her fish back");
+    }
+
+    function test_Audit_MinSharesSlippage() public {
+        uint256[] memory a = _fish(alice, 2);
+        vm.prank(alice);
+        dex.addLiquidity{value: 2 ether}(a, 0);
+        uint256[] memory b = _fish(bob, 1);
+        vm.prank(bob);
+        vm.expectRevert(abi.encodeWithSelector(DogeDEX.Slippage.selector, 1 ether, 2 ether));
+        dex.addLiquidity{value: 1 ether}(b, 2 ether);
+    }
+
+    /// Audit L-1: a front-run swap that shifts y against the exiting LP is caught by minItemsOut.
+    function test_Audit_RemoveLiquiditySlippageGuard() public {
+        uint256[] memory a = _fish(alice, 1);
+        vm.prank(alice);
+        dex.addLiquidity{value: 1 ether}(a, 0);
+        uint256[] memory b = _fish(bob, 1);
+        vm.prank(bob);
+        dex.addLiquidity{value: 1 ether}(b, 0); // 50/50, x=2, y=2
+        uint256[] memory c = _fish(bob, 1);
+        uint256 q = dex.sellQuote(FISH_KEY);
+        vm.prank(bob);
+        dex.sellToPool(c[0], q); // y=3: alice's half rounds down to 1 item
+        uint256 s = dex.lpShares(FISH_KEY, alice);
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(DogeDEX.Slippage.selector, 1, 2));
+        dex.removeLiquidity(FISH_KEY, s, 2, 0); // she asked for 2 items: refused instead of silently rounding
+        (uint256 x,,,,,) = dex.poolInfo(FISH_KEY, alice);
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(DogeDEX.Slippage.selector, x / 2, x));
+        dex.removeLiquidity(FISH_KEY, s, 1, x); // DOGE minimum enforced too
+        vm.prank(alice);
+        dex.removeLiquidity(FISH_KEY, s, 1, x / 2);
+        assertEq(dex.proceeds(alice), x / 2);
+    }
+
+    /// Audit M-2: listings are paginated.
+    function test_Audit_ListingsPaginated() public {
+        vm.startPrank(alice);
+        for (uint256 i; i < 5; i++) dex.list(items.mint{value: FEE}(alice, 3, 1), 1 ether);
+        vm.stopPrank();
+        assertEq(dex.listedCount(), 5);
+        (uint256[] memory p1,,) = dex.activeListings(0, 2);
+        (uint256[] memory p2,,) = dex.activeListings(4, 10);
+        (uint256[] memory p3,,) = dex.activeListings(9, 10);
+        assertEq(p1.length, 2);
+        assertEq(p2.length, 1);
+        assertEq(p3.length, 0);
     }
 }

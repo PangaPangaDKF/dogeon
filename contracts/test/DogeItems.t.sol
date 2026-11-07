@@ -128,4 +128,19 @@ contract DogeItemsTest is Test {
         for (uint256 i; i < b.length; i++) if (a[i] != b[i]) return false;
         return true;
     }
+
+    /// Audit M-1: inventoryOf is O(balance) (ERC721Enumerable) and follows transfers.
+    function test_Audit_InventoryEnumerable() public {
+        vm.startPrank(alice);
+        for (uint256 i; i < 50; i++) items.mint{value: FEE}(bob, 3, 1);
+        uint256 mine = items.mint{value: FEE}(alice, 1, 4);
+        vm.stopPrank();
+        assertEq(items.inventoryOf(alice).length, 1);
+        assertEq(items.inventoryOf(alice)[0], (mine << 16) | (1 << 8) | 4);
+        vm.prank(alice);
+        items.transferFrom(alice, bob, mine);
+        assertEq(items.inventoryOf(alice).length, 0);
+        assertEq(items.inventoryOf(bob).length, 51);
+        assertEq(items.totalSupply(), 51);
+    }
 }

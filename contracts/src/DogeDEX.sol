@@ -17,6 +17,8 @@ contract DogeDEX is ReentrancyGuard {
     DogeItems public immutable items;
     uint256 public constant FEE_BPS = 200; // 2% swap fee, kept by the pool (LPs)
     uint256 public constant BPS = 10_000;
+    uint256 public constant SHARES_PER_ITEM = 1e18; // first LP: shares scale with items, so S >> y (audit D-022)
+    uint256 public constant MIN_FIRST_DOGE = 0.001 ether; // no dust-priced pools
 
     // ---------- listings ----------
     struct Listing {
@@ -63,6 +65,8 @@ contract DogeDEX is ReentrancyGuard {
     error NotEnoughDoge(uint256 sent, uint256 required);
     error NotEnoughShares();
     error Slippage(uint256 got, uint256 limit);
+    error ZeroShares();
+    error ZeroPayout();
     error NothingToWithdraw();
     error TransferFailed();
 
@@ -117,18 +121,25 @@ contract DogeDEX is ReentrancyGuard {
         delete _listedIdx[tokenId];
     }
 
-    /// @notice All active listings packed as (tokenId << 16 | itemType << 8 | level), with prices and sellers.
-    function activeListings()
+    function listedCount() external view returns (uint256) {
+        return _listed.length;
+    }
+
+    /// @notice Active listings [offset, offset+limit) packed as (tokenId << 16 | itemType << 8 | level), with prices and
+    ///         sellers. Paginated so junk listings can't push the view over RPC gas caps (audit D-022).
+    function activeListings(uint256 offset, uint256 limit)
         external
         view
         returns (uint256[] memory packed, uint256[] memory prices, address[] memory sellers)
     {
-        uint256 n = _listed.length;
+        uint256 len = _listed.length;
+        uint256 end = offset >= len ? offset : (len - offset > limit ? offset + limit : len);
+        uint256 n = end - offset;
         packed = new uint256[](n);
         prices = new uint256[](n);
         sellers = new address[](n);
         for (uint256 i; i < n; i++) {
-            uint256 id = _listed[i];
+            uint256 id = _listed[offset + i];
             packed[i] = (id << 16) | keyOf(id);
             prices[i] = listings[id].price;
             sellers[i] = listings[id].seller;
@@ -174,9 +185,11 @@ contract DogeDEX is ReentrancyGuard {
         return out - (out * FEE_BPS) / BPS;
     }
 
-    /// @notice Deposit NFTs of ONE (type, level) plus DOGE. The first deposit sets the price. Later deposits must add DOGE
-    ///         in the current ratio: required = ceil(n * x / y). Overpayment is credited to proceeds.
-    function addLiquidity(uint256[] calldata tokenIds) external payable nonReentrant returns (uint256 minted) {
+    /// @notice Deposit NFTs of ONE (type, level) plus DOGE. The first deposit sets the price (>= MIN_FIRST_DOGE) and gets
+    ///         n * SHARES_PER_ITEM shares. Later deposits add DOGE in the current ratio: required = ceil(n * x / y), get
+    ///         floor(S * n / y) shares, which must be > 0 and >= minShares (slippage / rounding guard, audit D-022).
+    ///         Overpayment is credited to proceeds.
+    function addLiquidity(uint256[] calldata tokenIds, uint256 minShares) external payable nonReentrant returns (uint256 minted) {
         uint256 n = tokenIds.length;
         if (n == 0) revert EmptyDeposit();
         uint256 key = keyOf(tokenIds[0]);
@@ -185,17 +198,19 @@ contract DogeDEX is ReentrancyGuard {
         uint256 y = p.ids.length;
         uint256 required;
         if (p.shares == 0) {
-            if (msg.value == 0) revert NotEnoughDoge(0, 1);
+            if (msg.value < MIN_FIRST_DOGE) revert NotEnoughDoge(msg.value, MIN_FIRST_DOGE);
             required = msg.value;
-            minted = msg.value; // first LP: 1 share per wei deposited
+            minted = n * SHARES_PER_ITEM;
             p.doge += msg.value; // also absorbs dust left by a fully drained pool
         } else {
             required = (n * p.doge + y - 1) / y;
             if (msg.value < required) revert NotEnoughDoge(msg.value, required);
             minted = (p.shares * n) / y;
+            if (minted == 0) revert ZeroShares();
             p.doge += required;
             if (msg.value > required) proceeds[msg.sender] += msg.value - required;
         }
+        if (minted < minShares) revert Slippage(minted, minShares);
         p.shares += minted;
         lpShares[key][msg.sender] += minted;
         if (!poolExists[key]) {
@@ -208,11 +223,17 @@ contract DogeDEX is ReentrancyGuard {
     }
 
     /// @notice Burn `amount` shares for a pro-rata cut: floor(y*s/S) items and x*s/S DOGE (DOGE goes to proceeds).
-    function removeLiquidity(uint256 key, uint256 amount) external nonReentrant {
+    ///         minItemsOut / minDogeOut stop a front-run swap from shifting the rounding against you (audit D-022).
+    ///         The dropped fraction (< 1 item) stays with the other LPs: paying it in DOGE at spot would let an LP sell
+    ///         items to the other LPs at spot with no fee and no curve (rejected alternative, see D-022).
+    function removeLiquidity(uint256 key, uint256 amount, uint256 minItemsOut, uint256 minDogeOut) external nonReentrant {
         Pool storage p = _pools[key];
         if (amount == 0 || lpShares[key][msg.sender] < amount) revert NotEnoughShares();
-        uint256 nOut = (p.ids.length * amount) / p.shares;
+        uint256 y = p.ids.length;
+        uint256 nOut = (y * amount) / p.shares;
         uint256 dogeOut = (p.doge * amount) / p.shares;
+        if (nOut < minItemsOut) revert Slippage(nOut, minItemsOut);
+        if (dogeOut < minDogeOut) revert Slippage(dogeOut, minDogeOut);
         lpShares[key][msg.sender] -= amount;
         p.shares -= amount;
         p.doge -= dogeOut;
@@ -247,6 +268,7 @@ contract DogeDEX is ReentrancyGuard {
         Pool storage p = _pools[key];
         if (p.shares == 0) revert PoolMissing(key);
         payout = sellQuote(key);
+        if (payout == 0) revert ZeroPayout(); // selling for 0 would inflate y for free (audit D-022)
         if (payout < minOut) revert Slippage(payout, minOut);
         p.doge -= payout;
         p.ids.push(tokenId);

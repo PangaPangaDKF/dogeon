@@ -35,6 +35,35 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-022 · 2026-11-07 · Contract audit fixes: zero-share LP theft, slippage guards, O(balance) inventory, paginated listings
+- Feature: hardens DogeItems + DogeDEX before the user deploys to Chikyū. A security audit workflow (2 auditors: funds lens +
+  state/DoS lens, then a verifier writing forge PoCs, deleted afterwards) confirmed 6 findings (4 distinct) and refuted 2.
+- Reference: workflow `wf_7bba7bda-4da`; user-supplied avaxskills `security` checklist (slippage, events, CEI).
+- Files: `contracts/src/DogeItems.sol`, `contracts/src/DogeDEX.sol`, `contracts/test/*.t.sol` (+5 audit regression tests → 25),
+  `index.html` (new selectors + guards), `tests/sim.mjs`, `contracts/README.md`, docs.
+- Code:
+  - 🔴 **High (theft):** `addLiquidity` could mint 0 shares. The attacker seeds a 1-wei pool, inflates y with free `sellToPool`
+    calls (payout 0), the victim's NFTs mint 0 shares, and the attacker removes everything. Fix: first LP gets
+    `n × SHARES_PER_ITEM (1e18)` shares (S ≫ y), `MIN_FIRST_DOGE = 0.001` DOGE, `ZeroShares` revert, a new `minShares`
+    parameter (`addLiquidity(uint256[],uint256)`), and `sellToPool` reverts `ZeroPayout` (no free y inflation).
+  - 🟡 **Low (rounding front-run):** `removeLiquidity(key, amount, minItemsOut, minDogeOut)` → `Slippage` revert.
+  - 🟠 **Medium (DoS):** `inventoryOf` scanned every id ever minted → `DogeItems is ERC721Enumerable`, O(owner balance).
+  - 🟠 **Medium (DoS):** `activeListings(offset, limit)` + `listedCount()`.
+  - Game: `SEL` updated (`c5bb3168`, `f88bf15a`, `aa4df6f0`, `f36065b3`). `refreshChain` reads listings in pages of
+    `LIST_PAGE=100` (cap `LIST_MAX=500`). `addLp(ids,wei,pool)` sends `minShares` = 99% of the expected shares.
+    `removeLp` sends exact `minItems` and 99% `minDoge`.
+- Refuted (kept): "first depositor locks every key at a dust price" (PoC showed repricing through add/buy cycles still works,
+  now also blocked by `MIN_FIRST_DOGE`); owner can change `mintFee`/`treasury` (intended, has no power over user NFTs or DOGE).
+- Alternatives rejected: paying the dropped item fraction in DOGE on `removeLiquidity` (tried it: it underflows on 1-item
+  pools, and worse, lets an LP sell items to the other LPs at spot with no fee by removing in tiny chunks). The < 1 item
+  rounding stays with the remaining LPs and is guarded by `minItemsOut`. Dead/locked minimum shares were also rejected: they
+  would stop a drained pool from ever being re-seeded.
+- Process: practice 26 "contract audit = separate lenses (funds vs state/DoS) + PoC-backed refuter, then re-run the game e2e on
+  a fresh anvil". The first fix attempt itself had a value bug that the regression test caught.
+- Verify: `forge test` 25 passed; fresh anvil redeploy (same deterministic addresses) → sim e2e PASS twice (seeds 4242 and 7, the
+  second re-seeds the drained pool); 73 sim PASS; `ALL CHECKS PASSED`.
+- Commit: this commit.
+
 ### D-021 · 2026-11-07 · IT-5 review fixes: no craft duplication, no refund on unknown tx, account switch, drained pools
 - Feature: fixes the findings an adversarial review workflow confirmed on the IT-5 wiring (2 reviewers + 1 refuter: 9 real
   after de-dup = 7 distinct, 1 refuted).

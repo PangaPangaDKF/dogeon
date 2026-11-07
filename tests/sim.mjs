@@ -610,7 +610,7 @@ await scenarioAsync('chain e2e on local anvil: mint, equip, eat, list/buy, LP po
   const key = (3n << 8n) | 1n, mine = api.chainData.inv.filter(it => it.type === 3).map(it => it.id);
   const before = api.chainData.pools.find(p => p.key === key);
   const need = before && before.n ? (BigInt(mine.length) * before.doge + BigInt(before.n - 1)) / BigInt(before.n) : 2n * 10n ** 18n;
-  await api.addLp(mine, need); await idle(api);
+  await api.addLp(mine, need, before); await idle(api);
   let pool = api.chainData.pools.find(p => p.key === key);
   if (!pool || pool.mine === 0n || pool.n < 2) fail('e2e LP', `pool=${JSON.stringify(pool, big)} msg=${api.wallet.msg}`);
   else pass('e2e LP', `RAW FISH pool: ${pool.n} items / ${Number(pool.doge) / 1e18} DOGE, my shares ${pool.mine}`);

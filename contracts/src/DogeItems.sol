@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -11,7 +12,7 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 /// @notice The game burns materials off-chain, then calls `mint` with an exact DOGE fee. Metadata is fully on-chain.
 /// @dev Testnet MVP (DogeOS Chikyu). Anyone who pays the fee can mint: on-chain code cannot see gameplay, so the
 ///      "only playing gets you stuff" rule is enforced by the game UI (mint only after a craft). See docs/DECISIONS.md D-018.
-contract DogeItems is ERC721, Ownable, ReentrancyGuard {
+contract DogeItems is ERC721Enumerable, Ownable, ReentrancyGuard {
     using Strings for uint256;
 
     // item types (keep in sync with ITEM_TYPES in index.html)
@@ -100,16 +101,15 @@ contract DogeItems is ERC721, Ownable, ReentrancyGuard {
     }
 
     /// @notice Every item `owner` holds, packed as (tokenId << 16) | (itemType << 8) | level, so a game can read
-    ///         its whole inventory in one eth_call and decode it without a library. View only; O(totalMinted).
+    ///         its whole inventory in one eth_call and decode it without a library.
+    ///         O(balance of owner) via ERC721Enumerable — independent of total supply (audit D-022).
     function inventoryOf(address owner) external view returns (uint256[] memory packed) {
         uint256 n = balanceOf(owner);
         packed = new uint256[](n);
-        uint256 k;
-        for (uint256 id = 1; id < nextId && k < n; id++) {
-            if (_ownerOf(id) == owner) {
-                Item memory it = items[id];
-                packed[k++] = (id << 16) | (uint256(it.itemType) << 8) | it.level;
-            }
+        for (uint256 i; i < n; i++) {
+            uint256 id = tokenOfOwnerByIndex(owner, i);
+            Item memory it = items[id];
+            packed[i] = (id << 16) | (uint256(it.itemType) << 8) | it.level;
         }
     }
 

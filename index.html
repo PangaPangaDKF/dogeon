@@ -542,9 +542,9 @@ function walletRows(){
 const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catch(e){return false;}})();
 if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
 const CONTRACTS={'0x5fdaf3':{items:'',dex:''},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'}};
-const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'d3a17f29',addLiquidity:'4de59aa3',removeLiquidity:'9d7de6b3',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7'};
+const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7'};
 const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
-const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50]; // sell / LP presets in DOGE, picked with A/D in the market menu
+const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50],LIST_PAGE=100,LIST_MAX=500; // sell / LP presets in DOGE, picked with A/D in the market menu
 const W32=n=>BigInt(n).toString(16).padStart(64,'0'),A32=a=>String(a).toLowerCase().replace(/^0x/,'').padStart(64,'0');
 const words=h=>{h=String(h||'0x').replace(/^0x/,'');const o=[];for(let i=0;i+64<=h.length;i+=64)o.push(BigInt('0x'+h.slice(i,i+64)));return o;};
 function arrAt(w,slot){const off=Number(w[slot]/32n),n=Number(w[off]);return w.slice(off+1,off+1+n);} // dynamic array whose byte offset sits in head word `slot`
@@ -567,11 +567,13 @@ async function etx(to,data,value){
 }
 async function refreshChain(){
   if(!chainReady())return;const c=addrs(),me=wallet.addr;
-  const [inv,lst,pls,pr,fee,ap]=await Promise.all([ecall(c.items,SEL.inventoryOf+A32(me)),ecall(c.dex,SEL.activeListings),ecall(c.dex,SEL.allPools),
+  const [inv,lst,pls,pr,fee,ap]=await Promise.all([ecall(c.items,SEL.inventoryOf+A32(me)),ecall(c.dex,SEL.listedCount),ecall(c.dex,SEL.allPools),
     ecall(c.dex,SEL.proceeds+A32(me)),ecall(c.items,SEL.mintFee),ecall(c.items,SEL.isApprovedForAll+A32(me)+A32(c.dex))]);
   chainData.inv=arrAt(words(inv),0).map(unpack);
-  const lw=words(lst),lp=arrAt(lw,0),lpr=arrAt(lw,1),ls=arrAt(lw,2);
-  chainData.listings=lp.map((p,i)=>({...unpack(p),price:lpr[i],mine:ls[i]===BigInt(me)}));
+  const nList=Number(words(lst)[0]||0n),listings=[]; // paginated reads (audit D-022)
+  for(let off=0;off<nList&&off<LIST_MAX;off+=LIST_PAGE){const lw=words(await ecall(c.dex,SEL.activeListings+W32(off)+W32(LIST_PAGE))),lp=arrAt(lw,0),lpr=arrAt(lw,1),ls=arrAt(lw,2);
+    lp.forEach((p,i)=>listings.push({...unpack(p),price:lpr[i],mine:ls[i]===BigInt(me)}));}
+  chainData.listings=listings;
   const keys=arrAt(words(pls),0),pools=[];
   for(const k of keys){const w=words(await ecall(c.dex,SEL.poolInfo+W32(k)+A32(me)));pools.push({key:k,type:Number(k>>8n),level:Number(k&255n),doge:w[0],n:Number(w[1]),shares:w[2],mine:w[3],buy:w[4],sell:w[5]});}
   chainData.pools=pools;chainData.proceeds=words(pr)[0]||0n;chainData.fee=words(fee)[0]||0n;chainData.approved=(words(ap)[0]||0n)===1n;chainData.loaded=true;
@@ -615,9 +617,12 @@ const dex=()=>addrs().dex;
 function listNft(it,priceDoge){return chainAct(`LISTED #${it.id} FOR ${priceDoge} DOGE.`,async()=>{await ensureApproved();await etx(dex(),SEL.list+W32(it.id)+W32(toWei(priceDoge)),0);});}
 function delistNft(l){return chainAct(`DELISTED #${l.id}.`,()=>etx(dex(),SEL.delist+W32(l.id),0));}
 function buyListing(l){return chainAct(`BOUGHT ${itemName(l)} #${l.id}! WOW.`,()=>etx(dex(),SEL.buy+W32(l.id),l.price));}
-function addLp(ids,wei){return chainAct(`LP ADDED: ${ids.length} ITEMS. YOU ARE THE MARKET.`,async()=>{await ensureApproved();
-  await etx(dex(),SEL.addLiquidity+W32(32)+W32(ids.length)+ids.map(W32).join(''),wei);});}
-function removeLp(p){return chainAct('LP REMOVED. DOGE IS IN YOUR PROCEEDS.',()=>etx(dex(),SEL.removeLiquidity+W32(p.key)+W32(p.mine),0));}
+// minShares = 99% of what the pool you are looking at would mint (0 for a new pool): a front-run or rounding to 0 reverts (audit D-022)
+function addLp(ids,wei,p){const live=p&&p.shares>0n&&p.n>0,min=live?(p.shares*BigInt(ids.length)/BigInt(p.n))*99n/100n:0n;
+  return chainAct(`LP ADDED: ${ids.length} ITEMS. YOU ARE THE MARKET.`,async()=>{await ensureApproved();
+  await etx(dex(),SEL.addLiquidity+W32(64)+W32(min)+W32(ids.length)+ids.map(W32).join(''),wei);});}
+function removeLp(p){const minItems=BigInt(p.n)*p.mine/p.shares,minDoge=(p.doge*p.mine/p.shares)*99n/100n; // slippage guard (audit D-022)
+  return chainAct('LP REMOVED. DOGE IS IN YOUR PROCEEDS.',()=>etx(dex(),SEL.removeLiquidity+W32(p.key)+W32(p.mine)+W32(minItems)+W32(minDoge),0));}
 function buyPool(p){return chainAct(`SWAPPED ${fromWei(p.buy)} DOGE FOR 1 ${itemName(p)}.`,()=>etx(dex(),SEL.buyFromPool+W32(p.key),p.buy));}
 function sellPool(it,p){return chainAct(`SOLD #${it.id} FOR ${fromWei(p.sell)} DOGE (IN PROCEEDS).`,async()=>{await ensureApproved();await etx(dex(),SEL.sellToPool+W32(it.id)+W32(p.sell),0);});}
 function withdrawProceeds(){return chainAct('PROCEEDS SENT TO YOUR WALLET.',()=>etx(dex(),SEL.withdraw,0));}
@@ -634,7 +639,7 @@ function marketMenu(n){openMenu(n,'SPHINX NFT MARKET',()=>{const o=[],blk=chainB
     if(p.buy>0n)o.push({label:` SWAP ${fromWei(p.buy)} DOGE -> 1 ${itemName(p)}`,act:()=>{buyPool(p);return wallet.msg;}});
     if(mine.length&&p.sell>0n)o.push({label:` SWAP 1 ${itemName(p)} -> ${fromWei(p.sell)} DOGE`,act:()=>{sellPool(mine[0],p);return wallet.msg;}});
     if(mine.length&&p.n>0){const need=(BigInt(mine.length)*p.doge+BigInt(p.n-1))/BigInt(p.n);
-      o.push({label:` ADD ${mine.length} ITEMS + ${fromWei(need)} DOGE AS LP`,act:()=>{addLp(mine.map(it=>it.id),need);return wallet.msg;}});}
+      o.push({label:` ADD ${mine.length} ITEMS + ${fromWei(need)} DOGE AS LP`,act:()=>{addLp(mine.map(it=>it.id),need,p);return wallet.msg;}});}
     if(p.mine>0n)o.push({label:` REMOVE MY LP (${Math.round(Number(p.mine*1000n/p.shares))/10}%)`,act:()=>{removeLp(p);return wallet.msg;}});}
   const poolKeys=new Set(chainData.pools.filter(p=>p.shares>0n).map(p=>p.key)),groups={};
   for(const it of myFree()){const k=String(keyOfIt(it));if(!poolKeys.has(keyOfIt(it)))(groups[k]=groups[k]||[]).push(it);

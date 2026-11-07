@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 1.9 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 2.0 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -94,7 +94,11 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 25. **Economy lens in every review** — for each item path ask "can one input produce two outputs?" (craft effect + mint credit
     were each correct alone, together a duplication exploit, D-021). Refund only when a tx surely failed.
 
+26. **Audit contracts with split lenses + PoC refuter** — funds lens and state/DoS lens, a verifier that writes forge PoCs,
+    then fix with regression tests and re-run the game e2e on a fresh anvil. Check the fix itself for new value flows (D-022).
+
 ## Changelog
+- 2.0 (2026-11-07) — Practice 26 contract audit loop (D-022). Phase 3 complete.
 - 1.9 (2026-11-07) — Practice 25 economy lens (D-021).
 - 1.8 (2026-11-07) — Practice 24 (D-020).
 - 1.7 (2026-11-07) — Practices 22-23 from IT-5 wiring (D-019).

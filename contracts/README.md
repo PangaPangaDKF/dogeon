@@ -4,8 +4,8 @@ Two contracts, built and tested with Foundry. Design notes are in `docs/DECISION
 
 | Contract | What it does |
 |---|---|
-| `src/DogeItems.sol` | ERC-721 (OpenZeppelin v5.1). The Mechanic mints gear and food: `mint(to, itemType, level)` with an **exact 0.1 DOGE fee** that goes to the treasury. Metadata (JSON + SVG card) is fully on-chain. `inventoryOf(owner)` returns packed `(id<<16 \| type<<8 \| level)`. `burn(id)` uses an item up. |
-| `src/DogeDEX.sol` | The Sphinx DEX. **Listings**: `list`, `buy` (exact price), `delist`. **Pools (LP with DOGE)**: one pool per (type, level). `addLiquidity(ids[])` + DOGE gives shares, `removeLiquidity`, `buyFromPool` / `sellToPool` on a constant-product curve with a 2% fee for LPs. Pull payments: `withdraw()`. No admin. Nothing is for sale until a player creates it. |
+| `src/DogeItems.sol` | ERC-721 (OpenZeppelin v5.1). The Mechanic mints gear and food: `mint(to, itemType, level)` with an **exact 0.1 DOGE fee** that goes to the treasury. Metadata (JSON + SVG card) is fully on-chain. ERC721Enumerable. `inventoryOf(owner)` (O(balance)) returns packed `(id<<16 \| type<<8 \| level)`. `burn(id)` uses an item up. |
+| `src/DogeDEX.sol` | The Sphinx DEX. **Listings**: `list`, `buy` (exact price), `delist`. **Pools (LP with DOGE)**: one pool per (type, level). `addLiquidity(ids[], minShares)` + DOGE gives shares (first LP: 1e18 per item, min 0.001 DOGE), `removeLiquidity(key, shares, minItems, minDoge)`, `buyFromPool` / `sellToPool` on a constant-product curve with a 2% fee for LPs. Listings paginated: `activeListings(offset, limit)`, `listedCount()`. Pull payments: `withdraw()`. No admin. Nothing is for sale until a player creates it. Audited in D-022. |
 
 Item types: 1 HAMMER (lv 1-4) · 2 ARMOR (lv 1-2) · 3 RAW FISH · 4 COOKED FISH · 5 BONE CHARM · 6 MOON BISCUIT (lv 1).
 
@@ -14,7 +14,7 @@ Item types: 1 HAMMER (lv 1-4) · 2 ARMOR (lv 1-2) · 3 RAW FISH · 4 COOKED FISH
 cd contracts
 forge install foundry-rs/forge-std --no-git
 forge install OpenZeppelin/openzeppelin-contracts@v5.1.0 --no-git
-forge test            # 20 tests incl. 2 fuzz tests (k never drops, DEX stays solvent)
+forge test            # 25 tests incl. 2 fuzz tests + 5 audit regressions (k never drops, DEX stays solvent)
 ```
 
 ## Try it locally (no wallet, no real DOGE)
