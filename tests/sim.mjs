@@ -637,5 +637,83 @@ await scenarioAsync('chain e2e on local anvil: mint, equip, eat, list/buy, LP po
   for (let f = 0; f < 5; f++) api.step(DT); // render the menu (scroll window) a few frames
 });
 
+// ---------- Phase 3 IT-6: rest cap, bag, food, cooking, skills, death (D-020) ----------
+scenario('rest caps HP at 60% while MP fills to max', () => {
+  const api = boot(SEED + 22); startGame(api);
+  const P = api.get().P; P.hp = 10; P.mp = 0; // spawn point is inside camp
+  api.hold('r', true); for (let f = 0; f < 60 * 30; f++) api.step(DT); api.hold('r', false);
+  const cap = Math.ceil(P.maxHp * api.REST_CAP);
+  if (Math.round(P.hp) !== cap || P.mp !== P.maxMp) fail('rest cap', `hp ${P.hp} (cap ${cap}) mp ${P.mp}/${P.maxMp} after 30 s`);
+  else pass('rest cap', `hp 10 -> ${cap}/${P.maxHp} (60%), mp 0 -> ${P.maxMp}`);
+});
+
+scenario('inventory: I/Tab open it, 12 slots, food stacks of 5, materials shown', () => {
+  const api = boot(SEED + 23); startGame(api);
+  api.press('i'); api.step(DT);
+  let ui = api.get().ui;
+  if (!ui || ui.title !== 'INVENTORY') throw new Error('I did not open the inventory');
+  const rows = ui.build().map(r => r.label);
+  if (!rows.some(l => /BAG 0\/12 SLOTS/.test(l)) || !rows.some(l => /MATERIALS: ORB/.test(l))) fail('bag rows', rows.join(' | '));
+  else pass('bag rows', 'slot counter + materials row visible');
+  api.press('escape'); api.step(DT); api.press('tab'); api.step(DT);
+  ui = api.get().ui;
+  if (!ui || ui.title !== 'INVENTORY') fail('tab', 'Tab did not open the inventory'); else pass('tab', 'Tab opens it too');
+  api.press('escape'); api.step(DT);
+  const P = api.get().P;
+  const allFit = api.addToBag('raw_fish', 70);
+  if (allFit || P.bag.length !== api.BAG_SIZE || P.bag.some(s => s.qty !== 5)) fail('bag limit', `fit=${allFit} slots=${P.bag.length} qty=${P.bag.map(s => s.qty)}`);
+  else pass('bag limit', `70 fish -> ${P.bag.length} slots x 5, rest refused`);
+});
+
+scenario('food: RAW +15, COOKED +25, cook only near the fire', () => {
+  const api = boot(SEED + 24); startGame(api);
+  const P = api.get().P; P.hp = 10; P.x += 96; // walk away from the brazier first (spawn is next to it)
+  api.addToBag('raw_fish', 2);
+  api.invMenu(); let rows = api.get().ui.build();
+  const eatRaw = rows.find(r => /RAW FISH x2 \[EAT \+15/.test(r.label));
+  if (!eatRaw) throw new Error('no EAT row for raw fish: ' + rows.map(r => r.label).join(' | '));
+  eatRaw.act();
+  if (P.hp !== 25 || api.bagCount('raw_fish') !== 1) fail('eat raw', `hp ${P.hp} raw ${api.bagCount('raw_fish')}`); else pass('eat raw', 'hp 10 -> 25, 1 raw left');
+  if (rows.some(r => /^COOK/.test(r.label))) fail('cook far', 'COOK offered away from the fire'); else pass('cook far', 'no COOK away from the fire');
+  api.get().ui = null;
+  P.x = api.CX * 16 + 8; P.y = (api.CY + 4) * 16 - 4 - P.hh; // just north of the brazier (fire at FY = CY+4)
+  api.invMenu(); rows = api.get().ui.build();
+  const cook = rows.find(r => /^COOK RAW FISH/.test(r.label));
+  if (!cook) throw new Error('no COOK row next to the fire: ' + rows.map(r => r.label).join(' | '));
+  cook.act(); rows = api.get().ui.build();
+  const eatCooked = rows.find(r => /COOKED FISH x1 \[EAT \+25/.test(r.label));
+  if (!eatCooked) throw new Error('no cooked fish after cooking');
+  eatCooked.act();
+  if (P.hp !== 50 || api.bagCount('cooked_fish') !== 0) fail('eat cooked', `hp ${P.hp}`); else pass('cook + eat cooked', 'raw -> cooked at the fire, hp 25 -> 50');
+});
+
+scenario('skills grow only by use: combat on hit, bark per cast, tier bonus on damage', () => {
+  const api = boot(SEED + 25); startGame(api);
+  const g = api.get(), P = g.P; g.enemies.splice(0);
+  P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.dir = 'right'; P.iT = 99; g.mkt.sent = 0;
+  api.press(' '); api.step(DT); for (let f = 0; f < 30; f++) api.step(DT);
+  if (P.skills.combat !== 0) fail('air swing', `combat XP ${P.skills.combat} from a miss`); else pass('air swing', 'a miss gives no combat XP');
+  const dummy = () => { const e = { type: 'knight', def: api.ETYPES.knight, x: P.x + 14, y: P.y, hw: 5, hh: 4, hp: 999, maxHp: 999, dir: 'left', anim: 0, state: 'wander', t: 0, wx: 0, wy: 0, flash: 0, kbx: 0, kby: 0, cool: 99, enemy: true, boss: false, zone: 'field', summonT: 4, dead: false }; const live = api.get().enemies; live.splice(0); live.push(e); return e; }; // update() re-filters enemies every frame: always use the live array
+  P.sword = 4; // 18 dmg: +8% must visibly change the number (5 * 1.08 still rounds to 5)
+  let e = dummy(); P.atkCd = 0; api.press(' '); api.step(DT);
+  const base = 999 - e.hp;
+  if (P.skills.combat !== 1 || base <= 0) fail('hit XP', `combat XP ${P.skills.combat}, dmg ${base}`); else pass('hit XP', `hit for ${base}, combat XP 1`);
+  P.skills.combat = 10; e = dummy(); P.atkCd = 0; P.x = e.x - 14; api.press(' '); api.step(DT);
+  const tier = 999 - e.hp, want = Math.round(api.SWORD_DMG[P.sword] * 1.08);
+  if (tier !== want || tier === base) fail('tier bonus', `combat lv1 hit ${tier}, expected ${want}`); else pass('tier bonus', `combat tier 1: ${base} -> ${tier} dmg (+8%)`);
+  P.mp = 30; api.press('k'); api.step(DT);
+  if (P.skills.bark !== 1) fail('bark XP', `bark XP ${P.skills.bark}`); else pass('bark XP', 'bark +1 XP per cast');
+});
+
+scenario('death empties the bag (carried food), keeps pooled DOGE', () => {
+  const api = boot(SEED + 26); startGame(api);
+  const P = api.get().P; api.addToBag('cooked_fish', 3); P.bank = 50;
+  P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.iT = 0; P.hp = 1;
+  api.hurtPlayer(50, { x: P.x + 5, y: P.y });
+  for (let f = 0; f < 60 * 3; f++) api.step(DT);
+  const p = api.get().P;
+  if (p.bag.length || p.bank !== 50) fail('death bag', `bag ${p.bag.length} slots, bank ${p.bank}`); else pass('death bag', 'bag emptied, pool safe');
+});
+
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);
 process.exit(failures ? 1 : 0);

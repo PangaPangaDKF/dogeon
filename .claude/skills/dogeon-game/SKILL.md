@@ -5,7 +5,7 @@ description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bi
 
 # DOGEON — game context skill
 
-Version: 1.7 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 1.8 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #1 (user):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
 improve `prompts/SESSION_PROMPT.md` + this skill → update `CLAUDE.md`/`CONTEXT.md` → commit. Never batch features.
@@ -29,7 +29,7 @@ shop upgrades → heal ONLY by resting in camp → push further (field → brute
 
 ## 3. Invariants (never break without the user explicitly changing them)
 The source of truth is `CLAUDE.md` §4. Summary: no potions/regen · rest heals HP only to 60% (`REST_CAP`), food heals the rest ·
-camp fully safe (enemies can't enter, damage or shoot in) · death = −50% carried DOGE + all whiskers + materials ·
+camp fully safe (enemies can't enter, damage or shoot in) · death = −50% carried DOGE + all whiskers + materials + bag food (NFTs safe) ·
 whisker = 3 DOGE · skills grow only by use (no XP levels, per-skill tiers in `SKILL_THRESH`) · fishing only outside camp, any hit
 or move cancels it · quest stages 0→4 · populations field 22 / ruins 6, refill every 3 s ·
 controls WASD/Space-J/K-Q/E/R/I-Tab/F/Esc. Field names: `P.iT` = i-frames, `P.bag` = inventory (grep before naming new state).

@@ -27,8 +27,8 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 | IT-2 | Fishing: `T.WATER` ponds in field, F to fish (3–5 s bar, hit/move cancels), RAW FISH → bag, cook at fire; field pop 18→22, spawn 4s→3s | ✅ D-015 `02adc15` (review fixes: D-017) |
 | IT-3 | Wallet: plain EIP-1193 `window.ethereum` (NO ethers.js, D-016), `wallet_switchEthereumChain`→`wallet_addEthereumChain` Chikyū, connect/balance/disconnect in Sphinx row 0, offline fallback | ✅ D-016 |
 | IT-4 | `contracts/` Foundry: `DogeItems.sol` (ERC-721, `mint(to,type,level)` exact 0.1 DOGE fee, on-chain SVG, `inventoryOf`) + `DogeDEX.sol` (listings `list/buy/delist` + DOGE/item LP pools `addLiquidity/removeLiquidity/buyFromPool/sellToPool`, `withdraw`). 20 forge tests. Deployed on local anvil only (Chikyu deploy = user step, `contracts/README.md`) | ✅ D-018 |
-| IT-5 | Wire game ↔ contracts (selectors, no ethers): forge mint credits + PRESERVE fish, bag NFT rows (eat = burn), gear NFT owned = worn, Sphinx NFT MARKET (listings, LP pools, swaps, withdraw), scrolling menus, `?chain=local` anvil mode; anvil e2e test | ✅ D-019 (review → D-020) |
-| IT-6 ⏭ NEXT | Tests for rest cap / bag / skills, balance pass, PHASE3_BRIEF acceptance boxes, README for players, final docs | pending |
+| IT-5 | Wire game ↔ contracts (selectors, no ethers): forge mint credits + PRESERVE fish, bag NFT rows (eat = burn), gear NFT owned = worn, Sphinx NFT MARKET (listings, LP pools, swaps, withdraw), scrolling menus, `?chain=local` anvil mode; anvil e2e test | ✅ D-019 (review fixes → D-021) |
+| IT-6 | Survival tests (rest cap, bag, food, cook, skills, death), bag slot/material rows, death empties the bag, player README.md, brief v1.1 acceptance (9 ✓, 1 partial = Chikyū deploy) | ✅ D-020 |
 
 **User's asks for Phase 3 (verbatim intent):** rest heals only a little · inventory · Tibia-style "get better by using it" (no level-up) ·
 fishing to eat for HP, hard to fish while attacked, map always full, never easy full HP · real wallet connect → add DogeOS testnet RPC →
@@ -270,10 +270,10 @@ C:\Users\dulbi\dogeon\
 
 ## 9. What's next
 
-1. **D-020 IT-5 review fixes** (workflow wf_8eca6cca-70f) → **IT-6** wrap-up, RULE #1 after each. Anvil e2e: `anvil` + `forge script script/Deploy.s.sol --rpc-url local --broadcast --unlocked --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` → items `0x5FbDB2315678afecb367f032d93F642f64180aa3`, dex `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512` (deterministic on a fresh anvil). Play locally: `node tests/serve.mjs` → http://localhost:8080/?chain=local (add anvil account 0 to MetaMask only for local testing).
+1. **D-021 IT-5 review fixes** (workflow wf_8eca6cca-70f) → **IT-6** wrap-up, RULE #1 after each. Anvil e2e: `anvil` + `forge script script/Deploy.s.sol --rpc-url local --broadcast --unlocked --sender 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` → items `0x5FbDB2315678afecb367f032d93F642f64180aa3`, dex `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512` (deterministic on a fresh anvil). Play locally: `node tests/serve.mjs` → http://localhost:8080/?chain=local (add anvil account 0 to MetaMask only for local testing).
 2. Later / not requested yet: open issues I-3…I-9, polish.
 
-Versions now: SESSION_PROMPT v1.7 · dogeon-game skill v1.7 · PHASE3_BRIEF v1.0 · DECISIONS up to D-019 · MASTER_PROMPT §F/§G ledger. Tests: 51 sim PASS (incl. anvil e2e) + 20 forge. index.html ~967 lines.
+Versions now: SESSION_PROMPT v1.8 · dogeon-game skill v1.8 · PHASE3_BRIEF v1.1 · DECISIONS up to D-020 · MASTER_PROMPT §F/§G ledger. Tests: 64 sim PASS (incl. anvil e2e) + 20 forge.
 Run for wallets: `node tests/serve.mjs` → http://localhost:8080 (MetaMask does not inject into file://).
 **Auto-resume:** a session cron job (CronCreate, hourly at :17, prompt "DOGEON auto-resume…") continues Phase 3 when the session is idle; it deletes itself when Phase 3 is done. Session-only: if Claude was restarted, re-create it (see dogeon-workflow-rules memory).
 Function selectors (cast sig): mint 0x352926a8 · burn 0x42966c68 · inventoryOf 0x7eaebb15 · mintFee 0x13966db5 · setApprovalForAll 0xa22cb465 · isApprovedForAll 0xe985e9c5 · list 0x50fd7367 · delist 0x964bc33f · buy 0xd96a094a · activeListings 0xd3a17f29 · addLiquidity 0x4de59aa3 · removeLiquidity 0x9d7de6b3 · buyFromPool 0x66c1dbf3 · sellToPool 0x0de77491 · withdraw 0x3ccfd60b · proceeds 0x35adde54 · allPools 0xc5c63e65 · poolInfo 0x81ea4ee7 · buyQuote 0x168585e5 · sellQuote 0xd7a2e4c9

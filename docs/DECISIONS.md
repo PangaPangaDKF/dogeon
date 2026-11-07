@@ -35,6 +35,23 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-020 · 2026-11-07 · Phase 3 IT-6: survival tests, bag slots + materials, death empties the bag, player README
+- Feature: closes the Phase 3 acceptance list. The bag now shows `BAG n/12 SLOTS` + whiskers and a MATERIALS row. **Balance
+  decision:** carried food is lost on death (like materials), so preserving fish as NFTs (safe on chain) has a real purpose.
+- Reference: `prompts/PHASE3_BRIEF.md` §8 acceptance boxes (now v1.1, 9 ticked, 1 partial = real Chikyū txs wait for the user's
+  deploy) and IT-6 in §7; user rule "hard mode".
+- Files: `index.html` (`respawn()`, `invMenu()`), `tests/sim.mjs` (+5 scenarios, 13 checks), `README.md` (new, for players),
+  `prompts/PHASE3_BRIEF.md` v1.1, docs.
+- Code: `respawn()` sets `P.bag=[]`, message tells you to pool DOGE and preserve fish; `invMenu()` first two rows = slots/whiskers
+  and materials. Tests: rest cap 36/60 + MP full; I and Tab; 70 fish → 12×5 refused rest; RAW +15, COOKED +25, COOK only near
+  the fire; combat XP only on hits; tier 1 = +8% (hammer LV4 18 → 19); bark XP; death empties bag, pool safe.
+- Alternatives rejected: keeping food on death (makes the "preserve as NFT" choice meaningless); moving materials into the bag
+  (forge reads `P.orb` etc.; a row is enough for the brief, smaller diff).
+- Process: two IT-6 tests passed for the wrong reason first (`5×1.08` rounds to 5; stale `g.enemies` after `filter()`) →
+  practice 24 "assert the number changed, and re-read live arrays (`api.get().enemies`) every time".
+- Verify: sim `✓ 0 failed` seeds 4242/99 — 64 PASS; `forge test` 20 passed; `ALL CHECKS PASSED`.
+- Commit: this commit.
+
 ### D-019 · 2026-11-07 · Phase 3 IT-5: game ↔ contracts (mint at the forge, NFTs in the bag, Sphinx NFT market + LP)
 - Feature: the on-chain loop is playable. Crafting at Wrenchpaw gives a **mint credit**, so you can mint that item as an NFT
   (0.1 DOGE fee). Fish from the bag can be **preserved** as NFTs. The bag lists your NFTs: food NFTs can be eaten (burn → HP),

@@ -428,12 +428,12 @@ function hurtPlayer(d,src){
   if(P.hp<=0){P.hp=0;P.dead=true;P.deathT=2.2;sfx(300,0.8,'triangle',0.08,-260);puff(P.x,P.y-8,'#e8922c',16);}
 }
 function respawn(){
-  const lost=Math.floor(P.doge/2),lw=P.whisk;P.doge-=lost;P.whisk=0;P.orb=0;P.scrap=0;P.horn=0;P.steel=0;
+  const lost=Math.floor(P.doge/2),lw=P.whisk,lf=P.bag.length;P.doge-=lost;P.whisk=0;P.orb=0;P.scrap=0;P.horn=0;P.steel=0;P.bag=[]; // carried food is lost too; NFTs live on chain (D-020)
   P.dead=false;P.fishing=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.iT=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
   for(const e of enemies){if(e.boss){e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}}
   enemies=enemies.filter(e=>e.zone!=='boss'||e.boss);
-  openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE, ${lw} whiskers and all materials. Pool DOGE at the Sphinx to keep it safe!`]);
+  openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE, ${lw} whiskers, all materials${lf?' and your bag of food':''}. Pool DOGE at the Sphinx and preserve fish as NFTs to keep them safe!`]);
 }
 function attack(){
   stopFish('REELED IN');P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
@@ -710,6 +710,8 @@ function questTalk(n){
 }
 function invMenu(){
   openMenu(null,'INVENTORY',()=>{const o=[];
+    o.push({label:`BAG ${P.bag.length}/${BAG_SIZE} SLOTS  WHISKERS x${P.whisk}`,act:()=>'FOOD STACKS TO 5. DEATH EMPTIES THE BAG. NFTS ARE SAFE.'});
+    o.push({label:`MATERIALS: ORB ${P.orb} SCRAP ${P.scrap} HORN ${P.horn} STEEL ${P.steel}`,act:()=>'CRAFT AT WRENCHPAW. LOST ON DEATH.'});
     for(let i=0;i<P.bag.length;i++){const s=P.bag[i];const fd=FOODS[s.kind];
       if(fd){const nearFire=dist(P.x,P.y,CX*16+8,FY*16+8)<30;
         o.push({label:`${fd.name} x${s.qty} [EAT +${fd.heal} HP]`,act:()=>{if(P.hp>=P.maxHp)return 'HP IS FULL ALREADY.';bagRemove(s.kind,1);P.hp=Math.min(P.maxHp,P.hp+fd.heal);sfx(660,0.1,'triangle',0.05,200);return `ATE ${fd.name}. +${fd.heal} HP. YUM.`;}});

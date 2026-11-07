@@ -82,7 +82,7 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
 - **Fishing:** F next to water (ponds, all outside camp) → 3–5 s bar ÷ fishing skill. Getting hit, moving, slashing, barking or F again cancels. Catch → RAW FISH in the bag (cook at the fire via I). No safe fishing spot may ever exist.
 - **Inventory:** `P.bag` = up to 12 slots `{kind,qty}`; food stacks 5, others 20. `P.iT` = i-frame timer (was `P.inv`).
 - **Camp is fully safe:** enemies can't enter, can't damage you, projectiles stop at the fence. `hurtPlayer` has a camp guard.
-- **Death:** lose 50% of carried DOGE, all whiskers, all materials. Wake at fire at 35% HP/MP (RESPAWN_FRAC). Pooled DOGE is safe.
+- **Death:** lose 50% of carried DOGE, all whiskers, all materials and the whole bag (food). NFTs are safe on chain. Wake at fire at 35% HP/MP (RESPAWN_FRAC). Pooled DOGE is safe.
 - **DOGE Market:** price random-walks once per second; sentiment = price vs 30 s average. Bear: enemy dmg +50%, speed +15%, dark-red overlay. Bull: player dmg +50%, speed +10%.
 - **Economy:** whisker = 3 DOGE at the Sphinx (swap). Sphinx DEX: swap, buy items, pool/unpool DOGE. Mechanic forge: burn materials (ORB/SCRAP/HORN/STEEL) via RECIPES to craft hammer upgrades, armor, charms.
   Enemies drop materials: frog→ORB, ninja→SCRAP, bull→HORN, knight→STEEL; cats→WHISKERS; brutes→3 WHISKERS.

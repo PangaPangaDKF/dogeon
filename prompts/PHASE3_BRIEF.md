@@ -1,6 +1,6 @@
 # DOGEON — Phase 3 Brief: "Doge Chain"
 
-Version 1.0 · 2026-11-07 · Built from user request. This phase transitions from simulated web3 to
+Version 1.1 · 2026-11-07 (acceptance reviewed in IT-6, D-020) · Built from user request. This phase transitions from simulated web3 to
 real on-chain gameplay on DogeOS Chikyū testnet while adding survival mechanics (fishing, inventory,
 skill-by-use progression). Paste it or point to `@prompts/PHASE3_BRIEF.md` to drive any session.
 
@@ -141,16 +141,17 @@ Small bonuses per level (~5-10% per tier). Show skill levels in inventory or HUD
 - **IT-6** Tests for all new mechanics + docs update + balance pass.
 
 ## 8. Acceptance criteria
-- [ ] Rest caps HP recovery at 60% maxHp. MP still recovers fully. (IT-1)
-- [ ] Inventory opens with I/Tab, shows 12 slots, food/materials visible. (IT-1)
-- [ ] Combat/fishing/bark skills track usage and give tier bonuses. (IT-1)
-- [ ] Water tiles on map. F near water starts fishing. Hit interrupts. Catch → RAW FISH in inventory. (IT-2)
-- [ ] RAW FISH eaten from inventory heals +15 HP. COOKED FISH (cooked at fire) heals +25 HP. (IT-2)
-- [ ] Wallet connects via window.ethereum. DogeOS Chikyū auto-added. Address shown. (IT-3)
-- [ ] Mechanic forge calls DogeItems.mint() on-chain. NFT appears in inventory with token ID. (IT-5)
-- [ ] Sphinx DEX: list NFT for DOGE, buy listed NFT. Real testnet transactions. (IT-5)
-- [ ] Game works fully without wallet (graceful degradation). (IT-3)
-- [ ] `bash tests/check.sh` → ALL CHECKS PASSED with new scenarios. (IT-6)
+- [x] Rest caps HP recovery at 60% maxHp. MP still recovers fully. (IT-1) — sim "rest cap"
+- [x] Inventory opens with I/Tab, shows 12 slots, food/materials visible. (IT-1, slot/material rows IT-6) — sim "bag rows", "tab", "bag limit"
+- [x] Combat/fishing/bark skills track usage and give tier bonuses. (IT-1, per-skill tiers IT-2) — sim "hit XP", "tier bonus", "fish speed"
+- [x] Water tiles on map. F near water starts fishing. Hit interrupts. Catch → RAW FISH in inventory. (IT-2) — sim "ponds", "fish catch", "hit cancels"
+- [x] RAW FISH eaten from inventory heals +15 HP. COOKED FISH (cooked at fire) heals +25 HP. (IT-2) — sim "eat raw", "cook + eat cooked"
+- [x] Wallet connects via window.ethereum. DogeOS Chikyū auto-added. Address shown. (IT-3) — sim mockEth "add chain", "connect"
+- [x] Mechanic forge calls DogeItems.mint() on-chain. NFT appears in inventory with token ID. (IT-5) — anvil e2e "mint+equip"; Chikyū needs the user's deploy
+- [~] Sphinx DEX: list NFT for DOGE, buy listed NFT. (IT-5) — real txs proven on local anvil (e2e list/buy/LP/swap/withdraw).
+  **Real Chikyū testnet txs wait for the user's deploy** (needs a funded wallet; `contracts/README.md`), then fill `CONTRACTS['0x5fdaf3']`.
+- [x] Game works fully without wallet (graceful degradation). (IT-3) — sim "offline label" + every non-wallet scenario
+- [x] `bash tests/check.sh` → ALL CHECKS PASSED with new scenarios. (IT-6) — + stage 4 `forge test`
 
 ## 9. Definition of done (per iteration)
 Tests green → `docs/DECISIONS.md` entry → Conventional Commit → one improvement to brief/prompt/skill
