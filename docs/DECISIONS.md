@@ -35,6 +35,36 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-015 · 2026-11-07 · Phase 3 IT-2: fishing, per-skill tiers, enemy pressure 22 / 3 s
+- Feature: fishing as the only way to heal above the 60% rest cap. Ponds sit in the dangerous field, so food costs risk.
+- Reference: user request ("add a fishing feature to be able to eat to get hp up but the trick is that it is hard to fish if you
+  get attacked and all the map is always full and you cannot get full hp"); `prompts/PHASE3_BRIEF.md` G4, ambiguities 3, 4, 10.
+- Files: `index.html`, `tests/sim.mjs` (+4 scenarios, 6 PASS lines; stale `inv:0` → `iT:0`), `CLAUDE.md`, `CONTEXT.md`,
+  `prompts/SESSION_PROMPT.md` v1.3, `dogeon-game` skill v1.3.
+- Code (`index.html`):
+  - MAP: `PONDS_EXTRA=[[54,25,3.5,2.5],[24,53,4,2.5]]` → 5 ponds total (3 existing + one NE of the camp fence, one SW). `genMap()`
+    stamps them in the same water pass (no RNG calls, so the rest of the seeded map is unchanged). `T.WATER` was already solid.
+  - GAME STATE: `SKILL_THRESH` is now per skill `{combat:[0,10,25,50,100], fishing:[0,5,15,30,60], bark:[0,8,20,45,80]}`;
+    `skillLv(xp,kind)`, `skillMul(xp,kind)` (kind defaults to combat). `FISH_MIN=3, FISH_MAX=5, FIELD_POP=22, DUN_POP=6, SPAWN_EVERY=3`.
+    `waterAt(dir)` samples 6 px past the hitbox edge; `findWater()` prefers the facing dir, else turns to adjacent water;
+    `startFish()` (bar = rand(3..5) s ÷ `skillMul(fishing)`), `stopFish(msg)`, `updFish(dt)` (catch → `addToBag('raw_fish')`,
+    +1 fishing XP; bag full → "THE FISH GOT AWAY").
+  - Cancels: `hurtPlayer` → "LINE SNAPPED!"; any movement input → "THE FISH GOT AWAY"; `attack()`/`bark()` → "REELED IN";
+    F again → "REELED IN"; `respawn()` clears `P.fishing`.
+  - `update()`: F (not resting) toggles fishing; `updFish(dt)` runs after movement so a step on the last frame never awards a fish.
+    Spawner uses `SPAWN_EVERY`/`FIELD_POP`/`DUN_POP`; `newGame()` spawns `FIELD_POP`/`DUN_POP`.
+  - RENDER: `drawFishing()` — 1 px line with a slight sag from paw to a bobbing red/white float, 16×3 blue catch bar over the head.
+    Blue "F" hint bobs over the hero when water is adjacent (same style as the NPC "E").
+- Why: hard mode — every point of HP above 60% now costs a 3-5 s stand-still next to water in a field with 22 cats refilling every 3 s.
+- Alternatives rejected: a fishing minigame (timing hook) — extra system, MVP says no; river near camp (brief G4) — the resolved
+  ambiguity 3 says ponds, one near the camp, which is simpler; "ninja spawns increased near water" — deferred, population bump already
+  supplies the pressure; fish lost on death — not specified, kept the IT-1 death rule (materials only) and noted for the IT-6 balance pass.
+- Process: tests that reset a renamed field (`inv:0`) silently kept passing after IT-1 → SESSION_PROMPT practice 14 "when you rename
+  state, grep the tests too"; and "cancel tests must first assert the state they cancel" (non-vacuous tests).
+- Verify: `✓ 0 failed, 0 warnings` at seeds 4242, 7, 99 — 26 PASS. Manual: walk NE out of the camp to the pond, face it, F, wait for
+  the bar → +1 RAW FISH; get hit while fishing → LINE SNAPPED!; I at the fire → COOK.
+- Commit: this commit.
+
 ### D-014 · 2026-11-07 · Phase 3 IT-1: rest cap 60%, inventory bag, skill-by-use
 - Feature: survival rework part 1. Rest is now a stopgap; food (IT-2) is the real heal. Skills grow by doing, like Tibia.
 - Reference: user request ("rest only a little of hp", "inventory", "like tibia… you get more of something using some kind of attack");

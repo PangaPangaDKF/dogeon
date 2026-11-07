@@ -60,6 +60,7 @@ globalThis.__api = {
   ARMOR_RED, SWORD_DMG, CAMP, CX, CY,
   REST_CAP, SKILL_THRESH, skillLv, skillMul, BAG_SIZE, FOODS,
   addToBag, bagCount, bagRemove, invMenu,
+  tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt,
 };`;
 
 function boot(seed) {
@@ -137,7 +138,7 @@ scenario('camp is fully safe (20 s standing at the fence gap)', () => {
   const api = boot(SEED + 1);
   startGame(api);
   // stand on the south gap tile just inside the fence (row CAMP.y1), most exposed safe spot
-  api.P_ = { x: api.CX * 16 + 8, y: api.CAMP.y1 * 16 + 8, inv: 0 };
+  api.P_ = { x: api.CX * 16 + 8, y: api.CAMP.y1 * 16 + 8, iT: 0 };
   const hp0 = api.get().P.hp;
   let hitsEdge = 0;
   for (let f = 0; f < 60 * 20; f++) {
@@ -218,7 +219,7 @@ scenario('in-flight bone vs player standing just inside the camp gap', () => {
   startGame(api);
   const g = api.get();
   // West gap: tile column CAMP.x0 is camp (stone) at rows CY-1..CY+1. Stand at its left edge.
-  api.P_ = { x: api.CAMP.x0 * 16 + 1, y: api.CY * 16 + 8, inv: 0 };
+  api.P_ = { x: api.CAMP.x0 * 16 + 1, y: api.CY * 16 + 8, iT: 0 };
   for (const e of g.enemies) if (!e.boss) e.x = 70 * 16; // clear the area
   if (!api.playerInCamp()) throw new Error('setup: player should be inside camp');
   const hp0 = g.P.hp;
@@ -247,7 +248,7 @@ scenario('death respawns with reduced HP and MP', () => {
   const api = boot(SEED + 7);
   startGame(api);
   const P = api.get().P;
-  P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.inv = 0; P.hp = 1; // outside camp
+  P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.iT = 0; P.hp = 1; // outside camp
   api.hurtPlayer(50, { x: P.x + 10, y: P.y });
   for (let f = 0; f < 60 * 3; f++) api.step(DT);
   const g = api.get();
@@ -271,7 +272,7 @@ scenario('market: bounded random price, sentiment drives multipliers', () => {
   else pass('market', `price $${lo.toFixed(3)}..$${hi.toFixed(3)}, sentiment ${minS.toFixed(2)}..${maxS.toFixed(2)}`);
   // bear market makes enemy hits stronger
   const P = api.get().P;
-  P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.armor = 0; P.hp = P.maxHp = 999; P.inv = 0;
+  P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.armor = 0; P.hp = P.maxHp = 999; P.iT = 0;
   api.get().mkt.sent = -1; api.hurtPlayer(10, { x: P.x + 5, y: P.y });
   const bearHit = 999 - P.hp;
   if (bearHit !== 15) fail('bear damage', `10 dmg in full bear market should hit 15, hit ${bearHit}`);
@@ -307,7 +308,7 @@ scenario('pool: deposit safe on death, withdraw with yield', () => {
   else pass('pool deposit', '100 DOGE pooled');
   // die and respawn — pool should be safe
   api.press('escape'); api.step(DT);
-  g.P.x = 40 * 16 + 8; g.P.y = 50 * 16 + 8; g.P.inv = 0; g.P.hp = 1;
+  g.P.x = 40 * 16 + 8; g.P.y = 50 * 16 + 8; g.P.iT = 0; g.P.hp = 1;
   api.hurtPlayer(50, { x: g.P.x + 5, y: g.P.y });
   for (let f = 0; f < 60 * 3; f++) api.step(DT);
   if (api.get().P.bank !== 100) fail('pool safe on death', `expected bank=100 after death, got ${api.get().P.bank}`);
@@ -333,12 +334,92 @@ scenario('death loses all materials', () => {
   startGame(api);
   const g = api.get();
   g.P.orb = 5; g.P.scrap = 3; g.P.horn = 2; g.P.steel = 4;
-  g.P.x = 40 * 16 + 8; g.P.y = 50 * 16 + 8; g.P.inv = 0; g.P.hp = 1;
+  g.P.x = 40 * 16 + 8; g.P.y = 50 * 16 + 8; g.P.iT = 0; g.P.hp = 1;
   api.hurtPlayer(50, { x: g.P.x + 5, y: g.P.y });
   for (let f = 0; f < 60 * 3; f++) api.step(DT);
   const p = api.get().P;
   if (p.orb || p.scrap || p.horn || p.steel) fail('death materials', `materials survived death: orb=${p.orb} scrap=${p.scrap} horn=${p.horn} steel=${p.steel}`);
   else pass('death materials', 'all materials lost on death');
+});
+
+// ---------- Phase 3 IT-2: fishing (D-015) ----------
+// A walkable field tile with water directly north, so P.dir='up' faces the pond.
+function shoreTile(api) {
+  for (let ty = 3; ty < api.MH - 3; ty++) for (let tx = 3; tx < api.MW - 3; tx++) {
+    const t = api.tile(tx, ty);
+    if (!api.SOLID.has(t) && !api.inCampT(tx, ty) && api.tile(tx, ty - 1) === api.T.WATER
+      && !api.SOLID.has(api.tile(tx - 1, ty)) && !api.SOLID.has(api.tile(tx + 1, ty))) return [tx, ty];
+  }
+  return null;
+}
+function fishSetup(api, seed) {
+  const a = api || boot(seed); startGame(a);
+  const g = a.get(); g.enemies.splice(0); // empty world so only the test touches the player
+  const s = shoreTile(a); if (!s) throw new Error('no shore tile next to water found');
+  a.P_ = { x: s[0] * 16 + 8, y: s[1] * 16 + 8, dir: 'up', iT: 0 };
+  return a;
+}
+
+scenario('map: 4-6 fishing ponds, one near (outside) the camp', () => {
+  const api = boot(SEED + 13);
+  const seen = new Uint8Array(api.MW * api.MH); let ponds = 0, nearCamp = false;
+  for (let y = 0; y < api.MH; y++) for (let x = 0; x < api.MW; x++) {
+    if (seen[y * api.MW + x] || api.tile(x, y) !== api.T.WATER) continue;
+    ponds++; const st = [[x, y]]; seen[y * api.MW + x] = 1;
+    while (st.length) { const [cx, cy] = st.pop();
+      if (api.inCampT(cx, cy)) throw new Error(`water inside camp at ${cx},${cy}`);
+      if (Math.abs(cx - api.CX) <= 16 && Math.abs(cy - api.CY) <= 12) nearCamp = true;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy;
+        if (nx >= 0 && ny >= 0 && nx < api.MW && ny < api.MH && !seen[ny * api.MW + nx] && api.tile(nx, ny) === api.T.WATER) { seen[ny * api.MW + nx] = 1; st.push([nx, ny]); } } }
+  }
+  if (ponds < 4 || ponds > 6) fail('ponds', `expected 4-6 ponds, found ${ponds}`);
+  else if (!nearCamp) fail('pond near camp', 'no pond within 16x12 tiles of the camp centre');
+  else pass('ponds', `${ponds} ponds, one near the camp, none inside it`);
+});
+
+scenario('fishing: F at a pond -> RAW FISH in bag + fishing XP', () => {
+  const api = fishSetup(null, SEED + 14);
+  api.get().P.iT = 99; // no stray hit can cancel this one
+  api.press('f'); api.step(DT);
+  if (!api.get().P.fishing) throw new Error('F next to water did not start fishing');
+  const dur = api.get().P.fishDur;
+  if (dur < api.FISH_MIN - 1e-9 || dur > api.FISH_MAX + 1e-9) fail('fish bar', `bar ${dur.toFixed(2)}s outside ${api.FISH_MIN}-${api.FISH_MAX}s at skill 0`);
+  for (let f = 0; f < 60 * (api.FISH_MAX + 0.5); f++) api.step(DT);
+  const P = api.get().P;
+  if (P.fishing || api.bagCount('raw_fish') !== 1 || P.skills.fishing !== 1) fail('fish catch', `fishing=${P.fishing} raw_fish=${api.bagCount('raw_fish')} xp=${P.skills.fishing}`);
+  else pass('fish catch', `caught after ${dur.toFixed(2)}s, 1 RAW FISH, fishing XP 1`);
+});
+
+scenario('fishing: getting hit snaps the line, moving cancels, no water = no fishing', () => {
+  const api = fishSetup(null, SEED + 15);
+  api.press('f'); api.step(DT);
+  const P = api.get().P;
+  if (!P.fishing) throw new Error('setup: fishing did not start before the hit');
+  api.hurtPlayer(5, { x: P.x + 8, y: P.y });
+  for (let f = 0; f < 60 * (api.FISH_MAX + 0.5); f++) api.step(DT);
+  if (P.fishing || api.bagCount('raw_fish')) fail('hit cancels', `fishing=${P.fishing} raw_fish=${api.bagCount('raw_fish')} after a hit`);
+  else pass('hit cancels', 'hit while fishing -> no fish');
+  api.P_ = { kbx: 0, kby: 0, iT: 99 };
+  const s = shoreTile(api); api.P_ = { x: s[0] * 16 + 8, y: s[1] * 16 + 8, dir: 'up' };
+  api.press('f'); api.step(DT);
+  if (!P.fishing) throw new Error('setup: fishing did not start before moving');
+  api.hold('s', true); api.step(DT); api.hold('s', false);
+  for (let f = 0; f < 60 * (api.FISH_MAX + 0.5); f++) api.step(DT);
+  if (P.fishing || api.bagCount('raw_fish')) fail('move cancels', `fishing=${P.fishing} raw_fish=${api.bagCount('raw_fish')} after moving`);
+  else pass('move cancels', 'stepping away -> no fish');
+  api.P_ = { x: api.CX * 16 + 8, y: (api.CY + 3) * 16 + 8 }; // camp: no water
+  api.press('f'); api.step(DT);
+  if (P.fishing) fail('no water', 'F away from water started fishing');
+  else pass('no water', 'F away from water does nothing');
+});
+
+scenario('enemy pressure: field population and spawn timer', () => {
+  const api = boot(SEED + 16);
+  startGame(api);
+  const n = api.get().enemies.filter(e => e.zone === 'field').length;
+  if (api.FIELD_POP !== 22 || api.SPAWN_EVERY !== 3) fail('pressure consts', `FIELD_POP=${api.FIELD_POP} SPAWN_EVERY=${api.SPAWN_EVERY}, brief says 22 / 3 s`);
+  else if (n !== api.FIELD_POP) fail('field pop', `${n} field enemies at start, expected ${api.FIELD_POP}`);
+  else pass('field pop', `${n} field enemies, refill every ${api.SPAWN_EVERY}s`);
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

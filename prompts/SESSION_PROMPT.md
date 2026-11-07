@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 1.2 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 1.3 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -65,7 +65,13 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 
 13. **Rename collisions before adding state** — grep a field name before reusing it (`P.inv` was i-frames, not inventory; see D-014).
 
+14. **Renames reach the tests too** — after renaming state, grep `tests/`; stale `inv:0` resets kept "passing" for a whole iteration (D-015).
+15. **Non-vacuous tests** — a "X cancels Y" scenario must first assert Y really started, otherwise it passes when Y is broken.
+16. **Adversarial review before commit** — on ultracode sessions, run a small review → refute workflow on the diff and fix only
+    verified findings (D-015).
+
 ## Changelog
+- 1.3 (2026-11-07) — Practices 14-16 from IT-2 fishing (renames in tests, non-vacuous tests, review-then-refute before commit).
 - 1.2 (2026-11-07) — RULE #1 feature closeout (user). Practice 13: grep before naming new state (from D-014).
 - 1.1 (2026-11-07) — Added "prove bugs before reporting" after a false positive in the first review (D-005);
   added test-promotion rule (WARN → FAIL); skill routing.

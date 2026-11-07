@@ -247,6 +247,7 @@ const FY=CY+4,MOS_Y=CY-1; // brazier row, coin mosaic centre row
 const PADS=[[CX,CAMP.y0+2],[CAMP.x0+3,CY],[CAMP.x1-3,CY]]; // N, W, E NPC pads
 const DUN={x0:26,y0:2,x1:54,y1:17};
 const GATE_ROW=9;
+const PONDS_EXTRA=[[54,25,3.5,2.5],[24,53,4,2.5]]; // [cx,cy,rx,ry] tiles: NE of the camp fence (outside it), south-west field
 const map=new Uint8Array(MW*MH);
 const get=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?T.TREE:map[y*MW+x];
 const setT=(x,y,v)=>{if(x>=0&&y>=0&&x<MW&&y<MH)map[y*MW+x]=v;};
@@ -255,7 +256,8 @@ const inDunT=(x,y)=>x>=DUN.x0&&x<=DUN.x1&&y>=DUN.y0&&y<=DUN.y1;
 function genMap(){
   const r=mulberry(4242);
   for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const v=r();setT(x,y,v<0.05?T.FLOWER:v<0.11?T.TALL:T.GRASS);}
-  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(((x-64)/7)**2+((y-44)/4.5)**2<1)setT(x,y,T.WATER);if(((x-13)/4.5)**2+((y-46)/3.2)**2<1)setT(x,y,T.WATER);if(((x-12)/3.5)**2+((y-14)/3)**2<1)setT(x,y,T.WATER);}
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(((x-64)/7)**2+((y-44)/4.5)**2<1)setT(x,y,T.WATER);if(((x-13)/4.5)**2+((y-46)/3.2)**2<1)setT(x,y,T.WATER);if(((x-12)/3.5)**2+((y-14)/3)**2<1)setT(x,y,T.WATER);
+    for(const [px,py,rx,ry] of PONDS_EXTRA)if(((x-px)/rx)**2+((y-py)/ry)**2<1)setT(x,y,T.WATER);} // fishing ponds (D-015)
   const path=(x,y)=>{if(get(x,y)!==T.WATER)setT(x,y,T.DIRT);};
   for(let x=3;x<CAMP.x0;x++)for(let d=-1;d<=1;d++)path(x,CY+d+Math.round(Math.sin(x*0.3)*0.6));
   for(let x=CAMP.x1;x<MW-3;x++)for(let d=-1;d<=1;d++)path(x,CY+d+Math.round(Math.sin(x*0.25)*0.6));
@@ -303,9 +305,26 @@ const SWORD_DMG=[0,5,8,12,18],SWORD_COST=[0,0,30,80,160],ARMOR_RED=[0,0.25,0.45]
 // market (simulated DOGE/USD price, ticks once per second) + rest/respawn rules
 const MARKET={start:0.25,min:0.05,max:1.5,vol:0.03,revert:0.02,avgN:30,sentScale:0.2,bearDmg:0.5,bearSpd:0.15,bullDmg:0.5,bullSpd:0.1};
 const REST_DELAY=3,REST_HP=10,REST_MP=8,REST_CAP=0.6,RESPAWN_FRAC=0.35;
-const SKILL_THRESH=[0,10,25,50,100],SKILL_BONUS=0.08;
-function skillLv(xp){for(let i=SKILL_THRESH.length-1;i>=0;i--)if(xp>=SKILL_THRESH[i])return i;return 0;}
-function skillMul(xp){return 1+skillLv(xp)*SKILL_BONUS;}
+const SKILL_THRESH={combat:[0,10,25,50,100],fishing:[0,5,15,30,60],bark:[0,8,20,45,80]},SKILL_BONUS=0.08;
+function skillLv(xp,kind){const t=SKILL_THRESH[kind||'combat'];for(let i=t.length-1;i>=0;i--)if(xp>=t[i])return i;return 0;}
+function skillMul(xp,kind){return 1+skillLv(xp,kind)*SKILL_BONUS;}
+// fishing (D-015): bar length in seconds (divided by the fishing skill multiplier); enemy pressure
+const FISH_MIN=3,FISH_MAX=5,FIELD_POP=22,DUN_POP=6,SPAWN_EVERY=3;
+function waterAt(d){const v=DIRV[d],x=P.x+v[0]*(P.hw+6),y=P.y+v[1]*(P.hh+6);return get(Math.floor(x/16),Math.floor(y/16))===T.WATER?{x:x+v[0]*6,y:y+v[1]*6}:null;}
+function findWater(){for(const d of [P.dir,'up','down','left','right']){const w=waterAt(d);if(w){P.dir=d;return w;}}return null;}
+function startFish(){
+  const w=findWater();
+  if(!w){if(!toastMsg)toast('STAND NEXT TO WATER TO FISH (F)',1.5);return;}
+  P.fishing=true;P.fishT=0;P.fishDur=(FISH_MIN+Math.random()*(FISH_MAX-FISH_MIN))/skillMul(P.skills.fishing,'fishing');P.fishX=w.x;P.fishY=w.y;
+  sfx(600,0.12,'triangle',0.04,-300);
+}
+function stopFish(msg){if(!P.fishing)return;P.fishing=false;P.fishT=0;if(msg)floater(P.x,P.y-32,msg,'#ff9050');}
+function updFish(dt){
+  if(!P.fishing)return;P.fishT+=dt;if(P.fishT<P.fishDur)return;
+  P.fishing=false;P.fishT=0;
+  if(addToBag('raw_fish',1)){P.skills.fishing++;floater(P.x,P.y-24,'+1 RAW FISH','#80c0e0');sfx(900,0.15,'triangle',0.05,500);}
+  else toast('BAG FULL! THE FISH GOT AWAY.',2);
+}
 const BAG_SIZE=12;
 const FOODS={raw_fish:{name:'RAW FISH',heal:15,col:'#80c0e0'},cooked_fish:{name:'COOKED FISH',heal:25,col:'#f0a040'}};
 function addToBag(kind,qty){qty=qty||1;for(const s of P.bag){if(s.kind===kind&&s.qty<(FOODS[kind]?5:20)){const add=Math.min(qty,((FOODS[kind]?5:20))-s.qty);s.qty+=add;qty-=add;if(!qty)return true;}}while(qty>0&&P.bag.length<BAG_SIZE){const add=Math.min(qty,FOODS[kind]?5:20);P.bag.push({kind,qty:add});qty-=add;}return qty===0;}
@@ -343,8 +362,8 @@ function newGame(){
   P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
-  for(let i=0;i<18;i++)spawnEnemy('field');
-  for(let i=0;i<6;i++)spawnEnemy('dun');
+  for(let i=0;i<FIELD_POP;i++)spawnEnemy('field');
+  for(let i=0;i<DUN_POP;i++)spawnEnemy('dun');
   enemies.push(makeEnemy('boss',CX*16+8,5*16+8,'boss'));
   cam.x=P.x-W/2;cam.y=P.y-H/2;
 }
@@ -397,29 +416,29 @@ function shake(t){shakeT=Math.max(shakeT,t);}
 function hurtPlayer(d,src){
   if(P.iT>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
   const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-ARMOR_RED[P.armor])));
-  P.hp-=dmg;P.iT=0.9;P.resting=false;
+  P.hp-=dmg;P.iT=0.9;P.resting=false;stopFish('LINE SNAPPED!'); // getting hit ruins the catch (D-015)
   const dx=P.x-src.x,dy=P.y-src.y,l=Math.hypot(dx,dy)||1;P.kbx=dx/l*190;P.kby=dy/l*190;
   floater(P.x,P.y-22,'-'+dmg,'#ff5050');shake(0.2);sfx(140,0.15,'sawtooth',0.07,-80);
   if(P.hp<=0){P.hp=0;P.dead=true;P.deathT=2.2;sfx(300,0.8,'triangle',0.08,-260);puff(P.x,P.y-8,'#e8922c',16);}
 }
 function respawn(){
   const lost=Math.floor(P.doge/2),lw=P.whisk;P.doge-=lost;P.whisk=0;P.orb=0;P.scrap=0;P.horn=0;P.steel=0;
-  P.dead=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.iT=1.5;P.kbx=P.kby=0;P.dir='down';
+  P.dead=false;P.fishing=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.iT=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
   for(const e of enemies){if(e.boss){e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}}
   enemies=enemies.filter(e=>e.zone!=='boss'||e.boss);
   openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE, ${lw} whiskers and all materials. Pool DOGE at the Sphinx to keep it safe!`]);
 }
 function attack(){
-  P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
+  stopFish('REELED IN');P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
   const v=DIRV[P.dir],cx=P.x+v[0]*13,cy=P.y-5+v[1]*12,hw=v[0]?10:12,hh=v[0]?11:9;
-  const sdmg=Math.round(SWORD_DMG[P.sword]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat));
+  const sdmg=Math.round(SWORD_DMG[P.sword]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat'));
   let hit=false;for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh){damageEnemy(e,sdmg,v[0],v[1]);hit=true;}}
   if(hit)P.skills.combat++;
 }
 function bark(){
   if(P.mp<10){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return;}
-  P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+P.sword*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark)),hits:new Set()});
+  stopFish('REELED IN');P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+P.sword*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')),hits:new Set()});
   sfx(500,0.25,'sawtooth',0.05,500);
 }
 function damageEnemy(e,dmg,kx,ky){
@@ -539,7 +558,7 @@ function invMenu(){
         o.push({label:`${fd.name} x${s.qty} [EAT +${fd.heal} HP]`,act:()=>{if(P.hp>=P.maxHp)return 'HP IS FULL ALREADY.';bagRemove(s.kind,1);P.hp=Math.min(P.maxHp,P.hp+fd.heal);sfx(660,0.1,'triangle',0.05,200);return `ATE ${fd.name}. +${fd.heal} HP. YUM.`;}});
         if(s.kind==='raw_fish'&&nearFire)o.push({label:`COOK RAW FISH -> COOKED FISH`,act:()=>{if(!bagRemove('raw_fish',1))return 'NO RAW FISH.';if(!addToBag('cooked_fish',1)){addToBag('raw_fish',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED! MUCH DELICIOUS.';}});
       }else{const names={orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'CRAFTING MATERIAL. TAKE TO WRENCHPAW.'});}}
-    const sk=P.skills;o.push({label:`SKILLS: COMBAT LV${skillLv(sk.combat)} (${sk.combat}XP) BARK LV${skillLv(sk.bark)} (${sk.bark}XP) FISH LV${skillLv(sk.fishing)} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(skillLv(sk.combat)*SKILL_BONUS*100)}% DMG  BARK +${Math.round(skillLv(sk.bark)*SKILL_BONUS*100)}% DMG  FISH +${Math.round(skillLv(sk.fishing)*SKILL_BONUS*100)}% SPD`});
+    const sk=P.skills,lv=k=>skillLv(sk[k],k);o.push({label:`SKILLS: COMBAT LV${lv('combat')} (${sk.combat}XP) BARK LV${lv('bark')} (${sk.bark}XP) FISH LV${lv('fishing')} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(lv('combat')*SKILL_BONUS*100)}% DMG  BARK +${Math.round(lv('bark')*SKILL_BONUS*100)}% DMG  FISH +${Math.round(lv('fishing')*SKILL_BONUS*100)}% SPD`});
     if(!P.bag.length)o.push({label:'BAG IS EMPTY',act:()=>'HUNT MONSTERS OR CATCH FISH.'});
     o.push({label:'CLOSE',act:null});return o;});}
 function updateUI(dt){
@@ -582,6 +601,7 @@ function update(dt){
   let vx=0,vy=0;
   if(!P.resting){if(kd('arrowleft','a'))vx-=1;if(kd('arrowright','d'))vx+=1;if(kd('arrowup','w'))vy-=1;if(kd('arrowdown','s'))vy+=1;}
   const l=Math.hypot(vx,vy);P.moving=l>0;
+  if(l)stopFish('THE FISH GOT AWAY');
   if(l){vx/=l;vy/=l;if(P.atkT<=0){if(vx&&!vy)P.dir=vx>0?'right':'left';else if(vy&&!vx)P.dir=vy>0?'down':'up';else if(!(DIRV[P.dir][0]===Math.sign(vx)&&DIRV[P.dir][0])&&!(DIRV[P.dir][1]===Math.sign(vy)&&DIRV[P.dir][1]))P.dir=vy>0?'down':'up';}P.anim+=dt;}
   const spd=(P.atkT>0?45:82)*(1+MARKET.bullSpd*bullF());
   move(P,(vx*spd+P.kbx)*dt,(vy*spd+P.kby)*dt);
@@ -590,7 +610,9 @@ function update(dt){
   if(!P.resting){
     if(kp(' ','j')&&P.atkCd<=0)attack();
     if(kp('k','q'))bark();
+    if(kp('f')){if(P.fishing)stopFish('REELED IN');else startFish();}
   }
+  updFish(dt);
   if(kp('e')){let best=null,bd=28;for(const n of NPCS){const d=dist(n.x,n.y,P.x,P.y);if(d<bd){bd=d;best=n;}}if(best)talk(best);}
   if(kp('i','tab'))invMenu();
   // enemies
@@ -613,7 +635,7 @@ function update(dt){
       else{const names={orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL'},cols={orb:'#d080ff',scrap:'#c0c8d0',horn:'#60e060',steel:'#a0a8b0'};P[it.kind]++;floater(P.x,P.y-24,'+1 '+names[it.kind],cols[it.kind]);sfx(1100,0.05,'square',0.03,300);}}}
   items=items.filter(i=>i.life>0);
   // respawn
-  spawnT-=dt;if(spawnT<=0){spawnT=4;let f=0,dn=0;for(const e of enemies){if(e.zone==='field')f++;else if(e.zone==='dun')dn++;}if(f<18)spawnEnemy('field');if(dn<6)spawnEnemy('dun');}
+  spawnT-=dt;if(spawnT<=0){spawnT=SPAWN_EVERY;let f=0,dn=0;for(const e of enemies){if(e.zone==='field')f++;else if(e.zone==='dun')dn++;}if(f<FIELD_POP)spawnEnemy('field');if(dn<DUN_POP)spawnEnemy('dun');}
   updateCam(dt);
 }
 function updateParts(dt){
@@ -665,6 +687,8 @@ function drawWorld(){
     if(P.resting){drawChar(SPR.hero,'down',0,P.x,P.y+P.hh+1,1,ox,oy);const z=(time*1.2)%1;text('Z',P.x+5+z*6-ox,P.y-22-z*10-oy,'#c0d8ff');text('Z',P.x+3+((z+0.5)%1)*6-ox,P.y-22-((z+0.5)%1)*10-oy,'#c0d8ff');}
     else drawChar(SPR.hero,P.dir,P.atkT>0?0:frameOf(P,P.moving),P.x,P.y+P.hh,1,ox,oy);
     if(P.atkT>0)drawSlash(ox,oy);
+    if(P.fishing)drawFishing(ox,oy);
+    else if(!ui&&!P.resting&&['up','down','left','right'].some(waterAt)){const b=Math.round(Math.sin(time*6));text('F',P.x-1-ox,P.y-30+b-oy,'#80c0ff');}
   }});
   list.sort((a,b)=>a.y-b.y);for(const o of list)o.f();
   for(const p of projs){if(p.kind==='bone')ctx.drawImage(BONE[Math.floor(time*12)%2],Math.round(p.x-4-ox),Math.round(p.y-4-oy));else{const c=['#ffe040','#ff8040','#40e0ff'][Math.floor(time*14)%3];text('WOW',p.x-6-ox,p.y-3-oy,c,1,'#402000');}}
@@ -684,6 +708,15 @@ function drawSlash(ox,oy){
   // swing trail
   ctx.fillStyle='rgba(200,180,140,0.3)';
   for(let t=a-0.6;t<a;t+=0.08)for(let r=12;r<=16;r+=2)ctx.fillRect(Math.round(cx+Math.cos(t)*r),Math.round(cy+Math.sin(t)*r),1,1);
+}
+function drawFishing(ox,oy){
+  // line from the paw to a bobbing float, plus a catch bar over the head
+  const hx=P.x-ox,hy=P.y-10-oy,bx=Math.round(P.fishX-ox),by=Math.round(P.fishY-oy+Math.sin(time*5));
+  const n=Math.max(1,Math.round(Math.hypot(bx-hx,by-hy)));ctx.fillStyle='#e8e8f0';
+  for(let i=0;i<=n;i++){const t=i/n;ctx.fillRect(Math.round(hx+(bx-hx)*t),Math.round(hy+(by-hy)*t+Math.sin(t*Math.PI)*-3),1,1);}
+  ctx.fillStyle='#000';ctx.fillRect(bx-2,by-2,4,4);ctx.fillStyle='#ff3030';ctx.fillRect(bx-1,by-1,2,1);ctx.fillStyle='#fff';ctx.fillRect(bx-1,by,2,1);
+  const x=Math.round(P.x-8-ox),y=Math.round(P.y-30-oy);ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,18,5);ctx.fillStyle='#08143a';ctx.fillRect(x,y,16,3);
+  ctx.fillStyle='#60c0ff';ctx.fillRect(x,y,Math.ceil(16*Math.min(1,P.fishT/P.fishDur)),3);
 }
 function bar(x,y,w,v,max,c1,c2,bg){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,6);ctx.fillStyle=bg;ctx.fillRect(x,y,w,4);const f=Math.ceil(w*Math.max(0,v)/max);ctx.fillStyle=c1;ctx.fillRect(x,y,f,4);ctx.fillStyle=c2;ctx.fillRect(x,y,f,1);}
 function questText(){const s=state.stage;return s===0?'TALK TO ELDER SHIBE':s===1?`SLAY CATS ${Math.min(P.kills,8)}/8`:s===2?`SLAY BRUTES ${Math.min(P.bruteKills,3)}/3`:s===3?'DEFEAT THE CAT LORD':'COMPLETE! MUCH WOW';}
