@@ -58,6 +58,8 @@ globalThis.__api = {
   inCampT, zoneOf, playerInCamp, talk, shopMenu, bankMenu, newGame, RECIPES, ETYPES,
   setScene(s) { scene = s; },
   ARMOR_RED, SWORD_DMG, CAMP, CX, CY,
+  REST_CAP, SKILL_THRESH, skillLv, skillMul, BAG_SIZE, FOODS,
+  addToBag, bagCount, bagRemove, invMenu,
 };`;
 
 function boot(seed) {

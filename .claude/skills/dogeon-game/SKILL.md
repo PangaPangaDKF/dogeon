@@ -5,7 +5,12 @@ description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bi
 
 # DOGEON — game context skill
 
-Version: 1.1 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 1.2 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+
+**RULE #1 (user):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
+improve `prompts/SESSION_PROMPT.md` + this skill → update `CLAUDE.md`/`CONTEXT.md` → commit. Never batch features.
+
+**Current phase:** Phase 3 "Doge Chain" — `prompts/PHASE3_BRIEF.md` (survival: rest cap, bag, skills, fishing; real web3 on DogeOS Chikyū).
 
 ## 1. The game in one breath
 Top-down action RPG, Sega Genesis look (320×224, 16×16 tiles, outlined chunky pixels, blue dialog boxes),
@@ -23,9 +28,10 @@ shop upgrades → heal ONLY by resting in camp → push further (field → brute
 5. **Zero dependencies.** One HTML file, opens anywhere, no network. Dev tests may use Node.
 
 ## 3. Invariants (never break without the user explicitly changing them)
-The source of truth is `CLAUDE.md` §4. Summary: no potions/regen · camp fully safe (enemies can't enter,
-damage or shoot in) · death = −50% carried FUD + all whiskers · whisker = 3 FUD · prices table ·
-quest stages 0→4 · populations field 18 / ruins 6 · controls WASD/Space-J/K-Q/E/R/Esc.
+The source of truth is `CLAUDE.md` §4. Summary: no potions/regen · rest heals HP only to 60% (`REST_CAP`), food heals the rest ·
+camp fully safe (enemies can't enter, damage or shoot in) · death = −50% carried DOGE + all whiskers + materials ·
+whisker = 3 DOGE · skills grow only by use (no XP levels) · quest stages 0→4 · populations field 18 / ruins 6 ·
+controls WASD/Space-J/K-Q/E/R/I-Tab/F/Esc. Field names: `P.iT` = i-frames, `P.bag` = inventory (grep before naming new state).
 `tests/sim.mjs` enforces several of these automatically. When you add an invariant, add a check.
 
 ## 4. Architecture quick map

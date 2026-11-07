@@ -7,12 +7,46 @@
 
 ## 1. What DOGEON is
 
-A single-file (749 lines) vanilla JS Canvas top-down action RPG at `C:\Users\dulbi\dogeon\`.
+A single-file (~770 lines) vanilla JS Canvas top-down action RPG at `C:\Users\dulbi\dogeon\`.
 16-bit Genesis aesthetic, 320×224, 16×16 tiles, 16×20 character sprites drawn in code.
 Zero dependencies, zero network calls. Opens by double-clicking `index.html`.
 
 **Theme:** hammer-wielding shiba doge vs half-human cats, with a simulated DOGE cryptocurrency market
 that changes game difficulty in real time. DOGE/Ð coin references are wanted **everywhere** (HUD, menus, camp mosaic, title).
+
+---
+
+## 0. RESUME HERE — Phase 3 "Doge Chain" IN PROGRESS
+
+**Brief:** `prompts/PHASE3_BRIEF.md` (goals G1–G9, 10 resolved ambiguities, 10 acceptance boxes). Read it first.
+
+| Iter | Scope | Status |
+|------|-------|--------|
+| IT-0 | Phase 3 brief | ✅ `eaea704` |
+| IT-1 | Rest cap 60% + inventory bag (I/Tab) + skill-by-use | ✅ D-014 (commit after this file) |
+| IT-2 | Fishing: `T.WATER` ponds in field, F to fish (3–5 s bar, hit/move cancels), RAW FISH → bag, cook at fire; field pop 18→22, spawn 4s→3s | ⏭ NEXT |
+| IT-3 | Wallet: ethers v6 CDN `https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js`, `window.ethereum`, `wallet_addEthereumChain` DogeOS Chikyū, connect in Sphinx menu, graceful offline fallback | pending |
+| IT-4 | `contracts/` Foundry: `DogeItems.sol` (ERC-721, `mint(to,itemType)` payable 0.1 DOGE fee) + `DogeDEX.sol` (`list/buy/delist` fixed price) | pending |
+| IT-5 | Wire: Mechanic forge → `mint()`; Sphinx → list/buy NFTs; no store until someone lists ("create LP"); wallet panel shows NFTs | pending |
+| IT-6 | Tests (rest cap, bag, skills, fishing, wallet-off fallback) + docs + balance | pending |
+
+**User's asks for Phase 3 (verbatim intent):** rest heals only a little · inventory · Tibia-style "get better by using it" (no level-up) ·
+fishing to eat for HP, hard to fish while attacked, map always full, never easy full HP · real wallet connect → add DogeOS testnet RPC →
+real testnet txs to swap and mint · items are NFTs you mint, sell, and LP with DOGE · only playing gets you stuff · no store/swap unless
+someone created it first · crafter mints gear/food through a contract with a fee.
+
+**DogeOS Chikyū testnet:** chainId **6281971** (`0x5fdaf3`) · RPC `https://rpc.testnet.dogeos.com` · explorer
+`https://dogeos-testnet.l2scan.co` (alt: `https://blockscout.testnet.dogeos.com`) · native DOGE, 18 dec · faucet
+`https://faucet.testnet.dogeos.com` (42.069/day). Third-party sourced (chainlist.org/chain/6281971) — verify on docs.dogeos.com.
+
+### What IT-1 added (code)
+- Constants: `REST_CAP=0.6`, `SKILL_THRESH=[0,10,25,50,100]`, `SKILL_BONUS=0.08`, `BAG_SIZE=12`, `FOODS{raw_fish:+15, cooked_fish:+25}`.
+- Functions: `skillLv(xp)`, `skillMul(xp)`, `addToBag(kind,qty)`, `bagCount(kind)`, `bagRemove(kind,qty)`, `invMenu()`.
+- Player: `P.bag=[{kind,qty}]`, `P.skills={combat,fishing,bark}`, `P.fishing`, `P.fishT` (reserved for IT-2). **`P.inv` renamed `P.iT`** (i-frames).
+- `attack()` +1 combat XP only on hit; `bark()` +1 bark XP; both × `skillMul`. Rest caps HP at 60%, MP fills fully.
+- Icons `FISH_IC`, `CFISH_IC`, `ITEM_ICONS`. Inventory COOK option appears within 30 px of the fire.
+- Materials still live in `P.orb/scrap/horn/steel` (not in bag yet) — revisit in IT-5.
+- `tests/sim.mjs` harness exports: `REST_CAP, SKILL_THRESH, skillLv, skillMul, BAG_SIZE, FOODS, addToBag, bagCount, bagRemove, invMenu`.
 
 ---
 
@@ -38,6 +72,9 @@ Published artifact: https://claude.ai/artifact/SyvKSryRuYi2yPtHtHrHyy
 ## 3. Commit history (newest first)
 
 ```
+(next)  feat: Phase 3 IT-1 rest cap, inventory, skill-by-use
+eaea704 docs(prompt): Phase 3 brief "Doge Chain"
+486267a docs: add CONTEXT.md for session continuity
 825f9c7 docs: IT-7 tests, CLAUDE.md, brief — Phase 2 complete
 a515ad1 feat: Sphinx DEX, Elder lore, Mechanic forge + DOGE references
 492e40f feat: frog, ninja, bull, knight enemies + material drops
@@ -176,13 +213,14 @@ Exposes `__api` with: `get()`, `step(dt)`, `press(k)`, `hold(k,v)`, `talk()`, `M
 
 ```
 C:\Users\dulbi\dogeon\
-├── index.html              ← THE GAME (749 lines, everything in one file)
+├── index.html              ← THE GAME (~770 lines, everything in one file)
 ├── CLAUDE.md               ← project memory for Claude Code (rules, code map, invariants)
 ├── CONTEXT.md              ← THIS FILE (session context for continuation)
 ├── docs/
 │   └── DECISIONS.md        ← decision log D-001…D-013 + open issues
 ├── prompts/
-│   ├── PHASE2_BRIEF.md     ← enhanced prompt (v1.2, all acceptance ✅)
+│   ├── PHASE2_BRIEF.md     ← Phase 2 prompt (v1.2, all acceptance ✅)
+│   ├── PHASE3_BRIEF.md     ← Phase 3 prompt (v1.0, CURRENT)
 │   └── SESSION_PROMPT.md   ← living session opener
 ├── tests/
 │   ├── check.sh            ← static rules + syntax + sim (run with bash)
@@ -195,6 +233,9 @@ C:\Users\dulbi\dogeon\
 
 ## 8. User's standing rules
 
+0. **RULE #1 — feature closeout:** after EVERY feature: tests green → `docs/DECISIONS.md` entry (feature, change, reference,
+   files, code) → improve `prompts/SESSION_PROMPT.md` + `dogeon-game` skill (bump version) → update `CLAUDE.md` + this file → commit.
+   **Keep looping** through the iterations until Phase 3 is done; full permissions granted, nothing dangerous.
 1. **Always commit** after verified changes (Conventional Commits, end with `Co-Authored-By: Claude <model> <noreply@anthropic.com>`)
 2. **Log decisions** in `docs/DECISIONS.md`
 3. **Improve the prompt/skill** if the iteration taught something
@@ -202,16 +243,17 @@ C:\Users\dulbi\dogeon\
 5. **MVP scope only** — no extra effects, no extra systems, keep basic style
 6. **DOGE/Ð references everywhere** — overrides old "no Dogecoin logo" rule
 7. **Minimalist and light** — cheap per frame, robust, basic style, **hard mode**
-8. **Web3 is UI only** — no real chain calls, clearly labelled SIMULATED
+8. **Web3 (Phase 3 change):** real wallet + DogeOS Chikyū testnet txs. ethers v6 via CDN is the only game dependency.
+   Game must stay fully playable with no wallet / CDN blocked (offline fallback).
 9. **Art drawn in code** — no image files, sprites follow user's reference images
 10. **Full access granted** — "if you want permissions you got it, don't do danger stuffs"
 
 ---
 
-## 9. What's next (user hasn't asked yet — ideas from the brief)
+## 9. What's next
 
-- Fix remaining open issues (I-3 through I-9)
-- Historial de transacciones (transaction history)
-- Polish: title screen animation, win screen
-- Difficulty scaling / new game+
-- Whatever the user asks — they drive the roadmap
+1. **IT-2 fishing** (see §0 table) → then IT-3 … IT-6, applying RULE #1 after each.
+2. Later / not requested yet: open issues I-3…I-9, polish.
+
+Versions now: SESSION_PROMPT v1.2 · dogeon-game skill v1.2 · PHASE3_BRIEF v1.0 · DECISIONS up to D-014. Tests: 20 PASS.
+Note: `bash tests/check.sh` can exceed 30 s on Windows — run with a 120 s timeout, or `node tests/sim.mjs` directly.

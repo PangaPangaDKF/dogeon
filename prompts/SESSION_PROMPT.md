@@ -1,6 +1,15 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 1.1 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 1.2 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+
+> ## RULE #1 — Feature closeout (user rule, never skip)
+> Every finished feature, before starting the next one:
+> 1. **Tests green** (`bash tests/check.sh`), quote the result line.
+> 2. **`docs/DECISIONS.md` entry** with: the feature, the change, the reference (user request / brief goal / image / source URL),
+>    the **files** touched, and the **code** (function names, constants, line ranges).
+> 3. **Improve this prompt + the `dogeon-game` skill** (bump version, changelog line) with anything the feature taught.
+> 4. Update `CLAUDE.md` (code map + rules) and `CONTEXT.md` if architecture or rules changed.
+> 5. **Commit** (Conventional Commit) with a body listing files + what changed. One feature = one commit.
 
 Paste block A at the start of a fresh Claude Code session, then add a task block from B.
 
@@ -54,7 +63,10 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 11. **Ask for options on taste** — art/feel: request 2-3 variants, pick, iterate.
 12. **Stay original** — no ripped assets or logos.
 
+13. **Rename collisions before adding state** — grep a field name before reusing it (`P.inv` was i-frames, not inventory; see D-014).
+
 ## Changelog
+- 1.2 (2026-11-07) — RULE #1 feature closeout (user). Practice 13: grep before naming new state (from D-014).
 - 1.1 (2026-11-07) — Added "prove bugs before reporting" after a false positive in the first review (D-005);
   added test-promotion rule (WARN → FAIL); skill routing.
 - 1.0 (2026-11-07) — Distilled from MASTER_PROMPT.md §B–D into a reusable opener.

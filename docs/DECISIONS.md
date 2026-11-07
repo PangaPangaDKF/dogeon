@@ -35,6 +35,28 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-014 · 2026-11-07 · Phase 3 IT-1: rest cap 60%, inventory bag, skill-by-use
+- Feature: survival rework part 1. Rest is now a stopgap; food (IT-2) is the real heal. Skills grow by doing, like Tibia.
+- Reference: user request ("rest only a little of hp", "inventory", "like tibia… you get more of something using some kind of attack");
+  `prompts/PHASE3_BRIEF.md` G1–G3, ambiguities 1, 2, 4.
+- Files: `index.html`, `tests/sim.mjs` (harness exports), `CLAUDE.md`, `prompts/SESSION_PROMPT.md` v1.2, `dogeon-game` skill v1.2.
+- Code (`index.html`):
+  - GAME STATE: `REST_CAP=0.6`; `SKILL_THRESH=[0,10,25,50,100]`, `SKILL_BONUS=0.08`, `skillLv(xp)`, `skillMul(xp)`;
+    `BAG_SIZE=12`; `FOODS{raw_fish:+15, cooked_fish:+25}`; `addToBag(kind,qty)` (food stacks 5, others 20), `bagCount`, `bagRemove`.
+  - `newGame()`: `P.bag=[]`, `P.skills={combat,fishing,bark}`, `P.fishing`, `P.fishT`. **Renamed `P.inv` → `P.iT`** (i-frames) in
+    `hurtPlayer`, `respawn`, `update`, `drawWorld` to free the name.
+  - `attack()`: damage × `skillMul(P.skills.combat)`; +1 combat XP only if the swing hit something (no XP for air swings).
+  - `bark()`: +1 bark XP per cast, damage × `skillMul(P.skills.bark)`.
+  - `update()` rest: HP capped at `ceil(maxHp*REST_CAP)`; MP still fills. `I`/`Tab` → `invMenu()`. Tab `preventDefault`.
+  - UI: `invMenu()` lists bag slots, EAT (food), COOK raw→cooked within 30 px of the campfire, skills line.
+  - Icons: `FISH_IC`, `CFISH_IC`, `ITEM_ICONS` map. HUD rest text shows "HP CAPPED AT 60%. EAT FOOD FOR MORE." Title controls updated.
+- Why: makes HP a scarce resource (hard mode) and creates a reason to leave camp to fish.
+- Alternatives rejected: character XP levels (user said no level-up); slowing rest instead of capping (still reaches full, no tension);
+  moving materials into the bag now (bigger diff; forge still reads `P.orb` etc. — revisit in IT-5 when items become NFTs).
+- Process: the `P.inv` name collision → new practice 13 in SESSION_PROMPT ("grep before naming new state"). User RULE #1 added to prompt + skill.
+- Verify: `✓ 0 failed, 0 warnings (seed 4242)` — 20 PASS. Rest-cap / bag / skill scenarios land in IT-6.
+- Commit: this commit.
+
 ### D-013 · 2026-11-07 · IT-7: tests, docs, prompt — Phase 2 complete
 - What:
   - 6 new test scenarios (20 total): forge craft + burn, pool deposit + safe-on-death, new enemy spawn + material types, death materials loss.
@@ -163,3 +185,4 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 ## Process (improvements to the prompt / skills themselves)
 - 2026-11-07 · SESSION_PROMPT v1.1: "prove bugs before reporting" (from D-005), WARN→FAIL promotion rule.
 - 2026-11-07 · dogeon-game skill v1.1: added skill routing table and the 8-step protocol.
+- 2026-11-07 · SESSION_PROMPT v1.2 + skill v1.2: user RULE #1 (feature closeout), practice 13 grep-before-naming (D-014), Phase 3 pointer.

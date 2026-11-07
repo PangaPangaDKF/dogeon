@@ -38,7 +38,7 @@ function sfx(f,d=0.08,type='square',v=0.05,slide=0){try{if(!AC)AC=new (window.Au
 
 // ================= INPUT =================
 const keys={},pressed={};
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(!keys[k])pressed[k]=true;keys[k]=true;if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(!keys[k])pressed[k]=true;keys[k]=true;if([' ','arrowup','arrowdown','arrowleft','arrowright','tab'].includes(k))e.preventDefault();});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 const kd=(...ks)=>ks.some(k=>keys[k]);
@@ -196,7 +196,10 @@ const [ORB_IC,og]=mk(7,7);for(let y=0;y<7;y++)for(let x=0;x<7;x++){const d=Math.
 const [SCRAP_IC,scg]=mk(7,7);rect(scg,1,1,5,5,'#808890');rect(scg,2,2,3,3,'#c0c8d0');px(scg,3,0,'#606068');px(scg,0,3,'#606068');px(scg,6,3,'#606068');px(scg,3,6,'#606068');
 const [HORN_IC,hig]=mk(7,7);rect(hig,2,0,3,7,'#30c040');rect(hig,3,0,1,3,'#e09020');px(hig,1,5,'#30c040');px(hig,5,5,'#30c040');
 const [STEEL_IC,sti]=mk(7,7);rect(sti,1,1,5,5,'#a0a8b0');rect(sti,2,2,3,3,'#d0d8e0');px(sti,3,0,'#707880');px(sti,3,6,'#707880');
+const [FISH_IC,fig]=mk(9,7);rect(fig,2,1,5,5,'#80c0e0');rect(fig,3,2,3,3,'#a0d8f0');px(fig,1,2,'#80c0e0');px(fig,1,4,'#80c0e0');px(fig,7,3,'#80c0e0');px(fig,0,3,'#60a0b8');px(fig,8,2,'#60a0b8');px(fig,8,4,'#60a0b8');px(fig,4,2,'#204060');
+const [CFISH_IC,cfg2]=mk(9,7);rect(cfg2,2,1,5,5,'#f0a040');rect(cfg2,3,2,3,3,'#f8c060');px(cfg2,1,2,'#f0a040');px(cfg2,1,4,'#f0a040');px(cfg2,7,3,'#f0a040');px(cfg2,0,3,'#c08030');px(cfg2,8,2,'#c08030');px(cfg2,8,4,'#c08030');px(cfg2,4,2,'#604020');
 const MAT_ICONS={orb:ORB_IC,scrap:SCRAP_IC,horn:HORN_IC,steel:STEEL_IC};
+const ITEM_ICONS={raw_fish:FISH_IC,cooked_fish:CFISH_IC,orb:ORB_IC,scrap:SCRAP_IC,horn:HORN_IC,steel:STEEL_IC,whisk:WHISK};
 function makeBone(vert){const [c,g]=mk(9,9);const P=(x,y,col)=>vert?px(g,y,x,col):px(g,x,y,col);for(let x=1;x<7;x++)P(x,4,'#f4f4f4');for(const x of [2,4])for(const y of [2,3,5,6])P(x,y,'#dcdcdc');P(7,3,'#f4f4f4');P(7,4,'#f4f4f4');P(7,5,'#f4f4f4');P(8,4,'#f4f4f4');P(0,3,'#dcdcdc');P(0,5,'#dcdcdc');P(7,4,'#202020');return c;}
 const BONE=[makeBone(false),makeBone(true)];
 
@@ -299,7 +302,15 @@ const ANG={right:0,down:Math.PI/2,left:Math.PI,up:-Math.PI/2};
 const SWORD_DMG=[0,5,8,12,18],SWORD_COST=[0,0,30,80,160],ARMOR_RED=[0,0.25,0.45],ARMOR_COST=[0,40,110];
 // market (simulated DOGE/USD price, ticks once per second) + rest/respawn rules
 const MARKET={start:0.25,min:0.05,max:1.5,vol:0.03,revert:0.02,avgN:30,sentScale:0.2,bearDmg:0.5,bearSpd:0.15,bullDmg:0.5,bullSpd:0.1};
-const REST_DELAY=3,REST_HP=10,REST_MP=8,RESPAWN_FRAC=0.35;
+const REST_DELAY=3,REST_HP=10,REST_MP=8,REST_CAP=0.6,RESPAWN_FRAC=0.35;
+const SKILL_THRESH=[0,10,25,50,100],SKILL_BONUS=0.08;
+function skillLv(xp){for(let i=SKILL_THRESH.length-1;i>=0;i--)if(xp>=SKILL_THRESH[i])return i;return 0;}
+function skillMul(xp){return 1+skillLv(xp)*SKILL_BONUS;}
+const BAG_SIZE=12;
+const FOODS={raw_fish:{name:'RAW FISH',heal:15,col:'#80c0e0'},cooked_fish:{name:'COOKED FISH',heal:25,col:'#f0a040'}};
+function addToBag(kind,qty){qty=qty||1;for(const s of P.bag){if(s.kind===kind&&s.qty<(FOODS[kind]?5:20)){const add=Math.min(qty,((FOODS[kind]?5:20))-s.qty);s.qty+=add;qty-=add;if(!qty)return true;}}while(qty>0&&P.bag.length<BAG_SIZE){const add=Math.min(qty,FOODS[kind]?5:20);P.bag.push({kind,qty:add});qty-=add;}return qty===0;}
+function bagCount(kind){let n=0;for(const s of P.bag)if(s.kind===kind)n+=s.qty;return n;}
+function bagRemove(kind,qty){qty=qty||1;for(let i=P.bag.length-1;i>=0;i--){if(P.bag[i].kind===kind){const take=Math.min(qty,P.bag[i].qty);P.bag[i].qty-=take;qty-=take;if(P.bag[i].qty<=0)P.bag.splice(i,1);if(!qty)return true;}}return qty===0;}
 let mkt;
 function newMarket(){mkt={p:MARKET.start,hist:[MARKET.start],t:0,sent:0};}
 function updMarket(dt){
@@ -329,7 +340,7 @@ const NPCS=[
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,inv:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<18;i++)spawnEnemy('field');
@@ -384,16 +395,16 @@ function shake(t){shakeT=Math.max(shakeT,t);}
 
 // ================= COMBAT =================
 function hurtPlayer(d,src){
-  if(P.inv>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
+  if(P.iT>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
   const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-ARMOR_RED[P.armor])));
-  P.hp-=dmg;P.inv=0.9;P.resting=false;
+  P.hp-=dmg;P.iT=0.9;P.resting=false;
   const dx=P.x-src.x,dy=P.y-src.y,l=Math.hypot(dx,dy)||1;P.kbx=dx/l*190;P.kby=dy/l*190;
   floater(P.x,P.y-22,'-'+dmg,'#ff5050');shake(0.2);sfx(140,0.15,'sawtooth',0.07,-80);
   if(P.hp<=0){P.hp=0;P.dead=true;P.deathT=2.2;sfx(300,0.8,'triangle',0.08,-260);puff(P.x,P.y-8,'#e8922c',16);}
 }
 function respawn(){
   const lost=Math.floor(P.doge/2),lw=P.whisk;P.doge-=lost;P.whisk=0;P.orb=0;P.scrap=0;P.horn=0;P.steel=0;
-  P.dead=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.inv=1.5;P.kbx=P.kby=0;P.dir='down';
+  P.dead=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.iT=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
   for(const e of enemies){if(e.boss){e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}}
   enemies=enemies.filter(e=>e.zone!=='boss'||e.boss);
@@ -402,11 +413,13 @@ function respawn(){
 function attack(){
   P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
   const v=DIRV[P.dir],cx=P.x+v[0]*13,cy=P.y-5+v[1]*12,hw=v[0]?10:12,hh=v[0]?11:9;
-  for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh)damageEnemy(e,Math.round(SWORD_DMG[P.sword]*(1+MARKET.bullDmg*bullF())),v[0],v[1]);}
+  const sdmg=Math.round(SWORD_DMG[P.sword]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat));
+  let hit=false;for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh){damageEnemy(e,sdmg,v[0],v[1]);hit=true;}}
+  if(hit)P.skills.combat++;
 }
 function bark(){
   if(P.mp<10){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return;}
-  P.mp-=10;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+P.sword*3)*(1+MARKET.bullDmg*bullF())),hits:new Set()});
+  P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+P.sword*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark)),hits:new Set()});
   sfx(500,0.25,'sawtooth',0.05,500);
 }
 function damageEnemy(e,dmg,kx,ky){
@@ -519,6 +532,16 @@ function questTalk(n){
   else if(s===3)openDialog(n,[mktLine,lore,'The Cat Lord waits beyond the iron gate, north of camp. Do not go in hurt.']);
   else openDialog(n,[mktLine,lore,'You did it. Such hero. Much legend. The camp is safe... for now.','Many cats still roam out there. Hunt them if you wish.']);
 }
+function invMenu(){
+  openMenu(null,'INVENTORY',()=>{const o=[];
+    for(let i=0;i<P.bag.length;i++){const s=P.bag[i];const fd=FOODS[s.kind];
+      if(fd){const nearFire=dist(P.x,P.y,CX*16+8,FY*16+8)<30;
+        o.push({label:`${fd.name} x${s.qty} [EAT +${fd.heal} HP]`,act:()=>{if(P.hp>=P.maxHp)return 'HP IS FULL ALREADY.';bagRemove(s.kind,1);P.hp=Math.min(P.maxHp,P.hp+fd.heal);sfx(660,0.1,'triangle',0.05,200);return `ATE ${fd.name}. +${fd.heal} HP. YUM.`;}});
+        if(s.kind==='raw_fish'&&nearFire)o.push({label:`COOK RAW FISH -> COOKED FISH`,act:()=>{if(!bagRemove('raw_fish',1))return 'NO RAW FISH.';if(!addToBag('cooked_fish',1)){addToBag('raw_fish',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED! MUCH DELICIOUS.';}});
+      }else{const names={orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'CRAFTING MATERIAL. TAKE TO WRENCHPAW.'});}}
+    const sk=P.skills;o.push({label:`SKILLS: COMBAT LV${skillLv(sk.combat)} (${sk.combat}XP) BARK LV${skillLv(sk.bark)} (${sk.bark}XP) FISH LV${skillLv(sk.fishing)} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(skillLv(sk.combat)*SKILL_BONUS*100)}% DMG  BARK +${Math.round(skillLv(sk.bark)*SKILL_BONUS*100)}% DMG  FISH +${Math.round(skillLv(sk.fishing)*SKILL_BONUS*100)}% SPD`});
+    if(!P.bag.length)o.push({label:'BAG IS EMPTY',act:()=>'HUNT MONSTERS OR CATCH FISH.'});
+    o.push({label:'CLOSE',act:null});return o;});}
 function updateUI(dt){
   if(ui.type==='dialog'){
     const page=ui.pages[ui.idx];ui.chars+=70*dt;
@@ -553,7 +576,7 @@ function update(dt){
   // rest
   if(kd('r')){if(inCamp){if(!P.resting){P.resting=true;sfx(330,0.2,'triangle',0.04);}}else if(!toastMsg)toast('YOU CAN ONLY REST INSIDE THE CAMP!',1.5);}
   else P.resting=false;
-  if(P.resting){P.restT=(P.restT||0)+dt;if(P.restT>=REST_DELAY){P.hp=Math.min(P.maxHp,P.hp+REST_HP*dt);P.mp=Math.min(P.maxMp,P.mp+REST_MP*dt);}}
+  if(P.resting){P.restT=(P.restT||0)+dt;if(P.restT>=REST_DELAY){const hpCap=Math.ceil(P.maxHp*REST_CAP);P.hp=Math.min(hpCap,P.hp+REST_HP*dt);P.mp=Math.min(P.maxMp,P.mp+REST_MP*dt);}}
   else P.restT=0;
   // move
   let vx=0,vy=0;
@@ -563,12 +586,13 @@ function update(dt){
   const spd=(P.atkT>0?45:82)*(1+MARKET.bullSpd*bullF());
   move(P,(vx*spd+P.kbx)*dt,(vy*spd+P.kby)*dt);
   const k=Math.pow(0.0005,dt);P.kbx*=k;P.kby*=k;
-  P.inv-=dt;P.atkT-=dt;P.atkCd-=dt;
+  P.iT-=dt;P.atkT-=dt;P.atkCd-=dt;
   if(!P.resting){
     if(kp(' ','j')&&P.atkCd<=0)attack();
     if(kp('k','q'))bark();
   }
   if(kp('e')){let best=null,bd=28;for(const n of NPCS){const d=dist(n.x,n.y,P.x,P.y);if(d<bd){bd=d;best=n;}}if(best)talk(best);}
+  if(kp('i','tab'))invMenu();
   // enemies
   for(const e of enemies)if(!e.dead)updEnemy(e,dt);
   enemies=enemies.filter(e=>!e.dead);
@@ -637,7 +661,7 @@ function drawWorld(){
     if(e.hp<e.maxHp&&!e.boss){const bx=Math.round(e.x-7-ox),by=Math.round(e.y+e.hh-24-oy);ctx.fillStyle='#000';ctx.fillRect(bx-1,by-1,16,4);ctx.fillStyle='#600';ctx.fillRect(bx,by,14,2);ctx.fillStyle='#f33';ctx.fillRect(bx,by,Math.ceil(14*e.hp/e.maxHp),2);}
   }});
   if(!P.dead)list.push({y:P.y,f:()=>{
-    if(P.inv>0&&Math.floor(time*20)%2)return;
+    if(P.iT>0&&Math.floor(time*20)%2)return;
     if(P.resting){drawChar(SPR.hero,'down',0,P.x,P.y+P.hh+1,1,ox,oy);const z=(time*1.2)%1;text('Z',P.x+5+z*6-ox,P.y-22-z*10-oy,'#c0d8ff');text('Z',P.x+3+((z+0.5)%1)*6-ox,P.y-22-((z+0.5)%1)*10-oy,'#c0d8ff');}
     else drawChar(SPR.hero,P.dir,P.atkT>0?0:frameOf(P,P.moving),P.x,P.y+P.hh,1,ox,oy);
     if(P.atkT>0)drawSlash(ox,oy);
@@ -672,7 +696,7 @@ function drawHUD(){
   const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;
   text('DOGE $'+mkt.p.toFixed(3),168,3,'#f8d050');text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');
   text('QUEST',222,3,'#ffe040');text(questText(),222,10,'#fff');
-  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):P.resting?'RESTING... HP/MP RECOVERING':'SAFE CAMP - HOLD R TO REST';textC(t,W/2,H-9,P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
+  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':'SAFE CAMP - HOLD R TO REST  I=BAG';textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
 function drawUI(){
@@ -714,8 +738,8 @@ function drawTitle(){
   ctx.drawImage(SPR.knight.right[0],W/2-80,108,16,20);ctx.drawImage(SPR.alley.left[0],W/2+30,118,16,20);
   ctx.drawImage(SPR.merchant.down[0],10,180,16,20);ctx.drawImage(SPR.bank.down[0],28,180,16,20);ctx.drawImage(SPR.sage.down[0],46,180,16,20);
   if(Math.floor(time*2.5)%2)textC('PRESS ENTER',W/2,162,'#ffffff',2);
-  textC('WASD/ARROWS MOVE   SPACE/J SLASH   K/Q "WOW" BARK (10 MP)',W/2,190,'#a0b0e0');
-  textC('E TALK   HOLD R TO REST IN CAMP (ONLY WAY TO HEAL)',W/2,199,'#a0b0e0');
+  textC('WASD MOVE  SPACE SLASH  K BARK  F FISH  I BAG',W/2,190,'#a0b0e0');
+  textC('E TALK  R REST  REST CAPS AT 60% HP - EAT FOOD!',W/2,199,'#a0b0e0');
   textC('CLICK THE GAME FIRST IF KEYS DO NOTHING',W/2,212,'#606890');
 }
 function render(){
