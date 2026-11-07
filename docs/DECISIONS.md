@@ -35,6 +35,19 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-010 · 2026-11-07 · Sprites IT-4: hammer hero, sphinx, elder, mechanic + hammer swing
+- What:
+  - Hero redesigned: brown open vest (T), cream chest (A), blue pants (L), rope belt (B), sleepy half-closed eyes (acc overpaints top eye pixels with fur), barrel hammer on shoulder (acc draws handle+barrel per direction).
+  - Sphinx (bank): golden body, blue/gold alternating striped headdress (nemes) flowing down sides, blue gem on forehead.
+  - Elder (sage): grey fur, round glasses with cyan lens, beige cardigan, white beard, walking cane.
+  - Mechanic (merchant): brown fur, blue overalls (T+L same), cyan-tinted goggles on forehead, wrench in hand.
+  - `drawSlash` → hammer swing: wooden handle, barrel head at tip, muted swing trail.
+  - NPC names updated: "WRENCHPAW THE MECHANIC", "THE GREAT SPHINX OF DOGE", menu titles to match.
+- Why: User's concept images 3/4 (hero), image 1 (NPCs). Sphinx replaces Sir Hodl as the DEX. Mechanic replaces Barksley as the forge.
+- Tool: Claude Code (Opus 4.6). Palette + acc function changes only, reusing the same buildChar template.
+- Alternatives rejected: Custom HEAD templates per NPC (too much code for MVP — acc overlays work fine). Animated hammer idle (not requested).
+- Verify: `0 failed, 0 warnings (seed 4242)`.
+
 ### D-009 · 2026-11-07 · Camp redesign (image 12): plaza, doors, crystals, coin mosaic, NPC pads, Ð coin icon
 - What:
   - New tile types: DOOR, CRYSTAL, PAD. Plaza slab tile with grid lines. Gold crystal tile, round stone pad, wooden door leaf.

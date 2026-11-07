@@ -81,22 +81,45 @@ function buildChar(def){
 }
 const basePal={O:'#1a0e08',E:'#140c0c',N:'#140c0c',P:'#f0a0a0',W:'#e8e8f0',R:'#ff3030'};
 const SPR={};
-SPR.hero=buildChar({head:'dog',pal:{...basePal,F:'#e8922c',C:'#fbe8c4',K:'#fbe8c4',T:'#2862d0',A:'#f8d040',B:'#7a4a1a',L:'#3a2a24'},
-  acc(g,d){if(d==='right'){rect(g,3,6,9,1,'#d82828');px(g,2,6,'#d82828');px(g,1,7,'#d82828');px(g,2,8,'#a01818');}
-    else{rect(g,2,5,12,1,'#d82828');if(d==='up'){px(g,7,6,'#d82828');px(g,8,6,'#d82828');px(g,7,7,'#a01818');px(g,9,8,'#a01818');}}}});
-SPR.merchant=buildChar({head:'dog',pal:{...basePal,F:'#c97a2a',C:'#f4dcb0',K:'#f4dcb0',T:'#3a8a3a',A:'#e0c050',B:'#5a3416',L:'#3a2414'},
-  acc(g,d){const hat=(x,w)=>{rect(g,x+3,0,w-6,1,'#6a4a18');rect(g,x+3,1,w-6,3,'#e0b848');rect(g,x+3,4,w-6,1,'#b03828');rect(g,x+1,5,w-2,1,'#f0d060');rect(g,x,6,w,1,'#a07828');};
-    if(d==='right'){rect(g,0,12,4,7,'#4a2a10');rect(g,1,13,2,5,'#9a6a34');hat(1,15);}
-    else{if(d==='up'){rect(g,3,12,10,7,'#4a2a10');rect(g,4,13,8,5,'#9a6a34');rect(g,4,13,8,1,'#c08a50');rect(g,7,15,2,1,'#e0c050');}hat(0,16);}}});
-SPR.bank=buildChar({head:'dog',pal:{...basePal,F:'#ecc27c',C:'#fff6e0',K:'#fff6e0',T:'#4a2478',A:'#f0c030',B:'#f0c030',L:'#1c1c24'},
-  acc(g,d){const G='#f0c030';const hat=(x)=>{rect(g,x,0,8,4,'#1c1c24');rect(g,x+1,0,1,3,'#44445a');rect(g,x,3,8,1,'#c03050');rect(g,x-2,4,12,1,'#1c1c24');};
-    const mono=(ex)=>{for(const [dx,dy] of [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]])px(g,ex+dx,7+dy,G);px(g,ex+1,9,G);px(g,ex+2,10,G);px(g,ex+2,11,G);};
-    if(d==='right'){hat(5);mono(9);}else{hat(4);if(d==='down'){mono(11);px(g,6,12,'#d03040');px(g,9,12,'#d03040');px(g,7,12,'#801828');px(g,8,12,'#801828');}}}});
-SPR.sage=buildChar({head:'dog',pal:{...basePal,F:'#cfc6b4',C:'#fafaf2',K:'#fafaf2',T:'#2a4aa8',A:'#f8d860',B:'#8a5a2a',L:'#3a2a20',E:'#3a3030'},
-  acc(g,d){const Wh='#fafaf2';
-    if(d==='down'){rect(g,5,11,6,2,Wh);rect(g,6,13,4,2,Wh);rect(g,7,15,2,1,Wh);px(g,3,6,'#fff');px(g,4,6,'#fff');px(g,11,6,'#fff');px(g,12,6,'#fff');rect(g,14,5,1,15,'#7a4a1a');rect(g,13,3,3,3,'#30c8e0');px(g,14,4,'#c8ffff');}
-    else if(d==='right'){rect(g,9,11,5,2,Wh);rect(g,10,13,3,2,Wh);rect(g,13,6,1,14,'#7a4a1a');rect(g,12,4,3,3,'#30c8e0');px(g,13,5,'#c8ffff');}
-    else{rect(g,1,5,1,15,'#7a4a1a');rect(g,0,3,3,3,'#30c8e0');px(g,1,4,'#c8ffff');}}});
+SPR.hero=buildChar({head:'dog',pal:{...basePal,F:'#e8922c',C:'#fbe8c4',K:'#fbe8c4',T:'#6a4a2a',A:'#fbe8c4',B:'#b08a50',L:'#2856a8'},
+  acc(g,d){// sleepy half-closed eyes: overwrite top half of eye pixels with fur
+    if(d==='down'){px(g,5,7,'#e8922c');px(g,10,7,'#e8922c');}
+    else if(d==='right'){px(g,11,7,'#e8922c');}
+    // barrel hammer on right shoulder
+    const H='#7a4a1a',Hd='#5a3414',Bb='#c09060',Bl='#a07040';
+    if(d==='down'){rect(g,12,3,3,4,Bb);rect(g,12,3,3,1,Bl);px(g,13,7,H);px(g,13,8,H);px(g,13,9,H);px(g,13,10,H);px(g,13,11,H);}
+    else if(d==='right'){rect(g,11,2,4,4,Bb);rect(g,11,2,4,1,Bl);px(g,12,6,H);px(g,12,7,H);px(g,12,8,H);px(g,12,9,H);}
+    else{px(g,4,5,H);px(g,4,6,H);px(g,4,7,H);px(g,4,8,H);rect(g,3,1,3,4,Bb);rect(g,3,1,3,1,Bl);}}});
+SPR.merchant=buildChar({head:'dog',pal:{...basePal,F:'#c97a2a',C:'#f4dcb0',K:'#f4dcb0',T:'#2856a8',A:'#204898',B:'#6a5030',L:'#204898'},
+  acc(g,d){const Gg='#d0d0d0',Gl='#60e0e0',Wr='#a0a0a8',Wh='#808088';
+    // goggles on forehead
+    if(d==='down'){rect(g,3,4,4,2,Gg);px(g,5,4,Gl);px(g,5,5,Gl);rect(g,9,4,4,2,Gg);px(g,11,4,Gl);px(g,11,5,Gl);rect(g,7,4,2,1,Gg);
+      // wrench in right hand
+      rect(g,13,12,2,6,Wr);rect(g,12,12,1,2,Wh);rect(g,15,12,1,2,Wh);}
+    else if(d==='right'){rect(g,9,4,4,2,Gg);px(g,11,4,Gl);px(g,11,5,Gl);
+      rect(g,13,12,2,6,Wr);rect(g,12,12,1,2,Wh);rect(g,15,12,1,2,Wh);}
+    else{rect(g,3,4,4,2,Gg);px(g,4,4,Gl);px(g,4,5,Gl);rect(g,9,4,4,2,Gg);px(g,10,4,Gl);px(g,10,5,Gl);rect(g,7,4,2,1,Gg);}}});
+SPR.bank=buildChar({head:'dog',pal:{...basePal,F:'#e8c030',C:'#fff0a0',K:'#e8c030',T:'#2050a8',A:'#f0c030',B:'#f0c030',L:'#e8c030'},
+  acc(g,d){const G='#f0c030',Bl='#2050a8',Gem='#40c8ff';
+    // striped headdress (nemes) flowing down sides
+    if(d==='down'){rect(g,3,2,10,4,G);for(let i=0;i<4;i++)rect(g,3,2+i,10,1,i%2?Bl:G);px(g,7,3,Gem);px(g,8,3,Gem);
+      rect(g,1,6,3,12,G);rect(g,12,6,3,12,Bl);for(let y=6;y<18;y++){px(g,1+(y%2),y,y%2?G:Bl);px(g,12+(y%2),y,y%2?Bl:G);}}
+    else if(d==='right'){rect(g,6,2,8,4,G);for(let i=0;i<4;i++)rect(g,6,2+i,8,1,i%2?Bl:G);px(g,10,3,Gem);
+      rect(g,12,6,3,12,G);for(let y=6;y<18;y++)px(g,12+(y%2),y,y%2?G:Bl);}
+    else{rect(g,3,2,10,4,G);for(let i=0;i<4;i++)rect(g,3,2+i,10,1,i%2?Bl:G);
+      rect(g,1,6,3,12,Bl);rect(g,12,6,3,12,G);for(let y=6;y<18;y++){px(g,1+(y%2),y,y%2?Bl:G);px(g,12+(y%2),y,y%2?G:Bl);}}}});
+SPR.sage=buildChar({head:'dog',pal:{...basePal,F:'#a09890',C:'#d0ccc4',K:'#d0ccc4',T:'#c4a878',A:'#a08860',B:'#7a5a2a',L:'#3a3430',E:'#3a3030'},
+  acc(g,d){const Wh='#e8e8e0',Gl='#c0e0ff',Gf='#4080a0',Cn='#7a4a1a';
+    // white beard
+    if(d==='down'){rect(g,5,11,6,2,Wh);rect(g,6,13,4,2,Wh);rect(g,7,15,2,1,Wh);
+      // round glasses
+      rect(g,3,7,3,2,Gl);px(g,4,7,Gf);rect(g,10,7,3,2,Gl);px(g,11,7,Gf);rect(g,6,7,4,1,Gf);
+      // cane
+      rect(g,14,5,1,15,Cn);rect(g,13,4,3,2,Cn);}
+    else if(d==='right'){rect(g,9,11,5,2,Wh);rect(g,10,13,3,2,Wh);
+      rect(g,11,7,3,2,Gl);px(g,12,7,Gf);
+      rect(g,14,5,1,15,Cn);rect(g,13,4,3,2,Cn);}
+    else{rect(g,1,5,1,15,Cn);rect(g,0,4,3,2,Cn);}}});
 const catPal={O:'#120c16',E:'#120c16',N:'#e06080',P:'#e08090',W:'#e0e0e8',R:'#ff3030'};
 SPR.alley=buildChar({head:'cat',pal:{...catPal,F:'#7a7a8e',C:'#c8c8d6',K:'#7a7a8e',T:'#8a2828',A:'#d0d0d0',B:'#3a2a2a',L:'#2a2a30'},
   acc(g,d){if(d==='down'){rect(g,13,13,1,4,'#d8e0f0');px(g,13,12,'#6a4a2a');}else if(d==='right'){rect(g,11,14,4,1,'#d8e0f0');px(g,10,14,'#6a4a2a');}}});
@@ -240,8 +263,8 @@ const ETYPES={
 };
 let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,scene='title',winT=0;
 const NPCS=[
-  {id:'merchant',name:'BARKSLEY THE MERCHANT',spr:'merchant',x:PADS[2][0]*16+8,y:PADS[2][1]*16+8,hw:6,hh:4,dir:'down',met:false},
-  {id:'bank',name:'SIR HODL, VAULT KEEPER',spr:'bank',x:PADS[0][0]*16+8,y:PADS[0][1]*16+8,hw:6,hh:4,dir:'down',met:false},
+  {id:'merchant',name:'WRENCHPAW THE MECHANIC',spr:'merchant',x:PADS[2][0]*16+8,y:PADS[2][1]*16+8,hw:6,hh:4,dir:'down',met:false},
+  {id:'bank',name:'THE GREAT SPHINX OF DOGE',spr:'bank',x:PADS[0][0]*16+8,y:PADS[0][1]*16+8,hw:6,hh:4,dir:'down',met:false},
   {id:'quest',name:'ELDER SHIBE',spr:'sage',x:PADS[1][0]*16+8,y:PADS[1][1]*16+8,hw:6,hh:4,dir:'down',met:false}
 ];
 function newGame(){
@@ -386,13 +409,13 @@ function talk(n){
     else bankMenu(n);
   }else questTalk(n);
 }
-function shopMenu(n){openMenu(n,'BARKSLEY\'S WARES',()=>{const o=[];
+function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
   if(P.sword<4)o.push({label:`SHARPER SWORD LV${P.sword+1} (DMG ${SWORD_DMG[P.sword+1]})`,cost:SWORD_COST[P.sword+1],act:()=>{P.sword++;return 'MUCH SHARP. VERY STAB.';}});
   if(P.armor<2)o.push({label:`DOGE ARMOR LV${P.armor+1} (-${ARMOR_RED[P.armor+1]*100}% DMG)`,cost:ARMOR_COST[P.armor+1],act:()=>{P.armor++;return 'SUCH PROTECT. WOW.';}});
   if(P.hpUps<3)o.push({label:'BONE CHARM (+15 MAX HP)',cost:50+30*P.hpUps,act:()=>{P.hpUps++;P.maxHp+=15;return 'MAX HP UP! REST TO FILL IT.';}});
   if(P.mpUps<2)o.push({label:'MOON BISCUIT (+10 MAX MP)',cost:40+25*P.mpUps,act:()=>{P.mpUps++;P.maxMp+=10;return 'MAX MP UP! REST TO FILL IT.';}});
   o.push({label:'LEAVE',act:null});return o;});}
-function bankMenu(n){openMenu(n,'THE VAULT OF SIR HODL',()=>[
+function bankMenu(n){openMenu(n,'THE SPHINX DEX',()=>[
   {label:`EXCHANGE ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'YOU HAVE NO WHISKERS.';P.doge+=P.whisk*3;const m=`+${P.whisk*3} DOGE. VERY TRADE.`;P.whisk=0;return m;}},
   {label:`DEPOSIT ALL DOGE (${P.doge})`,act:()=>{if(!P.doge)return 'NOTHING TO DEPOSIT.';P.bank+=P.doge;P.doge=0;return 'DEPOSITED. SUCH SAFE.';}},
   {label:`WITHDRAW ALL DOGE (${P.bank})`,act:()=>{if(!P.bank)return 'YOUR VAULT IS EMPTY.';P.doge+=P.bank;P.bank=0;return 'WITHDRAWN. SPEND WISELY.';}},
@@ -539,9 +562,13 @@ function drawWorld(){
 function drawSlash(ox,oy){
   const p=1-P.atkT/0.18,base=ANG[P.dir],a0=base-1.25,a=a0+2.5*Math.min(1,p);
   const cx=P.x-ox,cy=P.y-6-oy;
-  ctx.fillStyle='rgba(255,255,220,0.55)';
-  for(let t=a0;t<a;t+=0.06)for(let r=11;r<=16;r+=1.5)ctx.fillRect(Math.round(cx+Math.cos(t)*r),Math.round(cy+Math.sin(t)*r),1,1);
-  for(let r=3;r<=16;r++){const x=Math.round(cx+Math.cos(a)*r),y=Math.round(cy+Math.sin(a)*r);if(r>=6){ctx.fillStyle='#4a5068';ctx.fillRect(x+1,y+1,1,1);}ctx.fillStyle=r<5?'#7a4a1a':r<6?'#f0c030':'#eef4ff';ctx.fillRect(x,y,1,1);}
+  // hammer handle
+  for(let r=3;r<=14;r++){const x=Math.round(cx+Math.cos(a)*r),y=Math.round(cy+Math.sin(a)*r);ctx.fillStyle='#7a4a1a';ctx.fillRect(x,y,1,1);}
+  // barrel head at the tip
+  for(let dr=-2;dr<=2;dr++)for(let da=-0.15;da<=0.15;da+=0.07){const r=14+dr,an=a+da;const x=Math.round(cx+Math.cos(an)*r),y=Math.round(cy+Math.sin(an)*r);ctx.fillStyle=dr<0?'#a07040':'#c09060';ctx.fillRect(x,y,1,1);}
+  // swing trail
+  ctx.fillStyle='rgba(200,180,140,0.3)';
+  for(let t=a-0.6;t<a;t+=0.08)for(let r=12;r<=16;r+=2)ctx.fillRect(Math.round(cx+Math.cos(t)*r),Math.round(cy+Math.sin(t)*r),1,1);
 }
 function bar(x,y,w,v,max,c1,c2,bg){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,6);ctx.fillStyle=bg;ctx.fillRect(x,y,w,4);const f=Math.ceil(w*Math.max(0,v)/max);ctx.fillStyle=c1;ctx.fillRect(x,y,f,4);ctx.fillStyle=c2;ctx.fillRect(x,y,f,1);}
 function questText(){const s=state.stage;return s===0?'TALK TO ELDER SHIBE':s===1?`SLAY CATS ${Math.min(P.kills,8)}/8`:s===2?`SLAY BRUTES ${Math.min(P.bruteKills,3)}/3`:s===3?'DEFEAT THE CAT LORD':'COMPLETE! MUCH WOW';}
