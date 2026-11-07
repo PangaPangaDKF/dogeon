@@ -31,7 +31,8 @@ Addresses land in `deployments/31337.json`.
    `cast wallet import dogeon --interactive`
 3. Deploy:
    `forge script script/Deploy.s.sol --rpc-url chikyu --broadcast --account dogeon --sender <YOUR_ADDRESS>`
-4. Copy `items` and `dex` from `deployments/6281971.json` into `CONTRACTS` in `index.html` (CHAIN section) and commit.
+4. Write the addresses into the game (checks both have contract code on Chikyū first):
+   `node apply-deployment.mjs` (from `contracts/`), then `bash ../tests/check.sh` and commit `index.html` + `deployments/6281971.json`.
 5. Optional: verify on Blockscout: `forge verify-contract <addr> src/DogeItems.sol:DogeItems --chain-id 6281971 --verifier blockscout --verifier-url https://blockscout.testnet.dogeos.com/api/`
 
 Chain facts (checked live 2026-11-07): chainId `0x5fdaf3` (6281971), RPC `https://rpc.testnet.dogeos.com`, Cancun opcodes supported.

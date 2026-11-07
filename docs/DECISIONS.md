@@ -35,6 +35,18 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-023 · 2026-11-07 · Deploy helper: apply-deployment.mjs writes contract addresses into the game
+- Feature: the user's Chikyū deploy becomes forge script → `node contracts/apply-deployment.mjs` → checks → commit. No hand-editing.
+- Reference: user "if you need a wallet … skip that and continue"; D-018 README step 4 was manual.
+- Files: `contracts/apply-deployment.mjs` (new), `contracts/README.md`, docs.
+- Code: reads `deployments/<chainId>.json` (default 6281971), validates both addresses + chainId, `eth_getCode` on the chain RPC
+  (refuses empty code; `--no-rpc` skips), rewrites only that chain's `'0x…':{items,dex}` entry. `--html`/`--dir` for tests.
+- Verify (on copies, real index.html untouched): fake Chikyū file written with --no-rpc ✓; fake addresses rejected on anvil ✓;
+  real anvil deployment written ✓; missing file → clear error ✓.
+- Process: a shell one-liner with backticks inside double quotes executed them as commands → practice 27 "write multi-line
+  docs with the Edit tool or a quoted heredoc file, never inline in `node -e "…"`".
+- Commit: this commit.
+
 ### D-022 · 2026-11-07 · Contract audit fixes: zero-share LP theft, slippage guards, O(balance) inventory, paginated listings
 - Feature: hardens DogeItems + DogeDEX before the user deploys to Chikyū. A security audit workflow (2 auditors: funds lens +
   state/DoS lens, then a verifier writing forge PoCs, deleted afterwards) confirmed 6 findings (4 distinct) and refuted 2.
