@@ -5,7 +5,7 @@ description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bi
 
 # DOGEON — game context skill
 
-Version: 1.8 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 1.9 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #1 (user):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
 improve `prompts/SESSION_PROMPT.md` + this skill → update `CLAUDE.md`/`CONTEXT.md` → commit. Never batch features.
@@ -46,6 +46,8 @@ Test locally: `anvil` + `forge script ... --unlocked`. `bash tests/check.sh` sta
 **Game ↔ chain (D-019):** CHAIN section holds `CONTRACTS`, `SEL`, raw ABI helpers, `etx` (send+receipt), `chainAct` (one tx at a time),
 `refreshChain` → `chainData`. Gear NFT owned = worn (`swordLv/armorLv`). Mint needs a forge credit or bag food (only playing gets stuff).
 Dev: `node tests/serve.mjs` + `anvil` + deploy, open `http://localhost:8080/?chain=local`. Sim e2e runs when anvil is up.
+**Item economy (D-021):** one craft = one item. Minting removes the off-chain effect (`takeOffChain`), refunds only on a sure failure
+(`e.sent && !e.reverted` = keep). Reset `chainData` on account/chain change. Review every item path for duplication.
 **Feature ledger:** every feature also gets a row in `MASTER_PROMPT.md` §G (user rule).
 **Web3 refs (IT-3/IT-4):** user-supplied avaxskills.com index — use only chain-agnostic EVM skills (`evm-foundry`, `nft-basics`,
 `security`, `audit`, `testing`, `evm-wallet-integration`); DogeOS is not Avalanche, so ignore subnet/Warp/Fuji specifics.

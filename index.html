@@ -47,7 +47,7 @@ const kp=(...ks)=>ks.some(k=>pressed[k]);
 // ================= PIXEL FONT 3x5 =================
 const FONT={A:[2,5,7,5,5],B:[6,5,6,5,6],C:[3,4,4,4,3],D:[6,5,5,5,6],E:[7,4,6,4,7],F:[7,4,6,4,4],G:[3,4,5,5,3],H:[5,5,7,5,5],I:[7,2,2,2,7],J:[1,1,1,5,2],K:[5,5,6,5,5],L:[4,4,4,4,7],M:[5,7,5,5,5],N:[6,5,5,5,5],O:[2,5,5,5,2],P:[6,5,6,4,4],Q:[2,5,5,6,3],R:[6,5,6,5,5],S:[3,4,2,1,6],T:[7,2,2,2,2],U:[5,5,5,5,7],V:[5,5,5,5,2],W:[5,5,7,7,5],X:[5,5,2,5,5],Y:[5,5,2,2,2],Z:[7,1,2,4,7],
 '0':[7,5,5,5,7],'1':[2,6,2,2,7],'2':[6,1,2,4,7],'3':[6,1,2,1,6],'4':[5,5,7,1,1],'5':[7,4,6,1,6],'6':[3,4,7,5,7],'7':[7,1,2,2,2],'8':[7,5,7,5,7],'9':[7,5,7,1,6],
-'.':[0,0,0,0,2],',':[0,0,0,2,4],'!':[2,2,2,0,2],'?':[6,1,2,0,2],':':[0,2,0,2,0],'-':[0,0,7,0,0],'+':[0,2,7,2,0],'/':[1,1,2,4,4],"'":[2,2,0,0,0],'(':[1,2,2,2,1],')':[4,2,2,2,4],'>':[4,2,1,2,4],'<':[1,2,4,2,1],'=':[0,7,0,7,0],'%':[5,1,2,4,5],'$':[3,6,2,3,6],'*':[0,5,2,5,0],'"':[5,5,0,0,0]};
+'.':[0,0,0,0,2],',':[0,0,0,2,4],'!':[2,2,2,0,2],'?':[6,1,2,0,2],':':[0,2,0,2,0],'-':[0,0,7,0,0],'+':[0,2,7,2,0],'/':[1,1,2,4,4],"'":[2,2,0,0,0],'(':[1,2,2,2,1],')':[4,2,2,2,4],'>':[4,2,1,2,4],'<':[1,2,4,2,1],'=':[0,7,0,7,0],'%':[5,1,2,4,5],'$':[3,6,2,3,6],'*':[0,5,2,5,0],'"':[5,5,0,0,0],'#':[5,7,5,7,5],'^':[2,5,0,0,0]};
 function textRaw(s,x,y,col,sc){ctx.fillStyle=col;let cx=x;for(const ch of s){const gl=FONT[ch];if(gl){for(let r=0;r<5;r++){const b=gl[r];for(let c=0;c<3;c++)if(b&(4>>c))ctx.fillRect(cx+c*sc,y+r*sc,sc,sc);}}cx+=4*sc;}}
 function text(s,x,y,col='#fff',sc=1,shadow='#000'){s=String(s).toUpperCase();x=Math.round(x);y=Math.round(y);if(shadow)textRaw(s,x+sc,y+sc,shadow,sc);textRaw(s,x,y,col,sc);}
 function textC(s,cx,y,col,sc=1,shadow='#000'){s=String(s);text(s,cx-(s.length*4*sc-sc)/2,y,col,sc,shadow);}
@@ -516,8 +516,8 @@ async function switchChain(){
 }
 async function refreshBal(){if(!wallet.addr||!wallet.chainOk){wallet.bal=null;return;}const h=await eth().request({method:'eth_getBalance',params:[wallet.addr,'latest']});wallet.bal=Number(BigInt(h)/10n**14n)/1e4;}
 function hookWallet(e){if(wallet.hooked||!e.on)return;wallet.hooked=true;
-  e.on('accountsChanged',a=>{if(!a||!a.length)disconnectWallet('WALLET DISCONNECTED.');else{wallet.addr=a[0];refreshBal().catch(()=>{});}});
-  e.on('chainChanged',id=>{wallet.chainOk=String(id).toLowerCase()===CHAIN.id;refreshBal().catch(()=>{});if(!wallet.chainOk)setWalletMsg('WRONG NETWORK. PICK CONNECT TO SWITCH BACK.');});}
+  e.on('accountsChanged',a=>{if(!a||!a.length)disconnectWallet('WALLET DISCONNECTED.');else{wallet.addr=a[0];resetChainData();refreshChain().catch(()=>{});refreshBal().catch(()=>{});}});
+  e.on('chainChanged',id=>{wallet.chainOk=String(id).toLowerCase()===CHAIN.id;resetChainData();refreshBal().catch(()=>{});if(!wallet.chainOk)setWalletMsg('WRONG NETWORK. PICK CONNECT TO SWITCH BACK.');});}
 async function connectWallet(){
   const e=eth();if(!e){setWalletMsg('NO WALLET FOUND. GAME STILL WORKS OFFLINE.');return false;}
   if(wallet.busy)return false;wallet.busy=true;setWalletMsg('CHECK YOUR WALLET...');
@@ -525,12 +525,12 @@ async function connectWallet(){
     const acc=await e.request({method:'eth_requestAccounts'});if(!acc||!acc.length)throw new Error('no account');
     wallet.addr=acc[0];hookWallet(e);
     await switchChain();await refreshBal();
-    wallet.connected=true;refreshChain().catch(()=>{});setWalletMsg(wallet.chainOk?'CONNECTED TO CHIKYU. SUCH CHAIN. WOW.':'CONNECTED, BUT ON THE WRONG NETWORK.');
+    wallet.connected=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));setWalletMsg(wallet.chainOk?`CONNECTED TO ${DEV_LOCAL?'LOCAL ANVIL':'CHIKYU'}. SUCH CHAIN. WOW.`:'CONNECTED, BUT ON THE WRONG NETWORK.');
     return true;
   }catch(err){setWalletMsg(walletErr(err));return false;}
   finally{wallet.busy=false;}
 }
-function disconnectWallet(m){wallet.connected=false;wallet.addr=null;wallet.bal=null;wallet.chainOk=false;setWalletMsg(m||'DISCONNECTED. YOUR NFTS STAY ON CHAIN.');
+function disconnectWallet(m){resetChainData();wallet.connected=false;wallet.addr=null;wallet.bal=null;wallet.chainOk=false;setWalletMsg(m||'DISCONNECTED. YOUR NFTS STAY ON CHAIN.');
   const e=eth();if(e)e.request({method:'wallet_revokePermissions',params:[{eth_accounts:{}}]}).catch(()=>{});}
 function walletRows(){
   if(!eth())return [{label:'WALLET: OFFLINE (SIMULATED DOGE ONLY)',act:()=>'NO WALLET. INSTALL METAMASK + OPEN VIA LOCALHOST.'}];
@@ -555,13 +555,15 @@ const addrs=()=>CONTRACTS[CHAIN.id]||{};
 const chainReady=()=>wallet.connected&&wallet.chainOk&&!!addrs().items&&!!addrs().dex;
 const chainData={inv:[],listings:[],pools:[],proceeds:0n,fee:0n,approved:false,loaded:false};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function ecall(to,data){return eth().request({method:'eth_call',params:[{to,data:'0x'+data},'latest']});}
+function resetChainData(){Object.assign(chainData,{inv:[],listings:[],pools:[],proceeds:0n,approved:false,loaded:false});}
+async function ecall(to,data){const r=await eth().request({method:'eth_call',params:[{to,data:'0x'+data},'latest']});if(!r||r==='0x')throw new Error('NO CONTRACT THERE. DEPLOY FIRST (CONTRACTS/README)');return r;}
 async function etx(to,data,value){
   const h=await eth().request({method:'eth_sendTransaction',params:[{from:wallet.addr,to,data:'0x'+data,value:'0x'+BigInt(value||0).toString(16)}]});
   setWalletMsg('TX '+String(h).slice(0,10)+'.. MINING, MUCH WAIT');
-  for(let i=0;i<200;i++){const r=await eth().request({method:'eth_getTransactionReceipt',params:[h]});
-    if(r){if(r.status==='0x1'||r.status===1)return r;throw new Error('TX REVERTED');}await sleep(1500);}
-  throw new Error('TX NOT MINED YET, CHECK THE EXPLORER');
+  const fail=(m,rev)=>Object.assign(new Error(m),{sent:true,reverted:!!rev,hash:h});
+  for(let i=0;i<200;i++){let r;try{r=await eth().request({method:'eth_getTransactionReceipt',params:[h]});}catch(e){throw fail('TX SENT, STATUS UNKNOWN. CHECK THE EXPLORER');}
+    if(r){if(r.status==='0x1'||r.status===1)return r;throw fail('TX REVERTED',true);}await sleep(1500);}
+  throw fail('TX NOT MINED YET, CHECK THE EXPLORER');
 }
 async function refreshChain(){
   if(!chainReady())return;const c=addrs(),me=wallet.addr;
@@ -591,20 +593,24 @@ const myFree=()=>chainData.inv; // inventoryOf only returns NFTs in the wallet (
 function nftBest(type){if(!chainReady())return 0;let b=0;for(const it of chainData.inv)if(it.type===type&&it.level>b)b=it.level;return b;}
 const swordLv=()=>Math.max(P.sword,Math.min(4,nftBest(1))),armorLv=()=>Math.max(P.armor,Math.min(2,nftBest(2)));
 function addCredit(t,l){const k=t+':'+l;P.credits[k]=(P.credits[k]||0)+1;}
+// minting moves a crafted item onto the chain, so its off-chain effect goes away (one craft = one item, D-021)
+function creditOk(t,l){if(!(P.credits[t+':'+l]>0))return false;if(t===1)return P.sword===l;if(t===2)return P.armor===l;if(t===5)return P.hpUps>0;if(t===6)return P.mpUps>0;return true;}
+function takeOffChain(t,l){if(t===1)P.sword=Math.max(1,l-1);else if(t===2)P.armor=l-1;else if(t===5){P.hpUps--;P.maxHp-=15;P.hp=Math.min(P.hp,P.maxHp);}else if(t===6){P.mpUps--;P.maxMp-=10;P.mp=Math.min(P.mp,P.maxMp);}}
+function putBack(t,l){if(t===1)P.sword=l;else if(t===2)P.armor=l;else if(t===5){P.hpUps++;P.maxHp+=15;}else if(t===6){P.mpUps++;P.maxMp+=10;}}
 function mintNft(type,level,src){ // src 'credit' (crafted at the forge) or a bag food kind
   return chainAct(`MINTED ${itemName({type,level})} NFT! TO THE MOON.`,async()=>{
     const k=type+':'+level;
-    if(src==='credit'){if(!(P.credits[k]>0))throw new Error('CRAFT IT FIRST');}else if(!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
+    if(src==='credit'){if(!creditOk(type,level))throw new Error('CRAFT IT FIRST AND KEEP IT EQUIPPED');P.credits[k]--;takeOffChain(type,level);}
+    else if(!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
     try{await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(type)+W32(level),chainData.fee);}
-    catch(e){if(src!=='credit')addToBag(src,1);throw e;}
-    if(src==='credit')P.credits[k]--;
+    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else addToBag(src,1);}throw e;} // unknown outcome: no refund (no dupes)
   });}
 function useNft(it){ // eat food / drink charm: burns the NFT, then applies the effect
   const food=TYPE_FOOD[it.type];
   if(food&&P.hp>=P.maxHp){setWalletMsg('HP IS FULL ALREADY.');return;}
   if(it.type===5&&P.hpUps>=3||it.type===6&&P.mpUps>=2){setWalletMsg('MAXED ALREADY. SELL IT AT THE SPHINX.');return;}
   chainAct(`USED ${itemName(it)} #${it.id}. SUCH NOM.`,async()=>{await etx(addrs().items,SEL.burn+W32(it.id),0);
-    if(food)P.hp=Math.min(P.maxHp,P.hp+FOODS[food].heal);else if(it.type===5){P.hpUps++;P.maxHp+=15;}else if(it.type===6){P.mpUps++;P.maxMp+=10;}});}
+    if(food)P.hp=Math.min(P.maxHp,P.hp+FOODS[food].heal);else if(it.type===5){if(P.hpUps<3){P.hpUps++;P.maxHp+=15;}}else if(it.type===6){if(P.mpUps<2){P.mpUps++;P.maxMp+=10;}}});}
 const dex=()=>addrs().dex;
 function listNft(it,priceDoge){return chainAct(`LISTED #${it.id} FOR ${priceDoge} DOGE.`,async()=>{await ensureApproved();await etx(dex(),SEL.list+W32(it.id)+W32(toWei(priceDoge)),0);});}
 function delistNft(l){return chainAct(`DELISTED #${l.id}.`,()=>etx(dex(),SEL.delist+W32(l.id),0));}
@@ -620,23 +626,23 @@ const mktUI={price:{},lp:{}}; // per-row preset index for the market menu (NOT m
 function marketMenu(n){openMenu(n,'SPHINX NFT MARKET',()=>{const o=[],blk=chainBlockRow();
   if(blk){o.push({label:blk,act:()=>'SEE CONTRACTS/README.MD TO DEPLOY.'});o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;}
   if(!chainData.loaded)o.push({label:'LOADING THE CHAIN...',act:()=>{refreshChain().catch(()=>{});return 'REFRESHING...';}});
-  if(chainData.proceeds>0n)o.push({label:`WITHDRAW PROCEEDS: ${fromWei(chainData.proceeds)} DOGE`,act:()=>{withdrawProceeds();return 'CONFIRM IN YOUR WALLET...';}});
-  for(const l of chainData.listings)o.push(l.mine?{label:`DELIST ${itemName(l)} #${l.id} (YOURS, ${fromWei(l.price)})`,act:()=>{delistNft(l);return 'CONFIRM IN YOUR WALLET...';}}
-    :{label:`BUY ${itemName(l)} #${l.id} FOR ${fromWei(l.price)} DOGE`,act:()=>{buyListing(l);return 'CONFIRM IN YOUR WALLET...';}});
-  for(const p of chainData.pools){const mine=myFree().filter(it=>keyOfIt(it)===p.key);
+  if(chainData.proceeds>0n)o.push({label:`WITHDRAW PROCEEDS: ${fromWei(chainData.proceeds)} DOGE`,act:()=>{withdrawProceeds();return wallet.msg;}});
+  for(const l of chainData.listings)o.push(l.mine?{label:`DELIST ${itemName(l)} #${l.id} (YOURS, ${fromWei(l.price)})`,act:()=>{delistNft(l);return wallet.msg;}}
+    :{label:`BUY ${itemName(l)} #${l.id} FOR ${fromWei(l.price)} DOGE`,act:()=>{buyListing(l);return wallet.msg;}});
+  for(const p of chainData.pools){if(p.shares===0n)continue;const mine=myFree().filter(it=>keyOfIt(it)===p.key);
     o.push({label:`POOL ${itemName(p)}: ${p.n} ITEMS / ${fromWei(p.doge)} DOGE`,act:()=>`SPOT ${(fromWei(p.doge)/Math.max(1,p.n)).toFixed(3)} DOGE. YOUR SHARE ${p.shares?Math.round(Number(p.mine*1000n/p.shares))/10:0}%.`});
-    if(p.buy>0n)o.push({label:` SWAP ${fromWei(p.buy)} DOGE -> 1 ${itemName(p)}`,act:()=>{buyPool(p);return 'CONFIRM IN YOUR WALLET...';}});
-    if(mine.length&&p.sell>0n)o.push({label:` SWAP 1 ${itemName(p)} -> ${fromWei(p.sell)} DOGE`,act:()=>{sellPool(mine[0],p);return 'CONFIRM IN YOUR WALLET...';}});
+    if(p.buy>0n)o.push({label:` SWAP ${fromWei(p.buy)} DOGE -> 1 ${itemName(p)}`,act:()=>{buyPool(p);return wallet.msg;}});
+    if(mine.length&&p.sell>0n)o.push({label:` SWAP 1 ${itemName(p)} -> ${fromWei(p.sell)} DOGE`,act:()=>{sellPool(mine[0],p);return wallet.msg;}});
     if(mine.length&&p.n>0){const need=(BigInt(mine.length)*p.doge+BigInt(p.n-1))/BigInt(p.n);
-      o.push({label:` ADD ${mine.length} ITEMS + ${fromWei(need)} DOGE AS LP`,act:()=>{addLp(mine.map(it=>it.id),need);return 'CONFIRM IN YOUR WALLET...';}});}
-    if(p.mine>0n)o.push({label:` REMOVE MY LP (${Math.round(Number(p.mine*1000n/p.shares))/10}%)`,act:()=>{removeLp(p);return 'CONFIRM IN YOUR WALLET...';}});}
-  const poolKeys=new Set(chainData.pools.map(p=>p.key)),groups={};
+      o.push({label:` ADD ${mine.length} ITEMS + ${fromWei(need)} DOGE AS LP`,act:()=>{addLp(mine.map(it=>it.id),need);return wallet.msg;}});}
+    if(p.mine>0n)o.push({label:` REMOVE MY LP (${Math.round(Number(p.mine*1000n/p.shares))/10}%)`,act:()=>{removeLp(p);return wallet.msg;}});}
+  const poolKeys=new Set(chainData.pools.filter(p=>p.shares>0n).map(p=>p.key)),groups={};
   for(const it of myFree()){const k=String(keyOfIt(it));if(!poolKeys.has(keyOfIt(it)))(groups[k]=groups[k]||[]).push(it);
     const pi=mktUI.price[it.id]??3,price=PRICES[pi];
-    o.push({label:`SELL #${it.id} ${itemName(it)} FOR < ${price} > DOGE`,adj:d=>{mktUI.price[it.id]=Math.max(0,Math.min(PRICES.length-1,pi+d));},act:()=>{listNft(it,price);return 'CONFIRM IN YOUR WALLET...';}});}
+    o.push({label:`SELL #${it.id} ${itemName(it)} FOR < ${price} > DOGE`,adj:d=>{mktUI.price[it.id]=Math.max(0,Math.min(PRICES.length-1,pi+d));},act:()=>{listNft(it,price);return wallet.msg;}});}
   for(const k in groups){const g=groups[k],li=mktUI.lp[k]??3,amt=PRICES[li];
-    o.push({label:`CREATE POOL: ${g.length} ${itemName(g[0])} + < ${amt} > DOGE`,adj:d=>{mktUI.lp[k]=Math.max(0,Math.min(PRICES.length-1,li+d));},act:()=>{addLp(g.map(it=>it.id),toWei(amt));return 'CONFIRM IN YOUR WALLET...';}});}
-  if(chainData.loaded&&!chainData.listings.length&&!chainData.pools.length)o.push({label:'NO MARKET YET. LIST OR CREATE A POOL FIRST.',act:()=>'NOTHING IS SOLD UNTIL A PLAYER SELLS IT.'});
+    o.push({label:`CREATE POOL: ${g.length} ${itemName(g[0])} + < ${amt} > DOGE`,adj:d=>{mktUI.lp[k]=Math.max(0,Math.min(PRICES.length-1,li+d));},act:()=>{addLp(g.map(it=>it.id),toWei(amt));return wallet.msg;}});}
+  if(chainData.loaded&&!chainData.listings.length&&!poolKeys.size)o.push({label:'NO MARKET YET. LIST OR CREATE A POOL FIRST.',act:()=>'NOTHING IS SOLD UNTIL A PLAYER SELLS IT.'});
   o.push({label:'REFRESH',act:()=>{refreshChain().then(()=>setWalletMsg('MARKET REFRESHED.')).catch(e=>setWalletMsg(walletErr(e)));return 'REFRESHING...';}});
   o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));}
 
@@ -655,10 +661,10 @@ function talk(n){
 }
 const RECIPES=[
   {name:'HAMMER LV2',nft:[1,2],need:{steel:2,scrap:1},req:()=>P.sword<2,act:()=>{P.sword=2;return `HAMMER LV2! DMG ${SWORD_DMG[2]}. VERY FORGE.`;}},
-  {name:'HAMMER LV3',nft:[1,3],need:{steel:3,horn:2},req:()=>P.sword>=2&&P.sword<3,act:()=>{P.sword=3;return `HAMMER LV3! DMG ${SWORD_DMG[3]}. MUCH POWER.`;}},
-  {name:'HAMMER LV4',nft:[1,4],need:{steel:5,horn:3,orb:2},req:()=>P.sword>=3&&P.sword<4,act:()=>{P.sword=4;return `HAMMER LV4! DMG ${SWORD_DMG[4]}. WOW.`;}},
+  {name:'HAMMER LV3',nft:[1,3],need:{steel:3,horn:2},req:()=>swordLv()>=2&&P.sword<3,act:()=>{P.sword=3;return `HAMMER LV3! DMG ${SWORD_DMG[3]}. MUCH POWER.`;}},
+  {name:'HAMMER LV4',nft:[1,4],need:{steel:5,horn:3,orb:2},req:()=>swordLv()>=3&&P.sword<4,act:()=>{P.sword=4;return `HAMMER LV4! DMG ${SWORD_DMG[4]}. WOW.`;}},
   {name:'DOGE ARMOR LV1',nft:[2,1],need:{steel:2,horn:1},req:()=>P.armor<1,act:()=>{P.armor=1;return `ARMOR LV1! -${ARMOR_RED[1]*100}% DMG.`;}},
-  {name:'DOGE ARMOR LV2',nft:[2,2],need:{steel:4,scrap:2,horn:2},req:()=>P.armor>=1&&P.armor<2,act:()=>{P.armor=2;return `ARMOR LV2! -${ARMOR_RED[2]*100}% DMG. SUCH PROTECT.`;}},
+  {name:'DOGE ARMOR LV2',nft:[2,2],need:{steel:4,scrap:2,horn:2},req:()=>armorLv()>=1&&P.armor<2,act:()=>{P.armor=2;return `ARMOR LV2! -${ARMOR_RED[2]*100}% DMG. SUCH PROTECT.`;}},
   {name:'BONE CHARM (+15 HP)',nft:[5,1],need:{orb:2,scrap:1},req:()=>P.hpUps<3,act:()=>{P.hpUps++;P.maxHp+=15;return 'MAX HP UP! REST TO FILL IT.';}},
   {name:'MOON BISCUIT (+10 MP)',nft:[6,1],need:{orb:1,horn:1},req:()=>P.mpUps<2,act:()=>{P.mpUps++;P.maxMp+=10;return 'MAX MP UP! REST TO FILL IT.';}}
 ];
@@ -669,8 +675,8 @@ function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
     o.push({label:`${r.name} [${parts}]`,act:has?()=>{for(const [k,v] of Object.entries(r.need))P[k]-=v;if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act();}:()=>'NOT ENOUGH MATERIALS. HUNT MORE.'});}
   // on-chain mint (D-019): only things you crafted (credits) or caught (bag food) can be minted
   const fee=chainData.loaded?fromWei(chainData.fee)+' DOGE':'FEE';
-  for(const k in P.credits)if(P.credits[k]>0){const [t,l]=k.split(':').map(Number);o.push({label:`MINT ${itemName({type:t,level:l})} NFT x${P.credits[k]} (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(t,l,'credit');return 'CONFIRM IN YOUR WALLET...';}});}
-  for(const f in FOOD_TYPE)if(bagCount(f))o.push({label:`PRESERVE ${FOODS[f].name} AS NFT (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(FOOD_TYPE[f],1,f);return 'CONFIRM IN YOUR WALLET...';}});
+  for(const k in P.credits){const [t,l]=k.split(':').map(Number);if(!creditOk(t,l))continue;o.push({label:`MINT ${itemName({type:t,level:l})} NFT x${P.credits[k]} (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(t,l,'credit');return wallet.msg;}});}
+  for(const f in FOOD_TYPE)if(bagCount(f))o.push({label:`PRESERVE ${FOODS[f].name} AS NFT (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(FOOD_TYPE[f],1,f);return wallet.msg;}});
   o.push({label:`INVENTORY: ORB ${P.orb} SCRAP ${P.scrap} HORN ${P.horn} STEEL ${P.steel}`,act:()=>'THOSE ARE YOUR MATERIALS.'});
   o.push({label:'LEAVE',act:null});return o;});ui.chain=true;}
 function bankMenu(n){openMenu(n,'THE SPHINX DEX',()=>{
@@ -719,7 +725,7 @@ function invMenu(){
       }else{const names={orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'CRAFTING MATERIAL. TAKE TO WRENCHPAW.'});}}
     const sk=P.skills,lv=k=>skillLv(sk[k],k);o.push({label:`SKILLS: COMBAT LV${lv('combat')} (${sk.combat}XP) BARK LV${lv('bark')} (${sk.bark}XP) FISH LV${lv('fishing')} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(lv('combat')*SKILL_BONUS*100)}% DMG  BARK +${Math.round(lv('bark')*SKILL_BONUS*100)}% DMG  FISH +${Math.round(lv('fishing')*SKILL_BONUS*100)}% SPD`});
     if(chainReady())for(const it of chainData.inv){const f=TYPE_FOOD[it.type];
-      o.push({label:`NFT #${it.id} ${itemName(it)} `+(f?`[EAT +${FOODS[f].heal} HP, BURNS]`:it.type<=2?'(OWNED = EQUIPPED)':'[USE, BURNS]'),act:it.type<=2?()=>`ON-CHAIN GEAR. EFFECTIVE HAMMER LV${swordLv()} ARMOR LV${armorLv()}.`:()=>{useNft(it);return 'CONFIRM IN YOUR WALLET...';}});}
+      o.push({label:`NFT #${it.id} ${itemName(it)} `+(f?`[EAT +${FOODS[f].heal} HP, BURNS]`:it.type<=2?'(OWNED = EQUIPPED)':'[USE, BURNS]'),act:it.type<=2?()=>`ON-CHAIN GEAR. EFFECTIVE HAMMER LV${swordLv()} ARMOR LV${armorLv()}.`:()=>{useNft(it);return wallet.msg;}});}
     if(!P.bag.length)o.push({label:'BAG IS EMPTY',act:()=>'HUNT MONSTERS OR CATCH FISH.'});
     o.push({label:'CLOSE',act:null});return o;});ui.chain=true;if(chainReady())refreshChain().catch(()=>{});}
 function updateUI(dt){

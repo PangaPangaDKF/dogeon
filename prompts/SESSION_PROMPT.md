@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 1.8 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 1.9 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -91,7 +91,11 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 24. **Make the assertion able to fail** — check that the number actually changed (+8% of 5 rounds to 5), and re-read live
     arrays from the game each time (`update()` re-filters `enemies`, old references go stale) (D-020).
 
+25. **Economy lens in every review** — for each item path ask "can one input produce two outputs?" (craft effect + mint credit
+    were each correct alone, together a duplication exploit, D-021). Refund only when a tx surely failed.
+
 ## Changelog
+- 1.9 (2026-11-07) — Practice 25 economy lens (D-021).
 - 1.8 (2026-11-07) — Practice 24 (D-020).
 - 1.7 (2026-11-07) — Practices 22-23 from IT-5 wiring (D-019).
 - 1.6 (2026-11-07) — Practices 20-21 from IT-4 contracts (D-018).

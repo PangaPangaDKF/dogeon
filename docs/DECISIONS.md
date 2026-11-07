@@ -35,6 +35,35 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-021 · 2026-11-07 · IT-5 review fixes: no craft duplication, no refund on unknown tx, account switch, drained pools
+- Feature: fixes the findings an adversarial review workflow confirmed on the IT-5 wiring (2 reviewers + 1 refuter: 9 real
+  after de-dup = 7 distinct, 1 refuted).
+- Reference: workflow `wf_8eca6cca-70f`; user rule "only playing you can get stuff" (no duplication exploits).
+- Files: `index.html`, `tests/sim.mjs` (mockEth gets `eth_call`/`eth_sendTransaction`/receipt modes; +1 scenario, 9 checks;
+  e2e expectations updated), docs.
+- Code (`index.html`):
+  - 🟠 **Craft duplication:** a craft applied its effect AND granted a mint credit, so mint + sell/use paid twice. Now minting
+    moves the item on chain: `creditOk(t,l)` (credit + still have it: `P.sword===l`, `P.armor===l`, `hpUps>0`, `mpUps>0`),
+    `takeOffChain()` (hammer/armor −1 level, charm −15 max HP, biscuit −10 max MP) before the tx, `putBack()` on a definite failure.
+    Forge MINT rows only show while `creditOk`. Recipe prerequisites accept an owned NFT (`swordLv()>=2`, `armorLv()>=1`).
+  - 🟠 **Refund on unknown outcome:** `etx()` errors after broadcast now carry `.sent` (and `.reverted` when mined with status 0).
+    `mintNft` refunds the fish/credit only if `!e.sent || e.reverted` → no duplicate when a slow/hiccuping RPC later mines it.
+  - **Account / network switch:** `resetChainData()` on `accountsChanged`, `chainChanged`, `disconnectWallet()` + refresh, so the
+    previous account's NFTs never count as worn gear and stale SELL/LP rows disappear.
+  - **No contract:** `ecall()` turns `'0x'` into "NO CONTRACT THERE. DEPLOY FIRST" (was a BigInt TypeError); the connect-time
+    refresh now shows its error instead of swallowing it.
+  - **Drained pools** (shares 0) are hidden and `CREATE POOL` is offered again for that type (contract already allowed it).
+  - **Messages:** rows return `wallet.msg` (13 rows) so "HP IS FULL ALREADY." / "WAIT, A TRANSACTION IS RUNNING." show instead
+    of a false "CONFIRM IN YOUR WALLET...". `useNft` re-checks the charm/biscuit cap when the burn confirms.
+  - **Font:** `'#'` and `'^'` glyphs added (token ids and the scroll-up hint rendered blank).
+- Refuted (kept): cursor index shifting after the WITHDRAW row disappears — a second E only opens another wallet confirm.
+- Alternatives rejected: forbidding mint of crafted gear (kills the "crafter mints" request); reconciling unknown txs by
+  tx hash on the next refresh (more state; the no-refund rule already prevents duplication).
+- Process: practice 25 "economy review lens: for every item path ask *can one input produce two outputs?*" (craft + mint was
+  invisible to unit tests because each half was correct alone).
+- Verify: sim `✓ 0 failed` seeds 4242/7 — 73 PASS (incl. anvil e2e); `forge test` 20 passed; `ALL CHECKS PASSED`.
+- Commit: this commit.
+
 ### D-020 · 2026-11-07 · Phase 3 IT-6: survival tests, bag slots + materials, death empties the bag, player README
 - Feature: closes the Phase 3 acceptance list. The bag now shows `BAG n/12 SLOTS` + whiskers and a MATERIALS row. **Balance
   decision:** carried food is lost on death (like materials), so preserving fish as NFTs (safe on chain) has a real purpose.

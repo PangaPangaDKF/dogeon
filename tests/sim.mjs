@@ -63,7 +63,7 @@ globalThis.__api = {
   addToBag, bagCount, bagRemove, invMenu,
   tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
   chainData, chainReady, refreshChain, mintNft, useNft, listNft, buyListing, delistNft, addLp, buyPool, sellPool, removeLp, withdrawProceeds,
-  swordLv, armorLv, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id,
+  swordLv, armorLv, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
 };`;
 
 function boot(seed, opts) {
@@ -476,7 +476,7 @@ scenario('fishing review fixes (D-017): tiers, facing, moving, reachable ponds, 
 // Fake EIP-1193 provider. `known` = wallet already has the chain; `reject` = user clicks Reject on connect.
 function mockEth({ known = false, reject = false } = {}) {
   let chain = '0x1';
-  const m = { calls: [], handlers: {}, added: null,
+  const m = { calls: [], handlers: {}, added: null, callResult: '0x', sent: [], receipt: 'ok',
     on(ev, fn) { m.handlers[ev] = fn; },
     async request({ method, params }) {
       m.calls.push(method);
@@ -488,6 +488,9 @@ function mockEth({ known = false, reject = false } = {}) {
         case 'eth_chainId': return chain;
         case 'eth_getBalance': return '0x' + (42069n * 10n ** 15n).toString(16); // 42.069 DOGE
         case 'wallet_revokePermissions': return null;
+        case 'eth_call': return m.callResult; // '0x' = no contract at that address
+        case 'eth_sendTransaction': m.sent.push(params[0]); return '0x' + 'ab'.repeat(32);
+        case 'eth_getTransactionReceipt': if (m.receipt === 'throw') throw { code: -32603, message: 'rpc hiccup' }; return { status: m.receipt === 'revert' ? '0x0' : '0x1' };
       }
       throw new Error('unexpected wallet method ' + method);
     } };
@@ -575,11 +578,11 @@ await scenarioAsync('chain e2e on local anvil: mint, equip, eat, list/buy, LP po
   pass('e2e connect', `anvil ${api.wallet.addr.slice(0, 8)}.., fee ${Number(api.chainData.fee) / 1e18} DOGE, ${inv0} NFTs held`);
 
   // forge credit -> mint hammer lv4 NFT -> owning it raises the effective hammer level
-  P.sword = 1; api.addCredit(1, 4);
+  P.sword = 4; api.addCredit(1, 4); // as if just forged: minting moves it on chain (P.sword -> 3)
   await api.mintNft(1, 4, 'credit'); await idle(api);
   const ham = api.chainData.inv.filter(it => it.type === 1 && it.level === 4).pop();
-  if (!ham || P.credits['1:4'] !== 0 || api.swordLv() !== 4) fail('e2e mint+equip', `ham=${JSON.stringify(ham)} credit=${P.credits['1:4']} swordLv=${api.swordLv()} msg=${api.wallet.msg}`);
-  else pass('e2e mint+equip', `HAMMER LV4 #${ham.id} minted, effective hammer LV${api.swordLv()} with P.sword=1`);
+  if (!ham || P.credits['1:4'] !== 0 || P.sword !== 3 || api.swordLv() !== 4) fail('e2e mint+equip', `ham=${JSON.stringify(ham)} credit=${P.credits['1:4']} swordLv=${api.swordLv()} msg=${api.wallet.msg}`);
+  else pass('e2e mint+equip', `HAMMER LV4 #${ham.id} minted, off-chain hammer LV${P.sword}, effective LV${api.swordLv()} from the NFT`);
 
   // preserve 3 raw fish from the bag as NFTs; eat one (burn) for HP
   api.addToBag('raw_fish', 3);
@@ -595,7 +598,7 @@ await scenarioAsync('chain e2e on local anvil: mint, equip, eat, list/buy, LP po
   // list the hammer -> it stops counting as equipped -> buy it back -> proceeds -> withdraw
   await api.listNft(ham, 1); await idle(api);
   const lst = api.chainData.listings.find(l => l.id === ham.id);
-  const otherHam = Math.max(1, ...api.chainData.inv.filter(it => it.type === 1).map(it => it.level)); // other hammers this account may hold
+  const otherHam = Math.max(P.sword, ...api.chainData.inv.filter(it => it.type === 1).map(it => it.level)); // other hammers this account may hold
   if (!lst || !lst.mine || api.swordLv() !== otherHam || api.chainData.inv.some(it => it.id === ham.id)) fail('e2e list', `listing=${JSON.stringify(lst, big)} swordLv=${api.swordLv()} msg=${api.wallet.msg}`);
   else pass('e2e list', `#${ham.id} listed for 1 DOGE, escrowed -> effective hammer LV${otherHam} (best still held)`);
   const pr0 = api.chainData.proceeds;
@@ -632,7 +635,7 @@ await scenarioAsync('chain e2e on local anvil: mint, equip, eat, list/buy, LP po
   api.marketMenu(api.get().NPCS.find(n => n.id === 'bank')); await idle(api); await flush();
   for (let i = 0; i < 50 && api.wallet.busy; i++) await flush();
   const rows = api.get().ui.build();
-  if (!rows.some(r => /POOL RAW FISH/.test(r.label)) || rows.some(r => r.label.length > 58)) fail('e2e market menu', rows.map(r => r.label).join(' | '));
+  if (!rows.some(r => /POOL RAW FISH|CREATE POOL: [0-9]+ RAW FISH/.test(r.label)) || rows.some(r => r.label.length > 58)) fail('e2e market menu', rows.map(r => r.label).join(' | '));
   else pass('e2e market menu', `${rows.length} rows, longest ${Math.max(...rows.map(r => r.label.length))} chars`);
   for (let f = 0; f < 5; f++) api.step(DT); // render the menu (scroll window) a few frames
 });
@@ -713,6 +716,72 @@ scenario('death empties the bag (carried food), keeps pooled DOGE', () => {
   for (let f = 0; f < 60 * 3; f++) api.step(DT);
   const p = api.get().P;
   if (p.bag.length || p.bank !== 50) fail('death bag', `bag ${p.bag.length} slots, bank ${p.bank}`); else pass('death bag', 'bag emptied, pool safe');
+});
+
+// ---------- D-021: IT-5 review fixes (mock wallet on the local dev chain, no anvil needed) ----------
+await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account switch, 0x, drained pool, font', async () => {
+  const eth = mockEth({ known: true });
+  const api = boot(SEED + 27, { eth, search: '?chain=local', realTimers: true }); startGame(api);
+  if (!('#' in api.FONT) || !('^' in api.FONT)) fail('font', "'#' or '^' glyph missing"); else pass('font', "'#' and '^' glyphs exist");
+  openSphinx(api); api.press('e'); api.step(DT); await flush(); await idle(api);
+  for (let i = 0; i < 20 && !/NO CONTRACT/.test(api.wallet.msg); i++) await flush();
+  if (!api.chainReady() || !/NO CONTRACT/.test(api.wallet.msg)) fail('0x contract', `ready=${api.chainReady()} msg="${api.wallet.msg}"`);
+  else pass('0x contract', `"${api.wallet.msg}"`);
+  api.get().ui = null;
+  const P = api.get().P, cd = api.chainData;
+  cd.loaded = true; cd.fee = 0n; // pretend the reads worked; txs go to the mock
+
+  // craft BONE CHARM -> +15 max HP + credit; minting it moves the charm on chain (stat removed) => one craft = one charm
+  P.orb = 2; P.scrap = 1;
+  api.shopMenu(api.get().NPCS.find(n => n.id === 'merchant'));
+  const craft = api.get().ui.build().find(r => /^BONE CHARM/.test(r.label)); craft.act();
+  if (P.hpUps !== 1 || P.maxHp !== 75 || !api.creditOk(5, 1)) throw new Error(`craft: hpUps ${P.hpUps} maxHp ${P.maxHp}`);
+  const mintRow = api.get().ui.build().find(r => /^MINT BONE CHARM NFT/.test(r.label));
+  if (!mintRow) throw new Error('no MINT BONE CHARM row: ' + api.get().ui.build().map(r => r.label).join(' | '));
+  mintRow.act(); await idle(api);
+  if (P.hpUps !== 0 || P.maxHp !== 60 || P.credits['5:1'] !== 0 || eth.sent.length !== 1) fail('charm dupe', `hpUps ${P.hpUps} maxHp ${P.maxHp} credit ${P.credits['5:1']} txs ${eth.sent.length}`);
+  else pass('charm dupe', 'mint moved the charm on chain: +15 max HP removed off-chain, credit spent');
+
+  // hammer: crafted LV2 then minted -> off-chain hammer drops to LV1 (the NFT now carries LV2)
+  P.sword = 1; P.steel = 2; P.scrap = 1; api.get().ui = null;
+  api.shopMenu(api.get().NPCS.find(n => n.id === 'merchant'));
+  api.get().ui.build().find(r => /^HAMMER LV2/.test(r.label)).act();
+  api.get().ui.build().find(r => /^MINT HAMMER LV2 NFT/.test(r.label)).act(); await idle(api);
+  if (P.sword !== 1 || api.creditOk(1, 2)) fail('hammer dupe', `P.sword ${P.sword} creditOk ${api.creditOk(1, 2)}`);
+  else pass('hammer dupe', 'minted HAMMER LV2: off-chain hammer back to LV1, no second mint');
+
+  // tx broadcast but receipt unknown -> NO refund (the mint may still land); a mined revert -> refund
+  api.get().ui = null; eth.receipt = 'throw'; api.addToBag('raw_fish', 1);
+  await api.mintNft(3, 1, 'raw_fish'); await idle(api);
+  if (api.bagCount('raw_fish') !== 0 || !/UNKNOWN/.test(api.wallet.msg)) fail('unknown outcome', `bag ${api.bagCount('raw_fish')} msg "${api.wallet.msg}"`);
+  else pass('unknown outcome', `no refund: "${api.wallet.msg}"`);
+  eth.receipt = 'revert'; api.addToBag('raw_fish', 1);
+  await api.mintNft(3, 1, 'raw_fish'); await idle(api);
+  if (api.bagCount('raw_fish') !== 1) fail('revert refund', `bag ${api.bagCount('raw_fish')} msg "${api.wallet.msg}"`);
+  else pass('revert refund', 'reverted mint -> fish back in the bag');
+  eth.receipt = 'ok';
+
+  // row messages: a synchronous refusal is shown, not "confirm in wallet"
+  cd.inv = [{ id: 9, type: 3, level: 1 }]; P.hp = P.maxHp;
+  api.invMenu(); const eat = api.get().ui.build().find(r => /^NFT #9 RAW FISH/.test(r.label));
+  const msg = eat && eat.act();
+  if (msg !== 'HP IS FULL ALREADY.') fail('sync msg', `got "${msg}"`); else pass('sync msg', '"HP IS FULL ALREADY." shown, no wallet prompt');
+  api.get().ui = null;
+
+  // drained pool (shares 0) is hidden and can be created again
+  cd.pools = [{ key: 769n, type: 3, level: 1, doge: 0n, n: 0, shares: 0n, mine: 0n, buy: 0n, sell: 0n }];
+  api.marketMenu(api.get().NPCS.find(n => n.id === 'bank'));
+  const rows = api.get().ui.build().map(r => r.label);
+  if (!rows.some(l => /^CREATE POOL: 1 RAW FISH/.test(l)) || rows.some(l => /^POOL RAW FISH/.test(l))) fail('drained pool', rows.join(' | '));
+  else pass('drained pool', 'empty pool hidden, CREATE POOL offered again');
+  api.get().ui = null; await flush();
+
+  // switching accounts drops the old account's NFTs (no borrowed gear)
+  cd.inv = [{ id: 1, type: 1, level: 4 }]; cd.loaded = true; P.sword = 1;
+  const before = api.swordLv();
+  eth.handlers.accountsChanged(['0x00000000000000000000000000000000000000b0']); await flush();
+  if (before !== 4 || api.swordLv() !== 1 || cd.inv.length) fail('account switch', `before ${before} after ${api.swordLv()} inv ${cd.inv.length}`);
+  else pass('account switch', 'new account: old NFTs dropped, hammer LV4 -> LV1');
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);
