@@ -35,6 +35,35 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-016 · 2026-11-07 · Phase 3 IT-3: real wallet connect on DogeOS Chikyū (no library)
+- Feature: the Sphinx DEX's first row is now a real wallet. CONNECT asks the wallet for accounts, switches to DogeOS Chikyū
+  (adds it on 4902), shows the short address and test-DOGE balance, follows account/network changes, and can DISCONNECT.
+  Without a wallet the row reads "WALLET: OFFLINE (SIMULATED DOGE ONLY)" and the game is unchanged.
+- Reference: user request ("add the wallet connect and after connect you add the dogeos testnet rpc to the wallet");
+  `prompts/PHASE3_BRIEF.md` G5, ambiguity 8. Chain verified live 2026-11-07: `eth_chainId` on `https://rpc.testnet.dogeos.com` →
+  `0x5fdaf3`, blocks advancing; Blockscout explorer and faucet return 200. Sources: chainlist.org/chain/6281971,
+  github.com/ethereum-lists/chains/pull/8860.
+- Files: `index.html`, `tests/sim.mjs` (+3 async scenarios, `mockEth()`), `tests/serve.mjs` (new), `CLAUDE.md`, `CONTEXT.md`,
+  `MASTER_PROMPT.md` (§F templates C7/C8, §G feature ledger), `prompts/SESSION_PROMPT.md` v1.4, `dogeon-game` skill v1.4.
+- Code (`index.html`, new section `CHAIN` before UI):
+  - `CHAIN{id:'0x5fdaf3',name,rpc,explorer,faucet}`, `wallet{connected,addr,bal,chainOk,busy,msg,hooked}`, `eth()`, `shortAddr()`,
+    `walletErr()` (4001 rejected, -32002 pending), `setWalletMsg()` (writes into the open Sphinx menu, marked `ui.chain`).
+  - `switchChain()` → `wallet_switchEthereumChain`, on any non-4001 error → `wallet_addEthereumChain` (DOGE, 18 decimals, rpc, explorer).
+  - `refreshBal()` → `eth_getBalance` → BigInt → 4-decimal DOGE. `hookWallet()` → `accountsChanged` / `chainChanged`.
+  - `connectWallet()`, `disconnectWallet()` (local clear + best-effort `wallet_revokePermissions`), `walletRows()`.
+  - `bankMenu()`: row 0 = `...walletRows()` (one row, so SWAP stays row 1); DISCONNECT row before LEAVE when connected.
+  - HUD camp hint shows `SPHINX=WALLET` or `CHAIN 0x12..abcd`; title line mentions the Sphinx wallet.
+- Why: the user wants real testnet transactions; this is the safe base for IT-4/IT-5 (mint/list/buy).
+- Alternatives rejected: ethers.js v6 from CDN (brief G5) — not needed: connect/switch/balance are plain EIP-1193 calls and the
+  IT-5 contract calls can use precomputed selectors (`cast sig`), so the game stays zero-dependency and works with the CDN blocked;
+  WalletConnect — needs a project id + network relay; RPC reads via `fetch` — breaks the "no network from the game" rule, the wallet
+  already proxies reads.
+- Process: user said "skip anything that needs a wallet or a hand, keep going" → contracts are built and tested locally with Foundry,
+  deployment is left as a script + steps. Every feature now also goes into MASTER_PROMPT §G ledger (user rule).
+- Verify: `✓ 0 failed, 0 warnings (seed 4242)` — 34 PASS; `ALL CHECKS PASSED`. Manual: `node tests/serve.mjs` → http://localhost:8080 →
+  Sphinx → CONNECT WALLET → approve "add network" + "switch" in MetaMask → row shows address + DOGE.
+- Commit: this commit.
+
 ### D-015 · 2026-11-07 · Phase 3 IT-2: fishing, per-skill tiers, enemy pressure 22 / 3 s
 - Feature: fishing as the only way to heal above the 60% rest cap. Ponds sit in the dangerous field, so food costs risk.
 - Reference: user request ("add a fishing feature to be able to eat to get hp up but the trick is that it is hard to fish if you

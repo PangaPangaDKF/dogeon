@@ -489,6 +489,49 @@ function updEnemy(e,dt){
   if(!P.dead&&!inCamp&&overlap(e,P,2))hurtPlayer(e.state==='dash'?Math.round(e.def.dmg*1.4):e.def.dmg,e);
 }
 
+// ================= CHAIN (DogeOS Chikyu testnet, EIP-1193, no library) =================
+// Verified 2026-11-07: eth_chainId on CHAIN.rpc returns 0x5fdaf3 (6281971). The game makes NO network call
+// itself: everything goes through the player's wallet (window.ethereum), and only after they press CONNECT.
+const CHAIN={id:'0x5fdaf3',name:'DogeOS Chikyu Testnet',rpc:'https://rpc.testnet.dogeos.com',explorer:'https://blockscout.testnet.dogeos.com',faucet:'FAUCET.TESTNET.DOGEOS.COM'};
+const wallet={connected:false,addr:null,bal:null,chainOk:false,busy:false,msg:'',hooked:false};
+function eth(){try{return (typeof window!=='undefined'&&window.ethereum)||null;}catch(e){return null;}}
+const shortAddr=a=>a?a.slice(0,6)+'..'+a.slice(-4):'';
+function walletErr(err){const c=err&&err.code;if(c===4001)return 'YOU REJECTED IT IN THE WALLET.';if(c===-32002)return 'WALLET REQUEST PENDING. OPEN YOUR WALLET.';return 'WALLET ERROR: '+String((err&&err.message)||err).slice(0,40).toUpperCase();}
+function setWalletMsg(m){wallet.msg=m;if(ui&&ui.type==='menu'&&ui.chain)ui.msg=m;}
+async function switchChain(){
+  const e=eth();
+  try{await e.request({method:'wallet_switchEthereumChain',params:[{chainId:CHAIN.id}]});}
+  catch(err){
+    if(err&&err.code===4001)throw err;
+    // 4902 = chain unknown to the wallet (some wallets report it as -32603 or only in the message): add it, which also switches
+    await e.request({method:'wallet_addEthereumChain',params:[{chainId:CHAIN.id,chainName:CHAIN.name,nativeCurrency:{name:'Dogecoin',symbol:'DOGE',decimals:18},rpcUrls:[CHAIN.rpc],blockExplorerUrls:[CHAIN.explorer]}]});
+  }
+  wallet.chainOk=String(await e.request({method:'eth_chainId'})).toLowerCase()===CHAIN.id;
+}
+async function refreshBal(){if(!wallet.addr||!wallet.chainOk){wallet.bal=null;return;}const h=await eth().request({method:'eth_getBalance',params:[wallet.addr,'latest']});wallet.bal=Number(BigInt(h)/10n**14n)/1e4;}
+function hookWallet(e){if(wallet.hooked||!e.on)return;wallet.hooked=true;
+  e.on('accountsChanged',a=>{if(!a||!a.length)disconnectWallet('WALLET DISCONNECTED.');else{wallet.addr=a[0];refreshBal().catch(()=>{});}});
+  e.on('chainChanged',id=>{wallet.chainOk=String(id).toLowerCase()===CHAIN.id;refreshBal().catch(()=>{});if(!wallet.chainOk)setWalletMsg('WRONG NETWORK. PICK CONNECT TO SWITCH BACK.');});}
+async function connectWallet(){
+  const e=eth();if(!e){setWalletMsg('NO WALLET FOUND. GAME STILL WORKS OFFLINE.');return false;}
+  if(wallet.busy)return false;wallet.busy=true;setWalletMsg('CHECK YOUR WALLET...');
+  try{
+    const acc=await e.request({method:'eth_requestAccounts'});if(!acc||!acc.length)throw new Error('no account');
+    wallet.addr=acc[0];hookWallet(e);
+    await switchChain();await refreshBal();
+    wallet.connected=true;setWalletMsg(wallet.chainOk?'CONNECTED TO CHIKYU. SUCH CHAIN. WOW.':'CONNECTED, BUT ON THE WRONG NETWORK.');
+    return true;
+  }catch(err){setWalletMsg(walletErr(err));return false;}
+  finally{wallet.busy=false;}
+}
+function disconnectWallet(m){wallet.connected=false;wallet.addr=null;wallet.bal=null;wallet.chainOk=false;setWalletMsg(m||'DISCONNECTED. YOUR NFTS STAY ON CHAIN.');
+  const e=eth();if(e)e.request({method:'wallet_revokePermissions',params:[{eth_accounts:{}}]}).catch(()=>{});}
+function walletRows(){
+  if(!eth())return [{label:'WALLET: OFFLINE (SIMULATED DOGE ONLY)',act:()=>'NO WALLET. INSTALL METAMASK + OPEN VIA LOCALHOST.'}];
+  if(!wallet.connected)return [{label:wallet.busy?'CONNECTING... CHECK YOUR WALLET':'CONNECT WALLET (DOGEOS CHIKYU TESTNET)',act:()=>{connectWallet();return 'CHECK YOUR WALLET...';}}];
+  return [{label:wallet.chainOk?`WALLET ${shortAddr(wallet.addr)} ${wallet.bal==null?'?':wallet.bal} DOGE`:'WRONG NETWORK - SWITCH TO CHIKYU',act:()=>{(wallet.chainOk?refreshBal():switchChain().then(refreshBal)).then(()=>setWalletMsg(`${wallet.bal} TEST DOGE. FAUCET: ${CHAIN.faucet}`)).catch(err=>setWalletMsg(walletErr(err)));return 'REFRESHING...';}}];
+}
+
 // ================= UI (dialog / menus) =================
 function openDialog(npc,lines,onEnd){ui={type:'dialog',npc,pages:lines,idx:0,chars:0,onEnd};sfx(660,0.04,'square',0.03);}
 function openMenu(npc,title,build){ui={type:'menu',npc,title,build,sel:0,msg:''};}
@@ -521,13 +564,14 @@ function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
 function bankMenu(n){openMenu(n,'THE SPHINX DEX',()=>{
   const yld=Math.floor(P.bank*0.01);
   return[
-  {label:'--- WALLET (SIMULATED DOGEOS) ---',act:()=>`ADDR: DOGE...${Math.floor(Math.random()*9999).toString(16)} | BAL: ${P.doge} DOGE | POOL: ${P.bank} | NET: CHIKYU TESTNET`},
+  ...walletRows(), // real wallet on DogeOS Chikyu (D-016); no wallet -> simulated label
   {label:`SWAP ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'NO WHISKERS TO SWAP.';P.doge+=P.whisk*3;const m=`SWAPPED ${P.whisk} WHISKERS FOR ${P.whisk*3} DOGE.`;P.whisk=0;return m;}},
   {label:`BUY BONE CHARM (50 DOGE)`,act:P.hpUps>=3?()=>'MAX CHARMS ALREADY.':()=>{if(P.doge<50)return 'NOT ENOUGH DOGE.';P.doge-=50;P.hpUps++;P.maxHp+=15;return 'BONE CHARM BOUGHT! +15 MAX HP.';}},
   {label:`BUY MOON BISCUIT (40 DOGE)`,act:P.mpUps>=2?()=>'MAX BISCUITS ALREADY.':()=>{if(P.doge<40)return 'NOT ENOUGH DOGE.';P.doge-=40;P.mpUps++;P.maxMp+=10;return 'MOON BISCUIT BOUGHT! +10 MAX MP.';}},
   {label:`ADD TO POOL (${P.doge} DOGE AVAIL)`,act:()=>{if(!P.doge)return 'NO DOGE TO ADD.';P.bank+=P.doge;P.doge=0;return 'POOLED. SAFE ON DEATH. EARNS YIELD.';}},
   {label:`REMOVE FROM POOL (${P.bank}+${yld} YIELD)`,act:()=>{if(!P.bank)return 'POOL IS EMPTY.';const t=P.bank+yld;P.doge+=t;P.bank=0;return `WITHDREW ${t} DOGE (${yld} YIELD). TO THE MOON.`;}},
-  {label:'LEAVE',act:null}];})}
+  ...(wallet.connected?[{label:'DISCONNECT WALLET',act:()=>{disconnectWallet();return wallet.msg;}}]:[]),
+  {label:'LEAVE',act:null}];});ui.chain=true;}
 const DOGE_LORE=[
   'In the old days, one DOGE bought a whole tent. Now it buys a whisker.',
   'The first doge was mined on a cold winter night. Very genesis. Much wow.',
@@ -729,7 +773,7 @@ function drawHUD(){
   const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;
   text('DOGE $'+mkt.p.toFixed(3),168,3,'#f8d050');text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');
   text('QUEST',222,3,'#ffe040');text(questText(),222,10,'#fff');
-  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':'SAFE CAMP - HOLD R TO REST  I=BAG';textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
+  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?'CHAIN '+shortAddr(wallet.addr)+'  R=REST  I=BAG':'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
 function drawUI(){
@@ -773,7 +817,7 @@ function drawTitle(){
   if(Math.floor(time*2.5)%2)textC('PRESS ENTER',W/2,162,'#ffffff',2);
   textC('WASD MOVE  SPACE SLASH  K BARK  F FISH  I BAG',W/2,190,'#a0b0e0');
   textC('E TALK  R REST  REST CAPS AT 60% HP - EAT FOOD!',W/2,199,'#a0b0e0');
-  textC('CLICK THE GAME FIRST IF KEYS DO NOTHING',W/2,212,'#606890');
+  textC('WALLET + DOGEOS TESTNET: TALK TO THE SPHINX. CLICK GAME IF KEYS FAIL',W/2,212,'#606890');
 }
 function render(){
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);

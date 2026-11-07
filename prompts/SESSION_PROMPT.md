@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 1.3 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 1.4 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -10,6 +10,8 @@ Version: 1.3 · 2026-11-07 · Changelog at the bottom. **Improve this file whene
 > 3. **Improve this prompt + the `dogeon-game` skill** (bump version, changelog line) with anything the feature taught.
 > 4. Update `CLAUDE.md` (code map + rules) and `CONTEXT.md` if architecture or rules changed.
 > 5. **Commit** (Conventional Commit) with a body listing files + what changed. One feature = one commit.
+> 6. **Ledger:** add the feature + its key code to `MASTER_PROMPT.md` §G (user rule, D-016).
+> If a step needs the user's wallet, key or hands (deploy, faucet, signing), skip it, leave a script + steps, and keep going.
 
 Paste block A at the start of a fresh Claude Code session, then add a task block from B.
 
@@ -70,7 +72,12 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 16. **Adversarial review before commit** — on ultracode sessions, run a small review → refute workflow on the diff and fix only
     verified findings (D-015).
 
+17. **Verify external facts live** — chain ids/RPCs from third-party lists were checked with a read-only `eth_chainId` curl
+    before shipping (D-016). Never trust a copied chain id.
+18. **Prefer the platform over a library** — EIP-1193 `request()` did everything ethers.js would have in IT-3.
+
 ## Changelog
+- 1.4 (2026-11-07) — RULE #1 step 6 (MASTER_PROMPT ledger) + "skip what needs the user's wallet"; practices 17-18 (D-016).
 - 1.3 (2026-11-07) — Practices 14-16 from IT-2 fishing (renames in tests, non-vacuous tests, review-then-refute before commit).
 - 1.2 (2026-11-07) — RULE #1 feature closeout (user). Practice 13: grep before naming new state (from D-014).
 - 1.1 (2026-11-07) — Added "prove bugs before reporting" after a false positive in the first review (D-005);

@@ -5,7 +5,7 @@ description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bi
 
 # DOGEON — game context skill
 
-Version: 1.3 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 1.4 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #1 (user):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
 improve `prompts/SESSION_PROMPT.md` + this skill → update `CLAUDE.md`/`CONTEXT.md` → commit. Never batch features.
@@ -35,6 +35,10 @@ or move cancels it · quest stages 0→4 · populations field 22 / ruins 6, refi
 controls WASD/Space-J/K-Q/E/R/I-Tab/F/Esc. Field names: `P.iT` = i-frames, `P.bag` = inventory (grep before naming new state).
 `tests/sim.mjs` enforces several of these automatically. When you add an invariant, add a check.
 **Tests:** a test for "X cancels Y" must first assert Y started (else it passes vacuously). When you rename state, grep `tests/` too.
+**Web3 rules (D-016):** wallet only via `window.ethereum` in the CHAIN section, only after CONNECT; no ethers.js, no fetch;
+every on-chain row has an offline label; async results go through `setWalletMsg()`; test with `mockEth()` in `tests/sim.mjs`.
+MetaMask needs http://localhost (`node tests/serve.mjs`). Anything needing the user's wallet/key (deploy, faucet) → skip, leave steps.
+**Feature ledger:** every feature also gets a row in `MASTER_PROMPT.md` §G (user rule).
 **Web3 refs (IT-3/IT-4):** user-supplied avaxskills.com index — use only chain-agnostic EVM skills (`evm-foundry`, `nft-basics`,
 `security`, `audit`, `testing`, `evm-wallet-integration`); DogeOS is not Avalanche, so ignore subnet/Warp/Fuji specifics.
 

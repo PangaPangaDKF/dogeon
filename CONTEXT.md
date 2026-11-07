@@ -24,9 +24,9 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 |------|-------|--------|
 | IT-0 | Phase 3 brief | ✅ `eaea704` |
 | IT-1 | Rest cap 60% + inventory bag (I/Tab) + skill-by-use | ✅ D-014 `a9fa508` |
-| IT-2 | Fishing: `T.WATER` ponds in field, F to fish (3–5 s bar, hit/move cancels), RAW FISH → bag, cook at fire; field pop 18→22, spawn 4s→3s | ✅ D-015 (see §3 for hash) |
-| IT-3 | Wallet: ethers v6 CDN `https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js`, `window.ethereum`, `wallet_addEthereumChain` DogeOS Chikyū, connect in Sphinx menu, graceful offline fallback | ⏭ NEXT |
-| IT-4 | `contracts/` Foundry: `DogeItems.sol` (ERC-721, `mint(to,itemType)` payable 0.1 DOGE fee) + `DogeDEX.sol` (`list/buy/delist` fixed price) | pending |
+| IT-2 | Fishing: `T.WATER` ponds in field, F to fish (3–5 s bar, hit/move cancels), RAW FISH → bag, cook at fire; field pop 18→22, spawn 4s→3s | ✅ D-015 `02adc15` (review fixes: D-017) |
+| IT-3 | Wallet: plain EIP-1193 `window.ethereum` (NO ethers.js, D-016), `wallet_switchEthereumChain`→`wallet_addEthereumChain` Chikyū, connect/balance/disconnect in Sphinx row 0, offline fallback | ✅ D-016 |
+| IT-4 ⏭ NEXT | `contracts/` Foundry (forge 1.5.1 installed at ~/.foundry/bin; build+test locally, deploy = user step): `DogeItems.sol` (ERC-721, `mint(to,itemType)` payable 0.1 DOGE fee) + `DogeDEX.sol` (`list/buy/delist` fixed price) | pending |
 | IT-5 | Wire: Mechanic forge → `mint()`; Sphinx → list/buy NFTs; no store until someone lists ("create LP"); wallet panel shows NFTs | pending |
 | IT-6 | Tests (rest cap, bag, skills, fishing, wallet-off fallback) + docs + balance | pending |
 
@@ -85,7 +85,8 @@ Published artifact: https://claude.ai/artifact/SyvKSryRuYi2yPtHtHrHyy
 ## 3. Commit history (newest first)
 
 ```
-(IT-2) feat: Phase 3 IT-2 fishing, per-skill tiers, enemy pressure — hash: see `git log -1 --grep IT-2`
+(IT-3) feat: Phase 3 IT-3 wallet connect — hash: `git log --oneline -3`
+02adc15 feat: Phase 3 IT-2 fishing, per-skill tiers, enemy pressure 22/3s
 c06128e docs: pin IT-1 commit hash in CONTEXT.md
 a9fa508 feat: Phase 3 IT-1 rest cap, inventory bag, skill-by-use
 eaea704 docs(prompt): Phase 3 brief "Doge Chain"
@@ -268,8 +269,9 @@ C:\Users\dulbi\dogeon\
 
 ## 9. What's next
 
-1. **IT-3 wallet** (see §0 table) → then IT-4 … IT-6, applying RULE #1 after each.
+1. **D-017 IT-2 review fixes** (pond RNG reshuffle, F while moving, facing-only, up-cast drawing, ninja near water, tests) → **IT-4 contracts** → IT-5 → IT-6, RULE #1 after each.
 2. Later / not requested yet: open issues I-3…I-9, polish.
 
-Versions now: SESSION_PROMPT v1.3 · dogeon-game skill v1.3 · PHASE3_BRIEF v1.0 · DECISIONS up to D-015. Tests: 26 PASS.
+Versions now: SESSION_PROMPT v1.4 · dogeon-game skill v1.4 · PHASE3_BRIEF v1.0 · DECISIONS up to D-016 · MASTER_PROMPT §F/§G added. Tests: 34 PASS.
+Run for wallets: `node tests/serve.mjs` → http://localhost:8080 (MetaMask does not inject into file://).
 Note: `bash tests/check.sh` can exceed 30 s on Windows — run with a 120 s timeout, or `node tests/sim.mjs` directly.

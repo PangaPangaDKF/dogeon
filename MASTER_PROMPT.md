@@ -158,3 +158,33 @@ List findings by severity. Fix only the critical ones, then give me a commit mes
 6. Ruins expansion: 3 rooms, a key item, a locked door, and a small puzzle (switch tiles).
 7. New enemies: Mage Cat (teleports, homing yarn ball) and Shield Cat (blocks frontal hits; attack from behind).
 8. Second region + second boss, and split into ES modules before it grows further.
+
+---
+
+## F. Phase 3 templates (web3 + survival)
+
+### C7. Web3 feature (wallet / chain)
+```
+Feature: <one sentence>. Chain: DogeOS Chikyu testnet (CHAIN in index.html, chainId 0x5fdaf3).
+Rules: talk to the wallet only through window.ethereum (EIP-1193) in the CHAIN section; no fetch/XHR/WebSocket in the game;
+nothing touches the network until the player presses CONNECT; every on-chain row has an offline fallback;
+async results land via setWalletMsg(); handle 4001 (rejected), -32002 (pending), 4902 (unknown chain).
+Test: add a mockEth() scenario in tests/sim.mjs (connect, reject, no wallet) before claiming done.
+```
+
+### C8. Solidity contract (contracts/, Foundry)
+```
+Contract: <name + one sentence>. Write it in contracts/src, tests in contracts/test (forge test must pass).
+Rules: Solidity ^0.8.24, no external imports unless vendored, checks-effects-interactions, pull payments or
+call{value} with success checks, events for every state change, custom errors, no owner backdoor on user funds.
+Deploying needs the user's funded key: never ask for or store a private key; leave a script + README steps instead.
+```
+
+## G. Feature ledger (every shipped feature, its code, and where it is logged)
+Update this table in the same commit as each feature (user RULE #1).
+
+| Iter | Feature | Key code (index.html unless noted) | Log |
+|---|---|---|---|
+| P3 IT-1 | Rest cap 60%, 12-slot bag (I/Tab), skill-by-use | `REST_CAP`, `BAG_SIZE`, `FOODS`, `addToBag/bagCount/bagRemove`, `invMenu()`, `P.skills`, `P.iT` (was `P.inv`) | D-014 |
+| P3 IT-2 | Fishing at 5 ponds, per-skill tiers, field pop 22 / spawn 3 s | `PONDS_EXTRA`, `SKILL_THRESH{combat,fishing,bark}`, `skillLv/skillMul(xp,kind)`, `FISH_MIN/MAX`, `waterAt/findWater/startFish/stopFish/updFish`, `drawFishing()`, `FIELD_POP/DUN_POP/SPAWN_EVERY` | D-015 |
+| P3 IT-3 | Real wallet connect + DogeOS Chikyu add/switch, balance, disconnect, offline fallback | CHAIN section: `CHAIN`, `wallet`, `eth()`, `connectWallet()`, `switchChain()`, `refreshBal()`, `hookWallet()`, `disconnectWallet()`, `walletRows()`, `setWalletMsg()`; Sphinx row 0; `tests/serve.mjs` (localhost) | D-016 |

@@ -35,8 +35,11 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 - Tiles are **16×16**. Characters are **16×20** sprites. The boss draws at 2×.
 - Audio: tiny WebAudio beeps via `sfx()`. Created on first key press.
 - Runs by opening `index.html` in a browser, or `npx serve .` / VS Code Live Server.
-- Must also run when published as a sandboxed single page: **no network calls, no `alert/confirm/prompt`,
-  no external images.** CDN scripts are allowed only if truly needed (prefer not).
+- Must also run when published as a sandboxed single page: **no network calls from game code, no `alert/confirm/prompt`,
+  no external images.** CDN scripts are allowed only if truly needed (prefer not — Phase 3 ships without ethers.js).
+- **Phase 3 web3 exception (D-016):** the game may talk to the player's wallet through `window.ethereum` (EIP-1193) in the
+  CHAIN section, and only after the player presses CONNECT. The wallet does all network traffic. No wallet = fully playable.
+  MetaMask does not inject into `file://` → run `node tests/serve.mjs` and open http://localhost:8080.
 - Phaser 3 was the original spec (see `docs/GDD.md` if present). The MVP deliberately uses vanilla
   Canvas for full pixel control and zero dependencies. Porting to Phaser is a separate, explicit task.
 
@@ -55,6 +58,7 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 | FX | `puff()` particles, `floater()` damage text, `toast()`, `shake()` |
 | COMBAT | `hurtPlayer()` (armor, i-frames, knockback, death, bear-market dmg boost), `respawn()` (death penalty: 50% DOGE + all whiskers + all materials), `attack()` hammer swing, `bark()` "WOW" projectile, `damageEnemy()` (uses `ai` field for knockback), `killEnemy()` (drops material via `e.def.mat` + quest counters + boss victory), `shootBone()` |
 | ENEMY AI | `updEnemy(e,dt)`: knockback → states `wander / chase / wind / dash`. Uses `e.def.ai||e.type` for behaviour: archer/frog kite + shoot, brute/bull wind up then dash, boss shoots spreads and summons below 50% HP |
+| CHAIN | DogeOS Chikyū via EIP-1193, no library: `CHAIN{id 0x5fdaf3, rpc, explorer, faucet}`, `wallet{connected,addr,bal,chainOk,busy,msg}`, `eth()`, `connectWallet()`, `switchChain()` (switch → add on error), `refreshBal()`, `hookWallet()` (accountsChanged/chainChanged), `disconnectWallet()`, `walletRows()` (Sphinx row 0), `setWalletMsg()` (async result → open menu with `ui.chain`) |
 | UI | `ui` is `null`, `{type:'dialog'}` or `{type:'menu'}`. `openDialog(npc, pages, onEnd)`, `openMenu(npc, title, buildFn)`, `talk()`, `shopMenu()` (forge: RECIPES burn materials), `bankMenu()` (Sphinx DEX: wallet, swap, buy, pool), `questTalk()` (Elder: market report + lore + quests), `invMenu()` (I/Tab: bag, eat, cook near fire, skills), `updateUI()` |
 | UPDATE | `update(dt)`: title → UI (pauses world) → death timer → rest → movement → attack/bark/talk → enemies → projectiles → items → respawn timer → camera |
 | RENDER | `drawTiles`, `drawChar` (shadow + sprite + tint), `drawFire`, `drawWorld` (y-sorted entities, "F" hint near water), `drawSlash`, `drawFishing` (line, float, catch bar), `drawHUD`, `box`, `drawUI`, `logo`, `drawTitle`, `render` |
@@ -82,6 +86,8 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
 - **DOGE Market:** price random-walks once per second; sentiment = price vs 30 s average. Bear: enemy dmg +50%, speed +15%, dark-red overlay. Bull: player dmg +50%, speed +10%.
 - **Economy:** whisker = 3 DOGE at the Sphinx (swap). Sphinx DEX: swap, buy items, pool/unpool DOGE. Mechanic forge: burn materials (ORB/SCRAP/HORN/STEEL) via RECIPES to craft hammer upgrades, armor, charms.
   Enemies drop materials: frog→ORB, ninja→SCRAP, bull→HORN, knight→STEEL; cats→WHISKERS; brutes→3 WHISKERS.
+- **Wallet:** Sphinx row 0 = CONNECT WALLET / `WALLET 0x12..ab N DOGE` / OFFLINE label. Never ask for or store a private key.
+  On-chain features are additive; the core loop never needs a wallet.
 - **NPCs:** Sphinx (bank) = DEX, Elder (quest) = market report + lore + quests, Mechanic (merchant) = forge. On pads N/W/E.
 - **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+40 DOGE) → 2 slay 3 brutes (+80 DOGE,
   opens ruins gate) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 DOGE).

@@ -30,13 +30,13 @@ function fakeCtx() {
   });
 }
 function fakeCanvas() { return { width: 0, height: 0, style: {}, getContext: () => fakeCtx(), addEventListener() {}, focus() {} }; }
-function makeSandbox() {
+function makeSandbox(opts = {}) {
   const listeners = {};
   const sb = {
     console, setTimeout: () => 0, clearTimeout() {},
     performance: { now: () => 0 },
     innerWidth: 960, innerHeight: 672,
-    window: {}, // no AudioContext -> sfx() hits its try/catch and stays silent
+    window: opts.eth ? { ethereum: opts.eth } : {}, // no AudioContext -> sfx() hits its try/catch and stays silent
     document: { getElementById: () => fakeCanvas(), createElement: () => fakeCanvas() },
     addEventListener: (type, fn) => { (listeners[type] ||= []).push(fn); },
     requestAnimationFrame: () => 0,
@@ -60,11 +60,11 @@ globalThis.__api = {
   ARMOR_RED, SWORD_DMG, CAMP, CX, CY,
   REST_CAP, SKILL_THRESH, skillLv, skillMul, BAG_SIZE, FOODS,
   addToBag, bagCount, bagRemove, invMenu,
-  tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt,
+  tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows,
 };`;
 
-function boot(seed) {
-  const { sb } = makeSandbox();
+function boot(seed, opts) {
+  const { sb } = makeSandbox(opts);
   vm.createContext(sb);
   // Deterministic Math.random so failures are reproducible with --seed.
   vm.runInContext(`(()=>{let a=${seed >>> 0};Math.random=function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};})();`, sb);
@@ -420,6 +420,77 @@ scenario('enemy pressure: field population and spawn timer', () => {
   if (api.FIELD_POP !== 22 || api.SPAWN_EVERY !== 3) fail('pressure consts', `FIELD_POP=${api.FIELD_POP} SPAWN_EVERY=${api.SPAWN_EVERY}, brief says 22 / 3 s`);
   else if (n !== api.FIELD_POP) fail('field pop', `${n} field enemies at start, expected ${api.FIELD_POP}`);
   else pass('field pop', `${n} field enemies, refill every ${api.SPAWN_EVERY}s`);
+});
+
+// ---------- Phase 3 IT-3: wallet on DogeOS Chikyu (D-016) ----------
+// Fake EIP-1193 provider. `known` = wallet already has the chain; `reject` = user clicks Reject on connect.
+function mockEth({ known = false, reject = false } = {}) {
+  let chain = '0x1';
+  const m = { calls: [], handlers: {}, added: null,
+    on(ev, fn) { m.handlers[ev] = fn; },
+    async request({ method, params }) {
+      m.calls.push(method);
+      switch (method) {
+        case 'eth_requestAccounts': if (reject) throw { code: 4001, message: 'User rejected the request.' };
+          return ['0xAbCdEf0123456789abcdef0123456789ABCDEF01'];
+        case 'wallet_switchEthereumChain': if (!known) throw { code: 4902, message: 'Unrecognized chain ID' }; chain = params[0].chainId; return null;
+        case 'wallet_addEthereumChain': known = true; m.added = params[0]; chain = params[0].chainId; return null;
+        case 'eth_chainId': return chain;
+        case 'eth_getBalance': return '0x' + (42069n * 10n ** 15n).toString(16); // 42.069 DOGE
+        case 'wallet_revokePermissions': return null;
+      }
+      throw new Error('unexpected wallet method ' + method);
+    } };
+  return m;
+}
+const flush = async () => { for (let i = 0; i < 10; i++) await new Promise(r => setImmediate(r)); };
+async function scenarioAsync(name, fn) {
+  console.log(`\n▶ ${name}`);
+  try { await fn(); } catch (err) { fail(name, err && err.stack ? err.stack.split('\n').slice(0, 3).join(' | ') : String(err)); }
+}
+function openSphinx(api) { const bank = api.get().NPCS.find(n => n.id === 'bank'); bank.met = true; api.talk(bank); return api.get().ui; }
+
+await scenarioAsync('wallet: no wallet -> offline label, game unaffected', async () => {
+  const api = boot(SEED + 17); startGame(api);
+  const ui = openSphinx(api), rows = ui.build();
+  if (!/OFFLINE/.test(rows[0].label)) fail('offline label', `row 0 = "${rows[0].label}"`);
+  else if (!/SWAP/.test(rows[1].label)) fail('offline layout', `SWAP moved: row 1 = "${rows[1].label}"`);
+  else pass('offline label', `"${rows[0].label}", SWAP still row 1`);
+  api.press('e'); api.step(DT); await flush();
+  if (api.wallet.connected) fail('offline connect', 'connected with no provider');
+  else pass('offline connect', `msg "${api.get().ui.msg}"`);
+});
+
+await scenarioAsync('wallet: connect adds + switches to Chikyu, shows address and balance', async () => {
+  const eth = mockEth();
+  const api = boot(SEED + 18, { eth }); startGame(api);
+  const ui = openSphinx(api);
+  if (!/CONNECT WALLET/.test(ui.build()[0].label)) throw new Error(`row 0 = "${ui.build()[0].label}"`);
+  api.press('e'); api.step(DT); await flush();
+  const w = api.wallet, a = eth.added;
+  if (!a || a.chainId !== '0x5fdaf3' || a.rpcUrls[0] !== 'https://rpc.testnet.dogeos.com' || a.nativeCurrency.decimals !== 18 || a.nativeCurrency.symbol !== 'DOGE')
+    fail('add chain', `wallet_addEthereumChain params wrong: ${JSON.stringify(a)}`);
+  else pass('add chain', `added ${a.chainName} ${a.chainId} after 4902`);
+  if (!w.connected || !w.chainOk || w.bal !== 42.069) fail('connect', `connected=${w.connected} chainOk=${w.chainOk} bal=${w.bal}`);
+  else pass('connect', `addr ${w.addr.slice(0, 6)}.., ${w.bal} DOGE`);
+  const rows = api.get().ui.build();
+  if (!/WALLET 0XABCD|WALLET 0xAbCd/i.test(rows[0].label) || !rows.some(r => r.label === 'DISCONNECT WALLET')) fail('wallet rows', rows.map(r => r.label).join(' | '));
+  else pass('wallet rows', `"${rows[0].label}" + DISCONNECT row`);
+  eth.handlers.chainChanged('0x1'); await flush();
+  if (w.chainOk) fail('chainChanged', 'still chainOk after switching to 0x1');
+  else pass('chainChanged', 'wrong network detected');
+  eth.handlers.accountsChanged([]); await flush();
+  if (w.connected) fail('accountsChanged', 'still connected after wallet locked');
+  else pass('accountsChanged', 'empty accounts -> disconnected');
+});
+
+await scenarioAsync('wallet: user rejects -> stays offline with a clear message', async () => {
+  const eth = mockEth({ reject: true });
+  const api = boot(SEED + 19, { eth }); startGame(api);
+  openSphinx(api); api.press('e'); api.step(DT); await flush();
+  const msg = api.get().ui && api.get().ui.msg;
+  if (api.wallet.connected || !/REJECTED/.test(msg || '')) fail('reject', `connected=${api.wallet.connected} msg="${msg}"`);
+  else pass('reject', `"${msg}"`);
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);
