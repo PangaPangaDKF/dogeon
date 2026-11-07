@@ -270,7 +270,7 @@ function shake(t){shakeT=Math.max(shakeT,t);}
 
 // ================= COMBAT =================
 function hurtPlayer(d,src){
-  if(P.inv>0||P.dead)return;
+  if(P.inv>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
   const dmg=Math.max(1,Math.round(d*(1-ARMOR_RED[P.armor])));
   P.hp-=dmg;P.inv=0.9;P.resting=false;
   const dx=P.x-src.x,dy=P.y-src.y,l=Math.hypot(dx,dy)||1;P.kbx=dx/l*190;P.kby=dy/l*190;
@@ -402,7 +402,7 @@ function update(dt){
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
   if(winT>0)winT-=dt;
   shakeT=Math.max(0,shakeT-dt);
-  if(ui){updateUI(dt);return;}
+  if(ui){updateParts(dt);updateUI(dt);return;} // particles keep living while the world pauses (I-2)
   updateParts(dt);
   if(P.dead){P.deathT-=dt;if(P.deathT<=0)respawn();updateCam(dt);return;}
   const inCamp=playerInCamp();
@@ -432,7 +432,7 @@ function update(dt){
     p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
     const tx=Math.floor(p.x/16),ty=Math.floor((p.y+4)/16);
     if(solidFor(tx,ty,{enemy:p.kind==='bone'})){p.life=0;puff(p.x,p.y,p.kind==='bone'?'#e0e0e0':'#ffe040',4);continue;}
-    if(p.kind==='bone'){if(!P.dead&&Math.abs(p.x-P.x)<P.hw+3&&Math.abs(p.y-(P.y-6))<10){hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy+6});p.life=0;}}
+    if(p.kind==='bone'){if(!P.dead&&!playerInCamp()&&Math.abs(p.x-P.x)<P.hw+3&&Math.abs(p.y-(P.y-6))<10){hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy+6});p.life=0;}}
     else{for(const e of enemies){if(e.dead||p.hits.has(e))continue;const ew=e.boss?14:8,eh=e.boss?20:11;if(Math.abs(p.x-e.x)<ew&&Math.abs(p.y-(e.y-(e.boss?14:6)))<eh){p.hits.add(e);damageEnemy(e,p.dmg,Math.sign(p.vx),Math.sign(p.vy));}}enemies=enemies.filter(e=>!e.dead);}
   }
   projs=projs.filter(p=>p.life>0);

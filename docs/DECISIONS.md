@@ -21,8 +21,8 @@ Severity: 🔴 breaks a design invariant · 🟠 real bug · 🟡 minor / edge c
 
 | # | Sev | Issue | Where | Proof |
 |---|---|---|---|---|
-| I-1 | 🔴 | An in-flight bone can hit the player standing just inside the camp gap. Its tile check uses the bone's tile, but its hitbox is 8 px wide, and `hurtPlayer` has no camp guard. | `index.html:435`, `hurtPlayer` | Proven: sim WARN "camp gap bone" |
-| I-2 | 🟠 | `parts[]` grows without limit while a dialog/menu is open. `drawFire()` (render) keeps pushing particles but `update()` returns before `updateParts()`. Embers also freeze mid-air. | `:405`, `:472` | Proven: sim WARN "particles during UI" (+535 in 30 s) |
+| ~~I-1~~ | ✅ | **Fixed in D-007.** An in-flight bone can hit the player standing just inside the camp gap. Its tile check uses the bone's tile, but its hitbox is 8 px wide, and `hurtPlayer` has no camp guard. | `index.html:435`, `hurtPlayer` | Proven: sim WARN "camp gap bone" |
+| ~~I-2~~ | ✅ | **Fixed in D-007.** `parts[]` grows without limit while a dialog/menu is open. `drawFire()` (render) keeps pushing particles but `update()` returns before `updateParts()`. Embers also freeze mid-air. | `:405`, `:472` | Proven: sim WARN "particles during UI" (+535 in 30 s) |
 | I-3 | 🟡 | Boss-summoned alleys (`zone:'boss'`) aggro anywhere on the map with no chase range, and they're never culled except on death/respawn. | `:320` | Code reading |
 | I-4 | 🟡 | Spawns need ≥170 px from the player, but the view half-diagonal is ~195 px, so cats can pop in at screen corners. | `:233` | Geometry |
 | I-5 | 🟡 | On the title screen, `updateParts(1/60)` runs inside render, and the fire spawns particles per render frame. On 120/144 Hz screens both run faster/denser. | `:550`, `:472` | Code reading |
@@ -34,6 +34,13 @@ Severity: 🔴 breaks a design invariant · 🟠 real bug · 🟡 minor / edge c
 When an issue is fixed: strike it here, link the D-entry, and promote its sim WARN to a FAIL.
 
 ---
+
+### D-007 · 2026-11-07 · Fix I-1 (bone hits inside camp) and I-2 (particle leak during UI)
+- What: Bone collision skips the player when `playerInCamp()`. `hurtPlayer()` also returns early in camp, so no future damage source can break the sanctuary. `update()` keeps calling `updateParts(dt)` while a dialog or menu is open.
+- Why: Phase 2 (IT-1) must start from a safe camp. The sanctuary is a design pillar.
+- Tool: Claude Code (Opus 5.5), `tests/sim.mjs`. Both WARNs are promoted to `fail()`.
+- Alternatives rejected: Shrinking the bone hitbox. That only fixes this one projectile. The `hurtPlayer` guard fixes the whole class of bugs.
+- Verify: `0 failed, 0 warnings (seed 4242)`.
 
 ### D-006 · 2026-11-07 · First architecture review (kickoff prompt §B)
 - What: Reviewed `index.html` end to end. Logged issues I-1…I-9 above. Proved I-1 and I-2 with simulation scenarios.

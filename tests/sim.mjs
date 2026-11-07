@@ -205,7 +205,7 @@ scenario('world pauses cleanly while a dialog is open', () => {
   const p0 = api.get().parts.length;
   for (let f = 0; f < 60 * 30; f++) api.step(DT); // 30 s reading a dialog
   const grown = api.get().parts.length - p0;
-  if (grown > 200) warn('particles during UI', `parts[] grew by ${grown} in 30 s with a dialog open (drawFire pushes, updateParts is skipped)`);
+  if (grown > 200) fail('particles during UI', `parts[] grew by ${grown} in 30 s with a dialog open (drawFire pushes, updateParts is skipped)`);
   else pass('particles during UI', `parts[] stable (+${grown})`);
 });
 
@@ -220,7 +220,7 @@ scenario('in-flight bone vs player standing just inside the camp gap', () => {
   const hp0 = g.P.hp;
   g.projs.push({ x: g.P.x - 40, y: g.P.y - 6, vx: 95, vy: 0, life: 2.6, kind: 'bone', dmg: 5 });
   for (let f = 0; f < 60; f++) api.step(DT);
-  if (api.get().P.hp < hp0) warn('camp gap bone', `bone hit the player inside camp (hp ${hp0} -> ${api.get().P.hp}); bone hitbox reaches past the camp tile check`);
+  if (api.get().P.hp < hp0) fail('camp gap bone', `bone hit the player inside camp (hp ${hp0} -> ${api.get().P.hp}); bone hitbox reaches past the camp tile check`);
   else pass('camp gap bone', 'bone stopped at the camp edge');
 });
 
