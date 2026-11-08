@@ -147,6 +147,28 @@ SPR.sage=buildChar({head:'dog',pal:{...basePal,F:'#a09890',C:'#d0ccc4',K:'#d0ccc
       rect(g,11,7,3,2,Gl);px(g,12,7,Gf);
       rect(g,14,5,1,15,Cn);rect(g,13,4,3,2,Cn);}
     else{rect(g,1,5,1,15,Cn);rect(g,0,4,3,2,Cn);}}});
+// ---- Phase 5 faction trainers (D-028): one Shibe per class, standing in the safe camp ----
+// Warrior (Demolition Dogs): crimson tabard, steel pauldron, red headband
+SPR.tWarrior=buildChar({head:'dog',pal:{...basePal,F:'#e8922c',C:'#fbe8c4',K:'#fbe8c4',T:'#8a1f24',A:'#d84038',B:'#4a4a54',L:'#5a1418'},
+  acc(g,d){const St='#b8bcc8',Sd='#787c88',Rb='#e02828';
+    rect(g,4,3,8,1,Rb); // red headband across the brow
+    if(d==='down'){rect(g,10,6,5,3,St);rect(g,10,6,5,1,Sd);rect(g,12,9,2,2,Sd);}       // right steel pauldron
+    else if(d==='right'){rect(g,10,5,5,3,St);rect(g,10,5,5,1,Sd);}
+    else{rect(g,1,6,5,3,St);rect(g,1,6,5,1,Sd);}}});
+// Archer (Kernel Crew): forest hood + cloak, a bow slung at the side
+SPR.tArcher=buildChar({head:'dog',pal:{...basePal,F:'#e8922c',C:'#fbe8c4',K:'#fbe8c4',T:'#1f5a34',A:'#49b86a',B:'#3a2a18',L:'#153f24'},
+  acc(g,d){const Hd='#17432a',Hl='#2a7a46',Bw='#caa060';
+    if(d==='down'){rect(g,2,2,12,3,Hd);rect(g,3,1,10,1,Hl);px(g,4,3,'#0e2a1a');px(g,11,3,'#0e2a1a');
+      for(let y=4;y<15;y++)px(g,0,y,Bw);px(g,1,4,Bw);px(g,1,14,Bw);}                      // bow at the left
+    else if(d==='right'){rect(g,3,2,11,3,Hd);rect(g,4,1,8,1,Hl);for(let y=5;y<14;y++)px(g,2,y,Bw);}
+    else{rect(g,2,2,12,3,Hd);rect(g,3,1,10,1,Hl);for(let y=4;y<15;y++)px(g,15,y,Bw);}}});
+// Healer (Barkitects): white-blue robe, a soft halo and a mender's staff
+SPR.tHealer=buildChar({head:'dog',pal:{...basePal,F:'#e8922c',C:'#fbe8c4',K:'#fbe8c4',T:'#e8edf4',A:'#4aa8e0',B:'#b0c0d0',L:'#9fb4c8'},
+  acc(g,d){const St='#d0dae8',Gl='#9ff0ff',Pl='#50e0b0';
+    const staff=x=>{rect(g,x,4,1,15,St);px(g,x-1,3,Pl);px(g,x+1,3,Pl);px(g,x,2,Pl);px(g,x,4,Pl);px(g,x,3,'#d8fff0');};
+    if(d==='down'){px(g,7,1,Gl);px(g,8,1,Gl);px(g,6,2,Gl);px(g,9,2,Gl);staff(14);}        // halo + staff
+    else if(d==='right'){px(g,7,1,Gl);px(g,8,1,Gl);staff(13);}
+    else{px(g,7,1,Gl);px(g,8,1,Gl);staff(1);}}});
 const catPal={O:'#120c16',E:'#120c16',N:'#e06080',P:'#e08090',W:'#e0e0e8',R:'#ff3030'};
 SPR.alley=buildChar({head:'cat',pal:{...catPal,F:'#7a7a8e',C:'#c8c8d6',K:'#7a7a8e',T:'#8a2828',A:'#d0d0d0',B:'#3a2a2a',L:'#2a2a30'},
   acc(g,d){if(d==='down'){rect(g,13,13,1,4,'#d8e0f0');px(g,13,12,'#6a4a2a');}else if(d==='right'){rect(g,11,14,4,1,'#d8e0f0');px(g,10,14,'#6a4a2a');}}});
@@ -273,6 +295,7 @@ const CAMP={x0:33,y0:27,x1:47,y1:41};
 const FY=CY+4,MOS_Y=CY-1; // brazier row, coin mosaic centre row
 const PADS=[[CX,CAMP.y0+2],[CAMP.x0+3,CY],[CAMP.x1-3,CY]]; // N, W, E NPC pads
 const PADS2=[[CX-3,FY],[CX+3,FY],[CX+3,CY-3]]; // Phase 4 partner NPCs: beside the fire (W, E) and next to the Sphinx (D-024)
+const PADS3=[[CX-4,CAMP.y1-1],[CX+4,CAMP.y1-1],[CX,CAMP.y0+4]]; // Phase 5 faction trainers: warrior + archer flank the south gate, healer by the hearth (D-028)
 const DUN={x0:26,y0:2,x1:54,y1:17};
 const GATE_ROW=9;
 const PONDS_EXTRA=[[54,25,3.5,2.5],[24,53,4,2.5]]; // [cx,cy,rx,ry] tiles: NE of the camp fence (outside it), south-west field
@@ -304,7 +327,7 @@ function genMap(){
   for(const d of [-2,2]){setT(CX+d,CAMP.y0,T.DOOR);setT(CX+d,CAMP.y1,T.DOOR);setT(CAMP.x0,CY+d,T.DOOR);setT(CAMP.x1,CY+d,T.DOOR);}
   for(const [x,y] of [[CAMP.x0+2,CAMP.y0+2],[CAMP.x1-2,CAMP.y0+2],[CAMP.x0+2,CAMP.y1-2],[CAMP.x1-2,CAMP.y1-2]])setT(x,y,T.TENT);
   for(const [x,y] of [[CX-3,CY-4],[CX+3,CY-4],[CX-3,CY+2],[CX+3,CY+2]])setT(x,y,T.CRYSTAL);
-  for(const [x,y] of [...PADS,...PADS2])setT(x,y,T.PAD);
+  for(const [x,y] of [...PADS,...PADS2,...PADS3])setT(x,y,T.PAD);
   setT(CX,FY,T.FIRE);
   // ruins
   for(let y=DUN.y0;y<=DUN.y1;y++)for(let x=DUN.x0;x<=DUN.x1;x++){const edge=x===DUN.x0||x===DUN.x1||y===DUN.y0||y===DUN.y1||y===DUN.y0+1;setT(x,y,edge?T.WALL:T.DFLOOR);}
@@ -386,17 +409,42 @@ const ETYPES={
   boss:{hp:320,spd:38,dmg:12,drop:0,hw:10,hh:7,chase:999,spr:'boss',boss:true}
 };
 let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,scene='title',winT=0;
+// ---- Phase 5 classes / professions (D-028). id matches DogeProfession: 1 warrior, 2 archer, 3 healer ----
+// spd/dmg/armor are multipliers/adds applied at use sites (classSpd/classDmg/classArmor); skill routing lands in a later part.
+const CLASSES={
+  warrior:{id:1,name:'WARRIOR',faction:'demo',factionName:'DEMOLITION DOGS',spr:'tWarrior',trainer:'SERGEANT IRONPAW',
+    spd:0.95,dmg:1.3,armor:0.12,skill:'GROUND POUND',
+    mech:['A frontline bruiser. Heavy hammer, thick hide, kicks down the doors.','+30% hammer damage and extra armor, a touch slower on your paws.'],
+    skillDesc:'YOUR WOW BECOMES GROUND POUND: a shockwave that knocks back every cat around you.'},
+  archer:{id:2,name:'ARCHER',faction:'kernel',factionName:'KERNEL CREW',spr:'tArcher',trainer:'SCOUT FLEETWHISKER',
+    spd:1.25,dmg:1.0,armor:0,skill:'QUICK SHOT',
+    mech:['A fast kiter. Hits from range and runs rings around the brutes.','+25% move speed and a faster, longer WOW. Lighter armor, so do not get cornered.'],
+    skillDesc:'YOUR WOW BECOMES QUICK SHOT: a fast, cheap arrow. Keep your distance, Kernel.'},
+  healer:{id:3,name:'HEALER',faction:'bark',factionName:'BARKITECTS',spr:'tHealer',trainer:'MENDER BRIGHTTAIL',
+    spd:1.2,dmg:0.85,armor:0.05,skill:'MEND',
+    mech:['Fleet-footed support. Trades punch for sustain and keeps the crew alive.','+20% move speed but -15% damage. Your skill spends MP to patch your wounds.'],
+    skillDesc:'YOUR WOW BECOMES MEND: spend MP to heal HP. MP only refills by resting in camp, so mend wisely.'},
+};
+const CLASS_IDS={1:'warrior',2:'archer',3:'healer'};
+const classOf=()=>P.prof?CLASSES[P.prof]:null;
+const classSpd=()=>{const c=classOf();return c?c.spd:1;};
+const classDmg=()=>{const c=classOf();return c?c.dmg:1;};
+const classArmor=()=>{const c=classOf();return c?c.armor:0;};
+const CLASS_COL={warrior:'#ff8060',archer:'#80e080',healer:'#80d0ff'};
 const NPCS=[
   {id:'merchant',name:'WRENCHPAW THE MECHANIC',spr:'merchant',x:PADS[2][0]*16+8,y:PADS[2][1]*16+8,hw:6,hh:4,dir:'down',met:false},
   {id:'bank',name:'THE GREAT SPHINX OF DOGE',spr:'bank',x:PADS[0][0]*16+8,y:PADS[0][1]*16+8,hw:6,hh:4,dir:'down',met:false},
   {id:'quest',name:'ELDER SHIBE, KEEPER OF THE HEIST',spr:'sage',x:PADS[1][0]*16+8,y:PADS[1][1]*16+8,hw:6,hh:4,dir:'down',met:false},
   {id:'lotto',name:'CLOVERHEART, THE LUCKY GUIDE',spr:'clover',x:PADS2[0][0]*16+8,y:PADS2[0][1]*16+8,hw:6,hh:4,dir:'down',met:false},
   {id:'noah',name:'NOAH, THE AI BRAIN (MODEL N-01)',spr:'noah',x:PADS2[1][0]*16+8,y:PADS2[1][1]*16+8,hw:6,hh:4,dir:'down',met:false},
-  {id:'bitget',name:'THE BITGET WALLET CARD',spr:'bitget',x:PADS2[2][0]*16+8,y:PADS2[2][1]*16+8,hw:6,hh:4,dir:'down',met:false}
+  {id:'bitget',name:'THE BITGET WALLET CARD',spr:'bitget',x:PADS2[2][0]*16+8,y:PADS2[2][1]*16+8,hw:6,hh:4,dir:'down',met:false},
+  {id:'warrior',cls:'warrior',name:'SERGEANT IRONPAW (DEMOLITION DOGS)',spr:'tWarrior',x:PADS3[0][0]*16+8,y:PADS3[0][1]*16+8,hw:6,hh:4,dir:'up',met:false},
+  {id:'archer',cls:'archer',name:'SCOUT FLEETWHISKER (KERNEL CREW)',spr:'tArcher',x:PADS3[1][0]*16+8,y:PADS3[1][1]*16+8,hw:6,hh:4,dir:'up',met:false},
+  {id:'healer',cls:'healer',name:'MENDER BRIGHTTAIL (BARKITECTS)',spr:'tHealer',x:PADS3[2][0]*16+8,y:PADS3[2][1]*16+8,hw:6,hh:4,dir:'down',met:false}
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,credits:{},faction:null};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,credits:{},faction:null,prof:null};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<FIELD_POP;i++)spawnEnemy('field');
@@ -453,7 +501,7 @@ function shake(t){shakeT=Math.max(shakeT,t);}
 // ================= COMBAT =================
 function hurtPlayer(d,src){
   if(P.iT>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
-  const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-ARMOR_RED[armorLv()])));
+  const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-Math.min(0.8,ARMOR_RED[armorLv()]+classArmor()))));
   P.hp-=dmg;P.iT=0.9;P.resting=false;stopFish('LINE SNAPPED!'); // getting hit ruins the catch (D-015)
   const dx=P.x-src.x,dy=P.y-src.y,l=Math.hypot(dx,dy)||1;P.kbx=dx/l*190;P.kby=dy/l*190;
   floater(P.x,P.y-22,'-'+dmg,'#ff5050');shake(0.2);sfx(140,0.15,'sawtooth',0.07,-80);
@@ -470,13 +518,13 @@ function respawn(){
 function attack(){
   stopFish('REELED IN');P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
   const v=DIRV[P.dir],cx=P.x+v[0]*13,cy=P.y-5+v[1]*12,hw=v[0]?10:12,hh=v[0]?11:9;
-  const sdmg=Math.round(SWORD_DMG[swordLv()]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat'));
+  const sdmg=Math.round(SWORD_DMG[swordLv()]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat')*classDmg());
   let hit=false;for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh){damageEnemy(e,sdmg,v[0],v[1]);hit=true;}}
   if(hit)P.skills.combat++;
 }
 function bark(){
   if(P.mp<10){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return;}
-  stopFish('REELED IN');P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+swordLv()*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')),hits:new Set()});
+  stopFish('REELED IN');P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+swordLv()*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg()),hits:new Set()});
   sfx(500,0.25,'sawtooth',0.05,500);
 }
 function damageEnemy(e,dmg,kx,ky){
@@ -573,8 +621,8 @@ function walletRows(){
 // dev: open with ?chain=local to use a local anvil chain (contracts/README.md); Chikyu addresses go in CONTRACTS after deploy
 const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catch(e){return false;}})();
 if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
-const CONTRACTS={'0x5fdaf3':{items:'0x596Ad480C01f20019Ab01F124B6F8655A3D046f0',dex:'0x5a76f70E0603C3e774ae4e9F2C4F225D1f7FBa51'},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'}};
-const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',poolTvlUsd:'25da0b68',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7'};
+const CONTRACTS={'0x5fdaf3':{items:'0x596Ad480C01f20019Ab01F124B6F8655A3D046f0',dex:'0x5a76f70E0603C3e774ae4e9F2C4F225D1f7FBa51',prof:''},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',prof:''}};
+const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',poolTvlUsd:'25da0b68',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43'};
 const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
 const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50],LIST_PAGE=100,LIST_MAX=500; // sell / LP presets in DOGE, picked with A/D in the market menu
 const W32=n=>BigInt(n).toString(16).padStart(64,'0'),A32=a=>String(a).toLowerCase().replace(/^0x/,'').padStart(64,'0');
@@ -585,9 +633,9 @@ const unpack=p=>({id:Number(p>>16n),type:Number((p>>8n)&255n),level:Number(p&255
 const itemName=it=>(ITEM_TYPES[it.type]||'ITEM')+(it.type<=2?' LV'+it.level:'');
 const addrs=()=>CONTRACTS[CHAIN.id]||{};
 const chainReady=()=>wallet.connected&&wallet.chainOk&&!!addrs().items&&!!addrs().dex;
-const chainData={inv:[],listings:[],pools:[],proceeds:0n,fee:0n,approved:false,loaded:false};
+const chainData={inv:[],listings:[],pools:[],proceeds:0n,fee:0n,profession:0,profFee:0n,approved:false,loaded:false};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function resetChainData(){Object.assign(chainData,{inv:[],listings:[],pools:[],proceeds:0n,approved:false,loaded:false});}
+function resetChainData(){Object.assign(chainData,{inv:[],listings:[],pools:[],proceeds:0n,profession:0,profFee:0n,approved:false,loaded:false});}
 async function ecall(to,data){const r=await eth().request({method:'eth_call',params:[{to,data:'0x'+data},'latest']});if(!r||r==='0x')throw new Error('NO CONTRACT THERE. DEPLOY FIRST (CONTRACTS/README)');return r;}
 async function etx(to,data,value){
   const h=await eth().request({method:'eth_sendTransaction',params:[{from:wallet.addr,to,data:'0x'+data,value:'0x'+BigInt(value||0).toString(16)}]});
@@ -608,9 +656,18 @@ async function refreshChain(){
   chainData.listings=listings;
   const keys=arrAt(words(pls),0),pools=[];
   for(const k of keys){const w=words(await ecall(c.dex,SEL.poolInfo+W32(k)+A32(me)));pools.push({key:k,type:Number(k>>8n),level:Number(k&255n),doge:w[0],n:Number(w[1]),shares:w[2],mine:w[3],buy:w[4],sell:w[5]});}
-  chainData.pools=pools;chainData.proceeds=words(pr)[0]||0n;chainData.fee=words(fee)[0]||0n;chainData.approved=(words(ap)[0]||0n)===1n;chainData.loaded=true;
+  chainData.pools=pools;chainData.proceeds=words(pr)[0]||0n;chainData.fee=words(fee)[0]||0n;chainData.approved=(words(ap)[0]||0n)===1n;
+  if(c.prof){try{const [pw,pf]=await Promise.all([ecall(c.prof,SEL.professionOf+A32(me)),ecall(c.prof,SEL.profFee)]); // D-028 profession registry (optional until deployed)
+    chainData.profession=Number(words(pw)[0]||0n);chainData.profFee=words(pf)[0]||0n;
+    if(chainData.profession&&CLASS_IDS[chainData.profession])P.prof=CLASS_IDS[chainData.profession];}catch(e){}}
+  chainData.loaded=true;
   await refreshBal();
 }
+// Phase 5 (D-028): claim your class on-chain. One per wallet forever; pays profFee DOGE + gas. Local pick stays free when offline.
+function chooseProfession(cls){const c=CLASSES[cls];if(!c)return;
+  if(!addrs().prof){P.prof=cls;setWalletMsg(`YOU TRAIN AS A ${c.name} (LOCAL). THE ON-CHAIN REGISTRY IS NOT DEPLOYED HERE YET.`);return;}
+  if(chainData.profession){setWalletMsg(`THIS WALLET IS LOCKED IN AS A ${CLASSES[CLASS_IDS[chainData.profession]].name}. ONE CLASS PER WALLET.`);return;}
+  return chainAct(`YOU ARE NOW A ${c.name}, SWORN ON-CHAIN. SUCH OATH.`,async()=>{await etx(addrs().prof,SEL.chooseProf+W32(c.id),chainData.profFee);P.prof=cls;});}
 // one chain action at a time; every result lands in the open menu via setWalletMsg
 async function chainAct(done,fn){
   if(wallet.busy){setWalletMsg('WAIT, A TRANSACTION IS RUNNING.');return false;}
@@ -695,8 +752,31 @@ function talk(n){
     if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX, door to DogeOS. I connect your wallet, add the DogeOS testnet and teach you DeFi.','Swap your whiskers for DOGE, or trade DOGE for upgrades.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','This is a SIMULATED DEX. No real transactions. Much wow.'],()=>bankMenu(n));}
     else bankMenu(n);
   }else if(n.id==='quest'){if(state.stage===0)questTalk(n);else elderMenu(n);}
+  else if(n.cls){professorTalk(n);}
   else partnerTalk(n);
 }
+// ---- Phase 5 (D-028): the three faction trainers. Tell their faction's story + class way, then let you take the oath. ----
+function professorTalk(n){const c=CLASSES[n.cls];
+  if(!n.met){n.met=true;openDialog(n,[`I am ${c.trainer} of the ${c.factionName}.`,...c.mech,c.skillDesc,'Walk the path only when you are ready. One class per wallet, forever.'],()=>professorMenu(n));}
+  else professorMenu(n);}
+function profClaimed(){return chainData.profession||0;} // on-chain class id, 0 if none / not connected
+function professorMenu(n){const c=CLASSES[n.cls],fac=FACTIONS.find(f=>f.id===c.faction);
+  openMenu(n,`${c.factionName}: THE ${c.name} PATH`,()=>{const o=[];
+    o.push({label:`READ: ${fac.name} (FACTION)`,act:()=>{lesson(n,[fac.motto,...fac.entry],()=>professorMenu(n));return '';}});
+    o.push({label:`THE ${c.name} WAY (MECHANIC + SKILL)`,act:()=>{lesson(n,[...c.mech,c.skillDesc],()=>professorMenu(n));return '';}});
+    const locked=profClaimed(); // a class bound to this wallet on-chain
+    if(P.prof===n.cls){
+      o.push({label:`YOUR PATH: ${c.name}${locked===c.id?' (ON-CHAIN)':' (LOCAL)'}`,act:()=>locked===c.id?'SWORN ON-CHAIN. THIS IS YOUR CREW.':'PICKED LOCALLY. CONNECT AT THE SPHINX TO SWEAR IT ON-CHAIN.'});
+      if(locked!==c.id&&chainReady()&&addrs().prof)o.push({label:`SWEAR ON-CHAIN (${fromWei(chainData.profFee||0n)} DOGE + GAS)`,act:()=>{chooseProfession(n.cls);return wallet.msg||'CONFIRM IN YOUR WALLET...';}});
+    }else if(locked){
+      o.push({label:`LOCKED ON-CHAIN: ${CLASSES[CLASS_IDS[locked]].name}`,act:()=>'ONE CLASS PER WALLET. THIS CHOICE IS FINAL ON-CHAIN.'});
+    }else if(P.prof){
+      o.push({label:`SWITCH TO ${c.name} (LOCAL)`,act:()=>{P.prof=n.cls;sfx(660,0.18,'triangle',0.05,300);return `YOU RETRAIN AS A ${c.name}. NOT YET ON-CHAIN — SWEAR IT AT THE SPHINX.`;}});
+    }else{
+      const onchain=chainReady()&&addrs().prof;
+      o.push({label:onchain?`BECOME A ${c.name} (${fromWei(chainData.profFee||0n)} DOGE + GAS)`:`BECOME A ${c.name}`,act:()=>{const r=chooseProfession(n.cls);return (r&&r.then)?(wallet.msg||'CONFIRM IN YOUR WALLET...'):(wallet.msg||`YOU TRAIN AS A ${c.name}.`);}});
+    }
+    o.push({label:'LEAVE',act:null});return o;});}
 const RECIPES=[
   {name:'HAMMER LV2',nft:[1,2],need:{steel:2,scrap:1},req:()=>P.sword<2,act:()=>{P.sword=2;return `HAMMER LV2! DMG ${SWORD_DMG[2]}. VERY FORGE.`;}},
   {name:'HAMMER LV3',nft:[1,3],need:{steel:3,horn:2},req:()=>swordLv()>=2&&P.sword<3,act:()=>{P.sword=3;return `HAMMER LV3! DMG ${SWORD_DMG[3]}. MUCH POWER.`;}},
@@ -904,7 +984,7 @@ function update(dt){
   const l=Math.hypot(vx,vy);P.moving=l>0;
   if(l)stopFish('THE FISH GOT AWAY');
   if(l){vx/=l;vy/=l;if(P.atkT<=0){if(vx&&!vy)P.dir=vx>0?'right':'left';else if(vy&&!vx)P.dir=vy>0?'down':'up';else if(!(DIRV[P.dir][0]===Math.sign(vx)&&DIRV[P.dir][0])&&!(DIRV[P.dir][1]===Math.sign(vy)&&DIRV[P.dir][1]))P.dir=vy>0?'down':'up';}P.anim+=dt;}
-  const spd=(P.atkT>0?45:82)*(1+MARKET.bullSpd*bullF());
+  const spd=(P.atkT>0?45:82)*(1+MARKET.bullSpd*bullF())*classSpd();
   move(P,(vx*spd+P.kbx)*dt,(vy*spd+P.kby)*dt);
   const k=Math.pow(0.0005,dt);P.kbx*=k;P.kby*=k;
   P.iT-=dt;P.atkT-=dt;P.atkCd-=dt;
@@ -1031,6 +1111,7 @@ function drawHUD(){
   text('DOGE $'+mkt.p.toFixed(3),168,3,'#f8d050');text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');
   text('QUEST',222,3,'#ffe040');text(questText(),222,10,'#fff');
   if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?'CHAIN '+shortAddr(wallet.addr)+'  R=REST  I=BAG':'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
+  if(!ui&&!P.dead){const c=classOf();text(c?c.name:'NO CLASS',3,H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class tag (D-028)
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
 function drawUI(){

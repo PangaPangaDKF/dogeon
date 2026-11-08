@@ -35,6 +35,39 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-028 · 2026-11-08 · Faction trainers + class identity in-game (Phase 5 part 2/N)
+- Feature: Three faction-trainer NPCs now stand in the safe camp, each tied to a class/faction: Sergeant Ironpaw (WARRIOR /
+  Demolition Dogs) and Scout Fleetwhisker (ARCHER / Kernel Crew) flank the south gate, Mender Brighttail (HEALER / Barkitects) by
+  the hearth. Each tells its faction's archive story (reusing the Phase 4 `FACTIONS` text) and its class way, then lets you take the
+  path. **Picking a class** sets `P.prof`; when a wallet is connected and the `DogeProfession` registry is deployed, "BECOME A …" /
+  "SWEAR ON-CHAIN" sends `choose(id)` (profFee DOGE + gas, one per wallet forever, read back on connect); offline it's a free LOCAL
+  pick you can switch until you swear it. **Passive class mechanics apply now:** WARRIOR +30% hammer dmg / +0.12 armor / x0.95 speed,
+  ARCHER x1.25 speed / neutral dmg / lighter, HEALER x1.20 speed / x0.85 dmg / +0.05 armor. A persistent class tag shows bottom-left.
+- Why: The user wants to "choose your character faction" where "each faction has a mechanic and skill … warrior … archer … healer,
+  the archer is more faster and healer too," with "3 npcs each one in front of the camp … each one tells the history of each faction
+  and you change profession," and the profession bound per wallet by a paid transaction. On-chain async multiplayer (user's choice).
+- Files: `index.html` (SPR.tWarrior/tArcher/tHealer sprites; `CLASSES`/`CLASS_IDS`/`CLASS_COL` + `classOf/classSpd/classDmg/classArmor`;
+  `PADS3` + genMap paint; 3 NPCs; `P.prof` in newGame; speed/attack/bark/armor hooks; CONTRACTS `prof` slot; SEL `chooseProf/
+  professionOf/profFee`; `chainData.profession/profFee` + refreshChain read + `chooseProfession()`; `professorTalk`/`professorMenu`;
+  HUD class tag), `contracts/apply-deployment.mjs` (regex now matches + writes the `prof` field), `tests/sim.mjs` (+1 scenario,
+  exports class internals).
+- Design call — HEALER vs the "heal only in camp" invariant: the MEND skill (part 3) will heal in the field but is paid in MP, and MP
+  refills ONLY by resting in camp, so the camp-sanctuary / greed-vs-safety invariants hold (MP is the limiter). Logged here so part 3
+  can lean on it; `CLAUDE.md` §4 updated.
+- Placement: the camp interior is open stone (only the 3-wide fence gaps constrain exit), so trainers clear of the spawn and gaps
+  never block the player; the sim asserts they sit in camp and off the spawn.
+- Tool: Claude Code (Opus 4.8); `game-ui-ux`, `pixel-art-sprites` style. Selectors reuse D-027's (choose f94e349d etc.).
+- Alternatives rejected: gating the whole game behind a wallet (breaks the zero-dependency / offline-playable invariant → local pick +
+  optional on-chain oath); mutating `P.maxHp` per class (error-prone with local switching → class HP bonus deferred, passive stats are
+  read-at-use); a brand-new faction set (reused the Phase 4 Demolition Dogs / Kernel Crew / Barkitects as the three classes).
+- Verify: `node tests/sim.mjs` → "faction trainers" scenario PASS (trainers placed, no-class neutral, warrior tanky, archer faster),
+  all others still 0 failed.
+- Next (part 3): signature skills replacing WOW per class — GROUND POUND (warrior AoE knockback), QUICK SHOT (archer fast arrow),
+  MEND (healer MP→HP); then staking-earns-DEX-fees, on-chain party/PvP/loot-steal, then redeploy the full set to Chikyu.
+- Commit: this commit.
+
+---
+
 ### D-027 · 2026-11-08 · DogeProfession contract — one class per wallet, paid on-chain (Phase 5 "Factions of the Heist", part 1/N)
 - Feature: `contracts/src/DogeProfession.sol` — the on-chain class system. Classes map to the three Heist factions:
   1 WARRIOR (Demolition Dogs), 2 ARCHER (Kernel Crew), 3 HEALER (Barkitects). `choose(uint8)` is payable with an exact fee

@@ -66,6 +66,7 @@ globalThis.__api = {
   chainData, chainReady, refreshChain, mintNft, useNft, listNft, buyListing, delistNft, addLp, buyPool, sellPool, removeLp, withdrawProceeds,
   swordLv, armorLv, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
+  CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
 };`;
 
 function boot(seed, opts) {
@@ -812,6 +813,41 @@ scenario('partner NPCs: Cloverheart (Relotto), Noah, Bitget Wallet Card tell the
   }
   const solid = ['lotto', 'noah', 'bitget'].map(id => npc(api, id)).every(n => api.get().P && Math.abs(n.x - api.get().P.x) + Math.abs(n.y - api.get().P.y) > 0);
   if (!solid) fail('npc spots', 'an NPC sits on the spawn point'); else pass('npc spots', 'beside the fire and next to the Sphinx, clear of the spawn');
+});
+
+scenario('faction trainers: pick a class locally, its mechanic applies, one class at a time (D-028)', () => {
+  const api = boot(SEED + 30); startGame(api);
+  // the three trainers stand in the safe camp, clear of the spawn point
+  let ok = true;
+  for (const id of ['warrior', 'archer', 'healer']) {
+    const n = npc(api, id);
+    if (!n) { fail('trainer ' + id, 'missing'); ok = false; continue; }
+    if (!api.inCampT(Math.floor(n.x / 16), Math.floor(n.y / 16))) { fail('trainer ' + id, 'outside the camp'); ok = false; }
+    if (Math.abs(n.x - api.get().P.x) + Math.abs(n.y - api.get().P.y) < 1) { fail('trainer ' + id, 'sits on the spawn'); ok = false; }
+  }
+  if (ok) pass('trainers placed', 'warrior/archer/healer in camp, clear of the spawn');
+  // no class by default -> neutral stats
+  if (api.classOf() || api.classDmg() !== 1 || api.classSpd() !== 1 || api.classArmor() !== 0) fail('no class', 'default player already has a class/modifier');
+  else pass('no class', 'start with NO CLASS and neutral stats');
+  // talk to the warrior trainer and take the warrior path (local, no wallet)
+  const w = npc(api, 'warrior'); api.talk(w); readDialog(api);
+  let ui = api.get().ui;
+  if (!ui || ui.type !== 'menu') { fail('warrior menu', 'no menu after the trainer dialog'); return; }
+  const become = ui.build().find(r => /BECOME A WARRIOR/.test(r.label));
+  if (!become) { fail('warrior menu', 'no BECOME A WARRIOR row: ' + ui.build().map(r => r.label).join(' | ')); return; }
+  become.act();
+  if (api.get().P.prof !== 'warrior') fail('become warrior', 'P.prof=' + api.get().P.prof);
+  else if (!(api.classDmg() > 1.2 && api.classSpd() < 1 && api.classArmor() > 0)) fail('warrior stats', `dmg ${api.classDmg()} spd ${api.classSpd()} armor ${api.classArmor()}`);
+  else pass('become warrior', `WARRIOR: dmg x${api.classDmg()}, spd x${api.classSpd()}, +${api.classArmor()} armor`);
+  api.get().ui = null;
+  // retrain to archer (local switch) -> faster; still exactly one class
+  const a = npc(api, 'archer'); api.talk(a); readDialog(api); ui = api.get().ui;
+  const sw = ui.build().find(r => /SWITCH TO ARCHER/.test(r.label));
+  if (!sw) { fail('switch archer', 'no SWITCH TO ARCHER row: ' + ui.build().map(r => r.label).join(' | ')); return; }
+  sw.act();
+  if (api.get().P.prof !== 'archer') fail('switch archer', 'P.prof=' + api.get().P.prof);
+  else if (!(api.classSpd() > 1.2 && api.classDmg() === 1)) fail('archer stats', `spd ${api.classSpd()} dmg ${api.classDmg()}`);
+  else pass('switch archer', `ARCHER: spd x${api.classSpd()} faster, dmg x${api.classDmg()} — still one class`);
 });
 
 scenario('Sphinx = DogeOS DeFi hub: connect, market, faucet, stake, oracle, school, dogeos.com, docs', () => {
