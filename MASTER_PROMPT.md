@@ -212,7 +212,7 @@ Structure `<script>` in `index.html` into these 12 sections in order:
 
 ---
 
-## G. Canonical Subsystem Ledger (`D-014..D-036`)
+## G. Canonical Subsystem Ledger (`D-014..D-037`)
 
 | ID | Subsystem | Canonical Symbols (`index.html` / `contracts/src/`) |
 |---|---|---|
@@ -222,3 +222,4 @@ Structure `<script>` in `index.html` into these 12 sections in order:
 | D-027..D-033 | `DogeProfession.sol`, `DogeStaking.sol`, 1% DEX protocol fee split (0.2% / 0.8%), 4-contract Chikyū deploy | `DogeProfession.sol`, `DogeStaking.sol`, `SPR.tWarrior/tArcher/tHealer`, `CLASSES`, `chooseProfession`, `useSkill/groundPound/quickShot/mend`, `stakeMenu` |
 | D-034..D-035 | Pre-decision diagnostic gate (`audit-scan.mjs`), `chainChanged` reload, 100% Web3 sim test coverage | `.agents/skills/analyzer-master/scripts/audit-scan.mjs`, `hookWallet()`, `spawnEnemy()`, `tests/sim.mjs` D-035 scenarios |
 | D-036 | **BarkSwap Pool DEX, Distinct Class Mechanics, Starter Bag (`WOOD`/`STONE`) Minting, Wallet Items Balance & Mouse UX** | `CLASSES`, `applyClass/syncMaxHp`, `attack()`, `quickShot()`, `drawWorld()`, `drawSlash()`, `MINTABLE`, `marketMenu()`, `stakeMenu()`, `drawUI()`, `cvPos()` |
+| D-037 | **Reproducibility & release: generated recreation manifest, blueprint drift guard, dual-brain protocol, shared lessons ledger** | `scripts/trynoah-manifest.mjs` (`--out` / `--verify`), `docs/RECREATION_MANIFEST.md`, `prompts/TRYNOAH_RECREATE.md` (Path A exact vs Path B blueprint), `tests/check.sh` stage 5, `AGENTS.md` §1b, `docs/LESSONS.md` (L-001..L-016), `scripts/publish-github.sh` |

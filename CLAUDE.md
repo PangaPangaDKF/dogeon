@@ -13,7 +13,7 @@
    improve it in the same commit. Note it in `docs/DECISIONS.md` under "Process".
 5. Test with the `terminal-testing` skill: `bash tests/check.sh` (Git Bash or Ubuntu/WSL) must pass (stage 4 = `forge test` on `contracts/`).
 
-**Project files:** `AGENTS.md` (workspace rules) · `prompts/ANALYZER_PROMPT_MASTER.md` (pre-decision master prompt) · `docs/DECISIONS.md` (history + open issues) · `contracts/` (Foundry: DogeItems ERC-721 + DogeDEX + DogeProfession + DogeStaking, see its README) · `prompts/SESSION_PROMPT.md` (session opener) ·
+**Project files:** `AGENTS.md` (workspace rules) · `prompts/ANALYZER_PROMPT_MASTER.md` (pre-decision master prompt) · `docs/DECISIONS.md` (history + open issues) · `docs/LESSONS.md` (dual-brain error→rule ledger) · `prompts/TRYNOAH_RECREATE.md` + `docs/RECREATION_MANIFEST.md` + `scripts/` (reproducibility & release) · `contracts/` (Foundry: DogeItems ERC-721 + DogeDEX + DogeProfession + DogeStaking, see its README) · `prompts/SESSION_PROMPT.md` (session opener) ·
 `tests/check.sh`, `tests/sim.mjs` · skills in `.claude/skills/` and `.agents/skills/` (own: `dogeon-game`, `terminal-testing`;
 installed: `find-skills`, `agent-browser`, `avalanche-skills`, `avax-*`, `solidity-security`, `caveman*`, `game-design-theory`, `pixel-art-sprites`, `balance-check`, `game-design-document`).
 

@@ -23,6 +23,41 @@
   - `DogeProfession.sol`: One class per wallet forever (`WARRIOR=1`, `ARCHER=2`, `HEALER=3`), exact fee, pull-payment treasury.
   - `DogeStaking.sol`: MasterChef DOGE staking vault receiving the 0.8% DEX fee share via `flushStakerFees()`.
 
+## 1b. DUAL-BRAIN PROTOCOL (Antigravity CLI ↔ Claude Code) — read before editing
+Two agents work this repo. These rules exist because real collisions already happened (one agent's **uncommitted**
+`index.html` edits were swept into the other's commit). Follow them exactly.
+
+1. **Dirty tree = the other brain is mid-flight. Do not edit.**
+   Start every session with `git status --short && git log --oneline -3`.
+   - Tree **clean** → you own the repo, proceed.
+   - Tree **dirty** and you did not make those edits → **do not touch those files.** Read them, report what you see,
+     and either wait or work in a lane that does not overlap. Never `git checkout`/`stash`/revert another agent's work.
+2. **Always hand off a clean tree.** Commit (or explicitly report) everything before you stop. Never end a turn with
+   uncommitted edits — that is exactly what the other brain will overwrite.
+3. **Claim the decision number first.** `grep -oE 'D-0[0-9]+' docs/DECISIONS.md | sort -u | tail -1`, then write your
+   `### D-NNN` heading **before** coding. Two agents must never both write the same `D-NNN`.
+4. **One logical change per commit**, Conventional Commits, and state in the body which brain authored it.
+5. **Shared blackboard:** [`CLAUDE_CODE_HANDOFF.md`](./CLAUDE_CODE_HANDOFF.md). When you finish a cycle, update its
+   "Current Snapshot" and leave a concrete *next* task. Read it first; it is the fastest way to inherit context.
+6. **Lane preferences** (soft ownership — reduces overlap, not a hard wall):
+   | Lane | Typical owner | Files |
+   |---|---|---|
+   | Gameplay / sprites / combat feel | Antigravity | `index.html` (GAME STATE, COMBAT, ENEMY AI, RENDER) |
+   | Contracts / Web3 / DeFi math / audits | Claude Code | `contracts/**`, `index.html` (CHAIN), `tests/sim.mjs` |
+   | Reproducibility / release / tooling | Claude Code | `scripts/**`, `prompts/TRYNOAH_RECREATE.md`, `docs/RECREATION_MANIFEST.md` |
+   | Prompts / skills / docs | Either (announce in handoff) | `MASTER_PROMPT.md`, `AGENTS.md`, `CLAUDE.md`, `.claude|.agents/skills/**` |
+7. **Never regenerate a generated file by hand.** `docs/RECREATION_MANIFEST.md` comes from
+   `node scripts/trynoah-manifest.mjs --out docs/RECREATION_MANIFEST.md`.
+8. **Never commit a deploy key.** The testnet key lives only in the session scratchpad. `bash scripts/publish-github.sh`
+   runs a hard secret gate and refuses to push if anything key-shaped is tracked.
+9. **Learn from both brains' mistakes:** read [`docs/LESSONS.md`](./docs/LESSONS.md) ("Final Conclusions" at minimum) before
+   deciding anything. **Every error either brain hits gets appended there** as `L-NNN` with root cause → **RULE** → what now
+   enforces it. An error is only closed once a test/script/skill enforces the rule — a note nobody runs is a note nobody keeps.
+10. **Pre-commit collision check (mandatory):** `git log --oneline -1` (did HEAD move while you worked?) and
+    `git diff --numstat` (does each file's +/- match your intent?). An additive change showing deletions means you are
+    reverting the other brain — stop. **Never restore a file from a backup made earlier in the session;** use
+    `git checkout -- <file>`. (Real incident: `docs/LESSONS.md` L-016.)
+
 ## 2. Verification Commands
 ```bash
 bash tests/check.sh          # Full suite: static checks + syntax + sim.mjs + forge test

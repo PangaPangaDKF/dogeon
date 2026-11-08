@@ -4,3 +4,11 @@ tests/out/
 Thumbs.db
 __pycache__/
 *.pyc
+
+# secrets — never commit deploy keys (public repo hygiene, D-037)
+.env
+.env.*
+*.key
+key.env
+*.pem
+mnemonic*

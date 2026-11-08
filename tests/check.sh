@@ -37,6 +37,11 @@ if [ -x "$FORGE" ] || [ -x "$FORGE.exe" ]; then
   else note "contracts/lib missing: see contracts/README.md setup"; fi
 else note "forge not installed: contracts not tested"; fi
 
+echo "== 5. recreation-prompt drift guard (D-037) =="
+if node scripts/trynoah-manifest.mjs --verify >/tmp/drift.txt 2>&1; then
+  ok "recreation prompts match source ($(grep -c '^  OK' /tmp/drift.txt) file(s) verified)"
+else bad "recreation prompts quote stale contract addresses/selectors/classes"; cat /tmp/drift.txt; fi
+
 echo
 if [ "$fails" -eq 0 ]; then printf '\033[32mALL CHECKS PASSED\033[0m\n'; else printf '\033[31m%s CHECK(S) FAILED\033[0m\n' "$fails"; fi
 exit "$fails"

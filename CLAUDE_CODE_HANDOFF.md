@@ -1,5 +1,37 @@
 # DOGEON — Dual-Brain Handoff & Context Sync (`Antigravity ↔ Claude Code ↔ TryNoah AI`)
 
+> ## ⇄ CURRENT SNAPSHOT — Claude Code cycle `D-037` (2026-11-08)
+>
+> **Baseline green:** `bash tests/check.sh` → **ALL CHECKS PASSED** (now **5 stages**), `index.html` **1273/1500**,
+> ~110 sim checks 0 failed, **45/45** Foundry tests, `audit-scan.mjs` clean. **`index.html` untouched this cycle**
+> (byte-identical to `61a34aa`) — the gameplay lane stayed yours.
+>
+> **Added (release/reproducibility lane):**
+> 1. **`scripts/trynoah-manifest.mjs`** — generates the authoritative recreation inventory from source
+>    (`--out docs/RECREATION_MANIFEST.md`); **`--verify`** is a drift guard that fails when a recreation prompt quotes a
+>    stale address/selector/class. **Wired as `tests/check.sh` stage 5** → a stale prompt now breaks the build.
+>    (Your purged `MASTER_PROMPT.md` passes it: 4 addresses, 30 selectors, 3 classes all present.)
+> 2. **`docs/RECREATION_MANIFEST.md`** — generated completeness contract. **Never hand-edit**; re-run `--out` after any
+>    change to `CONTRACTS`, `SEL`, `CLASSES`, `MINTABLE`, `RECIPES`, NPCs, enemies or balance constants.
+> 3. **`prompts/TRYNOAH_RECREATE.md`** — deploy runbook split into **Path A = EXACT replica** (hand TryNoah the real
+>    source/raw URL — the only byte-exact method) vs **Path B = BLUEPRINT rebuild** (your §1-4 spec; similar, not identical).
+> 4. **`AGENTS.md` §1b Dual-Brain Protocol** + **`docs/LESSONS.md`** (`L-001..L-016`, 10 Final Conclusions) — shared
+>    error→rule memory seeded with real failures from BOTH brains. Read the conclusions before deciding anything.
+> 5. **`scripts/publish-github.sh`** + `.gitignore` hardening. Pre-publish secret gate: the testnet key is in **no commit
+>    on any branch** — safe to publish. Repo **not** created (no `gh`/`GITHUB_TOKEN` here).
+>
+> **⚠️ Live collision we just hit (now `L-016`):** while I worked, you committed `38afe5a` (MASTER_PROMPT rewrite). I had
+> taken a `/tmp` backup of that file earlier and restored it, which silently **reverted your 208 lines**. I caught it via
+> `git diff --numstat` before committing and restored your version with `git checkout --`, then re-applied my ledger row
+> additively (+2/-1). **Rule now binding on both of us:** never restore a file from a stale session backup — use
+> `git checkout -- <file>`; and always check `git log --oneline -1` + `git diff --numstat` before committing.
+>
+> **Next for Antigravity (gameplay lane, no overlap):** your queued gameplay-polish job is now **`D-038`** —
+> BarkSwap price-impact/LP-share feedback, 3-class TTK + MP economy via `balance-check`, HUD skill-cost indicator.
+> Afterwards run `node scripts/trynoah-manifest.mjs --out docs/RECREATION_MANIFEST.md` so the manifest stays in sync.
+> **Claude Code is next taking:** contracts / DEX / wallet balance / item-token minting / bag items + dead-code weight
+> reduction (user request) — i.e. the `CHAIN` + `contracts/**` lane. Coordinate via this file before touching those.
+
 > **Purpose of this file:** Give **Claude Code** (and **TryNoah AI**) 100% of the context, architectural decisions, code changes (`D-034..D-036`), installed skills, prompt engineering rules, and verification loops built in this repository — plus a **ready-to-paste job prompt** at the bottom so Claude Code can immediately inspect, audit, and improve the project without wasting a single token of context.
 
 ---

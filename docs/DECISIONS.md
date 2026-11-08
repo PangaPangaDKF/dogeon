@@ -35,6 +35,63 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-037 · 2026-11-08 · Reproducibility & release track: generated recreation manifest, blueprint drift guard, dual-brain protocol, shared lessons ledger (Claude Code)
+- **Context / why (user's plan):** The user's stated goal moved from building features to **shipping + reproducing**:
+  *"create the repo on github and a well detallado prompt to use it on trynoah ai to recreate the same project there without
+  missing a single feature, code, contract, template, gameplay"*, plus *"both brains should coexist and not chocar … organize each
+  other"* and *"every error you see add it as a note for dual decisions … save the context of the changes and the why"*.
+  Antigravity's handoff had queued a D-037 gameplay-polish job instead; the user's own instruction takes precedence, so this
+  cycle serves the release/reproducibility track and leaves gameplay balance to the Antigravity lane (see `AGENTS.md` §1b).
+- **The core problem solved:** a hand-written recreation prompt silently goes stale. The instant a contract address, selector or
+  class stat changes, `MASTER_PROMPT.md` §A would keep telling TryNoah the *old* facts and nobody would notice. "Nothing is
+  missing" was an unverifiable claim.
+- **What changed:**
+  1. **`scripts/trynoah-manifest.mjs` (new, zero-dep):** derives the authoritative inventory straight from source —
+     17 `index.html` sections, both chains' `CONTRACTS`, all 30 `SEL` selectors, RedStone feed+adapter, every external/public
+     Solidity function across the 5 `.sol` files, exact per-class stats, item types / 9 mintables / 7 recipes, 9 NPCs,
+     8 enemy types, 13 balance constants, 21 real on-chain actions, 11 menus, and all 30 sim scenarios.
+     `--out` writes it; **`--verify`** is a drift guard that fails if a blueprint quotes a stale address/selector/class.
+  2. **`docs/RECREATION_MANIFEST.md` (generated):** the completeness contract — never hand-edited.
+  3. **`tests/check.sh` stage 5:** runs `--verify`, so a stale recreation prompt now **breaks the build**.
+  4. **`prompts/TRYNOAH_RECREATE.md` (new):** the operational runbook, led by the honest split between
+     **Path A = EXACT replica** (hand TryNoah the real 158 KB of source / raw URL — the only byte-exact method, and trivial
+     because the app is one zero-dependency static file) and **Path B = BLUEPRINT rebuild** (§A spec, functionally similar but
+     *not* identical). Includes static-host deploy steps (Netlify/Vercel/Pages, HTTPS required for `window.ethereum`),
+     an 8-step post-deploy browser acceptance test, the completeness checklist, and contract-redeploy + key-hygiene notes.
+  5. **`AGENTS.md` §1b Dual-Brain Protocol:** dirty tree = other brain mid-flight (do not touch); always hand off a clean tree;
+     claim `D-NNN` before coding; soft file lanes; never hand-edit generated files; never commit a deploy key.
+  6. **`docs/LESSONS.md` (new):** shared append-only error→rule ledger, seeded with 16 real failures from **both** brains
+     (L-001..L-016) each with root cause, the derived RULE, and what now enforces it, plus 10 distilled "Final Conclusions".
+  7. **`scripts/publish-github.sh` (new):** one-command repo publish, gated by a hard secret scan + the full test suite.
+  8. **`.gitignore`:** added `.env*`, `*.key`, `key.env`, `*.pem`, `mnemonic*` for public-repo hygiene.
+- **Pre-publish safety gate (run before any public push):** scanned **all** git history for the testnet deploy key —
+  `git log --all -p -S<key>` returns nothing, no 64-hex blobs, no tracked `.env`/key/secret files. Repo is safe to publish.
+- **GitHub repo: NOT created** — no `gh` CLI and no `GITHUB_TOKEN` in this environment. Per the user's instruction
+  ("if you need a key or a token to create the repo just ignore that step and keep working"), the step is skipped and
+  reduced to one command (`bash scripts/publish-github.sh <user>/<repo>`) for when a token exists.
+- **Errors I made this cycle (logged as lessons, per the user's rule):** (a) the drift guard initially required *every*
+  recreation doc to restate the registry and so failed `TRYNOAH_RECREATE.md`, which deliberately delegates — fixed by scoping
+  the checker to files whose declared role is to carry the registry (**L-013**); (b) the first "on-chain actions" extractor
+  matched by name and wrongly listed `addToBag`/`syncMaxHp`/`useSkill` — fixed to detect functions whose own body calls
+  `etx`/`ecall`/`chainAct`/`eth().request` (21 genuine actions). Both are now rules in `docs/LESSONS.md`.
+- **Live dual-brain collision during this cycle (L-016):** Antigravity committed `38afe5a` (a 208-line `MASTER_PROMPT.md`
+  rewrite + handoff edit) *while* this cycle was in progress. A `/tmp` backup restore from my drift-guard negative test had
+  written the pre-rewrite file back to disk, so my working tree **silently reverted his commit**. Caught before committing by
+  `git log -1` (unexpected HEAD) + `git diff --numstat` (`+208/-358` on a file I only meant to add 2 lines to). Fixed with
+  `git checkout --` on both of his files and re-applying only my additions (ledger `+2/-1`, handoff `+32/-0`). His purged
+  §1-4 blueprint passes the drift guard. Encoded as `AGENTS.md` §1b rule 10 (mandatory pre-commit collision check).
+- **Alternatives rejected:** claiming a prose prompt can clone the game byte-for-byte (it cannot — L-014); restating addresses
+  inside the runbook (that duplication *is* the drift source — L-013); doing Antigravity's queued gameplay-polish D-037 instead
+  (the user's release goal is higher leverage and avoids colliding with his gameplay lane).
+- **Verify:** `node scripts/trynoah-manifest.mjs --verify` → OK on both targets, exit 0; negative tests confirmed it fails on a
+  tampered address **and** on a stale manifest; `bash tests/check.sh` → **ALL CHECKS PASSED** (1273 lines, 0 sim failures over
+  ~110 checks, 45/45 Foundry tests, drift guard green); `index.html` left byte-identical to HEAD (no gameplay touched this cycle).
+- **Tool:** Claude Code (Opus 5), `analyzer-master` RULE #0 gate (`audit-scan.mjs`: 1274/1500 lines, selector parity OK,
+  0 collisions, full Web3 sim coverage), `dogeon-game` skill, `terminal-testing`.
+- **Commit:** this commit.
+
+---
+
 ### D-036 · 2026-11-08 · BarkSwap-styled Pool DEX at Sphinx NPC, wallet minted items balance, distinct class mechanics, starter bag (`WOOD`/`STONE`), & TryNoah AI Master Prompt Blueprint
 - What:
   1. **BarkSwap-Styled Pool DEX in `marketMenu` (`BARKSWAP POOL DEX: MINT, SWAP & LP`, `ui.barkswap = true`):**
