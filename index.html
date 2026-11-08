@@ -793,10 +793,10 @@ function marketMenu(n){openMenu(n,'BARKSWAP POOL DEX: MINT, SWAP & LP',()=>{cons
   if(chainData.proceeds>0n)o.push({label:`WITHDRAW PROCEEDS: ${fromWei(chainData.proceeds)} DOGE`,act:()=>{withdrawProceeds();return wallet.msg;}});
   for(const l of chainData.listings)o.push(l.mine?{label:`DELIST ${itemName(l)} #${l.id} (YOURS, ${fromWei(l.price)})`,act:()=>{delistNft(l);return wallet.msg;}}
     :{label:`BUY ${itemName(l)} #${l.id} FOR ${fromWei(l.price)} DOGE`,act:()=>{buyListing(l);return wallet.msg;}});
-  for(const p of chainData.pools){if(p.shares===0n)continue;const mine=myFree().filter(it=>keyOfIt(it)===p.key);
-    o.push({label:`POOL ${itemName(p)}: ${p.n} ITEMS / ${fromWei(p.doge)} DOGE`,act:()=>`SPOT ${(fromWei(p.doge)/Math.max(1,p.n)).toFixed(3)} DOGE. YOUR SHARE ${p.shares?Math.round(Number(p.mine*1000n/p.shares))/10:0}%.`});
-    if(p.buy>0n)o.push({label:` SWAP ${fromWei(p.buy)} DOGE -> 1 ${itemName(p)}`,act:()=>{buyPool(p);return wallet.msg;}});
-    if(mine.length&&p.sell>0n)o.push({label:` SWAP 1 ${itemName(p)} -> ${fromWei(p.sell)} DOGE`,act:()=>{sellPool(mine[0],p);return wallet.msg;}});
+  for(const p of chainData.pools){if(p.shares===0n)continue;const mine=myFree().filter(it=>keyOfIt(it)===p.key),lp=p.shares?Math.round(Number(p.mine*1000n/p.shares))/10:0,spot=fromWei(p.doge)/Math.max(1,p.n); // D-038: LP share % + price impact vs spot (<=50 chars)
+    o.push({label:`POOL ${itemName(p)}: ${p.n} ITEMS / ${fromWei(p.doge)} DOGE (LP ${lp}%)`,act:()=>`SPOT ${spot.toFixed(3)} DOGE. YOUR SHARE ${lp}%.`});
+    if(p.buy>0n){const bi=spot>0?Math.max(0,Math.round((fromWei(p.buy)/spot-1)*100)):0;o.push({label:` SWAP ${fromWei(p.buy)} DOGE -> 1 ${itemName(p)} (+${bi}%)`,act:()=>{buyPool(p);return wallet.msg;}});}
+    if(mine.length&&p.sell>0n){const si=spot>0?Math.max(0,Math.round((1-fromWei(p.sell)/spot)*100)):0;o.push({label:` SWAP 1 ${itemName(p)} -> ${fromWei(p.sell)} DOGE (-${si}%)`,act:()=>{sellPool(mine[0],p);return wallet.msg;}});}
     if(mine.length&&p.n>0){const need=(BigInt(mine.length)*p.doge+BigInt(p.n-1))/BigInt(p.n);
       o.push({label:` ADD ${mine.length} ITEMS + ${fromWei(need)} DOGE AS LP`,act:()=>{addLp(mine.map(it=>it.id),need,p);return wallet.msg;}});}
     if(p.mine>0n)o.push({label:` REMOVE MY LP (${Math.round(Number(p.mine*1000n/p.shares))/10}%)`,act:()=>{removeLp(p);return wallet.msg;}});}
@@ -960,7 +960,7 @@ const PARTNERS={ // stories are factual (sources in docs/DECISIONS.md D-024); no
     links:[['OPEN RELOTTO.APP','relotto'],['OPEN THE RELOTTO WEB APP','relottoApp']]},
   noah:{title:'NOAH: MODEL N-01',story:['Beep. I am Noah, a super AI brain in a box. Model N-01.',
     'Describe your dApp idea in a single prompt and I build it: frontend, smart contracts, backend and wallet hookup.',
-    'Today my builders mostly ship on Solana, and more chains are on the way.',
+    'Here on DogeOS, my builders ship EVM Solidity smart contracts powered by DOGE.',
     'DogeOS lists me in its ecosystem: build dApps by chatting with AI. Barkitects who want to build, start at TRYNOAH.AI.'],
     links:[['OPEN TRYNOAH.AI','noah']]},
   bitget:{title:'BITGET WALLET CARD',story:['Swipe right, shibe. I am the Bitget Wallet Card.',
@@ -1010,7 +1010,9 @@ function invMenu(){
       }else{const names={wood:'WOOD',stone:'STONE',orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'STARTER / CRAFTING MATERIAL. USE TO MINT AT FORGE OR BELOW.'});}}
     if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT STARTER HAMMER NFT [1 WOOD+1 STONE]`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
     const sk=P.skills,lv=k=>skillLv(sk[k],k);o.push({label:`SKILLS: COMBAT LV${lv('combat')} (${sk.combat}XP) BARK LV${lv('bark')} (${sk.bark}XP) FISH LV${lv('fishing')} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(lv('combat')*SKILL_BONUS*100)}% DMG  BARK +${Math.round(lv('bark')*SKILL_BONUS*100)}% DMG  FISH +${Math.round(lv('fishing')*SKILL_BONUS*100)}% SPD`});
-    if(chainReady())for(const it of chainData.inv){const f=TYPE_FOOD[it.type];
+    const nfts=chainReady()?chainData.inv:[]; // D-038: explicit off-chain bag (at risk) vs on-chain wallet NFTs (safe) boundary
+    o.push({label:`ON-CHAIN ITEMS (${nfts.length}): ${nfts.length?'SAFE ON DEATH':'MINT AT SPHINX/FORGE'}`,act:()=>'WALLET NFTS SURVIVE DEATH. BAG ITEMS & MATERIALS DROP WHEN YOU FALL.'});
+    for(const it of nfts){const f=TYPE_FOOD[it.type];
       o.push({label:`NFT #${it.id} ${itemName(it)} `+(f?`[EAT +${FOODS[f].heal} HP, BURNS]`:it.type<=2?'(OWNED = EQUIPPED)':'[USE, BURNS]'),act:it.type<=2?()=>`ON-CHAIN GEAR. EFFECTIVE HAMMER LV${swordLv()} ARMOR LV${armorLv()}.`:()=>{useNft(it);return wallet.msg;}});}
     if(!P.bag.length)o.push({label:'BAG IS EMPTY',act:()=>'HUNT MONSTERS OR CATCH FISH.'});
     o.push({label:'CLOSE',act:null});return o;});ui.chain=true;if(chainReady())refreshChain().catch(()=>{});}
@@ -1220,6 +1222,7 @@ function drawFishing(ox,oy){
 }
 function bar(x,y,w,v,max,c1,c2,bg){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,6);ctx.fillStyle=bg;ctx.fillRect(x,y,w,4);const f=Math.ceil(w*Math.max(0,v)/max);ctx.fillStyle=c1;ctx.fillRect(x,y,f,4);ctx.fillStyle=c2;ctx.fillRect(x,y,f,1);}
 function questText(){const s=state.stage;return s===0?'TALK TO ELDER SHIBE':s===1?`SLAY CATS ${Math.min(P.kills,8)}/8`:s===2?`SLAY BRUTES ${Math.min(P.bruteKills,3)}/3`:s===3?'DEFEAT THE CAT LORD':'COMPLETE! MUCH WOW';}
+const hudTag=()=>P.prof==='archer'?`ARCHER [SPC:ARROW K:VOLLEY ${SKILL_MP.archer}MP]`:P.prof==='healer'?`HEALER [SPC:STAFF K:MEND ${SKILL_MP.healer}MP]`:P.prof==='warrior'?`WARRIOR [SPC:CLEAVE K:SLAM ${SKILL_MP.warrior}MP]`:'NO CLASS [K:BARK 10MP]'; // D-038: HUD class + K/Q MP cost
 function drawHUD(){
   ctx.fillStyle='#0c0c24';ctx.fillRect(0,0,W,HUD_H);ctx.fillStyle='#3848a0';ctx.fillRect(0,HUD_H-2,W,1);ctx.fillStyle='#000';ctx.fillRect(0,HUD_H-1,W,1);
   text('HP',3,3,'#ff6060');bar(14,3,64,P.hp,P.maxHp,'#e83030','#ff9090','#3a0808');text(`${Math.ceil(P.hp)}/${P.maxHp}`,82,3,'#fff');
@@ -1230,7 +1233,7 @@ function drawHUD(){
   text('DOGE $'+mkt.p.toFixed(3),168,3,'#f8d050');text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');
   text('QUEST',222,3,'#ffe040');text(questText(),222,10,'#fff');
   if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?'CHAIN '+shortAddr(wallet.addr)+'  R=REST  I=BAG':'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
-  if(!ui&&!P.dead){const c=classOf(),tag=P.prof==='archer'?'ARCHER [SPC:ARROW K:VOLLEY]':P.prof==='healer'?'HEALER [SPC:STAFF K:HEAL]':P.prof==='warrior'?'WARRIOR [SPC:CLEAVE K:SLAM]':'NO CLASS';text(tag,3,H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class tag (D-028)
+  if(!ui&&!P.dead){const c=classOf();text(hudTag(),3,playerInCamp()?H-17:H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class + skill MP tag (D-028, D-038)
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
 function drawUI(){

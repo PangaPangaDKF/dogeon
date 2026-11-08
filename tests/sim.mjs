@@ -71,7 +71,7 @@ globalThis.__api = {
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy,
   net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
-  applyClass, syncMaxHp,
+  applyClass, syncMaxHp, hudTag,
 };`;
 
 function boot(seed, opts) {
@@ -1143,6 +1143,81 @@ scenario('D-040 multiplayer option: off by default, opt-in ?mp relays state, hos
   for (let i = 0; i < (api.NET_TTL + 1) * 60; i++) api.step(DT);
   if (!Object.keys(api.net.peers).length) pass('net ttl', `silent peers drop after ${api.NET_TTL}s`);
   else fail('net ttl', 'peers kept: ' + Object.keys(api.net.peers).join());
+});
+
+scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, BarkSwap LP/impact rows, HUD skill MP cost', () => {
+  const api = boot(SEED + 38, { eth: mockEth({ known: true }) }); startGame(api);
+  const g = api.get(), P = g.P;
+
+  // 1. Class TTK & survivability vs basic doge against a knight (35 HP) in neutral market
+  const simKillFrames = (prof, useVolley) => {
+    const cur = api.get();
+    cur.enemies.splice(0); cur.projs.splice(0); cur.mkt.sent = 0; api.get().ui = null;
+    P.x = 20 * 16 + 8; P.y = 50 * 16 + 8; P.dir = 'right'; P.dead = false; P.iT = 99; P.kbx = 0; P.kby = 0; P.atkCd = 0; P.atkT = 0; P.skills.combat = 0; P.skills.bark = 0; P.mp = 30;
+    P.prof = null; P.maxHp = 60; P.hp = 60;
+    if (prof) api.applyClass(prof, false);
+    const distPx = prof === 'archer' ? 48 : 14;
+    const kn = api.makeEnemy('knight', P.x + distPx, P.y, 'field');
+    kn.spd = 0; kn.def = { ...kn.def, spd: 0 }; // stationary target dummy for exact TTK measurement
+    api.get().enemies.push(kn);
+    if (useVolley) api.useSkill();
+    let frames = 0;
+    while (!kn.dead && kn.hp > 0 && frames < 300) {
+      kn.x = P.x + distPx; kn.y = P.y; kn.kbx = 0; kn.kby = 0;
+      if (P.atkCd <= 0) { api.press(' '); }
+      api.step(DT); frames++;
+    }
+    return frames;
+  };
+  const fBase = simKillFrames(null, false);
+  const fWar = simKillFrames('warrior', false);
+  const fArc = simKillFrames('archer', true);
+  if (!(fWar < fBase && fArc < fBase)) fail('class ttk', `base=${fBase}f warrior=${fWar}f archer=${fArc}f`);
+  else pass('class ttk', `WARRIOR (${fWar}f) and ARCHER (${fArc}f at 48px range) both beat basic doge TTK (${fBase}f) on a 35-HP knight`);
+
+  // Healer MP-on-hit + MEND sustain loop: 5 staff hits restore +10 MP (1 full MEND = +20 HP), effective HP > basic doge
+  api.get().enemies.splice(0); P.dead = false; P.iT = 99; P.kbx = 0; P.kby = 0; P.prof = null; P.maxHp = 60; P.hp = 60;
+  api.applyClass('healer', false);
+  P.hp = 20; P.mp = 20; P.dir = 'right'; P.atkCd = 0;
+  const dummy = api.makeEnemy('bull', P.x + 12, P.y, 'field'); api.get().enemies.push(dummy);
+  for (let i = 0; i < 5; i++) { dummy.x = P.x + 12; dummy.y = P.y; P.atkCd = 0; api.press(' '); api.step(DT); }
+  const mpAfter5 = P.mp;
+  api.useSkill(); // MEND (10 MP -> +20 HP)
+  if (mpAfter5 !== 30 || P.hp !== 40 || P.mp !== 20) fail('healer sustain', `mpAfter5=${mpAfter5} hp=${P.hp} mp=${P.mp}`);
+  else pass('healer sustain', '5 staff hits restored +10 MP (20->30), funding MEND (+20 HP, 105 effective HP pool)');
+
+  // 2. HUD skill-cost indicator (hudTag)
+  P.prof = null; const t0 = api.hudTag();
+  api.applyClass('warrior', false); const tW = api.hudTag();
+  api.applyClass('archer', false); const tA = api.hudTag();
+  api.applyClass('healer', false); const tH = api.hudTag();
+  if (!/10MP/.test(t0) || !/WARRIOR.*12MP/.test(tW) || !/ARCHER.*6MP/.test(tA) || !/HEALER.*10MP/.test(tH)) fail('hud skill cost', `${t0} | ${tW} | ${tA} | ${tH}`);
+  else pass('hud skill cost', `HUD displays class + K/Q MP cost (${tW}, ${tA}, ${tH})`);
+
+  // 3. Bag vs wallet clarity in invMenu ("ON-CHAIN ITEMS (N)" row)
+  api.invMenu();
+  const invOff = api.get().ui.build().map(r => r.label);
+  api.press('escape'); api.step(DT);
+  api.wallet.connected = true; api.wallet.chainOk = true; api.wallet.addr = '0xabc';
+  api.chainData.inv = [{ id: 3, type: 1, level: 2 }]; api.chainData.loaded = true;
+  api.invMenu();
+  const invOn = api.get().ui.build().map(r => r.label);
+  api.press('escape'); api.step(DT);
+  if (!invOff.some(l => /^ON-CHAIN ITEMS \(0\): MINT AT SPHINX\/FORGE/.test(l)) || !invOn.some(l => /^ON-CHAIN ITEMS \(1\): SAFE ON DEATH/.test(l)))
+    fail('invMenu on-chain clarity', invOff.join(' | ') + ' // ' + invOn.join(' | '));
+  else pass('invMenu on-chain clarity', 'invMenu shows ON-CHAIN ITEMS (N): SAFE ON DEATH vs off-chain bag items');
+
+  // 4. BarkSwap Pool DEX LP share + price-impact feedback (all labels <= 50 chars)
+  api.chainData.pools = [{ key: 258n, type: 1, level: 2, doge: 2n * 10n ** 18n, n: 2, shares: 2n * 10n ** 18n, mine: 10n ** 18n, buy: 206n * 10n ** 16n, sell: 65n * 10n ** 16n }];
+  api.marketMenu(npc(api, 'bank'));
+  const dexRows = api.get().ui.build().map(r => r.label);
+  const maxLen = Math.max(...dexRows.map(l => l.length));
+  if (!dexRows.some(l => /^POOL HAMMER LV2: 2 ITEMS \/ 2 DOGE \(LP 50%\)/.test(l))
+    || !dexRows.some(l => /^ SWAP 2\.06 DOGE -> 1 HAMMER LV2 \(\+106%\)/.test(l))
+    || !dexRows.some(l => /^ SWAP 1 HAMMER LV2 -> 0\.65 DOGE \(-35%\)/.test(l))
+    || maxLen > 50) fail('barkswap feedback', `maxLen=${maxLen} rows=${dexRows.join(' | ')}`);
+  else pass('barkswap feedback', `BarkSwap rows show LP 50% + (+106%)/(-35%) price impact (max label ${maxLen} <= 50 chars)`);
+  api.press('escape'); api.step(DT);
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

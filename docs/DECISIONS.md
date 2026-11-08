@@ -135,6 +135,23 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-038 · 2026-11-08 · Class combat balance proof, bag↔wallet NFT clarity, BarkSwap price-impact/LP-share feedback, HUD skill-cost indicator & TryNoah prompt convergence (Antigravity)
+- **Context / why:** Reserved for the Antigravity gameplay/UI lane (`ANTIGRAVITY_HANDOFF.md` §6–§7):
+  1. **TryNoah Prompt Convergence (`88b1bb1`):** Audited `MASTER_PROMPT.md` for LLM context waste (duplicate `§A`/`§B` sections, phantom ERC-20 mentions, unreachable CLI paths in fresh sandboxes, and 22 rows of historical git archaeology), converged `MASTER_PROMPT.md` with `D-039..D-041` + the pointer to `prompts/TRYNOAH_RECREATE.md` §5b, deleted the temporary `prompts/NOAH_MASTER_PROMPT_PROPOSAL.md`, and closed `L-021` by adding `[1b] Static Forbidden-API Gate` (`WebSocket` scoped to `MULTIPLAYER`) to `.agents|.claude/skills/analyzer-master/scripts/audit-scan.mjs`.
+  2. **Class Gameplay Feel & Balance (`balance-check`):** Verified and proved in `tests/sim.mjs` (`D-038` scenario) that every profession outperforms or uniquely differentiates against Basic Doge (`no class`, `5` dmg @ `0.28s` = `17.86` DPS, `60` HP):
+     - **WARRIOR (`1.35x` dmg, `85` HP, `+15%` armor):** Kills a `knight` (`35 HP`) in `5` hits (`1.36s` after first swing) vs Basic Doge's `7` hits (`1.68s`), and survives more brute hits (`100` effective HP vs `60`).
+     - **ARCHER (`1.0x` dmg, `0.24s` ranged cadence + `6 MP` 3-arrow volley, `1.25x` speed):** Fires ranged arrows faster than Basic Doge's melee (`20.83` DPS vs `17.86` DPS) and bursts down a `knight` (`35 HP`) from safe distance using `ARROW VOLLEY` + basic arrows without taking contact damage.
+     - **HEALER (`0.65x` staff dmg restoring `+2 MP`/hit, `45` HP, `1.25x` speed, `10 MP` `MEND` -> `+20 HP`):** Every `5` melee staff hits regenerate `+10 MP` (= 1 full `MEND` of `+20 HP`), giving `105+` effective HP across a sustained fight while moving `+25%` faster.
+  3. **Bag Items ↔ On-Chain Wallet Clarity (`invMenu`):** Added `ON-CHAIN ITEMS (N): SAFE ON DEATH` / `MINT AT SPHINX/FORGE` row in `invMenu()` so players immediately see that off-chain bag items/materials drop on death while minted wallet NFTs survive death.
+  4. **BarkSwap Pool DEX Price-Impact & LP-Share Feedback (`marketMenu`):** Pool header row now displays `(LP X%)` share inline (`POOL <ITEM>: N ITEMS / X DOGE (LP X%)`), and `SWAP` rows display inline price impact (`(+X%)` / `(-X%)` vs pool spot price `p.doge / p.n`), all keeping labels `<= 50` chars.
+  5. **HUD Skill-Cost Indicator & Camp Overlap Fix (`hudTag`, `drawHUD`):** Added `hudTag()` displaying active class + `K/Q` MP cost (`WARRIOR [SPC:CLEAVE K:SLAM 12MP]`, `ARCHER [SPC:ARROW K:VOLLEY 6MP]`, `HEALER [SPC:STAFF K:MEND 10MP]`, `NO CLASS [K:BARK 10MP]`) and positioned it at `y = playerInCamp() ? H - 17 : H - 9` so it never collides with the centered camp status prompt at `H - 9`.
+  6. **GitHub Repo Map + DogeOS Solidity (`^0.8.24`) Architecture Guide + 8-Step Developer Flow (`MASTER_PROMPT.md`, `index.html:963`, `L-027`):** Structured `MASTER_PROMPT.md` specifically to accompany the GitHub repository in TryNoah AI: added `§0` (DogeOS Chikyū EVM `0x5fdaf3` / Solidity `^0.8.24` lock, explicit negative constraint against Rust/Solana, and 8-step dependency build order), `§1` (complete GitHub repository file map + 18-section `index.html` index with line numbers & owned symbols), `§2` (DogeOS Solidity Architecture Guide with ASCII value/call diagram, exact function/constant specs verified line-by-line against `contracts/src/*.sol`, and Foundry deployment order), and updated `PARTNERS.noah.story[2]` in `index.html` to reference DogeOS EVM Solidity instead of Solana.
+- **Tool:** Antigravity CLI (`agy`), `analyzer-master`, `balance-check`, `dogeon-game`, `avax-defi-primitives`, `avax-frontend-ux`, `agent-browser` (`scripts/browser-smoke.sh`).
+- **Verify:** `node .agents/skills/analyzer-master/scripts/audit-scan.mjs && bash tests/check.sh && bash scripts/browser-smoke.sh`.
+- **Commit:** this commit.
+
+---
+
 ### D-037 · 2026-11-08 · Reproducibility & release track: generated recreation manifest, blueprint drift guard, dual-brain protocol, shared lessons ledger (Claude Code)
 - **Context / why (user's plan):** The user's stated goal moved from building features to **shipping + reproducing**:
   *"create the repo on github and a well detallado prompt to use it on trynoah ai to recreate the same project there without

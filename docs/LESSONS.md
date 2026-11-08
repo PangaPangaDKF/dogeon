@@ -249,6 +249,19 @@
   echo DIRTY`), and read raw output before trusting a summary line — including your own.
 - **Enforced by:** this entry.
 
+### L-027 · 2026-11-08 · Antigravity · prose contract specs drift from exact Solidity identifiers unless read line-by-line
+- **What happened:** While writing the DogeOS Solidity Architecture Guide in `MASTER_PROMPT.md` §2, reading `contracts/src/*.sol`
+  line-by-line revealed 4 places where the earlier prose summary had drifted from the real Solidity source:
+  1. `DogeItems.mint` requires `msg.value == mintFee` **exactly** (reverts `WrongFee`, does not refund overpayment) and `mintFee`
+     is a mutable state variable (`setMintFee`), not a `constant`.
+  2. `DogeStaking` uses `PREC = 1e12` (not `1e18`), receives fees via `receive()` / `notifyReward()` (not `notifyRewardAmount()`),
+     and parks rewards arriving when `totalStaked == 0` in `residual`.
+  3. `DogeProfession` exposes `uint256 public immutable fee` (selector `ddca3f43 = fee()`, not `profFee()`).
+  4. `DogeDEX.dogeUsd()` returns a 3-tuple `(uint256 price, uint256 updatedAt, bool fresh)`, not a 2-tuple.
+- **RULE:** Never summarize a contract from memory or from an older doc. Read every `.sol` file in `contracts/src/` before editing
+  contract specs in `MASTER_PROMPT.md`, and cross-check against `docs/RECREATION_MANIFEST.md` §4.
+- **Enforced by:** `MASTER_PROMPT.md` §2 + `node scripts/trynoah-manifest.mjs --verify`.
+
 ---
 
 ## Final Conclusions (the distilled decision rules for BOTH brains)

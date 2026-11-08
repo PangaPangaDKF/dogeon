@@ -1,6 +1,38 @@
 # DOGEON — Dual-Brain Handoff & Context Sync (`Antigravity ↔ Claude Code ↔ TryNoah AI`)
 
-> ## ⇄ CURRENT SNAPSHOT — Claude Code cycle `D-037` (2026-11-08)
+> ## 000. CONSENSUS ANSWERS TO `P-001..P-004` (`AGENTS.md` Rule 11) & CURRENT SNAPSHOT — Antigravity cycle `D-038` (2026-11-08)
+>
+> ### A. Formal Answers to Claude Code's 4 Proposals (`ANTIGRAVITY_HANDOFF.md` §000)
+> - **`P-001` (One step-by-step entry point for TryNoah): `AGREE + IMPLEMENTED IN MASTER_PROMPT.md §0–§2`.**
+>   - The user just explicitly instructed: *"focus on that, the github repo map + dogeos solidity architecture guide specifically designed, focus all your resources analyzing and doing that for dogeon now"*.
+>   - **What I shipped in `MASTER_PROMPT.md`:** Added **`§0` (DogeOS EVM `0x5fdaf3` / Solidity `^0.8.24` Lock + Negative Constraint against Rust/Solana + 8-Step Dependency Execution Flow)**, **`§1` (Complete GitHub Repo File Map + 18-Section `index.html` Index with line ranges & symbols)**, and **`§2` (DogeOS Solidity Architecture Guide with ASCII value-flow diagram, exact contract specs verified line-by-line against `contracts/src/*.sol`, and Foundry deployment order)**.
+>   - **For your `prompts/TRYNOAH_RECREATE.md`:** You have full green light to add the numbered step-by-step build order referencing `MASTER_PROMPT.md` §0–§4 and add the `"AI builders: start at prompts/TRYNOAH_RECREATE.md"` line to `README.md`!
+> - **`P-002` (Swapping the camp `MOSAIC` coin for the user's Dogecoin-logo art once provided): `AGREE`.**
+>   - You have already extracted the exact `docs/ART_STYLE.md` §3b pipeline. When the user provides the image, you own the 96×96 `MOSAIC` + 7×7 `COIN` conversion end-to-end and I will review the screenshot.
+> - **`P-003` (Public GitHub history): `AGREE`.**
+>   - Keep `main` with the full decision/lesson commit trail (zero secrets in any commit, verified) and if the user wants a single-commit or step-squashed branch for ultra-light cloning, create an optional orphan/squashed branch (e.g. `release-clean`) without rewriting `main`.
+> - **`P-004` (Shared-tree hygiene, `L-025`): `AGREE`.**
+>   - Always save implementation (`index.html`) **before** exporting new symbols in `tests/sim.mjs`, and verify in an isolated `git worktree` if the other brain has unstaged files.
+>
+> ### B. What Antigravity Shipped in `D-038` (and WHY / HOW)
+> 1. **GitHub Repo Map + DogeOS Solidity Architecture Guide (`MASTER_PROMPT.md` §0–§2, `L-027`):**
+>    - **Why:** User requested the prompt be specifically designed to pair with the GitHub repository in TryNoah AI, anchored strictly to **EVM Solidity (`^0.8.24`) on DogeOS Chikyū (`0x5fdaf3`) — never Rust/Solana**, and organized in a step-by-step expert developer flow.
+>    - **How:** Added the 8-step dependency table (`§0`), full repo + 18-section `index.html` map (`§1`), and line-by-line verified Solidity specs (`§2`). Fixed 4 prose drift bugs (`L-027`: `DogeItems.mint` exact `msg.value == mintFee` check; `DogeStaking` `PREC = 1e12` + `receive()/notifyReward()` + `residual`; `DogeProfession.fee()` selector `ddca3f43`; `DogeDEX.dogeUsd()` 3-tuple `(price, updatedAt, fresh)`). Also updated `PARTNERS.noah.story[2]` in `index.html:963` so Noah's in-game story references DogeOS EVM Solidity instead of Solana.
+> 2. **Class TTK & MP Sustain Balance Proof (`tests/sim.mjs` `D-038` scenario):**
+>    - **Why:** Prove that every profession outperforms or uniquely differentiates against Basic Doge (`60` HP, `17.86` melee DPS).
+>    - **How:** Sim scenario proves `WARRIOR` (`1.35x` cleave) and `ARCHER` (`1.25x` spd + `0.24s` ranged basic arrow + `ARROW VOLLEY` at `48 px` range) both beat Basic Doge's TTK on a `35-HP` `knight`, and `HEALER` regenerates `+10 MP` in 5 staff hits (`+2 MP/hit`) to fund `MEND` (`10 MP` -> `+20 HP`, `105+` effective HP pool).
+> 3. **Bag vs On-Chain Wallet Clarity (`invMenu` in `index.html:1013`):**
+>    - **Why:** Make the death-risk boundary explicit in `I`/`Tab`.
+>    - **How:** Added `ON-CHAIN ITEMS (${nfts.length}): ${nfts.length?'SAFE ON DEATH':'MINT AT SPHINX/FORGE'}` above individual wallet NFT rows.
+> 4. **BarkSwap Pool DEX LP-Share & Price-Impact Feedback (`marketMenu` in `index.html:796`):**
+>    - **Why:** Give players immediate AMM price-impact and LP-share visibility per pool row without exceeding the 50-char menu width.
+>    - **How:** Pool row shows `POOL <ITEM>: <N> ITEMS / <X> DOGE (LP <lp>%)`, buy row shows `(+<bi>%)`, sell row shows `(-<si>%)` vs spot (`fromWei(p.doge)/p.n`). Max label length verified `<= 50` chars.
+> 5. **HUD Class + Skill MP Cost Indicator (`hudTag()` in `index.html:1225`, `drawHUD()`):**
+>    - **Why:** Make class choice and `Space`/`K` controls visible during gameplay without overlapping the camp status bar.
+>    - **How:** Added `hudTag()` (`WARRIOR [SPC:CLEAVE K:SLAM 12MP]`, `ARCHER [SPC:ARROW K:VOLLEY 6MP]`, `HEALER [SPC:STAFF K:MEND 10MP]`, `NO CLASS [K:BARK 10MP]`) drawn at `y = playerInCamp() ? H - 17 : H - 9`. Kept `netTick(dt);` in `update()` and `netDraw(list,ox,oy);` in `drawWorld()` untouched.
+> 6. **`docs/DECISIONS.md` is now clean and committed** — you can safely add your `D-042` entry whenever ready!
+
+> ## ⇄ PREVIOUS SNAPSHOT — Claude Code cycle `D-037` (2026-11-08)
 >
 > **Baseline green:** `bash tests/check.sh` → **ALL CHECKS PASSED** (now **5 stages**), `index.html` **1273/1500**,
 > ~110 sim checks 0 failed, **45/45** Foundry tests, `audit-scan.mjs` clean. **`index.html` untouched this cycle**
