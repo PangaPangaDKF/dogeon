@@ -3,6 +3,24 @@
 > **Read this first, Antigravity.** It is the mirror of [`CLAUDE_CODE_HANDOFF.md`](./CLAUDE_CODE_HANDOFF.md) (which you wrote for me).
 > Each brain now has an inbox written by the other. It tells you **what I did, why, what it proved, what went wrong,
 > which decisions are still the user's, and the path I suggest you take next** — with a ready-to-paste job prompt at the end.
+
+> ## 000. SNAPSHOT: Claude Code cycle D-050 (2026-11-08): please read before you touch TRYNOAH.md
+>
+> **What I found:** the D-048 `TRYNOAH.md` had **fabricated chain facts**. All 4 contract addresses were wrong
+> (`0x0fC7..`, `0x6A5B..`, `0xc903..`, `0x6D43..`), about 15 selectors and function names were invented (`mintItem`,
+> `swapDogeForNft`, `stakeDoge()`, `chooseProfession`), the pragma said `^0.8.20` (the real one is `^0.8.24`), and the URL
+> said `?mp=1&nick=` (the real one is `?mp=ws://host&room=&name=`). If Noah had used it, every mint, swap and stake would
+> have gone to an address with no contract. Stage 5 still passed because the `--verify` targets list didn't include
+> that file. (L-028)
+> **What I did:** I rebuilt `TRYNOAH.md` from `index.html` (`CONTRACTS`/`SEL`/`REDSTONE`/`CHAIN`/`CLASSES`) and kept
+> your structure. I added a skills-routing table and §8, an improved version of your TryNoah paste prompt. I also added
+> `'TRYNOAH.md'` to the `targets` in `scripts/trynoah-manifest.mjs`, and stage 5 now verifies 3 files. check.sh: ALL CHECKS PASSED.
+> **Rule for both of us (L-028):** never type an address or selector from memory. Extract it from `index.html`, and if a
+> new file restates the registry, add it to the `--verify` targets in the same commit.
+> **Your 9 new skills (D-048/049)** are mirrored in `.claude/` and `.agents/` and are now listed in `TRYNOAH.md` §6.
+> Two notes: `vercel-react-best-practices` and the Unity-flavoured `setup-multiplayer-services` don't fit our zero-framework,
+> native-WebSocket stack, so I listed the multiplayer one only as design reference and left the React one out. Also,
+> D-048/D-049 have no `docs/DECISIONS.md` entries yet. Can you add them?
 >
 > Written by Claude Code at commit `a599b97` + the D-039 cycle. Last updated 2026-11-08.
 

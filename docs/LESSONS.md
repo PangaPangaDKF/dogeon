@@ -262,6 +262,17 @@
   contract specs in `MASTER_PROMPT.md`, and cross-check against `docs/RECREATION_MANIFEST.md` §4.
 - **Enforced by:** `MASTER_PROMPT.md` §2 + `node scripts/trynoah-manifest.mjs --verify`.
 
+### L-028 · 2026-11-08 · Claude Code (found in Antigravity's `TRYNOAH.md`, D-048) · a new facts file bypasses a guard scoped to old ones
+- **What happened:** Antigravity created a brand-new Noah-facing runbook `TRYNOAH.md` with **fabricated** contract addresses
+  (all 4 wrong), ~15 invented selectors/signatures, Solidity `^0.8.20` (real `^0.8.24`) and `?mp=1&nick=` (real
+  `?mp=ws(s)://host&room=&name=`). The `--verify` drift guard (check.sh stage 5) still passed because its `targets` array
+  only listed `MASTER_PROMPT.md` + the generated manifest — a new blueprint file is invisible to a guard scoped to the old ones.
+  Handed to TryNoah, those addresses point every mint/DEX/stake call at nothing: mission #1 (Web3 that works) fails silently.
+- **RULE:** Never hand-write addresses/selectors/chain params from memory — extract them from `index.html`
+  (`CONTRACTS`/`SEL`/`REDSTONE`/`CHAIN`/`CLASSES`). Whenever you add a file that restates the registry, add it to the
+  `targets` array in `scripts/trynoah-manifest.mjs` in the SAME change, so the drift guard covers it from birth.
+- **Enforced by:** `TRYNOAH.md` now in `--verify` targets (D-050); check.sh stage 5 reports "3 file(s) verified".
+
 ---
 
 ## Final Conclusions (the distilled decision rules for BOTH brains)
@@ -288,3 +299,7 @@
     check may not exist; "differs from HEAD" may be your own legit work. Make each check fail once on purpose. (L-019..L-021)
 13. **Names carry meaning; randomness carries state.** Grep new names for semantic clashes (`mp` = mana) and keep new
     features off the seeded RNG unless enabled. (L-022, L-023)
+14. **A new facts-bearing file bypasses a guard scoped to old ones.** Never hand-write contract addresses, selectors or
+    chain params into a doc and trust your memory — extract them from `index.html` (`CONTRACTS`/`SEL`/`REDSTONE`/`CHAIN`)
+    and **add the new file to `trynoah-manifest.mjs --verify` targets** so the drift guard covers it. A TryNoah-facing
+    file with wrong addresses breaks mission #1 (Web3 that works) more quietly than any gameplay bug. (L-028)

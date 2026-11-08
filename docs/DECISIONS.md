@@ -35,6 +35,15 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-050 · 2026-11-08 · Fix fabricated addresses/selectors in `TRYNOAH.md` + close the drift-guard hole (Claude Code)
+- What: Rewrote `TRYNOAH.md` (the single Noah entry point) and added it to the `scripts/trynoah-manifest.mjs --verify` target list.
+- Why: Antigravity's `TRYNOAH.md` (D-048) carried **fabricated** facts — all 4 contract addresses wrong (`0x0fC7..`, `0x6A5B..`, `0xc903..`, `0x6D43..`), ~15 invented selectors/signatures (`mintItem`, `swapDogeForNft`, `stakeDoge()`), Solidity `^0.8.20` (real `^0.8.24`), and `?mp=1&nick=` (real `?mp=ws(s)://host&room=&name=`). Handing that to TryNoah guarantees every mint/DEX/stake call hits a non-existent contract → mission priority #1 (Web3 that WORKS) silently fails. The `--verify` drift guard (check.sh stage 5) only scanned `MASTER_PROMPT.md` + the generated manifest, so a brand-new blueprint file bypassed it entirely.
+- How: Rebuilt `TRYNOAH.md` from source-of-truth (`CONTRACTS`/`SEL`/`REDSTONE`/`CHAIN`/`CLASSES` in `index.html`): correct 4 addresses + RedStone feed/adapter, all 30 `SEL` selectors verbatim, correct chain/fees/item-types, correct run command (`node server/relay.mjs` on :8787) and `?mp=` format, the 3-class matrix with the Healer-heals-party fact (D-046), a skills-routing table (load `dogeon-mission` first), and pointers to `MASTER_PROMPT.md` §A + `prompts/TRYNOAH_RECREATE.md` + `RECREATION_MANIFEST.md`. Added `'TRYNOAH.md'` to the `targets` array in `scripts/trynoah-manifest.mjs` so any future drift in it fails the build.
+- Tool: Claude Code (Opus 4.8); `dogeon-mission` + `dogeon-game` context; grep/sed source extraction.
+- Alternatives rejected: (a) delete `TRYNOAH.md` and keep only `TRYNOAH_RECREATE.md` — rejected, the user is actively handing `TRYNOAH.md` to Noah as a standalone system prompt, so it must exist and be correct. (b) Add an absence-check (flag any 0x-address that isn't ours) to the guard — rejected as too fragile (would false-positive on the legit local-anvil `0x7a69` addresses and the deployer). Presence-of-all-correct-facts already catches a wrong-address file.
+- Verify: `node scripts/trynoah-manifest.mjs --verify` → "3 file(s) verified", TRYNOAH.md OK (4 addresses, 30 selectors, 3 classes); `bash tests/check.sh` → ALL CHECKS PASSED (6 stages).
+- Commit: this commit.
+
 ### D-047 · 2026-11-08 · HUD wallet DOGE balance display, live RedStone USD sync & 70h project audit (Antigravity)
 - **Context / why:** User: *"i want to show my doge balance in my wallet on the ui, the game has a balanace but shows 0 syncronize it with the real price from the app redstone and add it there … tell me how god % the game is as the main plan i will create another accound and try to play with both accounts to test the game play, but the next step is clean everything and make the commit … do we need a better main start scren? do we nee to improve the dex and the nfts smart contracts? it is the reward from mints to the stakers working? … WAIT FORGET ABOUT THE ARCHER GAME PLAY LEAVE IT LIKE IT IS , continue"*.
 - **What was done:**

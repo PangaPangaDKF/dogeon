@@ -165,7 +165,7 @@ if (args.includes('--verify')) {
   // Only files that are SUPPOSED to carry the registry verbatim. prompts/TRYNOAH_RECREATE.md is deliberately
   // excluded: it delegates to §A + the manifest instead of restating addresses (restating them is what causes drift).
   // Checking the generated manifest catches "an address changed but nobody re-ran --out".
-  const targets = ['MASTER_PROMPT.md', 'docs/RECREATION_MANIFEST.md'].filter(f => existsSync(join(root, f)));
+  const targets = ['MASTER_PROMPT.md', 'docs/RECREATION_MANIFEST.md', 'TRYNOAH.md'].filter(f => existsSync(join(root, f)));
   let bad = 0;
   console.log('=== TRYNOAH BLUEPRINT DRIFT GUARD ===');
   if (forbidden.length) { console.log(`  FAIL forbidden API in index.html: ${forbidden.join(', ')}`); bad++; }
