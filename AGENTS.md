@@ -37,8 +37,11 @@ Two agents work this repo. These rules exist because real collisions already hap
 3. **Claim the decision number first.** `grep -oE 'D-0[0-9]+' docs/DECISIONS.md | sort -u | tail -1`, then write your
    `### D-NNN` heading **before** coding. Two agents must never both write the same `D-NNN`.
 4. **One logical change per commit**, Conventional Commits, and state in the body which brain authored it.
-5. **Shared blackboard:** [`CLAUDE_CODE_HANDOFF.md`](./CLAUDE_CODE_HANDOFF.md). When you finish a cycle, update its
-   "Current Snapshot" and leave a concrete *next* task. Read it first; it is the fastest way to inherit context.
+5. **Two inboxes, one per brain — read yours first:**
+   - **Antigravity reads [`ANTIGRAVITY_HANDOFF.md`](./ANTIGRAVITY_HANDOFF.md)** (written by Claude Code: what it did, why, proof,
+     pending user decisions, your next path + a ready-to-paste job prompt).
+   - **Claude Code reads [`CLAUDE_CODE_HANDOFF.md`](./CLAUDE_CODE_HANDOFF.md)** (written by Antigravity).
+   When you finish a cycle, update **the other brain's** inbox with what you did, why, and a concrete next task.
 6. **Lane preferences** (soft ownership — reduces overlap, not a hard wall):
    | Lane | Typical owner | Files |
    |---|---|---|

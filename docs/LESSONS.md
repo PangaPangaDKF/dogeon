@@ -160,6 +160,25 @@
   An additive edit that shows deletions is a red flag — stop and inspect.
 - **Enforced by:** `AGENTS.md` §1b rule 10 (pre-commit diff check); this entry.
 
+### L-017 · 2026-11-08 · Claude Code · "file modified on disk" is a question, not an answer
+- **What happened:** Twice in D-039 the edit tool warned that `index.html` / `CLAUDE.md` had "been modified on disk since you
+  last read it". That could mean the other brain is editing live (stop!) **or** merely that it *committed* changes since this
+  brain's last read in an earlier session (harmless). Guessing either way is wrong: guessing "harmless" risks a collision,
+  guessing "collision" stalls work.
+- **How it was resolved:** `git log --oneline -1` (HEAD unchanged at `a599b97`) + `git diff --numstat` (exactly the 2 lines I
+  wrote) proved it was the old committed changes. No live edit.
+- **RULE:** Treat the warning as a **trigger to run the collision check**, then decide on evidence: HEAD moved or the numstat
+  contains lines you didn't write → the other brain is active (stop, read, report); otherwise proceed.
+- **Enforced by:** `AGENTS.md` §1b rule 10.
+
+### L-018 · 2026-11-08 · Claude Code · a green mock suite is not proof the deployed contracts work
+- **What happened:** ~110 sim checks were green, but they drive a **mock** wallet. On the real chain the DEX had **zero pools**
+  and the wallet **zero items** — the mint → LP → swap → fee → reward loop had never actually run on DogeOS.
+- **Fix:** `scripts/e2e-chikyu.sh` runs the full loop against the deployed contracts: 17/17 PASS, fee split verified to the wei.
+- **RULE:** Keep **two** proofs: the fast deterministic sim (logic, every commit) **and** a live on-chain E2E (deployed bytecode,
+  after any contract/CHAIN change or redeploy). A mock can't catch a wrong selector, a fee-order bug or a bad deploy.
+- **Enforced by:** `scripts/e2e-chikyu.sh` (run it after every redeploy and before a release / TryNoah handoff).
+
 ---
 
 ## Final Conclusions (the distilled decision rules for BOTH brains)
@@ -180,3 +199,5 @@
    edit shows deletions, you are about to revert someone. Restore from `git`, never from a stale backup. (L-011, L-012, L-016)
 9. **Say which mode you are in: exact replica or rebuild.** Never imply byte-exactness from a prose spec. (L-014)
 10. **Prove the bug before fixing it, and fix the class, not the instance** — then encode the class as a rule here.
+11. **Mocks prove logic; only the live chain proves deployment.** Run `scripts/e2e-chikyu.sh` after any contract or CHAIN change.
+    A tool warning about changed files is a cue to run the collision check, not a verdict. (L-017, L-018)

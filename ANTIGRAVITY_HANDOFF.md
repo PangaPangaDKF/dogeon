@@ -1,0 +1,219 @@
+# DOGEON — Handoff from Claude Code → Antigravity CLI (`agy`)
+
+> **Read this first, Antigravity.** It is the mirror of [`CLAUDE_CODE_HANDOFF.md`](./CLAUDE_CODE_HANDOFF.md) (which you wrote for me).
+> Each brain now has an inbox written by the other. It tells you **what I did, why, what it proved, what went wrong,
+> which decisions are still the user's, and the path I suggest you take next** — with a ready-to-paste job prompt at the end.
+>
+> Written by Claude Code at commit `a599b97` + the D-039 cycle. Last updated 2026-11-08.
+
+---
+
+## 0. TL;DR (30 seconds)
+
+1. **Your work is intact and verified.** Your `38afe5a` MASTER_PROMPT rewrite passes the new drift guard (4 live addresses,
+   30 selectors, 3 classes — all present). Your D-034..D-036 code passes every check.
+2. **I own the release / CHAIN lane; you own gameplay.** I did not touch gameplay logic. I removed 3 dead constants only.
+3. **The DeFi loop is now proven on the real chain:** `scripts/e2e-chikyu.sh` → **17/17 PASS** on DogeOS Chikyū, fee split
+   verified to the wei. First real item NFTs (ids 1–3) and first real pool (`769`) were created and cleaned up.
+4. **Green light on `MASTER_PROMPT.md`:** I'm done with it (my only edit was one §G ledger row). Merge your
+   `prompts/NOAH_MASTER_PROMPT_PROPOSAL.md` improvements into it, then delete the proposal file (details in §6).
+5. **One collision happened and involved your commit** — fully recovered, nothing lost. Read §4; it produced a new rule we both follow.
+6. **Your next job is `D-038` (gameplay polish)** — reserved for you, nobody else will use that number. See §7–§9.
+
+---
+
+## 1. What I did, and WHY
+
+### D-037 — Reproducibility & release (`a599b97`)
+The user's goal shifted from building features to **shipping and reproducing** the project in TryNoah AI. The core risk I found:
+**a hand-written recreation prompt silently goes stale.** Change one contract address and `MASTER_PROMPT.md` would keep
+telling Noah the old one, and nobody would notice. "Nothing is missing" was an unverifiable claim. So:
+
+| Added | What it does | Why |
+|---|---|---|
+| `scripts/trynoah-manifest.mjs` | Derives the full inventory **from source**: 17 sections, `CONTRACTS` (both chains), 30 `SEL`, every external/public Solidity fn, class stats, items/mintables/recipes, NPCs, enemies, constants, 21 real on-chain actions, all sim scenarios. `--out` writes it, **`--verify`** is a drift guard. | Facts that are *generated* can't drift; facts that are *written* always do. |
+| `tests/check.sh` **stage 5** | Runs `--verify` on every check. | A stale Noah prompt now **fails the build** instead of shipping wrong addresses. |
+| `docs/RECREATION_MANIFEST.md` | The generated completeness contract. | **Never hand-edit.** Re-run `--out` after changing any registry/stat. |
+| `prompts/TRYNOAH_RECREATE.md` | Deploy runbook: **Path A = exact replica** (hand Noah the real source) vs **Path B = blueprint rebuild** (your spec prompt). Static-host steps + browser acceptance test + live-chain proof. | No prose prompt can clone 1,273 lines of hand-tuned canvas code byte-for-byte. The user wants it *exact*, so the honest method is Path A; your MASTER_PROMPT powers Path B. |
+| `AGENTS.md` §1b | 10-rule Dual-Brain Protocol. | Real collisions happened (§4). |
+| `docs/LESSONS.md` | Shared error→rule ledger, **L-001..L-018**, + 11 Final Conclusions. | User rule: *"every error you see add it as a note … learn from that … from both sides."* |
+| `scripts/publish-github.sh` | One-command GitHub publish behind a hard secret gate + the test suite. | Repo creation needs a token neither of us has; the step is reduced to one command for the user. |
+
+### D-039 — Dead code + live on-chain proof (this cycle)
+- **Removed** `SWORD_COST`, `ARMOR_COST` (leftovers of the Phase-1 DOGE shop that your forge `RECIPES` replaced — they would
+  mislead a Noah rebuild into recreating a shop that doesn't exist) and `TS=16` (tiles use literal 16). Proven dead first;
+  every reader updated (`CLAUDE.md`, manifest script, regenerated manifest).
+- **Added `scripts/e2e-chikyu.sh`:** the sim drives a **mock** wallet, so it can't prove the deployed bytecode. This runs the
+  real loop: stake → mint 3 RAW FISH → approve → create pool → swap both ways → fee → `flushStakerFees()` → reward → `claim()`
+  → `withdraw()` → remove LP → unstake. **17/17 PASS.**
+
+---
+
+## 2. Proof (so you can trust the baseline without re-deriving it)
+
+```
+bash tests/check.sh            → ALL CHECKS PASSED (5 stages)
+                                  static rules · node --check · ~110 sim checks 0 failed/0 warnings · 45/45 forge · drift guard
+bash scripts/e2e-chikyu.sh     → 17 passed, 0 failed   (needs DEPLOY_KEY in env; testnet throwaway only)
+node .agents/skills/analyzer-master/scripts/audit-scan.mjs → 1273/1500 lines, selector parity OK, 0 collisions
+```
+**Fee split, verified on-chain to the wei:** stakers' 0.8% = `0.0001632` (buy) + `0.000158368` (sell) = `0.000321568` =
+exactly `stakerFees` = exactly `pendingRewards`. Project 0.2% = `0.000080392`. Ratio **4.000**. The DEX is correct.
+
+Also seen on-chain: `professionOf(deployer) = 2` → your on-chain class oath works (that wallet is ARCHER forever).
+
+---
+
+## 3. What I deliberately did NOT do (and why) — please don't do these unilaterally either
+
+These need **the user's** decision, not ours:
+
+| Pending decision | Facts | Why we must ask |
+|---|---|---|
+| **Delete `docs/art/` reference images** | 1.54 MB = **37% of the repo**, 0 code references. The user's own NPC source images (D-024). | Deleting the user's assets is their call. (Still in git history either way.) |
+| **Prune skill packs** | Every skill is mirrored in `.agents/` **and** `.claude/` (~2× weight). Out-of-scope packs: `rust-best-practices` (no Rust here, 212 KB), `game-design-document` (Python docx/pdf/pptx generators, 880 KB), `caveman-compress` (Python, 208 KB). | Some were **explicit user requests** (D-003), and the mirror is how *you* load skills. Removing them could break your tooling. |
+| **Multiplayer** | User wants "at least 3 players, or at least the option to host a server — just add the option, don't fully develop it", and asked us to research open-source options. | **Claude Code is taking this as `D-040`** (research + an opt-in option). Don't start a parallel implementation — collision risk. |
+
+---
+
+## 4. The collision that involved your commit (transparent account) → `L-016`
+
+While I was working, you committed `38afe5a`. Earlier I had copied `MASTER_PROMPT.md` to `/tmp` for a drift-guard negative
+test and restored it from that copy — **which silently reverted your 208-line rewrite in my working tree.** My next commit
+would have shipped that revert under my name.
+
+**Caught before committing** by `git log -1` (HEAD had moved) + `git diff --numstat` (`+208/-358` on a file I meant to add
+2 lines to). Fixed with `git checkout -- MASTER_PROMPT.md CLAUDE_CODE_HANDOFF.md`, then re-applied only my additions
+(ledger `+2/-1`, handoff `+32/-0`). **Nothing of yours was lost.**
+
+**New binding rule for both of us (`AGENTS.md` §1b rule 10):** before every commit run `git log --oneline -1` and
+`git diff --numstat`; an additive change that shows deletions means you're reverting the other brain — stop. Never restore a
+file from a backup made earlier in the session; use `git checkout -- <file>`.
+
+And a symmetric thank-you: your `NOAH_MASTER_PROMPT_PROPOSAL.md` header says you kept it separate *"to avoid any merge or edit
+conflicts while Claude finishes its pass"* — that is exactly the protocol working. I read it; I did not touch it.
+
+---
+
+## 5. Lessons you should load before deciding (full list: `docs/LESSONS.md`)
+
+- **L-001** Gate offline fallbacks on `!chainReady() || !addrs().x` — never on "contract not deployed".
+- **L-002** Changing a serialized shape (`CONTRACTS`, `SEL`, deployment JSON) → grep every parser in the same commit.
+- **L-008** No state changes in `render()` (you found this one — G-5).
+- **L-009** Derive thresholds from the geometry they protect (you found this one — G-4).
+- **L-013/L-014** One source of truth, generated not written; never imply a prose prompt is byte-exact.
+- **L-016/L-017** Pre-commit collision check; a "file modified on disk" warning is a cue to check, not a verdict.
+- **L-018** Mocks prove logic, only the live chain proves deployment → run `e2e-chikyu.sh` after contract/CHAIN changes.
+
+When **you** hit an error, append `L-019+` with root cause → RULE → what enforces it. Claim the number with
+`grep -oE 'L-0[0-9]+' docs/LESSONS.md | sort -u | tail -1`.
+
+---
+
+## 6. Converging the three TryNoah prompt artifacts (please do this first)
+
+We now have three files that all talk to Noah. Three competing prompts = guaranteed drift (L-013). Suggested split:
+
+| File | Role | Owner |
+|---|---|---|
+| `MASTER_PROMPT.md` | **The** spec prompt (Path B rebuild) + §G ledger. Single source for "what to build". | **You** (green light — I'm done with it) |
+| `prompts/TRYNOAH_RECREATE.md` | The runbook: Path A exact deploy, hosting, acceptance tests, live-chain proof, publish. Points at MASTER_PROMPT for the spec; never restates addresses. | Claude Code |
+| `prompts/NOAH_MASTER_PROMPT_PROPOSAL.md` | Your audit + candidate. **Merge its improvements into `MASTER_PROMPT.md`, keep the Part-1 audit findings as a short note in `docs/DECISIONS.md`, then delete this file.** | You |
+
+When merging, keep these in `MASTER_PROMPT.md` §G (your proposal's ledger stops at `D-036`):
+- my `D-037` row (already there), and add a `D-039` row: *dead `SWORD_COST/ARMOR_COST/TS` removed; `scripts/e2e-chikyu.sh` live
+  proof 17/17*.
+- Do **not** mention `SWORD_COST` / `ARMOR_COST` / `TS` anywhere — they no longer exist.
+
+Then run `node scripts/trynoah-manifest.mjs --verify` — it must say OK for `MASTER_PROMPT.md`.
+
+---
+
+## 7. Suggested path for you — `D-038` (gameplay lane), in priority order
+
+The user's priority list right now: *contracts, DEX, wallet balance, item minting, character gameplay, bag items, everything
+fitting DogeOS, remove dead weight, keep the test→fix→improve-Noah-prompt loop running.* I took contracts/DEX/minting proof.
+These are yours and are high-leverage:
+
+1. **Class gameplay feel & balance (biggest player-visible win).** Use `balance-check`. Measure time-to-kill per enemy type
+   for basic doge vs WARRIOR / ARCHER / HEALER, and MP economy per minute (MEND/GROUND POUND/VOLLEY costs vs camp-only MP
+   refill). The user stated: *basic doge = weak attack; monsters are always strong; professions make you stronger.* Assert it:
+   add sim checks that each profession beats the basic doge's TTK on the same enemy.
+2. **Bag items ↔ chain clarity.** The bag shows WOOD/STONE + materials; minted items live in the wallet. Make the boundary
+   obvious in `invMenu` (e.g., an "ON-CHAIN ITEMS (N)" row mirroring BarkSwap's `WALLET ITEMS`), so players understand
+   "bag = off-chain, at risk on death; wallet NFTs = on-chain, safe". Pure UI — no contract change.
+3. **BarkSwap row feedback.** Show price impact and LP share per pool row (the data is already in `chainData.pools`:
+   `doge`, `n`, `shares`, `mine`, `buy`, `sell`). Keep labels ≤ 50 chars.
+4. **HUD skill-cost indicator** (class + `K/Q` MP cost), so the class choice is visible in play.
+
+For every change: sim assertion first, `bash tests/check.sh` (5 stages), then `node scripts/trynoah-manifest.mjs --out
+docs/RECREATION_MANIFEST.md` so Noah's manifest stays in sync, then update `MASTER_PROMPT.md` (the "improve the Noah prompt
+after each fix" loop the user asked for).
+
+**Avoid without coordinating via this file:** `contracts/**`, the `CHAIN` section of `index.html`, `scripts/**`,
+`prompts/TRYNOAH_RECREATE.md`, and anything multiplayer — those are in my lane right now.
+
+---
+
+## 8. How to use the new tools (teach-yourself in 2 minutes)
+
+```bash
+# 1. Is any recreation prompt stale? (also runs inside tests/check.sh as stage 5)
+node scripts/trynoah-manifest.mjs --verify
+
+# 2. Regenerate the Noah completeness manifest after you change CLASSES / MINTABLE / RECIPES / NPCs / constants
+node scripts/trynoah-manifest.mjs --out docs/RECREATION_MANIFEST.md
+
+# 3. Prove the DEPLOYED contracts still work (after any contract / CHAIN change or redeploy)
+DEPLOY_KEY=<testnet throwaway key> bash scripts/e2e-chikyu.sh        # never commit or print the key
+
+# 4. Publish to GitHub (only when the user provides a token)
+bash scripts/publish-github.sh <user>/<repo>     # refuses to push if a secret is tracked; runs the suite first
+
+# 5. Before EVERY commit (L-016)
+git log --oneline -1 && git diff --numstat       # HEAD moved? an additive edit showing deletions? → stop
+```
+
+---
+
+## 9. Roadmap to the deadline (both brains)
+
+| # | Item | Lane | Status |
+|---|---|---|---|
+| 1 | Release tooling: manifest, drift guard, runbook, protocol, lessons, publish script | Claude | ✅ D-037 |
+| 2 | Dead code (game) + live on-chain E2E of the full DeFi loop | Claude | ✅ D-039 |
+| 3 | Converge the 3 Noah prompt files into MASTER_PROMPT + runbook | **Antigravity** | ⏳ §6 |
+| 4 | Class balance, bag↔wallet clarity, BarkSwap feedback, HUD skill cost | **Antigravity** | ⏳ D-038 |
+| 5 | Multiplayer: research open-source options + an opt-in "host a server" option | Claude | ⏳ D-040 |
+| 6 | Project weight (art + skill packs) | **User decides** | ❓ §3 |
+| 7 | GitHub repo | User (token) | 🔑 one command ready |
+| 8 | TryNoah deploy (Path A) + browser acceptance test | User / either | after 3–7 |
+
+---
+
+## 10. Ready-to-paste job prompt for Antigravity
+
+```markdown
+You are the gameplay-lane engineer on DOGEON (@index.html). Claude Code owns contracts/CHAIN/release/multiplayer right now.
+
+STEP 1 — Sync (RULE #0):
+- Read @ANTIGRAVITY_HANDOFF.md (this file), @AGENTS.md §1b (Dual-Brain Protocol), and @docs/LESSONS.md "Final Conclusions".
+- `git status --short && git log --oneline -3` — if the tree has edits you didn't make, do NOT touch those files.
+- `node .agents/skills/analyzer-master/scripts/audit-scan.mjs && bash tests/check.sh` must be green (5 stages).
+
+STEP 2 — Converge the Noah prompts (handoff §6):
+- Merge @prompts/NOAH_MASTER_PROMPT_PROPOSAL.md improvements into @MASTER_PROMPT.md; keep the D-037 §G row, add D-039;
+  never mention SWORD_COST/ARMOR_COST/TS; delete the proposal file; `node scripts/trynoah-manifest.mjs --verify` must be OK.
+- Commit that alone (one logical change).
+
+STEP 3 — D-038 gameplay polish (handoff §7), in this order:
+1. Class balance with `balance-check`: sim assertions that each profession beats the basic doge's time-to-kill; MP economy.
+2. Bag vs wallet clarity in `invMenu` ("ON-CHAIN ITEMS (N)" row). 3. BarkSwap price-impact + LP-share per row.
+4. HUD class + K/Q MP cost.
+For each: failing sim assertion first → fix → `bash tests/check.sh` → `node scripts/trynoah-manifest.mjs --out
+docs/RECREATION_MANIFEST.md` → update @MASTER_PROMPT.md → log D-038 in @docs/DECISIONS.md → commit.
+
+RULES: claim D-NNN before coding; pre-commit `git log -1 && git diff --numstat`; append any error you hit to
+@docs/LESSONS.md as L-019+; leave a clean tree and update @CLAUDE_CODE_HANDOFF.md "CURRENT SNAPSHOT" with your next suggestion.
+Do NOT touch contracts/**, the CHAIN section, scripts/**, prompts/TRYNOAH_RECREATE.md, or multiplayer without coordinating here.
+```

@@ -104,6 +104,19 @@ all 30 `SEL` selectors · the RedStone feed + adapter · every external/public S
 stats · item types, mintables and forge recipes · NPCs, enemy types and balance constants · every on-chain action
 and menu function · and the full list of headless sim scenarios that must pass.
 
+### 3b. Live on-chain proof (the contracts the app talks to really work)
+
+The headless sim drives a **mock** wallet, so it proves logic but not the deployed bytecode. The live contracts are proven
+separately with `scripts/e2e-chikyu.sh`, which runs the exact loop the game's UI exposes on DogeOS Chikyū:
+
+```bash
+DEPLOY_KEY=<testnet throwaway key> bash scripts/e2e-chikyu.sh   # never paste this key into TryNoah
+```
+Last run (D-039): **17/17 PASS** — stake → mint 3 item NFTs → approve → create pool → swap DOGE→item → swap item→DOGE →
+protocol fee accrues → `flushStakerFees()` → staker reward → `claim()` → `withdraw()` → remove LP → unstake. The 1% fee
+split was verified **to the wei** (project 0.2% : stakers 0.8% = exactly 1 : 4). So a Path-A deploy needs no contract work:
+the addresses baked into `index.html` are live and correct.
+
 **Checklist to call a recreation complete**
 - [ ] Every manifest §1–§8 row exists in the rebuild.
 - [ ] Wallet connect adds **and** switches to `0x5fdaf3`; app still fully playable with the wallet rejected.
@@ -111,6 +124,8 @@ and menu function · and the full list of headless sim scenarios that must pass.
 - [ ] BarkSwap DEX: mint → wallet items row → create pool → swap both ways → add/remove LP → withdraw proceeds.
 - [ ] Staking: stake, claim, unstake, and `flushStakerFees()` sync.
 - [ ] `node scripts/trynoah-manifest.mjs --verify` exits 0.
+- [ ] After any redeploy: `bash scripts/e2e-chikyu.sh` → all PASS (fee split 1:4 on-chain).
+- [ ] No legacy DOGE-shop constants (`SWORD_COST`/`ARMOR_COST` were removed in D-039 — gear comes only from forge `RECIPES`).
 
 ---
 

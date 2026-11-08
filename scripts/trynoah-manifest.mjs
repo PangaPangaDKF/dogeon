@@ -55,7 +55,7 @@ const links = Object.fromEntries([...block(html, 'const LINKS=').matchAll(/(\w+)
 
 const num = re => { const m = html.match(re); return m ? m[1] : '?'; };
 const consts = {
-  W: num(/\bW=(\d+)/), H: num(/\bH=(\d+)/), TS: num(/\bTS=(\d+)/),
+  W: num(/\bW=(\d+)/), H: num(/\bH=(\d+)/), HUD_H: num(/HUD_H=(\d+)/),
   MW: num(/MW=(\d+)/), MH: num(/MH=(\d+)/),
   REST_CAP: num(/REST_CAP=([\d.]+)/), REST_DELAY: num(/REST_DELAY=([\d.]+)/), RESPAWN_FRAC: num(/RESPAWN_FRAC=([\d.]+)/),
   FIELD_POP: num(/FIELD_POP=(\d+)/), DUN_POP: num(/DUN_POP=(\d+)/), SPAWN_EVERY: num(/SPAWN_EVERY=(\d+)/),

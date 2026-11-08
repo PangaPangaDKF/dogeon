@@ -35,6 +35,39 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-039 · 2026-11-08 · Dead-code removal + LIVE on-chain E2E proof of the whole DeFi loop (Claude Code; D-038 reserved for Antigravity)
+- **Context / why:** User: *"remove dead code to remove weight"* and *"make sure that everything works as intended, the mint the
+  pools the dex"*. The 110-check headless sim proves the game logic, but it drives a **mock** EIP-1193 provider — it cannot prove
+  that the deployed Solidity actually behaves. The live DEX had **zero pools** and the wallet **zero items**: the mint → LP →
+  swap → fee → staking-reward loop had never been exercised on the real chain.
+- **Dead code removed (proven first — defined once, read nowhere):** `SWORD_COST` and `ARMOR_COST` (leftovers from the Phase-1
+  DOGE shop that the forge `RECIPES` replaced — worse than weight: they would mislead a TryNoah rebuild into recreating a shop that
+  no longer exists) and `TS=16` (tiles use a literal 16). Every reader updated in the same commit (L-002): `CLAUDE.md` code map,
+  `scripts/trynoah-manifest.mjs` (now reports `HUD_H`), manifest regenerated. Gameplay unchanged — sim 0 failed.
+- **Deliberately NOT removed (needs the user's call, see handoff):** the 1.54 MB of reference art in `docs/art/` (the user's own
+  NPC source images, 0 code references, 37% of repo weight) and duplicated/out-of-scope skill packs (`rust-best-practices`,
+  `game-design-document` Python generators, `caveman-compress` — mirrored in both `.agents/` and `.claude/`). Those were installed
+  on purpose (D-003 was a user request) and power the other brain's tooling; deleting them unilaterally would break both rules
+  "don't touch the other brain's work" and "confirm before irreversible-looking project changes".
+- **Live E2E (`scripts/e2e-chikyu.sh`, new, reusable):** **17/17 PASS** on chain 6281971 against the real `DogeItems`/`DogeDEX`/
+  `DogeStaking`: stake → mint 3 RAW FISH (ids 1-3) → approve → create pool `769` (2 items + 0.02 DOGE) → `allPools()` →
+  swap DOGE→item (`0.020604`) → swap item→DOGE (net `0.01959804`) → `stakerFees` → `flushStakerFees()` → reset to 0 →
+  `pendingRewards` → `claim()` → `withdraw()` → `removeLiquidity` → withdraw LP → unstake.
+  **Fee math verified to the wei:** stakers' 0.8% = `0.0001632` (buy) + `0.000158368` (sell) = `0.000321568` = exactly
+  `stakerFees` = exactly `pendingRewards` (sole staker). Project 0.2% = `0.000080392`; proceeds = sell net + project share =
+  `0.019678432` exactly. Project:staker ratio **4.000** → the 0.2 % / 0.8 % split is exact on-chain.
+  Also observed: `professionOf(deployer) = 2` → Antigravity already proved the on-chain class oath (wallet is ARCHER forever).
+- **Cost:** ~0.3 DOGE of testnet fees (mint fees go to the treasury = the deployer). Key read from the environment only, never printed.
+- **Alternatives rejected:** trusting the mock sim as proof of on-chain behaviour (mocks can't catch ABI/selector/fee-order bugs);
+  removing dead *contract* functions (`setMintFee`, `poolTvlUsd`, …) — they are deployed and tested, removing them forces a redeploy
+  and new addresses for zero runtime gain.
+- **Verify:** `bash tests/check.sh` → ALL CHECKS PASSED (5 stages, 0 sim failures, 45/45 forge, drift guard green);
+  `bash scripts/e2e-chikyu.sh` → 17 passed, 0 failed.
+- **Tool:** Claude Code (Opus 5.5), Foundry `cast` 1.5.1, `analyzer-master` gate, `avax-defi-primitives` reasoning for the fee audit.
+- **Commit:** this commit.
+
+---
+
 ### D-037 · 2026-11-08 · Reproducibility & release track: generated recreation manifest, blueprint drift guard, dual-brain protocol, shared lessons ledger (Claude Code)
 - **Context / why (user's plan):** The user's stated goal moved from building features to **shipping + reproducing**:
   *"create the repo on github and a well detallado prompt to use it on trynoah ai to recreate the same project there without
