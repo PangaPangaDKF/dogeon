@@ -35,6 +35,33 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-036 · 2026-11-08 · BarkSwap-styled Pool DEX at Sphinx NPC, wallet minted items balance, distinct class mechanics, starter bag (`WOOD`/`STONE`), & TryNoah AI Master Prompt Blueprint
+- What:
+  1. **BarkSwap-Styled Pool DEX in `marketMenu` (`BARKSWAP POOL DEX: MINT, SWAP & LP`, `ui.barkswap = true`):**
+     - Kept scope strictly on our 4 game contracts (`DogeItems` `0x207641C60474526a353960F3967d5c412026F62e`, `DogeDEX` `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10`, `DogeProfession`, `DogeStaking`) with zero extra external contracts.
+     - When the player chooses `NFT MARKET: SWAP + LIQUIDITY POOLS` at the Sphinx NPC, `marketMenu(n)` opens with BarkSwap's amber/slate/emerald card styling (`ui.barkswap = true` in `drawUI()`):
+       - Header shows `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <staked>`.
+       - Row 0: `MINT < ITEM > NFT (0.1 DOGE)` (`A/D` or mouse `<`/`>` cycles `MINTABLE`; consumes `1 WOOD + 1 STONE` when minting starter Hammer Lv2 if in bag, or mints directly on `DogeItems`).
+       - Row 1: `WALLET ITEMS (N): #id ITEM, ...` so you immediately see your minted item tokens balance in your wallet after minting, and can add them to a liquidity pool (`CREATE POOL` / `ADD ... AS LP`) or swap them (`SWAP ... DOGE -> 1 ITEM` / `SWAP 1 ITEM -> ... DOGE`) on `DogeDEX`.
+  2. **Distinct Profession Gameplay Mechanics (`WARRIOR`, `ARCHER`, `HEALER`) + `applyClass(cls, onchain)`:**
+     - **Hero Sprite Transformation:** `drawWorld()` renders `SPR[classOf()?classOf().spr:'hero']` (`SPR.tWarrior`, `SPR.tArcher`, `SPR.tHealer`).
+     - **ARCHER (`id: 2`):** `spd: 1.25`, `dmg: 1.0`, `hp: 0` (`60` maxHp). **Pressing `Space` (`attack()`) fires a fast ranged ARROW (`0 MP` cost, `speed = 280`, grants `+1` combat XP on hit) and draws a wooden bow & bowstring in `drawSlash()`!** Pressing `K`/`Q` (`quickShot()`) fires a **3-arrow spread volley** (`6 MP`).
+     - **HEALER (`id: 3`):** `spd: 1.25` (fast), `dmg: 0.65` (**weak melee basic attack**), `hp: -15` (**less Max HP: `45` base HP**), `armor: 0.05`. Melee staff strike restores **`+2 MP` on hit** and draws a glowing cyan/emerald staff arc in `drawSlash()`. Pressing `K`/`Q` (`mend()`, `10 MP`) heals `+20 HP × bark skill`.
+     - **WARRIOR (`id: 1`):** `spd: 0.95`, `dmg: 1.35` (**stronger basic melee attack** with `+4 px` wider cleave hitbox and screen shake), `hp: +25` (**more Max HP: `85` base HP**), `armor: 0.15` (**more armor: `+15%` damage reduction**). Pressing `K`/`Q` (`groundPound()`, `12 MP`) slams the ground in an AoE shockwave.
+  3. **Starter Bag Materials (`WOOD x3`, `STONE x3`) & Direct On-Chain Minting (`marketMenu`, `invMenu`, `shopMenu`):**
+     - `newGame()` initializes every new player with `wood: 3, stone: 3, orb: 2, scrap: 2, horn: 2, steel: 2` and `bag: [{kind:'wood',qty:3},{kind:'stone',qty:3}]` (plus `WOOD_IC`/`STONE_IC` pixel icons).
+     - Added `MINT STARTER HAMMER NFT [1 WOOD+1 STONE]` in `invMenu()` (`I`/`Tab`) and `shopMenu()`, plus `MINT < ITEM > NFT (0.1 DOGE)` at Row 0 of `marketMenu()`.
+  4. **Instant Wallet Popup, Row-0 Staking, Full Mouse Support & TryNoah AI Master Prompt Blueprint:**
+     - Removed blocking `refreshChain()` before `await fn()` in `chainAct()`; moved `STAKE < 1 > DOGE` to Row 0 of `stakeMenu()`; added full mouse `mousemove`, `wheel`, and `click` support (`cvPos`).
+     - Upgraded `MASTER_PROMPT.md` (§A Single-Prompt Full-Stack Recreation Blueprint for TryNoah AI, §B Enchanted Example Skill Prompt, removed dead Phase 1 instructions), `.claude/skills/dogeon-game/SKILL.md` (v2.4), `.agents/skills/analyzer-master/SKILL.md` (v2.1.0), and `prompts/SESSION_PROMPT.md` (v2.3).
+- Why: Live playtesting feedback on `http://localhost:8080`: (1) could see DOGE balance but couldn't interact with DEX/LP/staking, (2) held other Chikyū assets (`USDC`, `BTC`, `ETH`), (3) had no starter materials (`wood`/`stone`) in the bag to mint right away, and (4) choosing Archer/Healer/Warrior needed distinct basic attack & stat mechanics immediately after interacting.
+- Tool: Antigravity (`agy`), Avax Hub skills (`avax-dapp-architecture`, `avax-smart-contract-patterns`, `avax-token-launch`, `avax-data-feeds-oracles`, `avax-frontend-ux`, `avax-evm-wallet-integration`), Blockscout Chikyū explorer, `bash tests/check.sh`.
+- Alternatives rejected: Keeping Archer's `Space` attack as a melee hammer swing (user explicitly requested arrow as predetermined basic `Space` attack for Archer, weak melee + less HP + faster + MP heal for Healer, and stronger basic attack + more HP + more armor for Warrior).
+- Verify: `node .agents/skills/analyzer-master/scripts/audit-scan.mjs` + `bash tests/check.sh` → `ALL CHECKS PASSED`.
+- Commit: this commit.
+
+---
+
 ### D-035 · 2026-11-08 · Audit hardening & 100% Web3 action test coverage (G-1..G-7, I-3, I-4, I-5, I-8)
 - What:
   1. **G-1 (`hookWallet` `chainChanged` reload bug):** When switching back to `CHAIN.id` (`wallet.chainOk === true`), `chainChanged` now calls `refreshChain().catch(()=>{}); refreshOracle();` (matching `accountsChanged`), so the player's on-chain NFTs, profession, staking balances, and RedStone oracle reload automatically instead of staying blank after `resetChainData()`.
@@ -714,3 +741,4 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 - 2026-11-07 · dogeon-game skill v1.1: added skill routing table and the 8-step protocol.
 - 2026-11-07 · SESSION_PROMPT v1.2 + skill v1.2: user RULE #1 (feature closeout), practice 13 grep-before-naming (D-014), Phase 3 pointer.
 - 2026-11-08 · dogeon-game skill v2.2 (D-032): Phase 5 complete; web3 lesson — gate offline fallbacks on `!chainReady()||!addrs().x`, never on a contract being undeployed, so play survives after deployment (the sim caught it only by running against the live addresses). When committing to a deploy, run the game sim against the just-written addresses before saying done.
+- 2026-11-08 · MASTER_PROMPT v2.0 + dogeon-game skill v2.4 + analyzer-master skill v2.1.0 + SESSION_PROMPT v2.3 (D-036): Added Single-Prompt Full-Stack Recreation Blueprint (`MASTER_PROMPT.md` §A) and Enchanted Example Skill Prompt (`MASTER_PROMPT.md` §B) with exact stack, live Chikyū contract/token registry, and 4-byte selectors (`SEL`), and removed dead Phase 1 instructions so the entire project can be recreated on TryNoah AI from a single prompt with zero context waste.

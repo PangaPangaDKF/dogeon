@@ -1,114 +1,70 @@
 ---
 name: dogeon-game
-description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bit Shiba-vs-cats action RPG in index.html. Load before planning, designing, balancing, drawing sprites, fixing bugs or reviewing anything in this repo. Contains the game's pillars, design invariants, architecture map, which skill to use for which job, the decision-log protocol and the self-improvement rule.
+description: Full context, exact stack, live DogeOS Chikyū contract registry, ABI selectors, BarkSwap DEX card, and gameplay invariants for DOGEON ("The Grand Heist"), the single-file 16-bit Shiba-vs-cats Web3 Action RPG in index.html. Load before planning, designing, balancing, drawing sprites, writing Web3/Solidity integrations, or recreating the project on TryNoah AI.
 ---
 
-# DOGEON — game context skill
+# DOGEON — Master Game & Web3 Context Skill
 
-Version: 2.3 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #0 (Pre-Decision Analyzer Gate — THE NUMBER ONE RULE):** before taking ANY decision or editing ANY file, activate the **`analyzer-master`** skill (`.agents/skills/analyzer-master/SKILL.md` / `/analyzer-master`), run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs`, answer its 4 Strategic Thinking questions, and load `references/decision-gate.md` on demand.
 
-**RULE #1 (user — Feature Closeout):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
-improve `prompts/SESSION_PROMPT.md` + this skill → update `AGENTS.md`/`CLAUDE.md`/`CONTEXT.md` + `MASTER_PROMPT.md` §G → commit. Never batch features.
+**RULE #1 (User — Feature Closeout & Single-Prompt Reproducibility):** after every finished feature → tests green (`bash tests/check.sh`) → `docs/DECISIONS.md` entry → improve `MASTER_PROMPT.md` + `prompts/SESSION_PROMPT.md` + this skill (so the project can be recreated on **TryNoah AI** from a single prompt with zero wasted context and zero missing implementations) → update `AGENTS.md`/`CLAUDE.md`/`CONTEXT.md` + `MASTER_PROMPT.md` §G → commit.
 
-**Current phase:** Phase 5 "Factions of the Heist" is COMPLETE (D-027..D-032): on-chain professions (one class/wallet, paid
-`DogeProfession.choose`), 3 faction trainers in camp, warrior/archer/healer passive stats + GROUND POUND/QUICK SHOT/MEND skills, and
-DOGE staking (stake → earn 0.8% of a new 1% DEX protocol fee; project treasury keeps 0.2%). PvP/party/loot was deferred by the user
-("skip PvP for now"); if picked up later, build it as a SEPARATE opt-in on-chain arena, not entangled with the field death penalty.
-Phase 4 "The Grand Heist" and Phase 3 "Doge Chain" are complete. See `docs/DECISIONS.md` D-032 for the live Chikyū addresses.
+---
 
-**Web3 lesson (D-032):** when a `CONTRACTS[]` address goes from empty to a real one, re-check every offline / no-wallet path — gate the
-free local fallback on `!chainReady()||!addrs().x`, never on the contract being absent, so the game stays playable with no wallet even
-after deployment. The sim caught this only because its profession scenario ran against the live addresses.
+## 1. Exact Stack & Hard Constraints (Zero Context Waste)
+- **Frontend (`index.html`, < 1,500 lines):** Plain HTML + inline CSS + vanilla ES2022 JS + Canvas 2D (`320×224` internal resolution, `image-rendering: pixelated`, integer scaling).
+- **Zero External Dependencies:** No npm runtime packages, no ethers.js/viem/wagmi CDN, no external images/fonts/audio, no `fetch()`, `XMLHttpRequest`, `WebSocket`, `import()`, `alert()`, `confirm()`, or `prompt()`.
+- **Procedural Assets:**
+  - **Font:** 3×5 uppercase bitmap glyph table `FONT` (`text`, `textC`, `wrap`).
+  - **Sprites:** 16×20 character sprites via `buildChar({head:HEAD.dog|cat, pal:{O,F,C,P,E,N,R,W,T,A,B,L,K}, acc(g,dir,frame)})` and `staticSpr()`. Boss draws at 2×.
+  - **Tiles:** 16×16 procedural tile atlas `TL` (`MW=80, MH=60`, deterministic `mulberry(4242)` in `genMap()`).
+  - **Audio:** WebAudio `sfx(freq,dur,type,vol,slide)` with `AudioContext` resumed on `click` and `keydown`.
+- **Smart Contracts (`contracts/`, Foundry):** Solidity `^0.8.24` (`evm_version = "cancun"`), OpenZeppelin v5.1 (`ERC721`, `ERC721Enumerable`, `ReentrancyGuard`), 45 Foundry unit + fuzz tests (`forge test`).
+- **Web3 Transport:** EIP-1193 (`window.ethereum || window.bitkeep?.ethereum`) ONLY after clicking `CONNECT WALLET`. Precomputed 4-byte selectors (`SEL`) + 32-byte hex ABI helpers (`W32`, `A32`, `words`, `arrAt`, `unpack`, `toWei`, `fromWei`).
 
-## 1. The game in one breath
-Top-down action RPG, Sega Genesis look (320×224, 16×16 tiles, outlined chunky pixels, blue dialog boxes),
-inspired by the *feel* of Crusader of Centy but with 100% original art made in code. You are an original
-half-human Shiba Inu with the "doge" look. Half-human cats invaded. Doge-speak humor ("such X, much Y, wow").
+---
 
-**Core loop:** safe camp → fight cats → whiskers drop → back to camp → bank trades whiskers for FUD →
-shop upgrades → heal ONLY by resting in camp → push further (field → brutes → ruins → Cat Lord).
+## 2. Live DogeOS Chikyū Testnet Registry (`0x5fdaf3` / `6281971`)
+- **RPC:** `https://rpc.testnet.dogeos.com` · **Explorer:** `https://dogeos-testnet.l2scan.co` · **Faucet:** `https://faucet.testnet.dogeos.com`
+- **Deployed Game Contracts (`CONTRACTS['0x5fdaf3']`):**
+  - `items` (`DogeItems.sol`, ERC721Enumerable, packed `id<<16|type<<8|level`, `0.1 DOGE` mint fee): `0x207641C60474526a353960F3967d5c412026F62e`
+  - `dex` (`DogeDEX.sol`, NFT listings + `x*y=k` NFT/DOGE AMM pools, 2% LP fee + 1% protocol fee split 0.2% treasury / 0.8% stakers, pull-payment `proceeds`): `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10`
+  - `prof` (`DogeProfession.sol`, 1 class per wallet forever, `0.05 DOGE` fee): `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`
+  - `stake` (`DogeStaking.sol`, MasterChef `1e18` precision DOGE staking vault): `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`
+- **RedStone DOGE/USD Oracle (`REDSTONE['0x5fdaf3']`):**
+  - `feed`: `0x434F8D17c0301cfEa143dba912972E24B827C968` (`0xfeaf968c`) · `adapter`: `0xB08342D907D2df47B6F73e25F4fa033978B344B1` (`0x729bfda4` + `bytes32("DOGE")` stale fallback)
+- **4-Byte Selectors (`SEL`):**
+  `mint:'352926a8', burn:'42966c68', inventoryOf:'7eaebb15', mintFee:'13966db5', setApprovalForAll:'a22cb465', isApprovedForAll:'e985e9c5', list:'50fd7367', delist:'964bc33f', buy:'d96a094a', activeListings:'aa4df6f0', listedCount:'f36065b3', addLiquidity:'c5bb3168', removeLiquidity:'f88bf15a', buyFromPool:'66c1dbf3', sellToPool:'0de77491', withdraw:'3ccfd60b', dogeUsd:'435a3613', proceeds:'35adde54', allPools:'c5c63e65', poolInfo:'81ea4ee7', chooseProf:'f94e349d', professionOf:'31544fd8', profFee:'ddca3f43', stakeDoge:'3a4b66f1', unstakeDoge:'2e17de78', claimStake:'4e71d92d', pendingRewards:'31d7a262', stakedOf:'98807d84', flushFees:'6811406e', stakerFeesView:'67f7cf97'`
 
-## 2. Design pillars (use these to judge every idea)
-1. **Hard but fair ("tryhard").** Every death must be readable: telegraphs (brute flashes red 0.55 s), i-frames, knockback.
-2. **Camp = sanctuary, outside = risk.** The risk/return trip is the game. Anything that lets you heal or bank outside the camp weakens the core loop. Push back on it.
-3. **Greed vs safety.** Carried FUD is at risk (50% lost on death); vault FUD is safe. New systems should feed this tension.
-4. **Readable 16-bit.** If it doesn't read at 16×20 px with a dark outline, it doesn't ship.
-5. **Zero dependencies.** One HTML file, opens anywhere, no network. Dev tests may use Node.
+---
 
-## 3. Invariants (never break without the user explicitly changing them)
-The source of truth is `CLAUDE.md` §4. Summary: no potions/regen · rest heals HP only to 60% (`REST_CAP`), food heals the rest ·
-camp fully safe (enemies can't enter, damage or shoot in) · death = −50% carried DOGE + all whiskers + materials + bag food (NFTs safe) ·
-whisker = 3 DOGE · skills grow only by use (no XP levels, per-skill tiers in `SKILL_THRESH`) · fishing only outside camp, any hit
-or move cancels it · quest stages 0→4 · populations field 22 / ruins 6, refill every 3 s ·
-controls WASD/Space-J/K-Q/E/R/I-Tab/F/Esc. Field names: `P.iT` = i-frames, `P.bag` = inventory (grep before naming new state).
-`tests/sim.mjs` enforces several of these automatically. When you add an invariant, add a check.
-**Tests:** a test for "X cancels Y" must first assert Y started (else it passes vacuously). When you rename state, grep `tests/` too.
-**Web3 rules (D-016):** wallet only via `window.ethereum` in the CHAIN section, only after CONNECT; no ethers.js, no fetch;
-every on-chain row has an offline label; async results go through `setWalletMsg()`; test with `mockEth()` in `tests/sim.mjs`.
-MetaMask needs http://localhost (`node tests/serve.mjs`). Anything needing the user's wallet/key (deploy, faucet) → skip, leave steps.
-**Map RNG:** `genMap()` is seeded; add new terrain AFTER all `r()` passes and diff vs the approved map (D-017).
-**Contracts (D-018):** `contracts/` Foundry, solc 0.8.24 cancun, OZ v5.1 in gitignored `lib/` (`forge install` per README).
-DogeItems types 1..6 + `inventoryOf` packed `id<<16|type<<8|level`; DogeDEX listings + pools key `type<<8|level`, pull payments.
-Game calls use precomputed selectors (`cast sig`), never ethers. Never put a private key in the repo; deploy = user step.
-Test locally: `anvil` + `forge script ... --unlocked`. `bash tests/check.sh` stage 4 runs `forge test`.
-**Game ↔ chain (D-019):** CHAIN section holds `CONTRACTS`, `SEL`, raw ABI helpers, `etx` (send+receipt), `chainAct` (one tx at a time),
-`refreshChain` → `chainData`. Gear NFT owned = worn (`swordLv/armorLv`). Mint needs a forge credit or bag food (only playing gets stuff).
-Dev: `node tests/serve.mjs` + `anvil` + deploy, open `http://localhost:8080/?chain=local`. Sim e2e runs when anvil is up.
-**Item economy (D-021):** one craft = one item. Minting removes the off-chain effect (`takeOffChain`), refunds only on a sure failure
-(`e.sent && !e.reverted` = keep). Reset `chainData` on account/chain change. Review every item path for duplication.
-**Audited contract API (D-022):** `addLiquidity(ids,minShares)`, `removeLiquidity(key,amt,minItems,minDoge)`, `activeListings(offset,limit)`,
-`listedCount()`; first LP = 1e18 shares/item, min 0.001 DOGE; sells with payout 0 revert. Always pass slippage guards from the game.
-**Phase 4 (D-024):** lore = DogeOS Grand Heist (Fat Cats, factions Demolition Dogs / Kernel Crew / Barkitects). Camp NPCs: Sphinx (DeFi hub),
-Elder (Heist), Wrenchpaw (forge), Cloverheart (Relotto), Noah (trynoah.ai), Bitget Wallet Card. Links only via `openLink()` from a menu
-row, URL printed too. RedStone DOGE/USD: DogeDEX `dogeUsd()` (never reverts) → feed → adapter last push; mark STALE past 24 h; the oracle
-is display/safety only, never the swap price. Partner text must be sourced; no partnership claims without a source.
-**Feature ledger:** every feature also gets a row in `MASTER_PROMPT.md` §G (user rule).
-**Web3 refs (IT-3/IT-4):** user-supplied avaxskills.com index — use only chain-agnostic EVM skills (`evm-foundry`, `nft-basics`,
-`security`, `audit`, `testing`, `evm-wallet-integration`); DogeOS is not Avalanche, so ignore subnet/Warp/Fuji specifics.
+## 3. Core Gameplay & Web3 Design Invariants
+1. **Sanctuary Camp & Survival:** Camp (`x:33..47, y:27..41`) is 100% safe (`hurtPlayer` returns in camp; `solidFor` blocks `ent.enemy` and bone projectiles). Holding `R` in camp waits `3s` (`REST_DELAY`), then heals HP up to **60% (`REST_CAP`)** and MP to 100%. Healing above 60% requires eating fish (`RAW FISH +15`, `COOKED FISH +25`) or casting Healer `MEND` (`10 MP`).
+2. **Death & Greed vs. Safety:** Death loses 50% of carried `P.doge`, all whiskers, all materials, and `P.bag`, respawning at campfire at 35% HP/MP (`RESPAWN_FRAC`). Pooled `P.bank` DOGE and on-chain NFTs/staked DOGE are never lost on death.
+3. **Starter Bag & NFT Minting (`D-019`, `D-021`, `D-036`):**
+   - `newGame()` starts every player with `wood:3, stone:3, orb:2, scrap:2, horn:2, steel:2` and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]`.
+   - Players can immediately mint a `HAMMER LV2 NFT` using `1 WOOD + 1 STONE` (`mintNft(1,2,'starter')` in `invMenu` or `shopMenu`), mint crafted items via `creditOk`/`takeOffChain`/`putBack` (1 craft = 1 item, no dupes), preserve fish, or mint any item directly at Row 0 of `marketMenu()` (`MINT < ITEM > NFT (0.1 DOGE)`).
+   - Owning a gear NFT = wearing it (`swordLv()`, `armorLv()`).
+4. **Distinct Profession Gameplay Mechanics (`D-027..D-029`, `D-036`):**
+   - `applyClass(cls, onchain)` updates `P.prof`, recalculates `P.maxHp` via `syncMaxHp()`, and transforms the hero sprite (`SPR[classOf()?.spr || 'hero']`).
+   - **WARRIOR (`id:1`):** `+25` Max HP (`85` base), `+15%` armor (`0.15`), `1.35x` melee damage, `0.95x` speed, wider heavy cleave (`+4 px` reach + screen shake) on `Space`, and `GROUND POUND` AoE slam (`12 MP`) on `K`/`Q`.
+   - **ARCHER (`id:2`):** `60` base Max HP, `1.25x` speed, `1.0x` damage. **Pressing `Space` (`attack()`) shoots a fast ranged ARROW (`0 MP` cost, `speed=280`, `+1` combat XP on hit) and draws a wooden bow in `drawSlash()`!** Pressing `K`/`Q` (`quickShot()`) fires a **3-arrow spread volley** (`6 MP`).
+   - **HEALER (`id:3`):** `-15` Max HP (`45` base), `1.25x` speed (fast), `+5%` armor, weak melee (`0.65x`, draws glowing staff in `drawSlash()`, **restores `+2 MP` on hit**), and `MEND` (`K`/`Q`, `10 MP` → `+20 HP × bark skill`).
+5. **BarkSwap-Styled Pool DEX (`marketMenu`, `ui.barkswap`, `D-036`):**
+   - Opened at the Sphinx NPC via `NFT MARKET: SWAP + LIQUIDITY POOLS`. Uses ONLY our game contracts (`DogeItems` + `DogeDEX`).
+   - Header shows `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <staked>`.
+   - Row 0 (`MINT < ITEM > NFT (0.1 DOGE)`) mints item tokens directly (consuming `1 WOOD + 1 STONE` for starter Hammer Lv2 if in bag); Row 1 (`WALLET ITEMS (N): #id ITEM...`) shows the player's minted item tokens balance; below that are `CREATE POOL` / `POOL` / `SWAP` / `ADD LP` / `REMOVE LP` rows styled with BarkSwap's amber/slate/emerald card colors in `drawUI()`.
+6. **Instant Wallet Popup & Mouse UX (`D-036`):**
+   - `chainAct()` never awaits `refreshChain()` before `await fn()` (so MetaMask/Bitget opens immediately on click/keypress).
+   - Full mouse hover/wheel/click support on canvas (`cvPos`). In `tests/sim.mjs`, always close menus with `api.press('escape'); api.step(DT);` (never `api.get().ui = null`, which only mutates the wrapper object).
 
-## 4. Architecture quick map
-Single `<script>` in `index.html`, sections marked `// ===== NAME =====` (CORE, AUDIO, INPUT, PIXEL FONT,
-CHARACTER SPRITES, TILES, MAP, GAME STATE, COLLISION, FX, COMBAT, ENEMY AI, UI, UPDATE, RENDER, LOOP).
-Full table in `CLAUDE.md` §3. Key facts:
-- Globals: `state` (gate/stage/won), `P` (player), `enemies projs items parts floats`, `ui`, `cam`, `scene`.
-- `update(dt)` returns early when `ui` is open → the world pauses (side effects in `render()` don't!).
-- Input: `keys` held, `pressed` this frame only, cleared at end of `loop`.
-- Entities: `(x,y)` = collision box center, feet at `y+hh`. `enemy:true` makes camp tiles solid.
-- Balance numbers live in tables at the top of GAME STATE (`SWORD_*`, `ARMOR_*`, `ETYPES`).
-- Remove entities with `.filter()` after loops, never `splice` inside.
+---
 
-## 5. Which skill / template for which job
-| Job | Use |
-|---|---|
-| New feature | `prompts/SESSION_PROMPT.md` + plan mode; `game-feel`, `game-ui-ux`, `input-systems`, `save-systems`, `dialogue-systems` as relevant |
-| Combat / feel | `design-action-combat`, `game-feel`, `game-dev-combat-animation` |
-| Enemies / boss AI | `tune-enemy-ai`, `game-ai`, `design-game-encounters` |
-| Balance / economy | `balance-check`, MASTER_PROMPT C4 template, `game-design-theory` |
-| Sprites / tiles | `pixel-art-sprites` (adapt to our string-template system and palette roles) |
-| Levels / ruins rooms | `level-design`, `author-game-levels` |
-| Design doc / pitch | `game-design-document` (writes `docs/GDD.md`) |
-| Audio | `audio-design`, `build-game-audio-feedback` |
-| Testing | `terminal-testing` (this repo), `test-playable-web-games` for browser checks |
-| Terse low-token mode | `caveman` (only when the user asks for it; never for teaching explanations) |
-| Finding more skills | `find-skills` |
-
-## 6. Working protocol (every session)
-1. Read `CLAUDE.md`, this skill, and the last ~5 entries of `docs/DECISIONS.md`.
-2. Restate the task with acceptance criteria. Plan mode if more than one section is touched.
-3. Smallest surgical diff. New numbers go in the balance tables.
-4. Verify: `bash tests/check.sh` (must print ALL CHECKS PASSED), then the manual browser steps from `CLAUDE.md` §6.
-   If the change fixes a WARN in `tests/sim.mjs`, promote it to `fail()` in the same commit.
-5. **Log** a decision entry in `docs/DECISIONS.md` (template there): what changed, why, which tool/skill/model, alternatives rejected.
-6. **Commit** with a Conventional Commit message (`feat:`, `fix:`, `test:`, `docs:`, `chore:`), one logical change per commit.
-7. **Improve the system:** if anything in this session would have gone better with a clearer rule, update this skill,
-   `prompts/SESSION_PROMPT.md` or `CLAUDE.md` in the same or a follow-up commit, and log it under § Process.
-8. Tell the user: what changed (files + short diff summary), how to test it by hand, and the commit hash.
-
-## 7. Known issues (keep in sync with `docs/DECISIONS.md` and `tests/sim.mjs` WARN lines)
-See `docs/DECISIONS.md` § "Open issues". Don't fix them silently inside another task. Each one gets its own commit.
-
-## 8. Originality guardrail
-Original characters only. No ripped Crusader of Centy sprites, music, maps or names, and no Dogecoin logo.
-"Inspired by the feel" is OK. "Recreate level X" is not.
+## 4. Working Protocol (Every Session)
+1. Run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs` (`RULE #0`).
+2. Read `CLAUDE.md`, `MASTER_PROMPT.md` §A–B, and the last 5 entries of `docs/DECISIONS.md`.
+3. Make surgical diffs; keep `index.html` < 1,500 lines; put balance numbers in top-of-section tables.
+4. Export any new Web3/gameplay functions in `tests/sim.mjs` `HARNESS`, add assertions, and run `bash tests/check.sh` (`ALL CHECKS PASSED`).
+5. Follow `RULE #1`: log in `docs/DECISIONS.md`, update `MASTER_PROMPT.md` + this skill + `CLAUDE.md`/`CONTEXT.md`, and commit with a Conventional Commit message.

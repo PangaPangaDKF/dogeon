@@ -1,0 +1,133 @@
+# DOGEON — Dual-Brain Handoff & Context Sync (`Antigravity ↔ Claude Code ↔ TryNoah AI`)
+
+> **Purpose of this file:** Give **Claude Code** (and **TryNoah AI**) 100% of the context, architectural decisions, code changes (`D-034..D-036`), installed skills, prompt engineering rules, and verification loops built in this repository — plus a **ready-to-paste job prompt** at the bottom so Claude Code can immediately inspect, audit, and improve the project without wasting a single token of context.
+
+---
+
+## 1. Current Project Snapshot & Stack
+
+- **Game File:** [`index.html`](./index.html) (`1,272 / 1,500` lines — `228` lines of headroom remaining).
+  - **Stack:** Single-file HTML + inline CSS + vanilla ES2022 JS + HTML5 `<canvas width="320" height="224">` (`image-rendering: pixelated`), procedural 16×16 tiles (`TL`), procedural 16×20 string-template sprites (`SPR`), 3×5 uppercase bitmap font (`FONT`), WebAudio synth (`sfx()`), zero external runtime dependencies, no `fetch`/`alert`/`confirm`/`prompt`.
+- **Smart Contracts (`contracts/src/`, Foundry, Solidity `^0.8.24`, OpenZeppelin v5.1, 45 passing tests):**
+  - **Chain:** DogeOS Chikyū Testnet (`chainId: 0x5fdaf3` / `6281971`, RPC `https://rpc.testnet.dogeos.com`, Explorer `https://dogeos-testnet.l2scan.co`, Faucet `https://faucet.testnet.dogeos.com`).
+  - **`DogeItems.sol` (`items`):** `0x207641C60474526a353960F3967d5c412026F62e` — ERC-721 + `ERC721Enumerable` minted item tokens (`1=HAMMER, 2=ARMOR, 3=RAW FISH, 4=COOKED FISH, 5=BONE CHARM, 6=MOON BISCUIT`), packed `id<<16 | type<<8 | level` in `inventoryOf(address)`, `0.1 DOGE` mint fee, on-chain SVG `tokenURI`.
+  - **`DogeDEX.sol` (`dex`):** `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10` — Fixed-price NFT listings + constant-product (`x * y = k`) NFT/DOGE AMM liquidity pools (`key = (type<<8)|level`), 2% LP fee kept in pool reserves + 1% protocol fee skimmed outside reserves (0.2% project treasury / 0.8% DOGE stakers), pull-payment `proceeds` + `withdraw()`, and RedStone `dogeUsd()` view.
+  - **`DogeProfession.sol` (`prof`):** `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055` — One profession per wallet forever (`1=WARRIOR, 2=ARCHER, 3=HEALER`), `0.05 DOGE` oath fee via `choose(uint8)`.
+  - **`DogeStaking.sol` (`stake`):** `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d` — MasterChef (`ACC_PRECISION = 1e18`) DOGE staking vault receiving 0.8% of every `DogeDEX` trade via `notifyRewardAmount()` / `flushStakerFees()`.
+  - **RedStone DOGE/USD Oracle (`REDSTONE['0x5fdaf3']`):** Feed `0x434F8D17c0301cfEa143dba912972E24B827C968` (`latestRoundData()` = `0xfeaf968c`) + Adapter `0xB08342D907D2df47B6F73e25F4fa033978B344B1` (`getLastUpdateDetailsUnsafe(bytes32("DOGE"))` = `0x729bfda4` stale fallback).
+
+---
+
+## 2. All Recent Changes (`D-034` → `D-036`)
+
+### A. `D-034` — Analyzer Prompt Master, `RULE #0`, Workspace `AGENTS.md`, & Skill Packs
+- Created [`prompts/ANALYZER_PROMPT_MASTER.md`](./prompts/ANALYZER_PROMPT_MASTER.md) and [`AGENTS.md`](./AGENTS.md) establishing **RULE #0 (Pre-Decision Analyzer Gate)** before any code edit.
+- Created the executable diagnostic scanner [`.agents/skills/analyzer-master/scripts/audit-scan.mjs`](./.agents/skills/analyzer-master/scripts/audit-scan.mjs) (`node .agents/skills/analyzer-master/scripts/audit-scan.mjs`) which checks:
+  1. `index.html` line budget (`< 1,500` lines) and forbidden APIs (`fetch`, `alert`, `confirm`, `prompt`, `XMLHttpRequest`, `WebSocket`, `import`).
+  2. Selector hygiene (`SEL.*` usage parity).
+  3. Top-level `const`/`let`/`function` identifier collisions.
+  4. 100% Web3 action test coverage in `tests/sim.mjs`.
+
+### B. `D-035` — Full Codebase Audit Hardening & 100% Web3 Sim Coverage
+- **`G-1` (`hookWallet` `chainChanged` reload):** Switching back to `CHAIN.id` (`0x5fdaf3`) now calls `refreshChain().catch(()=>{}); refreshOracle();` so NFTs, pools, profession, staking, and oracle reload automatically after `resetChainData()`.
+- **`G-2` (Sphinx & `SCHOOL` `'STAKE'` live-testnet copy):** Removed outdated Phase 2 `"No real transactions"` copy; Sphinx intro and `STAKE` lesson now accurately explain both the off-chain camp vault (`+1%`, safe on death) and live DogeOS Chikyū NFTs, LP pools, and DOGE staking (`0.8%` of DEX trades).
+- **`G-3 / I-3` (`updEnemy` boss minion aggro):** Boss-summoned alley cats (`zone === 'boss' && !e.boss`) now only aggro when the player is inside the boss room or within `e.def.chase` range.
+- **`G-4 / I-4` (`spawnEnemy` corner pop-in):** Raised minimum player spawn distance from `170` px to `200` px (above the `195.2` px screen half-diagonal).
+- **`G-5 / I-5` (`drawTitle` frame-rate independent particles):** Moved `updateParts(dt)` into `update(dt)` on the `scene === 'title'` branch.
+- **`G-6 / I-8` (`AudioContext` gesture resume):** Added `if(AC&&AC.state==='suspended')AC.resume();` inside `click` and `keydown` listeners.
+- **`G-7` (`tests/sim.mjs` D-035 scenarios):** Added full simulation coverage for `connectWallet`, `disconnectWallet`, `chooseProfession` (on-chain + 1-class-per-wallet lock), `stakeDoge`, `claimStakeRewards`, `unstakeStake`, `syncDexFees`, `delistNft`, `chainChanged` reload, boss minion aggro, `>= 200 px` spawn distance, and title `dt` particles.
+
+### C. `D-036` — BarkSwap-Styled Pool DEX (`marketMenu`), Wallet Minted Items Balance, Starter Bag (`WOOD`/`STONE`), Distinct Class Mechanics, & Mouse Controls
+1. **BarkSwap-Styled Pool DEX at the Sphinx NPC (`marketMenu`, `drawUI`, `ui.barkswap = true`):**
+   - Strictly uses our 4 game contracts (`DogeItems` + `DogeDEX` + `DogeProfession` + `DogeStaking`) — zero extra external contracts.
+   - When the player picks `NFT MARKET: SWAP + LIQUIDITY POOLS` at the Sphinx NPC, `marketMenu(n)` opens with `title = 'BARKSWAP POOL DEX: MINT, SWAP & LP'` and `ui.barkswap = true`:
+     - **Menu Header (`drawUI`):** Shows `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <staked>`.
+     - **Row 0 — Create / Mint Item Token (`MINT < ITEM > NFT (0.1 DOGE)`):** Cycles `MINTABLE` (`HAMMER LV2..4`, `ARMOR LV1..2`, `RAW FISH`, `COOKED FISH`, `BONE CHARM`, `MOON BISCUIT`) with `A/D` or mouse click `<` / `>`. Consumes `1 WOOD + 1 STONE` if minting starter `HAMMER LV2` with wood/stone in bag, or mints directly on `DogeItems`.
+     - **Row 1 — Wallet Minted Items Balance (`WALLET ITEMS (N): #id ITEM, ...`):** Immediately displays the minted item tokens owned by your wallet (`myFree()`) so you can see your balance right after minting and add them to a pool below.
+     - **Pool & Swap Rows (on `DogeDEX`):**
+       - `CREATE POOL: N <ITEM> + < AMT > DOGE` (`addLp` creates a new item/DOGE pool on `DogeDEX`).
+       - `POOL <ITEM>: N ITEMS / X DOGE` (pool reserve & LP share view).
+       - ` SWAP X DOGE -> 1 <ITEM>` (`buyPool(p)`).
+       - ` SWAP 1 <ITEM> -> X DOGE` (`sellPool(mine[0], p)`).
+       - ` ADD N ITEMS + X DOGE AS LP` (`addLp(ids, need, p)`).
+       - ` REMOVE MY LP (X%)` (`removeLp(p)`).
+       - `SELL #id <ITEM> FOR < PRICE > DOGE` (`listNft(it, price)`), `BUY`, `DELIST`, and `WITHDRAW PROCEEDS`.
+     - **BarkSwap Visual Card Styling (`drawUI`):** Highlights `MINT` rows in amber CTA (`#3a2208`/`#ffd860`), `WALLET ITEMS` in dark-slate (`#101838`/`#f8e090`), and `POOL`/`SWAP`/`CREATE POOL`/`ADD` rows in emerald (`#0c2624`/`#80f8c0`).
+2. **Starter Bag Materials (`WOOD x3`, `STONE x3`) & Forge/Bag Minting (`newGame`, `invMenu`, `shopMenu`):**
+   - `newGame()` initializes every new player with `wood: 3, stone: 3, orb: 2, scrap: 2, horn: 2, steel: 2` and `bag: [{kind:'wood',qty:3},{kind:'stone',qty:3}]` (plus `WOOD_IC` and `STONE_IC` pixel icons).
+   - Added `MINT STARTER HAMMER NFT [1 WOOD+1 STONE]` in `invMenu()` (`I`/`Tab`) and `MINT HAMMER NFT [1 WOOD+1 STONE]` in `shopMenu()` (Wrenchpaw's Forge).
+3. **Distinct Profession Gameplay Mechanics (`WARRIOR`, `ARCHER`, `HEALER`) + `applyClass(cls, onchain)`:**
+   - **Hero Sprite Transformation:** `drawWorld()` renders `SPR[classOf()?classOf().spr:'hero']` (`SPR.tWarrior`, `SPR.tArcher`, `SPR.tHealer`).
+   - **`applyClass(cls, onchain)` & `syncMaxHp()`:** Immediately updates `P.prof`, recalculates `P.maxHp = 60 + P.hpUps*15 + (classOf()?classOf().hp:0)`, adjusts `P.hp`, spawns class-colored particles, and shows a toast.
+   - **ARCHER (`id: 2`, Kernel Crew, Scout Fleetwhisker):** `spd: 1.25`, `dmg: 1.0`, `hp: 0` (`60` maxHp). **Pressing `Space` (`attack()`) fires a predetermined ranged basic ARROW (`0 MP` cost, `speed = 280`, grants `+1` combat XP on hit) and draws a wooden bow & bowstring in `drawSlash()`!** Pressing `K`/`Q` (`quickShot()`) fires a **3-arrow spread volley** (`6 MP`).
+   - **HEALER (`id: 3`, Barkitects, Mender Brighttail):** `spd: 1.25` (fast), `dmg: 0.65` (**weak melee basic attack**), `hp: -15` (**less Max HP: `45` base HP**), `armor: 0.05`. Melee staff strike restores **`+2 MP` on hit** and draws a glowing cyan/emerald staff arc in `drawSlash()`. Pressing `K`/`Q` (`mend()`, `10 MP`) heals `+20 HP × bark skill`.
+   - **WARRIOR (`id: 1`, Demolition Dogs, Sergeant Ironpaw):** `spd: 0.95`, `dmg: 1.35` (**stronger basic melee attack** with `+4 px` wider cleave hitbox and screen shake), `hp: +25` (**more Max HP: `85` base HP**), `armor: 0.15` (**more armor: `+15%` damage reduction**). Pressing `K`/`Q` (`groundPound()`, `12 MP`) slams the ground in an AoE shockwave.
+4. **Instant Wallet Popup, Row-0 Staking & Full Mouse Controls (`chainAct`, `stakeMenu`, `cvPos`):**
+   - Removed blocking `if(!chainData.loaded) await refreshChain()` before `await fn()` in `chainAct()` (with safe default fees `0.1` / `0.05` DOGE) so MetaMask/Bitget opens immediately on user click/keypress.
+   - Moved `STAKE < 1 > DOGE (EARN 0.8% FEES)` to Row 0 of `stakeMenu()`; made `STAKE 0 DOGE IN THE VAULT (+1%)` in `bankMenu()` redirect to `stakeMenu()` when `P.doge === 0 && wallet.connected`.
+   - Added full mouse `mousemove`, `wheel`, and `click` support (`cvPos`) on canvas (`<` / `>` click adjusts presets; clicking any row activates it).
+
+---
+
+## 3. Installed Skills & How to Use Them Together
+
+All skills live in both `.claude/skills/` (for Claude Code) and `.agents/skills/` (for Antigravity / Agent Skills standard):
+
+| Skill Name | Path | When & How to Use It |
+|---|---|---|
+| **`analyzer-master`** | `.claude/skills/analyzer-master/SKILL.md` | **RULE #0 Gate (Run First Every Session):** Run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs`, answer the 4 Strategic Thinking Questions, and load `references/decision-gate.md` before editing any code. |
+| **`dogeon-game`** | `.claude/skills/dogeon-game/SKILL.md` | **Master Game & Web3 Context (v2.4):** Contains the exact stack, live Chikyū contract addresses (`CONTRACTS['0x5fdaf3']`), 4-byte `SEL` selectors, class mechanics, BarkSwap Pool DEX spec, and survival invariants. |
+| **`terminal-testing`** | `.claude/skills/terminal-testing/SKILL.md` | **Verification Loop:** Run `bash tests/check.sh` (static grep rules + `node --check` + headless `tests/sim.mjs` + Foundry `forge test`). |
+| **`avax-dapp-architecture`** | `.claude/skills/avax-dapp-architecture/SKILL.md` | **Web3 State & Optimistic UX:** Patterns for non-blocking wallet popups (`chainAct`), event/state refresh (`refreshChain`), and offline fallback (`!chainReady()`). |
+| **`avax-smart-contract-patterns`** | `.claude/skills/avax-smart-contract-patterns/SKILL.md` | **Solidity Patterns:** Access control, pull-over-push payments (`proceeds`), CEI, and state machines in `contracts/src/*.sol`. |
+| **`avax-defi-primitives`** | `.claude/skills/avax-defi-primitives/SKILL.md` | **AMM & Staking Math:** Constant-product `x * y = k` reserve math, LP share minting/burning, slippage guards (`minShares`, `minDoge`), and MasterChef `accRewardPerShare` in `DogeDEX.sol` & `DogeStaking.sol`. |
+| **`avax-nft-basics`** | `.claude/skills/avax-nft-basics/SKILL.md` | **ERC-721 & On-Chain Metadata:** `ERC721Enumerable`, packed `inventoryOf`, and on-chain SVG `tokenURI` in `DogeItems.sol`. |
+| **`avax-evm-wallet-integration`** | `.claude/skills/avax-evm-wallet-integration/SKILL.md` | **EIP-1193 Provider Hygiene:** `eth_requestAccounts`, `wallet_switchEthereumChain`, `wallet_addEthereumChain` (`4902`), `accountsChanged`, and `chainChanged`. |
+| **`avax-frontend-ux`** | `.claude/skills/avax-frontend-ux/SKILL.md` | **Transaction Lifecycle UX:** Clear pending/mining/confirmed/rejected (`4001`) feedback via `setWalletMsg()`. |
+| **`avax-security` & `avax-audit`** | `.claude/skills/avax-security/SKILL.md` | **Security & Solvency Audits:** Multi-lens review (Funds/Reentrancy, State/DoS, Economy Duplication `creditOk`/`takeOffChain`/`putBack`). |
+| **`avax-data-feeds-oracles`** | `.claude/skills/avax-data-feeds-oracles/SKILL.md` | **RedStone Oracle Hygiene:** `latestRoundData()` heartbeat checks (`ORACLE_MAX_AGE = 86400`) and stale adapter fallback (`getLastUpdateDetailsUnsafe`). |
+| **`pixel-art-sprites` & `balance-check`** | `.claude/skills/pixel-art-sprites/SKILL.md` | **Sprites & Combat Balance:** 16×20 string-template sprites (`node tests/sprites.mjs`) and TTK/economy balance tables. |
+
+---
+
+## 4. How the Prompt System Works (`MASTER_PROMPT.md` + `SESSION_PROMPT.md`)
+
+1. **[`MASTER_PROMPT.md`](./MASTER_PROMPT.md) §A (Single-Prompt Full-Stack Blueprint for TryNoah AI):**
+   - Self-contained, zero-waste blueprint containing the exact stack, live DogeOS Chikyū addresses, 4-byte `SEL` selectors, and gameplay/DEX specs so pasting it into **TryNoah AI** recreates the entire app in one prompt.
+2. **[`MASTER_PROMPT.md`](./MASTER_PROMPT.md) §B (Enchanted Example Skill Prompt):**
+   - Demonstrates the 4-block LLM prompt engineering standard:
+     1. *Context & Hard Constraints* (`@index.html`, `< 1,500` lines, zero deps, verification command).
+     2. *Exact On-Chain Registry & Selectors* (`CONTRACTS`, `SEL`).
+     3. *Deterministic Implementation Spec* (exact functions, state mutations, UI rows, class stats).
+     4. *Negative Constraints* (what NOT to do).
+3. **[`prompts/SESSION_PROMPT.md`](./prompts/SESSION_PROMPT.md) (v2.3) & [`CLAUDE.md`](./CLAUDE.md):**
+   - Enforces **RULE #0** (run `audit-scan.mjs` first) and **RULE #1** (tests green → `docs/DECISIONS.md` → update `MASTER_PROMPT.md` + `dogeon-game` skill → commit).
+
+---
+
+## 5. Ready-to-Paste Job Prompt for Claude Code
+
+Copy and paste the block below directly into **Claude Code** to sync its context and give it its next high-impact engineering job:
+
+```markdown
+You are the co-lead engineer on DOGEON ("The Grand Heist", single-file 16-bit Web3 Action RPG in @index.html + Foundry contracts in @contracts/).
+
+### STEP 1 — SYNC YOUR BRAIN & VERIFY BASELINE (RULE #0)
+1. Read @CLAUDE_CODE_HANDOFF.md, @MASTER_PROMPT.md, @.claude/skills/dogeon-game/SKILL.md, @.claude/skills/analyzer-master/SKILL.md, and the top 3 entries of @docs/DECISIONS.md (D-034, D-035, D-036).
+2. Run the diagnostic scanner and test suite to confirm our baseline is 100% green:
+   `node .agents/skills/analyzer-master/scripts/audit-scan.mjs && bash tests/check.sh`
+
+### STEP 2 — YOUR JOB: AUDIT, POLISH & IMPROVE THE BARKSWAP POOL DEX & CLASS GAMEPLAY LOOP
+Using the installed skills (`analyzer-master`, `dogeon-game`, `avax-defi-primitives`, `avax-frontend-ux`, `balance-check`), inspect @index.html and propose a surgical plan (< 40 lines net in @index.html, keeping total lines well under 1,320) to improve:
+1. **BarkSwap Pool DEX UX (`marketMenu` & `drawUI` in @index.html#780-820, #1200-1230):**
+   - Make sure that when a player mints an item token (`MINT < ITEM > NFT` at Row 0 or via starter `1 WOOD + 1 STONE`), or creates/adds/swaps in a pool (`CREATE POOL`, `SWAP`, `ADD LP`, `REMOVE LP`), the menu shows clear, BarkSwap-style reserve/price-impact/LP-share feedback and works seamlessly both when connected on DogeOS Chikyū (`0x5fdaf3`) and when testing offline.
+2. **Class Gameplay Feel & Balance (`CLASSES`, `attack`, `useSkill`, `drawSlash` in @index.html#440-585, #1175-1205):**
+   - Verify and polish the combat feel and balance across all 3 professions:
+     - **ARCHER:** `Space` basic arrow (`0 MP`, `speed=280`, bow drawn in `drawSlash`) + `K/Q` 3-arrow spread volley (`6 MP`).
+     - **HEALER:** `-15` Max HP (`45` base), fast (`1.25x` speed), weak melee staff (`0.65x` dmg, restores `+2 MP` on hit, staff drawn in `drawSlash`) + `K/Q` `MEND` (`10 MP` -> `+20 HP * bark skill`).
+     - **WARRIOR:** `+25` Max HP (`85` base), `+15%` armor, strong melee cleave (`1.35x` dmg, `+4 px` reach + screen shake) + `K/Q` `GROUND POUND` (`12 MP` AoE slam).
+3. **Simulation & Prompt Sync (RULE #1):**
+   - Add deterministic assertions in @tests/sim.mjs for any improvement you make.
+   - Do NOT add extra contracts or external dependencies; keep everything focused on our 4 game contracts (`DogeItems`, `DogeDEX`, `DogeProfession`, `DogeStaking`), item minting, pool DEX, and class gameplay.
+   - Run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs && bash tests/check.sh`, log `D-037` in @docs/DECISIONS.md, update @MASTER_PROMPT.md + @.claude/skills/dogeon-game/SKILL.md, and commit with a Conventional Commit message.
+```

@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 2.2 · 2026-11-08 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 2.3 · 2026-11-08 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #0 — Pre-Decision Analyzer Gate (THE NUMBER ONE RULE — NEVER SKIP)
 > Before taking ANY decision or writing ANY code, run the **Analyzer Prompt Master** (`prompts/ANALYZER_PROMPT_MASTER.md`):
@@ -110,8 +110,11 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
     "Solana fork"). Say what changed and why in the reply.
 30. **Look at the art** — `node tests/sprites.mjs index.html out.png` and Read the PNG before calling sprites done.
 31. **Pre-Decision Analyzer Gate (`prompts/ANALYZER_PROMPT_MASTER.md`)** — always run Explore → Verify Baseline → Plan & Invariant Gate before taking any decision, keep `AGENTS.md` at workspace root for CLI auto-discovery, and use `/fork` or `/rewind` to recover cleanly from speculative paths (D-034).
+32. **Single-Prompt Full-Stack Reproducibility (TryNoah AI Rule, `MASTER_PROMPT.md` §A–B)** — always keep `MASTER_PROMPT.md` and `dogeon-game/SKILL.md` updated with the exact technical stack, live DogeOS Chikyū contract/token addresses, 4-byte selectors (`SEL`), and deterministic gameplay/UI specs (while removing dead instructions) so the entire app can be recreated on TryNoah AI from a single prompt without wasting context (D-036).
+33. **Closing menus in `tests/sim.mjs` + Instant Wallet Popup in `chainAct()`** — `api.get().ui = null` only mutates the returned wrapper object in `sim.mjs`; always close menus with `api.press('escape'); api.step(DT);`. Never `await refreshChain()` before `await fn()` in `chainAct()`, or slow RPC reads will delay `eth_sendTransaction` and block the browser wallet popup (D-036).
 
 ## Changelog
+- 2.3 (2026-11-08) — Added practices 32–33: TryNoah AI single-prompt full-stack reproducibility blueprint (`MASTER_PROMPT.md` §A–B), `api.press('escape')` menu close in `sim.mjs`, and non-blocking `chainAct()` wallet popup (D-036).
 - 2.2 (2026-11-08) — Added RULE #0 (`prompts/ANALYZER_PROMPT_MASTER.md` pre-decision gate), practice 31, and CLI best practices (`AGENTS.md`, verification loops, Explore-Plan-Execute, parallel audit subagents) (D-034).
 - 2.1 (2026-11-07) — Practices 27-30 from Phase 4 (D-023, D-024). MASTER_PROMPT C9 partner NPC template.
 - 2.0 (2026-11-07) — Practice 26 contract audit loop (D-022). Phase 3 complete.

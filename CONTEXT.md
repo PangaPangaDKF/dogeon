@@ -162,9 +162,10 @@ db9225a chore(skills): add caveman, find-skills, game-design skills and own doge
 ```
 x, y, hw, hh, dir, anim, moving,
 hp, maxHp, mp, maxMp,
-doge, bank (pool), whisk, orb, scrap, horn, steel,
+doge, bank (pool), whisk, wood, stone, orb, scrap, horn, steel,
+bag (starts with WOOD x3, STONE x3), credits, prof ('warrior'|'archer'|'healer'|null),
 sword (1-4), armor (0-2), hpUps (0-3), mpUps (0-2),
-inv, atkT, atkCd, kbx, kby, resting, dead, deathT,
+iT, atkT, atkCd, kbx, kby, resting, dead, deathT,
 kills, bruteKills
 ```
 

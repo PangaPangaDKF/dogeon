@@ -21,7 +21,20 @@ const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
 function resize(){let s=Math.min(innerWidth/W,innerHeight/H);if(s>=1)s=Math.floor(s);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
 addEventListener('resize',resize);resize();
-cv.addEventListener('click',()=>{cv.focus();if(AC&&AC.state==='suspended')AC.resume();});
+function cvPos(e){const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*W/(r.width||W),(e.clientY-r.top)*H/(r.height||H)];}
+cv.addEventListener('mousemove',e=>{if(!ui||ui.type!=='menu')return;const [mx,my]=cvPos(e),all=ui.build(),top=Math.max(0,Math.min(ui.sel-Math.floor(MENU_ROWS/2),all.length-MENU_ROWS)),n=Math.min(MENU_ROWS,all.length),y=Math.round((H-(44+n*11))/2)+6;
+  if(mx>=36&&mx<=284&&my>=y+27&&my<y+27+n*11)ui.sel=top+Math.floor((my-(y+27))/11);});
+cv.addEventListener('wheel',e=>{if(!ui||ui.type!=='menu')return;e.preventDefault();const all=ui.build();ui.sel=(ui.sel+(e.deltaY>0?1:all.length-1))%all.length;sfx(440,0.03,'square',0.02);},{passive:false});
+cv.addEventListener('click',e=>{cv.focus();if(AC&&AC.state==='suspended')AC.resume();
+  if(scene==='title'){pressed['enter']=true;return;}
+  if(!ui)return;if(ui.type==='dialog'){pressed['e']=true;return;}
+  const [mx,my]=cvPos(e),all=ui.build(),top=Math.max(0,Math.min(ui.sel-Math.floor(MENU_ROWS/2),all.length-MENU_ROWS)),n=Math.min(MENU_ROWS,all.length),h=44+n*11,y=Math.round((H-h)/2)+6;
+  if(mx<30||mx>290||my<y||my>y+h){ui=null;return;}
+  if(my<y+27){if(top>0)ui.sel=Math.max(0,ui.sel-1);return;}
+  if(my>=y+27+n*11){if(top+MENU_ROWS<all.length)ui.sel=Math.min(all.length-1,ui.sel+1);return;}
+  const idx=top+Math.floor((my-(y+27))/11);if(idx>=0&&idx<all.length){ui.sel=idx;const o=all[idx];
+    if(o.adj){const lt=o.label.indexOf('<'),gt=o.label.indexOf('>');if(lt>0&&mx>=48+lt*4-4&&mx<=48+lt*4+6){o.adj(-1);sfx(440,0.03,'square',0.02);return;}if(gt>lt&&mx>=48+gt*4-2&&mx<=48+gt*4+8){o.adj(1);sfx(440,0.03,'square',0.02);return;}}
+    pressed['e']=true;}});
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 const R=(a,b)=>a+Math.random()*(b-a);
 const dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
@@ -412,17 +425,17 @@ let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=
 // spd/dmg/armor are multipliers/adds applied at use sites (classSpd/classDmg/classArmor); skill routing lands in a later part.
 const CLASSES={
   warrior:{id:1,name:'WARRIOR',faction:'demo',factionName:'DEMOLITION DOGS',spr:'tWarrior',trainer:'SERGEANT IRONPAW',
-    spd:0.95,dmg:1.3,armor:0.12,skill:'GROUND POUND',
-    mech:['A frontline bruiser. Heavy hammer, thick hide, kicks down the doors.','+30% hammer damage and extra armor, a touch slower on your paws.'],
-    skillDesc:'YOUR WOW BECOMES GROUND POUND: a shockwave that knocks back every cat around you.'},
+    spd:0.95,dmg:1.35,armor:0.15,hp:25,skill:'GROUND POUND',
+    mech:['A frontline tank. Heavy hammer cleave, thick armor, +25 max HP.','SPACE = heavy wide hammer smash (+35% dmg). +15% armor reduction.'],
+    skillDesc:'K/Q = GROUND POUND (12 MP): shockwave that damages and knocks back every cat around you.'},
   archer:{id:2,name:'ARCHER',faction:'kernel',factionName:'KERNEL CREW',spr:'tArcher',trainer:'SCOUT FLEETWHISKER',
-    spd:1.25,dmg:1.0,armor:0,skill:'QUICK SHOT',
-    mech:['A fast kiter. Hits from range and runs rings around the brutes.','+25% move speed and a faster, longer WOW. Lighter armor, so do not get cornered.'],
-    skillDesc:'YOUR WOW BECOMES QUICK SHOT: a fast, cheap arrow. Keep your distance, Kernel.'},
+    spd:1.25,dmg:1.0,armor:0,hp:0,skill:'ARROW VOLLEY',
+    mech:['A fast ranged kiter. Choosing Archer replaces your hammer with a bow!','SPACE = shoot arrows at range (0 MP)! +25% move speed to kite brutes.'],
+    skillDesc:'K/Q = ARROW VOLLEY (6 MP): fires a 3-arrow spread fan for crowd control.'},
   healer:{id:3,name:'HEALER',faction:'bark',factionName:'BARKITECTS',spr:'tHealer',trainer:'MENDER BRIGHTTAIL',
-    spd:1.2,dmg:0.85,armor:0.05,skill:'MEND',
-    mech:['Fleet-footed support. Trades punch for sustain and keeps the crew alive.','+20% move speed but -15% damage. Your skill spends MP to patch your wounds.'],
-    skillDesc:'YOUR WOW BECOMES MEND: spend MP to heal HP. MP only refills by resting in camp, so mend wisely.'},
+    spd:1.25,dmg:0.65,armor:0.05,hp:-15,skill:'MEND',
+    mech:['Fleet-footed mystic. Less max HP (-15 HP) and weak melee hit (-35% dmg), but +25% move speed!','SPACE = light staff strike (+2 MP on hit). Keep moving and heal through fights.'],
+    skillDesc:'K/Q = MEND (10 MP): spend MP to heal +20 HP anytime. Staff hits restore +2 MP!'},
 };
 const CLASS_IDS={1:'warrior',2:'archer',3:'healer'};
 const classOf=()=>P.prof?CLASSES[P.prof]:null;
@@ -430,6 +443,9 @@ const classSpd=()=>{const c=classOf();return c?c.spd:1;};
 const classDmg=()=>{const c=classOf();return c?c.dmg:1;};
 const classArmor=()=>{const c=classOf();return c?c.armor:0;};
 const CLASS_COL={warrior:'#ff8060',archer:'#80e080',healer:'#80d0ff'};
+function syncMaxHp(){const c=classOf(),base=60+(c?c.hp:0)+P.hpUps*15,d=base-P.maxHp;P.maxHp=base;if(d>0)P.hp+=d;else P.hp=Math.min(P.hp,P.maxHp);}
+function applyClass(cls,onchain){if(!CLASSES[cls])return;P.prof=cls;syncMaxHp();const c=CLASSES[cls];puff(P.x,P.y-8,CLASS_COL[cls],14);
+  toast(`${c.name} (${onchain?'ON-CHAIN':'ACTIVE'}): ${cls==='archer'?'SPACE SHOOTS ARROWS! K=VOLLEY':cls==='healer'?'FAST + K TO HEAL, WEAK MELEE':'+25 HP, +15% ARMOR, HEAVY HIT!'}`,3.5);}
 const NPCS=[
   {id:'merchant',name:'WRENCHPAW THE MECHANIC',spr:'merchant',x:PADS[2][0]*16+8,y:PADS[2][1]*16+8,hw:6,hh:4,dir:'down',met:false},
   {id:'bank',name:'THE GREAT SPHINX OF DOGE',spr:'bank',x:PADS[0][0]*16+8,y:PADS[0][1]*16+8,hw:6,hh:4,dir:'down',met:false},
@@ -443,7 +459,7 @@ const NPCS=[
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,orb:0,scrap:0,horn:0,steel:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,credits:{},faction:null,prof:null};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,wood:3,stone:3,orb:2,scrap:2,horn:2,steel:2,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,credits:{},faction:null,prof:null};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<FIELD_POP;i++)spawnEnemy('field');
@@ -507,7 +523,7 @@ function hurtPlayer(d,src){
   if(P.hp<=0){P.hp=0;P.dead=true;P.deathT=2.2;sfx(300,0.8,'triangle',0.08,-260);puff(P.x,P.y-8,'#e8922c',16);}
 }
 function respawn(){
-  const lost=Math.floor(P.doge/2),lw=P.whisk,lf=P.bag.length;P.doge-=lost;P.whisk=0;P.orb=0;P.scrap=0;P.horn=0;P.steel=0;P.bag=[]; // carried food is lost too; NFTs live on chain (D-020)
+  const lost=Math.floor(P.doge/2),lw=P.whisk,lf=P.bag.length;P.doge-=lost;P.whisk=0;P.wood=0;P.stone=0;P.orb=0;P.scrap=0;P.horn=0;P.steel=0;P.bag=[]; // carried food is lost too; NFTs live on chain (D-020)
   P.dead=false;P.fishing=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.iT=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
   for(const e of enemies){if(e.boss){e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}}
@@ -515,11 +531,17 @@ function respawn(){
   openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE, ${lw} whiskers, all materials${lf?' and your bag of food':''}. Pool DOGE at the Sphinx and preserve fish as NFTs to keep them safe!`]);
 }
 function attack(){
-  stopFish('REELED IN');P.atkT=0.18;P.atkCd=0.3;sfx(700,0.07,'square',0.035,-450);
-  const v=DIRV[P.dir],cx=P.x+v[0]*13,cy=P.y-5+v[1]*12,hw=v[0]?10:12,hh=v[0]?11:9;
-  const sdmg=Math.round(SWORD_DMG[swordLv()]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat')*classDmg());
-  let hit=false;for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh){damageEnemy(e,sdmg,v[0],v[1]);hit=true;}}
-  if(hit)P.skills.combat++;
+  stopFish('REELED IN');P.atkT=0.18;P.atkCd=P.prof==='archer'?0.24:P.prof==='warrior'?0.34:0.28;
+  const v=DIRV[P.dir],sdmg=Math.round(SWORD_DMG[swordLv()]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat')*classDmg());
+  if(P.prof==='archer'){
+    projs.push({x:P.x+v[0]*9,y:P.y-6+v[1]*9,vx:v[0]*280,vy:v[1]*280,life:0.8,kind:'arrow',basic:true,dir:P.dir,dmg:sdmg,hits:new Set()});
+    sfx(780,0.1,'triangle',0.045,-220);return;
+  }
+  sfx(P.prof==='healer'?840:P.prof==='warrior'?520:700,0.08,P.prof==='healer'?'sine':'square',0.04,P.prof==='healer'?180:-450);
+  if(P.prof==='warrior')shake(0.08);
+  const reach=P.prof==='warrior'?4:0,cx=P.x+v[0]*(13+reach),cy=P.y-5+v[1]*(12+reach),hw=(v[0]?10:12)+reach,hh=(v[0]?11:9)+reach;
+  let hit=false;for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh){damageEnemy(e,sdmg,v[0]*(P.prof==='warrior'?1.35:1),v[1]*(P.prof==='warrior'?1.35:1));hit=true;}}
+  if(hit){P.skills.combat++;if(P.prof==='healer')P.mp=Math.min(P.maxMp,P.mp+2);}
 }
 function bark(){
   if(P.mp<10){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return;}
@@ -527,7 +549,7 @@ function bark(){
   sfx(500,0.25,'sawtooth',0.05,500);
 }
 // ---- Phase 5 (D-029): K/Q runs your class skill (replaces WOW), else the default bark ----
-const SKILL_MP={warrior:12,archer:6,healer:12};
+const SKILL_MP={warrior:12,archer:6,healer:10};
 function useSkill(){const c=classOf();if(!c)return bark();if(P.prof==='warrior')return groundPound();if(P.prof==='archer')return quickShot();return mend();}
 const noMp=n=>{if(P.mp<n){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return true;}return false;};
 // WARRIOR: GROUND POUND — a shockwave that damages + knocks back every cat around you
@@ -537,14 +559,14 @@ function groundPound(){if(noMp(SKILL_MP.warrior))return;stopFish('REELED IN');P.
   enemies=enemies.filter(e=>!e.dead);
   for(let i=0;i<16;i++){const a=i/16*6.28;parts.push({x:P.x+Math.cos(a)*10,y:P.y+Math.sin(a)*10,vx:Math.cos(a)*130,vy:Math.sin(a)*130-10,life:0.4,col:i%2?'#e0a040':'#fff0c0'});}
   shake(0.22);sfx(90,0.3,'sawtooth',0.06,-40);sfx(170,0.18,'square',0.04);}
-// ARCHER: QUICK SHOT — a fast, cheap, long arrow
-function quickShot(){if(noMp(SKILL_MP.archer))return;stopFish('REELED IN');P.mp-=SKILL_MP.archer;P.skills.bark++;const v=DIRV[P.dir];
-  projs.push({x:P.x+v[0]*9,y:P.y-6+v[1]*9,vx:v[0]*300,vy:v[1]*300,life:0.85,kind:'arrow',dir:P.dir,dmg:Math.round((6+swordLv()*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg()),hits:new Set()});
+// ARCHER: ARROW VOLLEY (QUICK SHOT) — fires a 3-arrow fan (center + angled spread)
+function quickShot(){if(noMp(SKILL_MP.archer))return;stopFish('REELED IN');P.mp-=SKILL_MP.archer;P.skills.bark++;const v=DIRV[P.dir],base=ANG[P.dir],dmg=Math.round((6+swordLv()*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg());
+  for(const da of [0,-0.22,0.22]){const a=base+da;projs.push({x:P.x+v[0]*9,y:P.y-6+v[1]*9,vx:Math.round(Math.cos(a)*300),vy:Math.round(Math.sin(a)*300),life:0.85,kind:'arrow',dir:P.dir,dmg,hits:new Set()});}
   sfx(760,0.12,'triangle',0.045,-200);}
-// HEALER: MEND — spend MP to heal HP (MP only refills by resting in camp, so the camp-sanctuary rule holds, D-028)
+// HEALER: MEND — spend MP to heal HP (MP only refills by resting in camp or staff hits, D-028)
 function mend(){if(noMp(SKILL_MP.healer))return;if(P.hp>=P.maxHp){toast('ALREADY FULL HP.',1.2);sfx(440,0.1,'sine',0.03);return;}
   stopFish('REELED IN');P.mp-=SKILL_MP.healer;P.skills.bark++;
-  const heal=Math.round(18*skillMul(P.skills.bark,'bark'));P.hp=Math.min(P.maxHp,P.hp+heal);
+  const heal=Math.round(20*skillMul(P.skills.bark,'bark'));P.hp=Math.min(P.maxHp,P.hp+heal);
   for(let i=0;i<10;i++)parts.push({x:P.x+(Math.random()*12-6),y:P.y+4+(Math.random()*8-4),vx:0,vy:-34,life:0.6,col:i%2?'#70f0b0':'#d8fff0'});
   floater(P.x,P.y-12,'+'+heal,'#80ffb0');sfx(620,0.14,'sine',0.05,220);sfx(880,0.2,'sine',0.04,180);}
 function damageEnemy(e,dmg,kx,ky){
@@ -653,9 +675,9 @@ const unpack=p=>({id:Number(p>>16n),type:Number((p>>8n)&255n),level:Number(p&255
 const itemName=it=>(ITEM_TYPES[it.type]||'ITEM')+(it.type<=2?' LV'+it.level:'');
 const addrs=()=>CONTRACTS[CHAIN.id]||{};
 const chainReady=()=>wallet.connected&&wallet.chainOk&&!!addrs().items&&!!addrs().dex;
-const chainData={inv:[],listings:[],pools:[],proceeds:0n,fee:0n,profession:0,profFee:0n,staked:0n,rewards:0n,dexFees:0n,approved:false,loaded:false};
+const chainData={inv:[],listings:[],pools:[],proceeds:0n,fee:10n**17n,profession:0,profFee:5n*10n**16n,staked:0n,rewards:0n,dexFees:0n,approved:false,loaded:false};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function resetChainData(){Object.assign(chainData,{inv:[],listings:[],pools:[],proceeds:0n,profession:0,profFee:0n,staked:0n,rewards:0n,dexFees:0n,approved:false,loaded:false});}
+function resetChainData(){Object.assign(chainData,{inv:[],listings:[],pools:[],proceeds:0n,fee:10n**17n,profession:0,profFee:5n*10n**16n,staked:0n,rewards:0n,dexFees:0n,approved:false,loaded:false});}
 async function ecall(to,data){const r=await eth().request({method:'eth_call',params:[{to,data:'0x'+data},'latest']});if(!r||r==='0x')throw new Error('NO CONTRACT THERE. DEPLOY FIRST (CONTRACTS/README)');return r;}
 async function etx(to,data,value){
   const h=await eth().request({method:'eth_sendTransaction',params:[{from:wallet.addr,to,data:'0x'+data,value:'0x'+BigInt(value||0).toString(16)}]});
@@ -669,6 +691,7 @@ async function refreshChain(){
   if(!chainReady())return;const c=addrs(),me=wallet.addr;
   const [inv,lst,pls,pr,fee,ap]=await Promise.all([ecall(c.items,SEL.inventoryOf+A32(me)),ecall(c.dex,SEL.listedCount),ecall(c.dex,SEL.allPools),
     ecall(c.dex,SEL.proceeds+A32(me)),ecall(c.items,SEL.mintFee),ecall(c.items,SEL.isApprovedForAll+A32(me)+A32(c.dex))]);
+  if(!chainReady()||wallet.addr!==me)return;
   chainData.inv=arrAt(words(inv),0).map(unpack);
   const nList=Number(words(lst)[0]||0n),listings=[]; // paginated reads (audit D-022)
   for(let off=0;off<nList&&off<LIST_MAX;off+=LIST_PAGE){const lw=words(await ecall(c.dex,SEL.activeListings+W32(off)+W32(LIST_PAGE))),lp=arrAt(lw,0),lpr=arrAt(lw,1),ls=arrAt(lw,2);
@@ -679,17 +702,18 @@ async function refreshChain(){
   chainData.pools=pools;chainData.proceeds=words(pr)[0]||0n;chainData.fee=words(fee)[0]||0n;chainData.approved=(words(ap)[0]||0n)===1n;
   if(c.prof){try{const [pw,pf]=await Promise.all([ecall(c.prof,SEL.professionOf+A32(me)),ecall(c.prof,SEL.profFee)]); // D-028 profession registry (optional until deployed)
     chainData.profession=Number(words(pw)[0]||0n);chainData.profFee=words(pf)[0]||0n;
-    if(chainData.profession&&CLASS_IDS[chainData.profession])P.prof=CLASS_IDS[chainData.profession];}catch(e){}}
+    if(chainData.profession&&CLASS_IDS[chainData.profession])applyClass(CLASS_IDS[chainData.profession],true);}catch(e){}}
   if(c.stake){try{const [sk,rw,df]=await Promise.all([ecall(c.stake,SEL.stakedOf+A32(me)),ecall(c.stake,SEL.pendingRewards+A32(me)),ecall(c.dex,SEL.stakerFeesView)]); // D-030 staking (optional until deployed)
     chainData.staked=words(sk)[0]||0n;chainData.rewards=words(rw)[0]||0n;chainData.dexFees=words(df)[0]||0n;}catch(e){}}
+  if(!chainReady()||wallet.addr!==me)return;
   chainData.loaded=true;
   await refreshBal();
 }
 // Phase 5 (D-028): claim your class on-chain. One per wallet forever; pays profFee DOGE + gas. Local pick stays free when offline.
 function chooseProfession(cls){const c=CLASSES[cls];if(!c)return;
-  if(!chainReady()||!addrs().prof){P.prof=cls;setWalletMsg(`YOU TRAIN AS A ${c.name} (LOCAL). CONNECT AT THE SPHINX TO SWEAR IT ON-CHAIN.`);return;} // offline / registry not here: free local pick (game stays playable with no wallet)
+  if(!chainReady()||!addrs().prof){applyClass(cls,false);setWalletMsg(`YOU TRAIN AS A ${c.name} (LOCAL). SPACE=${cls==='archer'?'ARROWS':cls==='healer'?'STAFF':'CLEAVE'}!`);return;} // offline / registry not here: free local pick (game stays playable with no wallet)
   if(chainData.profession){setWalletMsg(`THIS WALLET IS LOCKED IN AS A ${CLASSES[CLASS_IDS[chainData.profession]].name}. ONE CLASS PER WALLET.`);return;}
-  return chainAct(`YOU ARE NOW A ${c.name}, SWORN ON-CHAIN. SUCH OATH.`,async()=>{await etx(addrs().prof,SEL.chooseProf+W32(c.id),chainData.profFee);P.prof=cls;});}
+  return chainAct(`YOU ARE NOW A ${c.name}, SWORN ON-CHAIN. SUCH OATH.`,async()=>{await etx(addrs().prof,SEL.chooseProf+W32(c.id),chainData.profFee);applyClass(cls,true);});}
 // Phase 5 (D-030): on-chain DOGE staking — stake real testnet DOGE, earn the holders' 0.8% share of every DEX trade
 function stakeDoge(doge){if(!addrs().stake)return setWalletMsg('STAKING NOT DEPLOYED ON THIS CHAIN YET.');return chainAct(`STAKED ${doge} DOGE. NOW EARNING DEX FEES.`,()=>etx(addrs().stake,SEL.stakeDoge,toWei(doge)));}
 function unstakeStake(){if(!(chainData.staked>0n))return setWalletMsg('NOTHING STAKED.');return chainAct('UNSTAKED. DOGE BACK IN YOUR WALLET.',()=>etx(addrs().stake,SEL.unstakeDoge+W32(chainData.staked),0));}
@@ -700,9 +724,9 @@ async function chainAct(done,fn){
   if(wallet.busy){setWalletMsg('WAIT, A TRANSACTION IS RUNNING.');return false;}
   if(!chainReady()){setWalletMsg('CONNECT AT THE SPHINX (DOGEOS CHIKYU) FIRST.');return false;}
   wallet.busy=true;setWalletMsg('CONFIRM IN YOUR WALLET...');
-  try{if(!chainData.loaded)await refreshChain();await fn();await refreshChain();setWalletMsg(done);sfx(990,0.12,'triangle',0.05,300);return true;}
+  try{await fn();await refreshChain().catch(()=>{});setWalletMsg(done);sfx(990,0.12,'triangle',0.05,300);return true;}
   catch(err){setWalletMsg(walletErr(err));return false;}
-  finally{wallet.busy=false;}
+  finally{wallet.busy=false;cv.focus();}
 }
 async function ensureApproved(){if(chainData.approved)return;setWalletMsg('STEP 1/2: LET THE SPHINX MOVE YOUR NFTS...');await etx(addrs().items,SEL.setApprovalForAll+A32(addrs().dex)+W32(1),0);chainData.approved=true;setWalletMsg('STEP 2/2: CONFIRM IN YOUR WALLET...');}
 const keyOfIt=it=>(BigInt(it.type)<<8n)|BigInt(it.level);
@@ -715,13 +739,14 @@ function addCredit(t,l){const k=t+':'+l;P.credits[k]=(P.credits[k]||0)+1;}
 function creditOk(t,l){if(!(P.credits[t+':'+l]>0))return false;if(t===1)return P.sword===l;if(t===2)return P.armor===l;if(t===5)return P.hpUps>0;if(t===6)return P.mpUps>0;return true;}
 function takeOffChain(t,l){if(t===1)P.sword=Math.max(1,l-1);else if(t===2)P.armor=l-1;else if(t===5){P.hpUps--;P.maxHp-=15;P.hp=Math.min(P.hp,P.maxHp);}else if(t===6){P.mpUps--;P.maxMp-=10;P.mp=Math.min(P.mp,P.maxMp);}}
 function putBack(t,l){if(t===1)P.sword=l;else if(t===2)P.armor=l;else if(t===5){P.hpUps++;P.maxHp+=15;}else if(t===6){P.mpUps++;P.maxMp+=10;}}
-function mintNft(type,level,src){ // src 'credit' (crafted at the forge) or a bag food kind
+function mintNft(type,level,src){ // src 'credit' (crafted at the forge), 'starter' (1 wood + 1 stone), a bag food kind, or direct on-chain mint at Sphinx
   return chainAct(`MINTED ${itemName({type,level})} NFT! TO THE MOON.`,async()=>{
     const k=type+':'+level;
     if(src==='credit'){if(!creditOk(type,level))throw new Error('CRAFT IT FIRST AND KEEP IT EQUIPPED');P.credits[k]--;takeOffChain(type,level);}
-    else if(!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
+    else if(src==='starter'){if(bagCount('wood')<1||bagCount('stone')<1)throw new Error('NEED 1 WOOD + 1 STONE IN BAG');bagRemove('wood',1);bagRemove('stone',1);if(P.wood>0)P.wood--;if(P.stone>0)P.stone--;}
+    else if(src&&!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
     try{await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(type)+W32(level),chainData.fee);}
-    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else addToBag(src,1);}throw e;} // unknown outcome: no refund (no dupes)
+    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else if(src==='starter'){addToBag('wood',1);addToBag('stone',1);P.wood++;P.stone++;}else if(src)addToBag(src,1);}throw e;} // unknown outcome: no refund (no dupes)
   });}
 function useNft(it){ // eat food / drink charm: burns the NFT, then applies the effect
   const food=TYPE_FOOD[it.type];
@@ -743,22 +768,27 @@ function buyPool(p){return chainAct(`SWAPPED ${fromWei(p.buy)} DOGE FOR 1 ${item
 function sellPool(it,p){return chainAct(`SOLD #${it.id} FOR ${fromWei(p.sell)} DOGE (IN PROCEEDS).`,async()=>{await ensureApproved();await etx(dex(),SEL.sellToPool+W32(it.id)+W32(p.sell),0);});}
 function withdrawProceeds(){return chainAct('PROCEEDS SENT TO YOUR WALLET.',()=>etx(dex(),SEL.withdraw,0));}
 function chainBlockRow(){if(!eth())return 'NO WALLET: ON-CHAIN ITEMS NEED METAMASK.';if(!wallet.connected)return 'CONNECT YOUR WALLET AT THE SPHINX FIRST.';if(!wallet.chainOk)return 'WRONG NETWORK. SWITCH AT THE SPHINX.';if(!addrs().items)return 'NFT CONTRACTS NOT DEPLOYED ON CHIKYU YET.';return null;}
-const mktUI={price:{},lp:{}}; // per-row preset index for the market menu (NOT mkt = price sim)
+const MINTABLE=[{type:1,level:2},{type:1,level:3},{type:1,level:4},{type:2,level:1},{type:2,level:2},{type:3,level:1},{type:4,level:1},{type:5,level:1},{type:6,level:1}];
+const mktUI={price:{},lp:{},mint:0}; // per-row preset index for the market menu (NOT mkt = price sim)
 const stakeUI={amt:3}; // preset index (PRICES) for the on-chain staking amount (D-030)
 // Phase 5 (D-030): on-chain DOGE staking menu — stake real DOGE, earn the holders' 0.8% share of DEX fees
 function stakeMenu(n){openMenu(n,'DOGE STAKING: EARN 0.8% OF DEX FEES',()=>{
   if(!chainReady())return [...walletRows(),{label:'CONNECT YOUR WALLET TO STAKE',act:()=>'CONNECT AT THE SPHINX (DOGEOS CHIKYU) FIRST.'},{label:'BACK',act:()=>{bankMenu(n);return '';}}];
   if(!addrs().stake)return [{label:'STAKING NOT DEPLOYED ON THIS CHAIN YET',act:()=>'DEPLOY THE STAKING CONTRACT (CONTRACTS/README), THEN APPLY-DEPLOYMENT.'},{label:'BACK',act:()=>{bankMenu(n);return '';}}];
   const amt=PRICES[stakeUI.amt],o=[
+    {label:`STAKE < ${amt} > DOGE (EARN 0.8% FEES)`,adj:d=>{stakeUI.amt=Math.max(0,Math.min(PRICES.length-1,stakeUI.amt+d));},act:()=>{stakeDoge(amt);return wallet.msg;}},
     {label:`YOUR STAKE: ${fromWei(chainData.staked)} DOGE`,act:()=>'STAKED DOGE EARNS THE HOLDERS 0.8% OF EVERY DEX TRADE. PROJECT KEEPS 0.2%.'},
-    {label:`PENDING REWARDS: ${fromWei(chainData.rewards)} DOGE`,act:()=>{claimStakeRewards();return wallet.msg;}},
-    {label:`STAKE < ${amt} > DOGE`,adj:d=>{stakeUI.amt=Math.max(0,Math.min(PRICES.length-1,stakeUI.amt+d));},act:()=>{stakeDoge(amt);return wallet.msg;}}];
+    {label:`PENDING REWARDS: ${fromWei(chainData.rewards)} DOGE (CLAIM)`,act:()=>{claimStakeRewards();return wallet.msg;}}];
   if(chainData.staked>0n)o.push({label:`UNSTAKE ALL (${fromWei(chainData.staked)} DOGE)`,act:()=>{unstakeStake();return wallet.msg;}});
   if(chainData.dexFees>0n)o.push({label:`SYNC DEX FEES TO STAKERS (${fromWei(chainData.dexFees)} DOGE)`,act:()=>{syncDexFees();return wallet.msg;}});
   o.push({label:'REFRESH',act:()=>{refreshChain().then(()=>setWalletMsg('STAKING REFRESHED.')).catch(e=>setWalletMsg(walletErr(e)));return 'REFRESHING...';}});
   o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;refreshChain().catch(()=>{});}
-function marketMenu(n){openMenu(n,'SPHINX NFT MARKET',()=>{const o=[],blk=chainBlockRow();
+function marketMenu(n){openMenu(n,'BARKSWAP POOL DEX: MINT, SWAP & LP',()=>{const o=[],blk=chainBlockRow();
   if(blk){o.push({label:blk,act:()=>'SEE CONTRACTS/README.MD TO DEPLOY.'});o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;}
+  const mi=mktUI.mint||0,mt=MINTABLE[mi],starter=mt.type===1&&mt.level===2&&bagCount('wood')>0&&bagCount('stone')>0;
+  o.push({label:`MINT < ${itemName(mt)} > NFT (${fromWei(chainData.fee||10n**17n)} DOGE)`,adj:d=>{mktUI.mint=(mi+d+MINTABLE.length)%MINTABLE.length;},act:()=>{mintNft(mt.type,mt.level,starter?'starter':undefined);return wallet.msg;}});
+  const inv=myFree(),invTxt=inv.length?inv.slice(0,2).map(it=>'#'+it.id+' '+itemName(it)).join(', ')+(inv.length>2?' +MORE':''):'NONE YET - MINT ONE ABOVE';
+  o.push({label:`WALLET ITEMS (${inv.length}): ${invTxt}`,act:()=>`YOU OWN ${inv.length} MINTED ITEM TOKENS IN YOUR WALLET. ADD THEM TO A POOL BELOW!`});
   if(!chainData.loaded)o.push({label:'LOADING THE CHAIN...',act:()=>{refreshChain().catch(()=>{});return 'REFRESHING...';}});
   if(chainData.proceeds>0n)o.push({label:`WITHDRAW PROCEEDS: ${fromWei(chainData.proceeds)} DOGE`,act:()=>{withdrawProceeds();return wallet.msg;}});
   for(const l of chainData.listings)o.push(l.mine?{label:`DELIST ${itemName(l)} #${l.id} (YOURS, ${fromWei(l.price)})`,act:()=>{delistNft(l);return wallet.msg;}}
@@ -776,9 +806,9 @@ function marketMenu(n){openMenu(n,'SPHINX NFT MARKET',()=>{const o=[],blk=chainB
     o.push({label:`SELL #${it.id} ${itemName(it)} FOR < ${price} > DOGE`,adj:d=>{mktUI.price[it.id]=Math.max(0,Math.min(PRICES.length-1,pi+d));},act:()=>{listNft(it,price);return wallet.msg;}});}
   for(const k in groups){const g=groups[k],li=mktUI.lp[k]??3,amt=PRICES[li];
     o.push({label:`CREATE POOL: ${g.length} ${itemName(g[0])} + < ${amt} > DOGE`,adj:d=>{mktUI.lp[k]=Math.max(0,Math.min(PRICES.length-1,li+d));},act:()=>{addLp(g.map(it=>it.id),toWei(amt));return wallet.msg;}});}
-  if(chainData.loaded&&!chainData.listings.length&&!poolKeys.size)o.push({label:'NO MARKET YET. LIST OR CREATE A POOL FIRST.',act:()=>'NOTHING IS SOLD UNTIL A PLAYER SELLS IT.'});
+  if(chainData.loaded&&!chainData.listings.length&&!poolKeys.size)o.push({label:'NO POOLS YET. MINT AN ITEM ABOVE, THEN CREATE POOL!',act:()=>'MINT AN ITEM TOKEN FIRST, THEN ADD IT TO THE POOL WITH DOGE.'});
   o.push({label:'REFRESH',act:()=>{refreshChain().then(()=>setWalletMsg('MARKET REFRESHED.')).catch(e=>setWalletMsg(walletErr(e)));return 'REFRESHING...';}});
-  o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));}
+  o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;ui.barkswap=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));}
 
 // ================= UI (dialog / menus) =================
 function openDialog(npc,lines,onEnd){ui={type:'dialog',npc,pages:lines,idx:0,chars:0,onEnd};sfx(660,0.04,'square',0.03);}
@@ -811,7 +841,7 @@ function professorMenu(n){const c=CLASSES[n.cls],fac=FACTIONS.find(f=>f.id===c.f
     }else if(locked){
       o.push({label:`LOCKED ON-CHAIN: ${CLASSES[CLASS_IDS[locked]].name}`,act:()=>'ONE CLASS PER WALLET. THIS CHOICE IS FINAL ON-CHAIN.'});
     }else if(P.prof){
-      o.push({label:`SWITCH TO ${c.name} (LOCAL)`,act:()=>{P.prof=n.cls;sfx(660,0.18,'triangle',0.05,300);return `YOU RETRAIN AS A ${c.name}. NOT YET ON-CHAIN — SWEAR IT AT THE SPHINX.`;}});
+      o.push({label:`SWITCH TO ${c.name} (LOCAL)`,act:()=>{applyClass(n.cls,false);sfx(660,0.18,'triangle',0.05,300);return `YOU RETRAIN AS A ${c.name}. SPACE=${n.cls==='archer'?'SHOOT ARROWS':n.cls==='healer'?'STAFF (+2 MP)':'HEAVY CLEAVE'}!`;}});
     }else{
       const onchain=chainReady()&&addrs().prof;
       o.push({label:onchain?`BECOME A ${c.name} (${fromWei(chainData.profFee||0n)} DOGE + GAS)`:`BECOME A ${c.name}`,act:()=>{const r=chooseProfession(n.cls);return (r&&r.then)?(wallet.msg||'CONFIRM IN YOUR WALLET...'):(wallet.msg||`YOU TRAIN AS A ${c.name}.`);}});
@@ -831,8 +861,9 @@ function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
     const parts=Object.entries(r.need).map(([k,v])=>`${v} ${k.toUpperCase()}`).join('+');
     const has=Object.entries(r.need).every(([k,v])=>P[k]>=v);
     o.push({label:`${r.name} [${parts}]`,act:has?()=>{for(const [k,v] of Object.entries(r.need))P[k]-=v;if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act();}:()=>'NOT ENOUGH MATERIALS. HUNT MORE.'});}
-  // on-chain mint (D-019): only things you crafted (credits) or caught (bag food) can be minted
+  // on-chain mint (D-019): crafted credits, starter wood+stone bag kit, or caught bag food can be minted
   const fee=chainData.loaded?fromWei(chainData.fee)+' DOGE':'FEE';
+  if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT HAMMER NFT [1 WOOD+1 STONE] (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
   for(const k in P.credits){const [t,l]=k.split(':').map(Number);if(!creditOk(t,l))continue;o.push({label:`MINT ${itemName({type:t,level:l})} NFT x${P.credits[k]} (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(t,l,'credit');return wallet.msg;}});}
   for(const f in FOOD_TYPE)if(bagCount(f))o.push({label:`PRESERVE ${FOODS[f].name} AS NFT (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(FOOD_TYPE[f],1,f);return wallet.msg;}});
   o.push({label:`INVENTORY: ORB ${P.orb} SCRAP ${P.scrap} HORN ${P.horn} STEEL ${P.steel}`,act:()=>'THOSE ARE YOUR MATERIALS.'});
@@ -865,7 +896,7 @@ function bankMenu(n){openMenu(n,'THE SPHINX DEX - DOGEOS DEFI HUB',()=>{
   {label:'NFT MARKET: SWAP + LIQUIDITY POOLS',act:()=>{marketMenu(n);return '';}},
   {label:'ON-CHAIN STAKING: EARN 0.8% OF DEX FEES',act:()=>{stakeMenu(n);return '';}},
   linkRow('GET TESTNET DOGE (FAUCET)',LINKS.faucet),
-  {label:`STAKE ${P.doge} DOGE IN THE VAULT (+1%)`,act:()=>{if(!P.doge)return 'NO DOGE TO STAKE.';P.bank+=P.doge;P.doge=0;return 'STAKED. SAFE WHEN YOU FALL. EARNS 1%.';}},
+  {label:`STAKE ${P.doge} DOGE IN THE VAULT (+1%)`,act:()=>{if(!P.doge){if(wallet.connected){stakeMenu(n);return 'OPENED ON-CHAIN WALLET STAKING.';}return 'NO DOGE TO STAKE.';}P.bank+=P.doge;P.doge=0;return 'STAKED. SAFE WHEN YOU FALL. EARNS 1%.';}},
   {label:`UNSTAKE ${P.bank}+${yld} DOGE`,act:()=>{if(!P.bank)return 'NOTHING STAKED.';const t=P.bank+yld;P.doge+=t;P.bank=0;return `UNSTAKED ${t} DOGE (${yld} REWARD). TO THE MOON.`;}},
   {label:`SWAP ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'NO WHISKERS TO SWAP.';P.doge+=P.whisk*3;const m=`SWAPPED ${P.whisk} WHISKERS FOR ${P.whisk*3} DOGE.`;P.whisk=0;return m;}},
   {label:`BUY BONE CHARM (50 DOGE)`,act:P.hpUps>=3?()=>'MAX CHARMS ALREADY.':()=>{if(P.doge<50)return 'NOT ENOUGH DOGE.';P.doge-=50;P.hpUps++;P.maxHp+=15;return 'BONE CHARM BOUGHT! +15 MAX HP.';}},
@@ -976,7 +1007,8 @@ function invMenu(){
       if(fd){const nearFire=dist(P.x,P.y,CX*16+8,FY*16+8)<30;
         o.push({label:`${fd.name} x${s.qty} [EAT +${fd.heal} HP]`,act:()=>{if(P.hp>=P.maxHp)return 'HP IS FULL ALREADY.';bagRemove(s.kind,1);P.hp=Math.min(P.maxHp,P.hp+fd.heal);sfx(660,0.1,'triangle',0.05,200);return `ATE ${fd.name}. +${fd.heal} HP. YUM.`;}});
         if(s.kind==='raw_fish'&&nearFire)o.push({label:`COOK RAW FISH -> COOKED FISH`,act:()=>{if(!bagRemove('raw_fish',1))return 'NO RAW FISH.';if(!addToBag('cooked_fish',1)){addToBag('raw_fish',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED! MUCH DELICIOUS.';}});
-      }else{const names={orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'CRAFTING MATERIAL. TAKE TO WRENCHPAW.'});}}
+      }else{const names={wood:'WOOD',stone:'STONE',orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'STARTER / CRAFTING MATERIAL. USE TO MINT AT FORGE OR BELOW.'});}}
+    if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT STARTER HAMMER NFT [1 WOOD+1 STONE]`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
     const sk=P.skills,lv=k=>skillLv(sk[k],k);o.push({label:`SKILLS: COMBAT LV${lv('combat')} (${sk.combat}XP) BARK LV${lv('bark')} (${sk.bark}XP) FISH LV${lv('fishing')} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(lv('combat')*SKILL_BONUS*100)}% DMG  BARK +${Math.round(lv('bark')*SKILL_BONUS*100)}% DMG  FISH +${Math.round(lv('fishing')*SKILL_BONUS*100)}% SPD`});
     if(chainReady())for(const it of chainData.inv){const f=TYPE_FOOD[it.type];
       o.push({label:`NFT #${it.id} ${itemName(it)} `+(f?`[EAT +${FOODS[f].heal} HP, BURNS]`:it.type<=2?'(OWNED = EQUIPPED)':'[USE, BURNS]'),act:it.type<=2?()=>`ON-CHAIN GEAR. EFFECTIVE HAMMER LV${swordLv()} ARMOR LV${armorLv()}.`:()=>{useNft(it);return wallet.msg;}});}
@@ -1046,7 +1078,7 @@ function update(dt){
     const tx=Math.floor(p.x/16),ty=Math.floor((p.y+4)/16);
     if(solidFor(tx,ty,{enemy:p.kind==='bone'})){p.life=0;puff(p.x,p.y,p.kind==='bone'?'#e0e0e0':'#ffe040',4);continue;}
     if(p.kind==='bone'){if(!P.dead&&!playerInCamp()&&Math.abs(p.x-P.x)<P.hw+3&&Math.abs(p.y-(P.y-6))<10){hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy+6});p.life=0;}}
-    else{for(const e of enemies){if(e.dead||p.hits.has(e))continue;const ew=e.boss?14:8,eh=e.boss?20:11;if(Math.abs(p.x-e.x)<ew&&Math.abs(p.y-(e.y-(e.boss?14:6)))<eh){p.hits.add(e);damageEnemy(e,p.dmg,Math.sign(p.vx),Math.sign(p.vy));}}enemies=enemies.filter(e=>!e.dead);}
+    else{for(const e of enemies){if(e.dead||p.hits.has(e))continue;const ew=e.boss?14:8,eh=e.boss?20:11;if(Math.abs(p.x-e.x)<ew&&Math.abs(p.y-(e.y-(e.boss?14:6)))<eh){p.hits.add(e);if(p.basic)P.skills.combat++;damageEnemy(e,p.dmg,Math.sign(p.vx),Math.sign(p.vy));if(p.kind==='arrow'){p.life=0;break;}}}enemies=enemies.filter(e=>!e.dead);}
   }
   projs=projs.filter(p=>p.life>0);
   // items
@@ -1106,8 +1138,9 @@ function drawWorld(){
   }});
   if(!P.dead)list.push({y:P.y,f:()=>{
     if(P.iT>0&&Math.floor(time*20)%2)return;
-    if(P.resting){drawChar(SPR.hero,'down',0,P.x,P.y+P.hh+1,1,ox,oy);const z=(time*1.2)%1;text('Z',P.x+5+z*6-ox,P.y-22-z*10-oy,'#c0d8ff');text('Z',P.x+3+((z+0.5)%1)*6-ox,P.y-22-((z+0.5)%1)*10-oy,'#c0d8ff');}
-    else drawChar(SPR.hero,P.dir,P.atkT>0?0:frameOf(P,P.moving),P.x,P.y+P.hh,1,ox,oy);
+    const hSpr=SPR[classOf()?classOf().spr:'hero'];
+    if(P.resting){drawChar(hSpr,'down',0,P.x,P.y+P.hh+1,1,ox,oy);const z=(time*1.2)%1;text('Z',P.x+5+z*6-ox,P.y-22-z*10-oy,'#c0d8ff');text('Z',P.x+3+((z+0.5)%1)*6-ox,P.y-22-((z+0.5)%1)*10-oy,'#c0d8ff');}
+    else drawChar(hSpr,P.dir,P.atkT>0?0:frameOf(P,P.moving),P.x,P.y+P.hh,1,ox,oy);
     if(P.atkT>0)drawSlash(ox,oy);
     if(P.fishing)drawFishing(ox,oy);
     else if(!ui&&!P.resting&&waterAt(P.dir)){const b=Math.round(Math.sin(time*6));text('F',P.x-1-ox,P.y-30+b-oy,'#80c0ff');}
@@ -1123,15 +1156,18 @@ function drawWorld(){
   if(boss&&zoneOf(P.x,P.y)==='boss'){ctx.fillStyle='#000';ctx.fillRect(59,H-14,202,8);ctx.fillStyle='#401020';ctx.fillRect(60,H-13,200,6);ctx.fillStyle='#e02050';ctx.fillRect(60,H-13,Math.ceil(200*boss.hp/boss.maxHp),6);ctx.fillStyle='#ff80a0';ctx.fillRect(60,H-13,Math.ceil(200*boss.hp/boss.maxHp),1);textC('THE CAT LORD',W/2,H-22,'#ffd0e0');}
 }
 function drawSlash(ox,oy){
-  const p=1-P.atkT/0.18,base=ANG[P.dir],a0=base-1.25,a=a0+2.5*Math.min(1,p);
-  const cx=P.x-ox,cy=P.y-6-oy;
-  // hammer handle
-  for(let r=3;r<=14;r++){const x=Math.round(cx+Math.cos(a)*r),y=Math.round(cy+Math.sin(a)*r);ctx.fillStyle='#7a4a1a';ctx.fillRect(x,y,1,1);}
-  // barrel head at the tip
-  for(let dr=-2;dr<=2;dr++)for(let da=-0.15;da<=0.15;da+=0.07){const r=14+dr,an=a+da;const x=Math.round(cx+Math.cos(an)*r),y=Math.round(cy+Math.sin(an)*r);ctx.fillStyle=dr<0?'#a07040':'#c09060';ctx.fillRect(x,y,1,1);}
-  // swing trail
-  ctx.fillStyle='rgba(200,180,140,0.3)';
-  for(let t=a-0.6;t<a;t+=0.08)for(let r=12;r<=16;r+=2)ctx.fillRect(Math.round(cx+Math.cos(t)*r),Math.round(cy+Math.sin(t)*r),1,1);
+  const p=1-P.atkT/0.18,base=ANG[P.dir],cx=P.x-ox,cy=P.y-6-oy;
+  if(P.prof==='archer'){
+    for(let da=-0.9;da<=0.9;da+=0.1){const r=11,an=base+da;ctx.fillStyle='#9a6a2a';ctx.fillRect(Math.round(cx+Math.cos(an)*r),Math.round(cy+Math.sin(an)*r),2,2);}
+    const x0=cx+Math.cos(base-0.9)*10,y0=cy+Math.sin(base-0.9)*10,x1=cx+Math.cos(base+0.9)*10,y1=cy+Math.sin(base+0.9)*10;
+    ctx.fillStyle='#e8e8e8';for(let i=0;i<=8;i++)ctx.fillRect(Math.round(x0+(x1-x0)*i/8),Math.round(y0+(y1-y0)*i/8),1,1);
+    return;
+  }
+  const a0=base-1.25,a=a0+2.5*Math.min(1,p),maxR=P.prof==='warrior'?17:14;
+  for(let r=3;r<=maxR;r++){const x=Math.round(cx+Math.cos(a)*r),y=Math.round(cy+Math.sin(a)*r);ctx.fillStyle=P.prof==='healer'?'#80e8ff':'#7a4a1a';ctx.fillRect(x,y,1,1);}
+  for(let dr=-2;dr<=2;dr++)for(let da=-0.15;da<=0.15;da+=0.07){const r=maxR+dr,an=a+da;const x=Math.round(cx+Math.cos(an)*r),y=Math.round(cy+Math.sin(an)*r);ctx.fillStyle=P.prof==='healer'?'#50f0b0':P.prof==='warrior'?(dr<0?'#b02020':'#d8d8e8'):(dr<0?'#a07040':'#c09060');ctx.fillRect(x,y,1,1);}
+  ctx.fillStyle=P.prof==='healer'?'rgba(80,240,180,0.35)':P.prof==='warrior'?'rgba(255,90,60,0.35)':'rgba(200,180,140,0.3)';
+  for(let t=a-0.6;t<a;t+=0.08)for(let r=maxR-2;r<=maxR+2;r+=2)ctx.fillRect(Math.round(cx+Math.cos(t)*r),Math.round(cy+Math.sin(t)*r),1,1);
 }
 function drawFishing(ox,oy){
   // line from the paw to a bobbing float, plus a catch bar over the head
@@ -1154,7 +1190,7 @@ function drawHUD(){
   text('DOGE $'+mkt.p.toFixed(3),168,3,'#f8d050');text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');
   text('QUEST',222,3,'#ffe040');text(questText(),222,10,'#fff');
   if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?'CHAIN '+shortAddr(wallet.addr)+'  R=REST  I=BAG':'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
-  if(!ui&&!P.dead){const c=classOf();text(c?c.name:'NO CLASS',3,H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class tag (D-028)
+  if(!ui&&!P.dead){const c=classOf(),tag=P.prof==='archer'?'ARCHER [SPC:ARROW K:VOLLEY]':P.prof==='healer'?'HEALER [SPC:STAFF K:HEAL]':P.prof==='warrior'?'WARRIOR [SPC:CLEAVE K:SLAM]':'NO CLASS';text(tag,3,H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class tag (D-028)
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
 function drawUI(){
@@ -1171,11 +1207,16 @@ function drawUI(){
     const all=ui.build(),top=Math.max(0,Math.min(ui.sel-Math.floor(MENU_ROWS/2),all.length-MENU_ROWS)),opts=all.slice(top,top+MENU_ROWS),h=44+opts.length*11;const y=Math.round((H-h)/2)+6;
     box(30,y,260,h);
     textC(ui.title,W/2,y+6,'#ffe040');
-    text(`CARRIED: ${P.doge} DOGE`,40,y+16,'#f8d050');text(`VAULT: ${P.bank}`,200,y+16,'#b0a060');
+    if(ui.chain&&wallet.connected){text(`WALLET: ${wallet.bal==null?'?':wallet.bal} DOGE`,40,y+16,'#f8d050');text(`ITEMS: ${chainData.inv.length}  STAKED: ${fromWei(chainData.staked)}`,172,y+16,'#60e0a0');}
+    else{text(`CARRIED: ${P.doge} DOGE`,40,y+16,'#f8d050');text(`VAULT: ${P.bank}`,200,y+16,'#b0a060');}
     ctx.fillStyle='#3848a0';ctx.fillRect(36,y+24,248,1);
     if(top>0)text('^',282,y+16,'#ffe040');if(top+MENU_ROWS<all.length)text('V',282,y+h-10,'#ffe040');
-    opts.forEach((o,i)=>{const yy=y+29+i*11,sel=i+top===ui.sel;if(sel){ctx.fillStyle='#2a48d0';ctx.fillRect(36,yy-2,248,9);text('>',40,yy,'#ffe040');}
-      const afford=!o.cost||P.doge>=o.cost;text(o.label,48,yy,sel?'#fff':'#c8d0f0');if(o.cost)text(o.cost+' DOGE',280-(String(o.cost).length+4)*4,yy,afford?'#f8d050':'#a05050');});
+    opts.forEach((o,i)=>{const yy=y+29+i*11,idx=i+top,sel=idx===ui.sel,lb=o.label||'';
+      const isMint=ui.barkswap&&/^MINT /.test(lb),isBal=ui.barkswap&&/^WALLET ITEMS/.test(lb),isPool=ui.barkswap&&/^(POOL | SWAP | ADD |CREATE POOL)/.test(lb);
+      if(!sel){if(isMint){ctx.fillStyle='#3a2208';ctx.fillRect(36,yy-2,248,10);}else if(isBal){ctx.fillStyle='#101838';ctx.fillRect(36,yy-2,248,10);}else if(isPool){ctx.fillStyle='#0c2624';ctx.fillRect(36,yy-2,248,10);}}
+      if(sel){ctx.fillStyle=isMint?'#b86810':'#2a48d0';ctx.fillRect(36,yy-2,248,9);text('>',40,yy,'#ffe040');}
+      const afford=!o.cost||P.doge>=o.cost,col=sel?'#fff':isMint?'#ffd860':isPool?'#80f8c0':isBal?'#f8e090':'#c8d0f0';
+      text(lb,48,yy,col);if(o.cost)text(o.cost+' DOGE',280-(String(o.cost).length+4)*4,yy,afford?'#f8d050':'#a05050');});
     text(ui.msg||(all[ui.sel]&&all[ui.sel].adj?'W/S SELECT  A/D PRICE  E OK  ESC LEAVE':'W/S SELECT   E BUY   ESC LEAVE'),40,y+h-10,ui.msg?'#a0ffa0':'#8090c0');
   }
 }

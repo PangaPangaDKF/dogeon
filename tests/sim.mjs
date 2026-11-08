@@ -69,6 +69,7 @@ globalThis.__api = {
   CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
+  applyClass, syncMaxHp,
 };`;
 
 function boot(seed, opts) {
@@ -557,7 +558,7 @@ await scenarioAsync('wallet: user rejects -> stays offline with a clear message'
 // Needs: anvil on 127.0.0.1:8545 with contracts/script/Deploy.s.sol deployed (contracts/README.md). Skipped otherwise.
 const ANVIL = 'http://127.0.0.1:8545', ACCT = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
 async function rpc(method, params = []) {
-  const r = await fetch(ANVIL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
+  const r = await fetch(ANVIL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(800) });
   const j = await r.json(); if (j.error) throw Object.assign(new Error(j.error.message), { code: j.error.code }); return j.result;
 }
 function anvilEth() { // EIP-1193 provider backed by anvil's unlocked dev account
@@ -666,13 +667,14 @@ scenario('inventory: I/Tab open it, 12 slots, food stacks of 5, materials shown'
   let ui = api.get().ui;
   if (!ui || ui.title !== 'INVENTORY') throw new Error('I did not open the inventory');
   const rows = ui.build().map(r => r.label);
-  if (!rows.some(l => /BAG 0\/12 SLOTS/.test(l)) || !rows.some(l => /MATERIALS: ORB/.test(l))) fail('bag rows', rows.join(' | '));
-  else pass('bag rows', 'slot counter + materials row visible');
+  if (!rows.some(l => /BAG 2\/12 SLOTS/.test(l)) || !rows.some(l => /WOOD x3/.test(l)) || !rows.some(l => /STONE x3/.test(l)) || !rows.some(l => /MATERIALS: ORB/.test(l))) fail('bag rows', rows.join(' | '));
+  else pass('bag rows', 'starter bag (WOOD x3, STONE x3) + materials row visible');
   api.press('escape'); api.step(DT); api.press('tab'); api.step(DT);
   ui = api.get().ui;
   if (!ui || ui.title !== 'INVENTORY') fail('tab', 'Tab did not open the inventory'); else pass('tab', 'Tab opens it too');
   api.press('escape'); api.step(DT);
   const P = api.get().P;
+  P.bag.length = 0; // clear starter wood/stone to test the 12-slot stack capacity
   const allFit = api.addToBag('raw_fish', 70);
   if (allFit || P.bag.length !== api.BAG_SIZE || P.bag.some(s => s.qty !== 5)) fail('bag limit', `fit=${allFit} slots=${P.bag.length} qty=${P.bag.map(s => s.qty)}`);
   else pass('bag limit', `70 fish -> ${P.bag.length} slots x 5, rest refused`);
@@ -839,17 +841,29 @@ scenario('faction trainers: pick a class locally, its mechanic applies, one clas
   if (!become) { fail('warrior menu', 'no BECOME A WARRIOR row: ' + ui.build().map(r => r.label).join(' | ')); return; }
   become.act();
   if (api.get().P.prof !== 'warrior') fail('become warrior', 'P.prof=' + api.get().P.prof);
-  else if (!(api.classDmg() > 1.2 && api.classSpd() < 1 && api.classArmor() > 0)) fail('warrior stats', `dmg ${api.classDmg()} spd ${api.classSpd()} armor ${api.classArmor()}`);
-  else pass('become warrior', `WARRIOR: dmg x${api.classDmg()}, spd x${api.classSpd()}, +${api.classArmor()} armor`);
+  else if (!(api.classDmg() > 1.2 && api.classSpd() < 1 && api.classArmor() > 0 && api.get().P.maxHp === 85)) fail('warrior stats', `dmg ${api.classDmg()} spd ${api.classSpd()} armor ${api.classArmor()} maxHp ${api.get().P.maxHp}`);
+  else pass('become warrior', `WARRIOR: dmg x${api.classDmg()}, spd x${api.classSpd()}, +${api.classArmor()} armor, maxHp ${api.get().P.maxHp}`);
   api.get().ui = null;
-  // retrain to archer (local switch) -> faster; still exactly one class
+  // retrain to archer (local switch) -> faster, 60 maxHp, and Space fires an arrow (0 MP)
   const a = npc(api, 'archer'); api.talk(a); readDialog(api); ui = api.get().ui;
   const sw = ui.build().find(r => /SWITCH TO ARCHER/.test(r.label));
   if (!sw) { fail('switch archer', 'no SWITCH TO ARCHER row: ' + ui.build().map(r => r.label).join(' | ')); return; }
   sw.act();
   if (api.get().P.prof !== 'archer') fail('switch archer', 'P.prof=' + api.get().P.prof);
-  else if (!(api.classSpd() > 1.2 && api.classDmg() === 1)) fail('archer stats', `spd ${api.classSpd()} dmg ${api.classDmg()}`);
-  else pass('switch archer', `ARCHER: spd x${api.classSpd()} faster, dmg x${api.classDmg()} — still one class`);
+  else if (!(api.classSpd() > 1.2 && api.classDmg() === 1 && api.get().P.maxHp === 60)) fail('archer stats', `spd ${api.classSpd()} dmg ${api.classDmg()} maxHp ${api.get().P.maxHp}`);
+  else pass('switch archer', `ARCHER: spd x${api.classSpd()} faster, dmg x${api.classDmg()}, maxHp ${api.get().P.maxHp} — still one class`);
+  api.press('escape'); api.step(DT);
+  // Archer basic Space attack shoots an arrow with 0 MP cost
+  api.get().projs.length = 0; api.get().P.atkCd = 0; api.get().P.mp = 30; api.get().P.dir = 'right';
+  api.press(' '); api.step(DT);
+  const basicArrow = api.get().projs.find(p => p.kind === 'arrow');
+  if (!basicArrow || api.get().P.mp !== 30) fail('archer basic arrow', `arrow=${!!basicArrow} mp=${api.get().P.mp}`);
+  else pass('archer basic arrow', 'Space fires a fast basic arrow (0 MP cost)');
+  // retrain to healer -> fast (spd 1.25), weak melee (dmg 0.65), less HP (45 maxHp), melee hit restores +2 MP
+  const h = npc(api, 'healer'); api.talk(h); readDialog(api); ui = api.get().ui;
+  ui.build().find(r => /SWITCH TO HEALER/.test(r.label)).act(); api.press('escape'); api.step(DT);
+  if (api.get().P.prof !== 'healer' || api.get().P.maxHp !== 45 || api.classDmg() !== 0.65 || api.classSpd() !== 1.25) fail('healer stats', `prof=${api.get().P.prof} maxHp=${api.get().P.maxHp} dmg=${api.classDmg()} spd=${api.classSpd()}`);
+  else pass('healer stats', 'HEALER: maxHp 45 (-15 HP), melee x0.65 (weak), spd x1.25 (fast)');
 });
 
 scenario('class skills: GROUND POUND knocks back, QUICK SHOT flies fast, MEND spends MP to heal (D-029)', () => {
@@ -862,16 +876,16 @@ scenario('class skills: GROUND POUND knocks back, QUICK SHOT flies fast, MEND sp
   else if (!(e.kbx !== 0 || e.kby !== 0 || e.dead)) fail('ground pound', 'no knockback');
   else if (api.get().P.mp !== mp0 - api.SKILL_MP.warrior) fail('ground pound mp', `mp ${mp0}->${api.get().P.mp}`);
   else pass('ground pound', `cat ${hp0}->${e.hp} hp, knocked back, -${api.SKILL_MP.warrior} MP`);
-  // ARCHER: quick shot is a fast, cheap arrow
-  P = api.get().P; P.prof = 'archer'; P.mp = 30; P.dir = 'right'; api.get().projs.length = 0;
+  // ARCHER: quick shot is a fast, cheap 3-arrow volley
+  P = api.get().P; P.prof = 'archer'; api.syncMaxHp(); P.mp = 30; P.dir = 'right'; api.get().projs.length = 0;
   const mpA = P.mp; api.useSkill();
-  const arrow = api.get().projs.find(p => p.kind === 'arrow');
-  if (!arrow) fail('quick shot', 'no arrow projectile fired');
-  else if (Math.abs(arrow.vx) + Math.abs(arrow.vy) < 300) fail('quick shot', 'arrow too slow: ' + arrow.vx);
+  const arrows = api.get().projs.filter(p => p.kind === 'arrow');
+  if (arrows.length < 3) fail('quick shot', `expected 3-arrow volley, got ${arrows.length}`);
+  else if (Math.abs(arrows[0].vx) + Math.abs(arrows[0].vy) < 300) fail('quick shot', 'arrow too slow: ' + arrows[0].vx);
   else if (api.get().P.mp !== mpA - api.SKILL_MP.archer) fail('quick shot mp', 'mp ' + api.get().P.mp);
-  else pass('quick shot', `arrow speed ${Math.abs(arrow.vx) + Math.abs(arrow.vy)}, -${api.SKILL_MP.archer} MP`);
+  else pass('quick shot', `3-arrow volley speed ${Math.round(Math.abs(arrows[0].vx) + Math.abs(arrows[0].vy))}, -${api.SKILL_MP.archer} MP`);
   // HEALER: mend trades MP for HP (above the 60% rest cap is allowed; MP only refills in camp)
-  P = api.get().P; P.prof = 'healer'; P.hp = 20; P.maxHp = 60; P.mp = 30;
+  P = api.get().P; P.prof = 'healer'; api.syncMaxHp(); P.hp = 20; P.mp = 30;
   const hpH = P.hp, mpH = P.mp; api.useSkill();
   if (!(api.get().P.hp > hpH)) fail('mend heal', `hp ${hpH}->${api.get().P.hp}`);
   else if (!(api.get().P.mp < mpH)) fail('mend mp', 'MP not spent');
@@ -989,7 +1003,24 @@ await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChan
   if (api.get().P.prof !== 'warrior' || eth.sent.length !== sentBeforeLock || !/LOCKED IN/.test(api.wallet.msg)) fail('prof lock', `prof=${api.get().P.prof} msg="${api.wallet.msg}"`);
   else pass('prof lock', 'second on-chain class change refused (one class per wallet)');
 
-  // stakeDoge, claimStakeRewards, unstakeStake, syncDexFees, delistNft
+  // stakeDoge, claimStakeRewards, unstakeStake, syncDexFees, delistNft + direct marketMenu mint & stakeMenu Row 0
+  api.marketMenu(npc(api, 'bank'));
+  const mktRow0 = api.get().ui.build()[0];
+  if (!mktRow0 || !/^MINT < HAMMER LV2 > NFT/.test(mktRow0.label)) fail('market direct mint row', mktRow0 ? mktRow0.label : 'missing');
+  else {
+    mktRow0.act(); await idle(api);
+    if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.mint)) fail('market direct mint tx', JSON.stringify(eth.sent.at(-1)));
+    else pass('market direct mint', `"${mktRow0.label}" at row 0 mints directly on DogeItems`);
+  }
+  api.stakeMenu(npc(api, 'bank'));
+  const stkRow0 = api.get().ui.build()[0];
+  if (!stkRow0 || !/^STAKE < 1 > DOGE/.test(stkRow0.label)) fail('stakeMenu row 0', stkRow0 ? stkRow0.label : 'missing');
+  else pass('stakeMenu row 0', `"${stkRow0.label}" is row 0 for immediate staking`);
+  api.get().P.doge = 0; api.bankMenu(npc(api, 'bank'));
+  api.get().ui.build().find(r => /^STAKE 0 DOGE IN THE VAULT/.test(r.label)).act();
+  if (!api.get().ui || !/DOGE STAKING/.test(api.get().ui.title)) fail('vault stake redirect', api.get().ui && api.get().ui.title);
+  else pass('vault stake redirect', 'STAKE 0 DOGE IN THE VAULT redirects to ON-CHAIN STAKING when wallet is connected');
+  api.press('escape'); api.step(DT);
   await api.stakeDoge(1); await idle(api);
   if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.stakeDoge)) fail('stakeDoge', JSON.stringify(eth.sent.at(-1)));
   else pass('stakeDoge', 'staked 1 DOGE via SEL.stakeDoge');
@@ -1005,6 +1036,19 @@ await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChan
   await api.delistNft({ id: 7, type: 1, level: 2, price: 10n ** 18n, mine: true }); await idle(api);
   if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.delist)) fail('delistNft', JSON.stringify(eth.sent.at(-1)));
   else pass('delistNft', 'delisted #7 via SEL.delist');
+
+  // D-036: starter material mint (1 WOOD + 1 STONE) + BarkSwap Pool DEX wallet items balance & CREATE POOL row
+  const woodBefore = api.bagCount('wood'), stoneBefore = api.bagCount('stone');
+  await api.mintNft(1, 2, 'starter'); await idle(api);
+  if (api.bagCount('wood') !== woodBefore - 1 || api.bagCount('stone') !== stoneBefore - 1 || !eth.sent.at(-1).data.startsWith('0x' + api.SEL.mint)) fail('starter mint', `wood=${api.bagCount('wood')} stone=${api.bagCount('stone')}`);
+  else pass('starter mint', 'minted HAMMER LV2 NFT consuming 1 WOOD + 1 STONE from starter bag');
+
+  api.chainData.inv = [{ id: 1, type: 1, level: 2 }];
+  api.marketMenu(npc(api, 'bank'));
+  const mktRows = api.get().ui.build().map(r => r.label);
+  if (!api.get().ui.barkswap || !mktRows.some(l => /^WALLET ITEMS \(1\): #1 HAMMER LV2/.test(l)) || !mktRows.some(l => /^CREATE POOL: 1 HAMMER LV2/.test(l))) fail('barkswap pool dex', mktRows.join(' | '));
+  else pass('barkswap pool dex', 'BarkSwap-styled Pool DEX shows WALLET ITEMS (1): #1 HAMMER LV2 + CREATE POOL row');
+  api.press('escape'); api.step(DT);
 
   api.disconnectWallet(); await flush();
   if (api.wallet.connected || api.chainData.loaded) fail('disconnectWallet', `connected=${api.wallet.connected} loaded=${api.chainData.loaded}`);
