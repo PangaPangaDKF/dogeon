@@ -16,6 +16,23 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
+## 00. RESUME HERE (latest, 2026-11-08, after commit 1b225fa / D-050)
+
+- **Repo is public:** https://github.com/PangaPangaDKF/dogeon. **Noah entry point:** `TRYNOAH.md` (clone → load skills →
+  `bash tests/check.sh` → deploy as-is). §8 is the paste-ready TryNoah prompt. Its 4 addresses, 30 selectors and 3 classes are
+  drift-guarded (check.sh stage 5 now verifies `MASTER_PROMPT.md`, `docs/RECREATION_MANIFEST.md` and `TRYNOAH.md`).
+- **Load order for any brain:** `dogeon-mission` skill (charter, wins conflicts) → `dogeon-game` skill → `docs/GAME_GUIDE.md`
+  → `MASTER_PROMPT.md`.
+- **Recent:** D-043 user's Dogecoin coin art (`MOSAIC_PAL/PX`, locked) · D-044 frozen right-facing meme-doge face ·
+  D-045 mission charter skill + "DOGEON Pool DEX" (BarkSwap naming removed, `ui.pooldex`) + GAME_GUIDE.md · D-046 (Antigravity)
+  the Healer heals itself + nearby party over the relay · D-047 (Antigravity) HUD wallet balance + RedStone USD ·
+  D-048/049 (Antigravity) 9 new skills + `TRYNOAH.md` · D-050 (Claude) replaced the fabricated addresses/selectors in
+  `TRYNOAH.md` and added it to the drift guard (L-028).
+- **Status:** `bash tests/check.sh` ALL CHECKS PASSED (6 stages, 45 forge tests, relay 10/10). `index.html` ~1,352/1,500 lines.
+- **Open:** R2 "light" (remove `sfx()` audio + decorative particles/shake) is not done yet and needs a P-NNN to Antigravity.
+  Mission #1 still needs a real-wallet game-UI mint proven end-to-end on Chikyū (contracts are proven by `e2e-chikyu.sh` 17/17).
+  D-048/049 have no DECISIONS entries yet (asked Antigravity).
+
 ## 0a. RESUME HERE — Phase 4 "The Grand Heist" (built in D-024)
 
 **Brief:** `prompts/PHASE4_BRIEF.md` v1.1 (all acceptance boxes ticked). The user's vision: DOGEON = Grand Heist lore RPG with DeFi + education.
