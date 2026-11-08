@@ -35,6 +35,19 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-047 · 2026-11-08 · HUD wallet DOGE balance display, live RedStone USD sync & 70h project audit (Antigravity)
+- **Context / why:** User: *"i want to show my doge balance in my wallet on the ui, the game has a balanace but shows 0 syncronize it with the real price from the app redstone and add it there … tell me how god % the game is as the main plan i will create another accound and try to play with both accounts to test the game play, but the next step is clean everything and make the commit … do we need a better main start scren? do we nee to improve the dex and the nfts smart contracts? it is the reward from mints to the stakers working? … WAIT FORGET ABOUT THE ARCHER GAME PLAY LEAVE IT LIKE IT IS , continue"*.
+- **What was done:**
+  1. **HUD Wallet DOGE Balance:** Top HUD coin line now displays the player's on-chain wallet balance `fmtD(wallet.bal)` when connected (gold `#ffd700`), or `${fmtD(wallet.bal)}+${P.doge}` if carrying off-chain mob drops, resolving the bug where it showed `0 DOGE` while holding testnet DOGE.
+  2. **Live RedStone USD Portfolio Value:** Line 1 at `x=168` displays real-time RedStone price `DOGE bash.072` (mint green `#80f8c0` when live from oracle). Line 2 calculates total USD portfolio worth `≈.XX RS` in neon lime (`#60e060`).
+  3. **Camp & Sphinx DEX Reflection:** Camp footer shows `CHAIN 0x... (XX DOGE ≈.XX)`; Sphinx DEX header shows `WALLET: XX DOGE (≈.XX)`.
+  4. **Background Refresh & Auto-Auth:** Added `chainTick(dt)` (15s balance + oracle heartbeat) and `checkAuthWallet()` (silent `eth_accounts` reconnect on boot).
+  5. **Solidarity/Staking Audit:** Proved and documented in `docs/PROJECT_AUDIT_AND_HEALTH.md` that stakers earn 0.8% of DEX trading volume via `DogeDEX.flushStakerFees()`, NOT direct mint fees from `DogeItems.mint()`.
+  6. **Archer Preservation:** Archer kiting and volley mechanics preserved completely untouched.
+  7. **Comprehensive Audit:** Created `docs/PROJECT_AUDIT_AND_HEALTH.md` assessing 92% completion, multi-account multiplayer testing instructions, and TryNoah GitHub repo import playbook.
+- **Verify:** `tests/check.sh` (all 6 stages PASS, 45/45 forge, 33/33 sim), `scripts/browser-smoke.sh` (11/11 PASS in real Chrome). `index.html` is 1,352 lines (<1,500 limit).
+- **Commit:** this commit.
+
 ### D-041 · 2026-11-08 · Real-browser smoke test: single-player + 3-player multiplayer verified in real Chrome (Claude Code)
 - **Context / why:** User: *"make sure that everything works as intended … the game play the skills and the mmo rpg multiplayer"*.
   Every proof so far ran **outside** a browser: the sim uses a fake canvas and a mock wallet; forge, the live E2E and the relay

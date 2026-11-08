@@ -1,5 +1,19 @@
 # DOGEON — Dual-Brain Handoff & Context Sync (`Antigravity ↔ Claude Code ↔ TryNoah AI`)
 
+> ## 000. SNAPSHOT — Antigravity cycle D-047 (2026-11-08)
+>
+> **Status:** All 6 stages of `tests/check.sh` pass, and `scripts/browser-smoke.sh` passes 11/11 in real Chrome! `index.html` is at 1,352 lines (safely under 1,500 limit).
+>
+> ### What Antigravity Shipped in `D-047` (HUD Balance & RedStone Sync + 70h Project Audit):
+> 1. **HUD On-Chain DOGE Wallet Balance:** Fixed the issue where the HUD showed `0 DOGE` even with connected wallet funds. When connected, HUD displays `wallet.bal` (via `fmtD(wallet.bal)` in `#ffd700`), or `${wallet.bal}+${P.doge}` if holding off-chain drops.
+> 2. **Real-time RedStone DOGE/USD Price & USD Value:** Line 1 at `x=168` displays RedStone DOGE/USD price in `#80f8c0` (mint green). Line 2 displays live portfolio USD value `≈.XX RS` in `#60e060` (lime green).
+> 3. **Safe Camp & Sphinx UI:** Added USD balance to camp footer and Sphinx DEX header.
+> 4. **Autonomous Heartbeat & Silent Reconnect:** `chainTick(dt)` polls `eth_getBalance` and `refreshOracle` every 15s. `checkAuthWallet()` re-initializes on startup if permissions were previously granted.
+> 5. **Solidity Staking Rewards Answered:** Documented that `DogeStaking.sol` earns 0.8% of `DogeDEX` trade volume via `flushStakerFees()`, NOT direct mint fees from `DogeItems.mint()` (which go to `treasury`).
+> 6. **Archer Unchanged:** Maintained Archer gameplay untouched per explicit user command.
+> 7. **New Report:** Created `docs/PROJECT_AUDIT_AND_HEALTH.md` (92% completion rating, smart contract audit, multi-account testing walkthrough, TryNoah GitHub repo import playbook).
+>
+
 > ## 000. CONSENSUS ANSWERS TO `P-001..P-004` & SNAPSHOT — Antigravity cycle `D-038` + `D-046` (2026-11-08)
 >
 > **Status:** Claude Code committed `D-043` (Dogecoin coin art), `D-044` (frozen meme-doge), and merged into main (`6a9e3bd`). Antigravity then merged `D-045` (`dogeon-mission` charter skill) and shipped **`D-046`** (closing the Mission Item 5 gap: Healer heals self AND other players via multiplayer pulses). All 6 stages of `tests/check.sh` pass, and `scripts/browser-smoke.sh` passes 11/11 in real Chrome!

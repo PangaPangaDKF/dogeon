@@ -642,6 +642,7 @@ const CHAIN={id:'0x5fdaf3',name:'DogeOS Chikyu Testnet',rpc:'https://rpc.testnet
 const wallet={connected:false,addr:null,bal:null,chainOk:false,busy:false,msg:'',hooked:false};
 function eth(){try{return (typeof window!=='undefined'&&(window.ethereum||(window.bitkeep&&window.bitkeep.ethereum)))||null;}catch(e){return null;}} // Bitget Wallet: window.bitkeep.ethereum
 const shortAddr=a=>a?a.slice(0,6)+'..'+a.slice(-4):'';
+const fmtD=n=>typeof n==='number'?(n>=1000?Math.floor(n):n%1===0?n:Number(n.toFixed(2))):n;
 function walletErr(err){const c=err&&err.code;if(c===4001)return 'YOU REJECTED IT IN THE WALLET.';if(c===-32002)return 'WALLET REQUEST PENDING. OPEN YOUR WALLET.';return 'WALLET ERROR: '+String((err&&err.message)||err).slice(0,40).toUpperCase();}
 function setWalletMsg(m){wallet.msg=m;if(ui&&ui.type==='menu'&&ui.chain)ui.msg=m;}
 async function switchChain(){
@@ -672,6 +673,9 @@ async function connectWallet(){
 }
 function disconnectWallet(m){resetChainData();wallet.connected=false;wallet.addr=null;wallet.bal=null;wallet.chainOk=false;setWalletMsg(m||'DISCONNECTED. YOUR NFTS STAY ON CHAIN.');
   const e=eth();if(e)e.request({method:'wallet_revokePermissions',params:[{eth_accounts:{}}]}).catch(()=>{});}
+let chainT=0;
+function chainTick(dt){if(!wallet.connected||wallet.busy)return;chainT+=dt;if(chainT<15)return;chainT=0;refreshBal().catch(()=>{});if(oracleStale())refreshOracle().catch(()=>{});}
+async function checkAuthWallet(){const e=eth();if(!e||wallet.connected)return;try{const acc=await e.request({method:'eth_accounts'});if(acc&&acc.length){wallet.addr=acc[0];hookWallet(e);wallet.chainOk=String(await e.request({method:'eth_chainId'})).toLowerCase()===CHAIN.id;if(wallet.chainOk){wallet.connected=true;await refreshBal();refreshChain().catch(()=>{});refreshOracle();}}}catch(e){}}
 function walletRows(){
   if(!eth())return [{label:'WALLET: OFFLINE (SIMULATED DOGE ONLY)',act:()=>'NO WALLET. INSTALL METAMASK + OPEN VIA LOCALHOST.'}];
   if(!wallet.connected)return [{label:wallet.busy?'CONNECTING... CHECK YOUR WALLET':'CONNECT WALLET (DOGEOS CHIKYU TESTNET)',act:()=>{connectWallet();return 'CHECK YOUR WALLET...';}}];
@@ -1103,7 +1107,7 @@ function netDraw(list,ox,oy){ // from drawWorld(): ghosts join the y-sorted enti
 function update(dt){
   time+=dt;
   if(scene==='title'){updateParts(dt);if(kp('enter',' ')){newGame();scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
-  updMarket(dt);
+  updMarket(dt);chainTick(dt);
   netTick(dt); // opt-in multiplayer (no-op without ?mp); before the UI early-return so you stay visible while in menus
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
   if(winT>0)winT-=dt;
@@ -1254,11 +1258,16 @@ function drawHUD(){
   text('HP',3,3,'#ff6060');bar(14,3,64,P.hp,P.maxHp,'#e83030','#ff9090','#3a0808');text(`${Math.ceil(P.hp)}/${P.maxHp}`,82,3,'#fff');
   text('MP',3,10,'#60a0ff');bar(14,10,64,P.mp,P.maxMp,'#3070f0','#90c0ff','#08143a');text(`${Math.floor(P.mp)}/${P.maxMp}`,82,10,'#fff');
   ctx.drawImage(WHISK,118,2);text('x'+P.whisk,129,3,'#e0e0ff');
-  ctx.drawImage(COIN,119,9);text(P.doge+' DOGE',129,10,'#f8d050');
-  const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;
-  text('DOGE $'+mkt.p.toFixed(3),168,3,'#f8d050');text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');
+  ctx.drawImage(COIN,118,9);
+  const wBal=wallet.connected&&wallet.bal!=null;
+  const dDisp=wBal?(P.doge?`${fmtD(wallet.bal)}+${P.doge}`:fmtD(wallet.bal)):P.doge;
+  text(dDisp+' DOGE',128,10,wBal?'#ffd700':'#f8d050');
+  const curP=oracle.loaded?oracle.price:mkt.p;
+  text('DOGE $'+curP.toFixed(curP<1?3:2),168,3,oracle.loaded?'#80f8c0':'#f8d050');
+  if(wBal){const u=((wallet.bal||0)+P.doge)*curP;text('≈$'+(u>=100?u.toFixed(1):u.toFixed(2))+(oracle.loaded?' RS':''),168,10,'#60e060');}
+  else{const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');}
   text('QUEST',222,3,'#ffe040');text(questText(),222,10,'#fff');
-  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?'CHAIN '+shortAddr(wallet.addr)+'  R=REST  I=BAG':'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
+  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?`CHAIN ${shortAddr(wallet.addr)} (${wallet.bal==null?'?':fmtD(wallet.bal)}D ≈$${(((wallet.bal||0)+P.doge)*curP).toFixed(2)})  R=REST  I=BAG`:'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
   if(!ui&&!P.dead){const c=classOf();text(hudTag(),3,playerInCamp()?H-17:H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class + skill MP tag (D-028, D-038)
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
@@ -1276,7 +1285,7 @@ function drawUI(){
     const all=ui.build(),top=Math.max(0,Math.min(ui.sel-Math.floor(MENU_ROWS/2),all.length-MENU_ROWS)),opts=all.slice(top,top+MENU_ROWS),h=44+opts.length*11;const y=Math.round((H-h)/2)+6;
     box(30,y,260,h);
     textC(ui.title,W/2,y+6,'#ffe040');
-    if(ui.chain&&wallet.connected){text(`WALLET: ${wallet.bal==null?'?':wallet.bal} DOGE`,40,y+16,'#f8d050');text(`ITEMS: ${chainData.inv.length}  STAKED: ${fromWei(chainData.staked)}`,172,y+16,'#60e0a0');}
+    if(ui.chain&&wallet.connected){const cp=oracle.loaded?oracle.price:mkt.p;text(`WALLET: ${wallet.bal==null?'?':fmtD(wallet.bal)} DOGE (≈$${(((wallet.bal||0))*cp).toFixed(2)})`,40,y+16,'#f8d050');text(`ITEMS: ${chainData.inv.length}  STAKED: ${fromWei(chainData.staked)}`,172,y+16,'#60e0a0');}
     else{text(`CARRIED: ${P.doge} DOGE`,40,y+16,'#f8d050');text(`VAULT: ${P.bank}`,200,y+16,'#b0a060');}
     ctx.fillStyle='#3848a0';ctx.fillRect(36,y+24,248,1);
     if(top>0)text('^',282,y+16,'#ffe040');if(top+MENU_ROWS<all.length)text('V',282,y+h-10,'#ffe040');
@@ -1337,6 +1346,7 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 cv.focus();
+checkAuthWallet().catch(()=>{});
 </script>
 </body>
 </html>
