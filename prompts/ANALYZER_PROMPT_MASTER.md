@@ -3,8 +3,11 @@
 Version: 1.0 · 2026-11-08 · Source of truth for pre-decision analysis across CLI, Solidity, Web3, and 16-bit Game Engineering.
 
 > ## RULE #0 (THE NUMBER ONE RULE — NEVER SKIP)
-> **Before taking ANY architectural, code, contract, balance, or refactor decision, you MUST run this Analyzer Prompt Master protocol.**
-> No code or contract file may be edited until Phase 1 (Explore), Phase 2 (Verify Baseline), and Phase 3 (Plan & Invariant Gate) are complete.
+> **Before taking ANY architectural, code, contract, balance, or refactor decision, invoke the modular `analyzer-master` Agent Skill (`.agents/skills/analyzer-master/SKILL.md`, slash command `/analyzer-master`) and run its bundled diagnostic script:**
+> ```bash
+> node .agents/skills/analyzer-master/scripts/audit-scan.mjs
+> ```
+> Prefer modular **Agent Skills** (`SKILL.md` + `scripts/` + `references/`) over monolithic workflow prompts so context loads progressively on demand.
 
 ---
 

@@ -2,11 +2,11 @@
 
 > Auto-loaded by Antigravity CLI (`agy`) and compatible coding agents. Keep concise, authoritative, and in sync with `CLAUDE.md`.
 
-## 0. RULE #0 (THE NUMBER ONE RULE — PRE-DECISION ANALYZER GATE)
-1. **Before taking ANY decision or editing ANY file**, run the **Analyzer Prompt Master** in [`prompts/ANALYZER_PROMPT_MASTER.md`](./prompts/ANALYZER_PROMPT_MASTER.md):
-   - **Explore**: Read [`CLAUDE.md`](./CLAUDE.md), [`.claude/skills/dogeon-game/SKILL.md`](./.claude/skills/dogeon-game/SKILL.md), and the last 5 entries of [`docs/DECISIONS.md`](./docs/DECISIONS.md). Locate exact `@file#Lstart-Lend` ranges.
-   - **Verify Baseline**: Ensure `bash tests/check.sh` is green; for bugs/audit findings, write a failing test or PoC first.
-   - **Plan & Invariant Gate**: Verify game invariants, Solidity CEI/solvency invariants, offline fallback (`!chainReady() || !addrs().x`), name collisions, and seeded map RNG before writing code. Wait for approval on multi-section or architectural changes.
+## 0. RULE #0 (THE NUMBER ONE RULE — `/analyzer-master` SKILL GATE)
+1. **Before taking ANY decision or editing ANY file**, invoke and follow the modular **`analyzer-master` skill** ([`.agents/skills/analyzer-master/SKILL.md`](./.agents/skills/analyzer-master/SKILL.md) / [`prompts/ANALYZER_PROMPT_MASTER.md`](./prompts/ANALYZER_PROMPT_MASTER.md)):
+   - **Step 1 (Automated Diagnostic Scan):** Run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs` to check line budget, selector parity, top-level collisions, and simulation test coverage gaps.
+   - **Step 2 (Strategic Thinking Gate):** Answer *Why this, why now?*, *Second-order effects (offline, account/chain switch, death, contract solvency)*, *Test-first proof*, and *Progressive context hygiene*.
+   - **Step 3 (On-Demand Checklists):** Load [`.agents/skills/analyzer-master/references/decision-gate.md`](./.agents/skills/analyzer-master/references/decision-gate.md) only for the domains touched. Wait for approval on multi-section or architectural changes.
 2. **RULE #1 — Feature Closeout (after every verified change)**:
    - Run `bash tests/check.sh` (all 4 stages must pass: static rules, JS syntax, headless simulation `tests/sim.mjs`, and Foundry `forge test`).
    - Append a decision entry to [`docs/DECISIONS.md`](./docs/DECISIONS.md) (what, why, tool/skill, alternatives rejected, verification output).
