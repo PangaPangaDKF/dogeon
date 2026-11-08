@@ -55,7 +55,15 @@ To prevent conflicting edits, model hallucinations, and code bloat, both brains 
 
 ---
 
-### D. Modern Web & Frontend Optimization
+### D. Multiplayer, Networking & Cloud Services
+
+| Skill | Repository Source | Why It Worked & How It Was Used |
+|---|---|---|
+| [`setup-multiplayer-services`](file:///mnt/c/Users/dulbi/dogeon/.agents/skills/setup-multiplayer-services) | `unity-technologies/skills` | Provides industry-standard network topology paradigms, session discovery, room/lobby lifecycle patterns, and dedicated server partitioning guidelines. Used to structure DOGEON's room-based relay (`server/relay.mjs`) and ghost replication model. |
+
+---
+
+### E. Modern Web & Frontend Optimization
 
 | Skill | Repository Source | Why It Worked & How It Was Used |
 |---|---|---|
