@@ -70,7 +70,7 @@ function wrap(s,n){const out=[];let line='';for(const w of s.split(' ')){if((lin
 const HEAD={
 dog:{down:["...OO......OO...","..OFFO....OFFO..","..OFPFOOOOFPFO..",".OFFFFFFFFFFFFO.",".OFCFFFFFFFFCFO.",".OFFEFCCCCFEFFO.",".OFCCCCNNCCCCFO.","..OCCCCCCCCCCO..","...OCCCCCCCCO...","....OOOOOOOO...."],
      up:["...OO......OO...","..OFFO....OFFO..","..OFFFOOOOFFFO..",".OFFFFFFFFFFFFO.",".OFFFFFFFFFFFFO.",".OFFFFFFFFFFFFO.",".OFFFFFFFFFFFFO.","..OFFFFFFFFFFO..","...OFFFFFFFFO...","....OOOOOOOO...."],
-     right:[".....OO.........","....OFFO........","....OFPFO.......","...OFFFFFOOO....","..OFFFFFFFFFO...","..OFFFFFCEFFFO..","..OFFFFCCCCCCCNO","..OFFFCCCCCCCCO.","...OFFCCCCOOOO..","....OOOOOO......"]},
+     right:["...OO....OO.....","..OFFO..OFFO....","..OFPFOOOFPFO...",".OFFFFFFFFFFFO..",".OFFCFFFFFCFFFO.",".OFFEWFFFFEWCFO.",".OCCCCCFFCCCCNNO",".OCCCCCCCCCOOCO.","..OCCCCCCCCCO...","...OOOOOOOOO...."]},
 cat:{down:["..O..........O..","..OO........OO..","..OFO......OFO..",".OFPFOOOOOOFPFO.",".OFFFFFFFFFFFFO.",".OFRRFFFFFFRRFO.","WOFFFFFNNFFFFFOW",".OFFFCCCCCCFFFO.","W.OFFCCCCCCFFO.W","...OOOOOOOOOO..."],
      up:["..O..........O..","..OO........OO..","..OFO......OFO..",".OFFFOOOOOOFFFO.",".OFFFFFFFFFFFFO.",".OFFFFFFFFFFFFO.",".OFFFFFFFFFFFFO.",".OFFFFFFFFFFFFO.","..OFFFFFFFFFFO..","...OOOOOOOOOO..."],
      right:[".....O..........",".....OO.........","....OFPO........","...OFFFFOO......","..OFFFFFFFFO....","..OFFFFFFRFFO...","..OFFFFFFFFNO...","..OFFFFCCCCFOW..","...OFFCCCCOO.W..","....OOOOOO......"]}
@@ -1164,7 +1164,8 @@ function drawTiles(ox,oy){
 }
 function frameOf(e,moving){const seq=(e.dir==='left'||e.dir==='right')?[0,1,0,1]:[0,1,0,2];return moving?seq[Math.floor(e.anim*8)%4]:0;}
 function drawChar(spr,dir,fr,x,feetY,scale,ox,oy,tint){
-  let c=spr[dir][fr];if(tint)c=tinted(c,tint);
+  let c=spr.right[0];if(tint)c=tinted(c,tint); // D-044 (user): every character is drawn FROZEN, always facing right — no walk cycle,
+  // no flip. dir/fr are kept in the signature (and in P.dir) because attacks, skills and fishing still aim in all 4 directions.
   const sx=Math.round(x-8*scale-ox),sy=Math.round(feetY-20*scale-oy);
   ctx.drawImage(SHADOW,0,0,12,4,Math.round(x-6*scale-ox),Math.round(feetY-3*scale+1-oy),12*scale,4*scale);
   ctx.drawImage(c,sx,sy,16*scale,20*scale);
