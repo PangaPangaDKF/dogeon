@@ -27,6 +27,7 @@ if (Number(dep.chainId) !== chainId) die(`deployment file is for chain ${dep.cha
 if (!args.includes('--no-rpc')) {
   const checks = [['items', dep.items], ['dex', dep.dex]];
   if (isAddr(dep.prof)) checks.push(['prof', dep.prof]); // profession registry is optional (D-028)
+  if (isAddr(dep.stake)) checks.push(['stake', dep.stake]); // staking vault is optional (D-030)
   for (const [name, a] of checks) {
     const r = await fetch(RPC[chainId], { method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getCode', params: [a, 'latest'] }) }).then(x => x.json()).catch(e => ({ error: { message: String(e) } }));
@@ -37,10 +38,11 @@ if (!args.includes('--no-rpc')) {
 
 const hex = '0x' + chainId.toString(16);
 const prof = isAddr(dep.prof) ? dep.prof : '';
+const stake = isAddr(dep.stake) ? dep.stake : '';
 let src = readFileSync(html, 'utf8');
-const re = new RegExp(`'${hex}':\\{items:'[^']*',dex:'[^']*',prof:'[^']*'\\}`);
+const re = new RegExp(`'${hex}':\\{items:'[^']*',dex:'[^']*',prof:'[^']*',stake:'[^']*'\\}`);
 if (!re.test(src)) die(`CONTRACTS entry for ${hex} not found in ${html}`);
-src = src.replace(re, `'${hex}':{items:'${dep.items}',dex:'${dep.dex}',prof:'${prof}'}`);
+src = src.replace(re, `'${hex}':{items:'${dep.items}',dex:'${dep.dex}',prof:'${prof}',stake:'${stake}'}`);
 writeFileSync(html, src);
-console.log(`CONTRACTS['${hex}'] = { items: ${dep.items}, dex: ${dep.dex}, prof: ${prof || '(none)'} } written to ${html}`);
+console.log(`CONTRACTS['${hex}'] = { items: ${dep.items}, dex: ${dep.dex}, prof: ${prof || '(none)'}, stake: ${stake || '(none)'} } written to ${html}`);
 console.log('Next: bash tests/check.sh, then commit index.html + contracts/deployments/' + chainId + '.json');

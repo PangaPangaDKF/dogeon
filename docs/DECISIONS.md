@@ -35,6 +35,26 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-031 · 2026-11-08 · On-chain staking in the Sphinx UI (Phase 5 part 5/N)
+- Feature: The Sphinx DeFi hub gains an **ON-CHAIN STAKING: EARN 0.8% OF DEX FEES** row → `stakeMenu()`. It shows your staked DOGE
+  and pending rewards, and lets you **stake** a preset DOGE amount (A/D to pick), **unstake all**, **claim rewards**, and
+  **SYNC DEX FEES TO STAKERS** (calls `flushStakerFees()` when the DEX has unflushed fees). Uses real wallet DOGE (wei). The off-chain
+  "safe vault" rows (DOGE pooled, safe on death) stay as a separate, clearly different thing.
+- Why: Surfaces the D-030 staking contract in-game so players actually stake and earn the holders' cut; the SYNC row makes the fee
+  flow visible (also good for the SPHINX SCHOOL / educational angle).
+- Files: `index.html` (CONTRACTS `stake` slot; SEL `stakeDoge/unstakeDoge/claimStake/pendingRewards/stakedOf/flushFees/stakerFeesView`;
+  `chainData.staked/rewards/dexFees` + refreshChain read + `stakeDoge/unstakeStake/claimStakeRewards/syncDexFees`; `stakeUI` + `stakeMenu`
+  + hub row), `contracts/apply-deployment.mjs` (regex matches + writes the `stake` field), `tests/sim.mjs` (staking row + menu-opens check).
+- Offline/robust: every staking row degrades gracefully — not connected → "CONNECT YOUR WALLET TO STAKE"; connected but `stake`
+  address empty (not yet deployed) → "STAKING NOT DEPLOYED ON THIS CHAIN YET". The game stays fully playable with no wallet.
+- Tool: Claude Code (Opus 4.8), mirrors the existing `chainAct`/`etx`/`refreshChain` patterns. Selectors from D-030.
+- Verify: `node tests/sim.mjs` → "hub rows" includes ON-CHAIN STAKING, "staking menu" opens offline without crashing; 0 failed.
+- Next (part 6 = final): redeploy the full set (items, dex, prof, staking) to Chikyu with the funded key, run `apply-deployment.mjs`,
+  verify on-chain, update CONTEXT/skill/SESSION_PROMPT, commit — Phase 5 complete (PvP deferred by user).
+- Commit: this commit.
+
+---
+
 ### D-030 · 2026-11-08 · Staking + a 1% DEX protocol fee (0.2% project / 0.8% stakers) — contracts (Phase 5 part 4/N)
 - Feature: `contracts/src/DogeStaking.sol` (new) — stake DOGE, earn the holders' share of DEX fees. MasterChef accumulator
   (`accRewardPerShare`, `rewardDebt`, pull-style `claim`), `stake/unstake/claim`, `pendingRewards`, `totalStaked`; `receive()`

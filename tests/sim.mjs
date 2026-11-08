@@ -881,9 +881,15 @@ scenario('Sphinx = DogeOS DeFi hub: connect, market, faucet, stake, oracle, scho
   const api = boot(SEED + 29); startGame(api);
   const bank = npc(api, 'bank'); bank.met = true; api.talk(bank);
   const labels = api.get().ui.build().map(r => r.label);
-  const need = [/^WALLET: OFFLINE|^CONNECT WALLET/, /^NFT MARKET: SWAP \+ LIQUIDITY/, /FAUCET/, /^STAKE /, /^UNSTAKE /, /REDSTONE/, /SPHINX SCHOOL/, /^DOGEOS\.COM/, /DEVELOPER DOCS/];
+  const need = [/^WALLET: OFFLINE|^CONNECT WALLET/, /^NFT MARKET: SWAP \+ LIQUIDITY/, /^ON-CHAIN STAKING/, /FAUCET/, /^STAKE /, /^UNSTAKE /, /REDSTONE/, /SPHINX SCHOOL/, /^DOGEOS\.COM/, /DEVELOPER DOCS/];
   const missing = need.filter(re => !labels.some(l => re.test(l)));
-  if (missing.length) fail('hub rows', `missing ${missing.join(', ')} in: ${labels.join(' | ')}`); else pass('hub rows', `${labels.length} rows incl. connect, market, faucet, stake, oracle, school, links`);
+  if (missing.length) fail('hub rows', `missing ${missing.join(', ')} in: ${labels.join(' | ')}`); else pass('hub rows', `${labels.length} rows incl. connect, market, staking, faucet, vault, oracle, school, links`);
+  // the on-chain DOGE-staking submenu opens (offline it prompts to connect; must never crash)
+  api.get().ui.build().find(r => /^ON-CHAIN STAKING/.test(r.label)).act();
+  const stk = api.get().ui;
+  if (!stk || stk.type !== 'menu' || !stk.build().some(r => /CONNECT YOUR WALLET TO STAKE|YOUR STAKE:/.test(r.label))) fail('staking menu', 'did not open: ' + (stk && stk.build().map(r => r.label).join(' | ')));
+  else pass('staking menu', 'DOGE STAKING opens (earn 0.8% of DEX fees)');
+  stk.build().find(r => /^BACK$/.test(r.label)).act(); // back to the hub for the rest of the scenario
   for (const [re, url] of [[/FAUCET/, api.LINKS.faucet], [/^DOGEOS\.COM/, api.LINKS.dogeos], [/DEVELOPER DOCS/, api.LINKS.docs]]) api.get().ui.build().find(r => re.test(r.label)).act();
   const o = api.opened();
   if (!o.includes('https://faucet.testnet.dogeos.com') || !o.includes('https://www.dogeos.com/') || !o.includes('https://docs.dogeos.com/en/getting-started/overview')) fail('hub links', o.join(' '));
