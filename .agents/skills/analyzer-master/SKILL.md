@@ -3,7 +3,7 @@ name: analyzer-master
 version: "2.1.0"
 spec: "agentskills@1.0"
 description: >
-  Pre-decision strategic analyzer, verification gate, and single-prompt reproducibility architect for DOGEON (Solidity contracts + 16-bit Canvas RPG + BarkSwap/DogeOS Chikyū DeFi).
+  Pre-decision strategic analyzer, verification gate, and single-prompt reproducibility architect for DOGEON (Solidity contracts + 16-bit Canvas RPG + DOGEON Pool DEX/DogeOS Chikyū DeFi).
   Use BEFORE making any architectural, Solidity, Web3, balance, or multi-section code decision, or invoke via /analyzer-master.
 ---
 
@@ -26,7 +26,7 @@ This script deterministically checks:
 
 ### Step 2 — Strategic Thinking Gate (Stop & Ask Before Acting)
 Before proposing any change, answer these 4 strategic questions in 1–2 lines each:
-1. **Why this, why now?** Does this change advance the user's actual goal (playable 16-bit RPG + real DogeOS Chikyū DeFi/BarkSwap/NFT/Class/Staking loop), or is it scope creep / mechanical rule-following?
+1. **Why this, why now?** Does this change advance the user's actual goal (playable 16-bit RPG + real DogeOS Chikyū DeFi/DOGEON Pool DEX/NFT/Class/Staking loop), or is it scope creep / mechanical rule-following?
 2. **Second-order effects:** If I change `X`, what breaks in offline mode (`!chainReady() || !addrs().x`), on account/chain switch (`accountsChanged`/`chainChanged`), on player death (`respawn()`), or in contract solvency (`k = x * y`, `proceeds`, `stakerFees`)?
 3. **Test-first proof:** Can I write a failing assertion in `tests/sim.mjs` or `contracts/test/*.t.sol` *before* touching production code?
 4. **Zero-Waste Single-Prompt Reproducibility (TryNoah AI Rule):** Can another AI builder (e.g., TryNoah AI) recreate this exact feature from `MASTER_PROMPT.md` §A–B and `dogeon-game/SKILL.md` without missing contract addresses, 4-byte selectors, state fields, or UI rows? Remove any dead instructions or outdated facts immediately.

@@ -139,7 +139,7 @@ const md = () => {
 
   L.push('## 6. Items, mintables, recipes');
   L.push(`- **Item types:** ${Object.entries(itemTypes).map(([k, v]) => `${k}=${v}`).join(' · ')}`);
-  L.push(`- **Mintable at BarkSwap Row 0 (${mintable.length}):** ${mintable.map(m => `${itemTypes[m.type] || m.type} LV${m.level}`).join(' · ')}`);
+  L.push(`- **Mintable at DOGEON Pool DEX Row 0 (${mintable.length}):** ${mintable.map(m => `${itemTypes[m.type] || m.type} LV${m.level}`).join(' · ')}`);
   L.push(`- **Forge recipes (${recipes.length}):** ${recipes.join(' · ')}`);
   L.push('');
 

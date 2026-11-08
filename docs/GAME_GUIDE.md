@@ -1,0 +1,173 @@
+# DOGEON — The Game & Every Mechanic (plain language)
+
+> What DOGEON is, how you play it, and how each system works — for players, for the two AI brains building it, and for
+> TryNoah AI rebuilding it. Code-level details: [`CLAUDE.md`](../CLAUDE.md) §3. Why decisions were made:
+> [`docs/DECISIONS.md`](./DECISIONS.md). What we're allowed to build: the `dogeon-mission` skill.
+
+---
+
+## 1. The game in one paragraph
+
+You are a Shiba Inu ("doge") in **DOGEON — The Grand Heist**, a 16-bit top-down pixel RPG. The Fat Cats have taken the doge
+world's value and locked it away. You leave a **safe camp**, fight half-human cats in the field, collect **resources**, bring
+them home, **craft and mint** gear, trade it, and push deeper until you beat the **Cat Lord**. Everything you mint is a real
+**NFT on the DogeOS Chikyū testnet**, and the whole DeFi layer (market, liquidity pools, staking) is real and on-chain.
+The game is **fully playable with no wallet** — the chain adds ownership on top.
+
+**The core loop, which is the whole game right now:**
+> **play → gather resources → mint stuff → defeat the monsters and the boss**
+
+---
+
+## 2. Controls
+
+| Key | Action |
+|---|---|
+| `WASD` / arrows | Move |
+| `Space` / `J` | Basic attack (differs per class) |
+| `K` / `Q` | Class skill (costs MP) |
+| `E` / `Enter` | Talk / confirm |
+| hold `R` | Rest (only inside camp) |
+| `I` / `Tab` | Bag (eat, cook, mint, skills) |
+| `F` | Fish (facing water, standing still) |
+| `A` / `D` in menus | Change an amount or item |
+| `Esc` | Close |
+| Mouse | Hover rows, click to pick, click `<` `>` to change amounts |
+
+Characters are **frozen facing right** (a deliberate style choice) — but you still move and aim in all four directions.
+
+---
+
+## 3. The world
+
+- **The camp (safe).** Enemies cannot enter, cannot hit you, and their arrows stop at the fence. The giant **Dogecoin** on the
+  plaza floor is the game's identity art. All NPCs live here.
+- **The field.** 22 cats roam it, one more spawns every 3 seconds out of sight. Five fishing ponds, all outside the camp.
+- **The ruins (north).** Opens at quest stage 2. Six tougher enemies, then the **Cat Lord** boss behind the gate.
+
+### Who is in camp
+| NPC | What they do |
+|---|---|
+| **The Sphinx** (north) | The DeFi hub: connect wallet + add the DogeOS network, DOGEON Pool DEX pool DEX, staking, faucet, DOGE/USD oracle, an 8-lesson DeFi school |
+| **Elder Shibe** (west) | Quests, the Grand Heist story, the three factions |
+| **Wrenchpaw** (east) | The forge: turn monster materials into gear, then mint it |
+| **Sergeant Ironpaw / Scout Fleetwhisker / Mender Brighttail** | The three class trainers (see §5) |
+| **Cloverheart / Noah / Bitget Card** | Partner NPCs with their stories and links |
+
+---
+
+## 4. Survival rules (this is a hard game on purpose)
+
+- **Resting only heals to 60%.** Hold `R` inside camp for 3 s, then +10 HP/s up to 60% of max, and MP back to full. Moving resets it.
+- **Above 60% you must eat.** Raw fish +15 HP, cooked fish +25 HP (cook at the campfire from the bag). No potions, no regen.
+- **MP only refills by resting in camp.** This is what keeps the Healer honest.
+- **Death costs you:** half your carried DOGE, all whiskers, all materials, and your whole bag. **Safe from death:** DOGE in the
+  camp vault, DOGE staked on-chain, and every NFT in your wallet. You wake at the campfire with 35% HP/MP.
+- **The market changes the difficulty.** A simulated DOGE price (anchored to the real RedStone DOGE/USD when you're connected)
+  drifts every second. **Bear:** cats hit up to +50% harder and move +15% faster, screen tints red. **Bull:** you hit up to
+  +50% harder and move +10% faster.
+- **No character levels.** Skills grow only by using them: combat (hits that land), bark, fishing. Each tier adds +8%.
+
+---
+
+## 5. The three classes (professions)
+
+You start as a **basic doge** with a weak attack — fully playable. Talk to a trainer to pick a class: **free offline**, and you
+can switch. Connect a wallet and you can **swear it on-chain** (`DogeProfession.choose`, a small DOGE fee + gas) — then it is
+**one class per wallet, forever**.
+
+| | **Warrior** (Demolition Dogs) | **Archer** (Kernel Crew) | **Healer** (Barkitects) |
+|---|---|---|---|
+| Max HP | 85 (+25) | 60 | 45 (−15) |
+| Speed | 0.95× | **1.25×** | **1.25×** |
+| `Space` | Heavy wide cleave, 1.35× damage | **Shoots arrows at range, 0 MP** | Light staff hit, 0.65× damage, **+2 MP on hit** |
+| `K` / `Q` | **Ground Pound** (12 MP): shockwave, damages + knocks back everything around you | **Arrow Volley** (6 MP): 3-arrow spread | **Mend** (10 MP): heal HP anywhere |
+| Armor | +15% damage reduction | — | +5% |
+
+> **Planned (not built yet):** the Healer healing **other players** in multiplayer. Today Mend only heals yourself.
+
+---
+
+## 6. Resources, crafting and minting
+
+**Where resources come from:** cats drop **whiskers**; brutes drop 3; frogs → **orb**, ninjas → **scrap**, bulls → **horn**,
+knights → **steel**. Fishing gives **raw fish**. Every new player also starts with **3 wood + 3 stone**.
+
+**Your bag** holds 12 slots (food stacks 5, materials 20). Bag contents are **lost on death** — wallet NFTs are not.
+
+**Three ways to mint an NFT** (each costs a 0.1 DOGE fee on `DogeItems`):
+1. **Starter mint** — 1 wood + 1 stone → a Hammer Lv2 NFT, straight from the bag (`I`), the forge, or the DEX.
+2. **Forge a recipe** at Wrenchpaw (burns materials), which gives a mint credit you can put on-chain.
+3. **Mint directly** at the Sphinx's DEX, row 0.
+
+Item types: Hammer (Lv1–4), Armor (Lv1–2), Raw Fish, Cooked Fish, Bone Charm, Moon Biscuit.
+
+**Owning gear = wearing it.** If your wallet holds a Hammer Lv3 NFT, you swing a Lv3 hammer. Eating a food NFT burns it.
+One craft always equals one item — minting removes the off-chain copy, so nothing is ever duplicated.
+
+---
+
+## 7. The DeFi layer (real, on DogeOS Chikyū)
+
+At the Sphinx:
+
+- **Connect wallet** — adds and switches to DogeOS Chikyū (chain `0x5fdaf3` / 6281971) for you. MetaMask, Bitget Wallet, any
+  EIP-1193 wallet. Get free test DOGE from the faucet link.
+- **DOGEON Pool DEX pool DEX** — mint items, see your wallet's items, **create a pool** (items + DOGE), **swap** DOGE ↔ item against a
+  constant-product curve, **add/remove liquidity**, list items for a fixed price, and withdraw proceeds. Each row shows price
+  impact and your LP share. Nothing is for sale until a player creates it.
+- **Fees:** every trade pays **2% to liquidity providers** (kept in the pool) plus a **1% protocol fee** split
+  **0.2% to the project treasury / 0.8% to DOGE stakers**. Verified on-chain to the wei.
+- **Staking** — stake DOGE, earn the stakers' 0.8% share of all DEX trades, claim or unstake any time. Staked DOGE is safe on death.
+- **Oracle** — RedStone DOGE/USD is shown for information and anchors the in-game market; **swap prices always come from the
+  pool reserves**, never the oracle.
+- **The camp vault** is a separate, off-chain thing: it just keeps game DOGE safe when you die.
+
+---
+
+## 8. Quests
+
+0 Talk to Elder Shibe → 1 slay 8 cats (+40 DOGE) → 2 slay 3 brutes (+80 DOGE, opens the ruins gate) → 3 defeat the Cat Lord →
+4 complete (Golden Yarn, +150 DOGE).
+
+---
+
+## 9. Playing with other people (optional)
+
+Multiplayer is **off** unless the URL asks for it. One person hosts:
+
+```bash
+node server/relay.mjs      # serves the game AND the relay on port 8787, no install needed
+```
+
+Everyone opens `http://<host>:8787/?mp=ws://<host>:8787&room=heist&name=YOURNAME`. Up to 8 players per room see each other's
+doge — class sprite, movement, HP bar and name. Over the internet use `wss://` (the relay behind HTTPS).
+
+**Not shared yet:** enemies and loot. Each player fights their own cats. A true shared world needs an authoritative server
+(the open-source path is Colyseus) and is deliberately out of scope for now.
+
+---
+
+## 10. Enemies
+
+| Enemy | HP | Behaviour | Drops |
+|---|---|---|---|
+| Alley cat | 15 | Chases you | Whisker |
+| Archer cat | 12 | Keeps distance, shoots bones | Whisker |
+| Frog | 14 | Kites and shoots | Orb |
+| Ninja | 18 | Fast, likes the ponds | Scrap |
+| Bull | 55 | Winds up, then charges | Horn |
+| Knight | 35 | Tanky melee | Steel |
+| Brute | 48 | Flashes red, then dashes | 3 whiskers |
+| **Cat Lord** (boss) | 320 | Arrow spreads; summons help below 50% HP | Golden Yarn |
+
+Everything is readable: brutes telegraph before dashing, you get invulnerability frames and knockback after a hit.
+
+---
+
+## 11. Art style (short version)
+
+320×224 internal resolution, 16×16 tiles, 16×20 characters, a 3×5 uppercase font, everything drawn **in code** — no image
+files ship with the game. Shibas are doge-orange with cream faces and the signature eyebrow dots and side-eye; cats are the
+cold-palette opposites. The camp Dogecoin is the user's own artwork converted to pixels and must never be redrawn by hand.
+Full details, with measured palettes: [`docs/ART_STYLE.md`](./ART_STYLE.md).

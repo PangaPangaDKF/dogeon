@@ -3,6 +3,9 @@
 > Auto-loaded by Antigravity CLI (`agy`) and compatible coding agents. Keep concise, authoritative, and in sync with `CLAUDE.md`.
 
 ## 0. RULE #0 (THE NUMBER ONE RULE — `/analyzer-master` SKILL GATE)
+0. **Load the `dogeon-mission` skill FIRST** ([`.agents/skills/dogeon-mission/SKILL.md`](./.agents/skills/dogeon-mission/SKILL.md)) —
+   *what* to build and what NOT to (user's charter: priorities, hard rules R1–R6, scope fence, decision test). `analyzer-master`
+   then covers *how* to decide safely, and `dogeon-game` *how* the code works.
 1. **Before taking ANY decision or editing ANY file**, invoke and follow the modular **`analyzer-master` skill** ([`.agents/skills/analyzer-master/SKILL.md`](./.agents/skills/analyzer-master/SKILL.md) / [`prompts/ANALYZER_PROMPT_MASTER.md`](./prompts/ANALYZER_PROMPT_MASTER.md)):
    - **Step 1 (Automated Diagnostic Scan):** Run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs` to check line budget, selector parity, top-level collisions, and simulation test coverage gaps.
    - **Step 2 (Strategic Thinking Gate):** Answer *Why this, why now?*, *Second-order effects (offline, account/chain switch, death, contract solvency)*, *Test-first proof*, and *Progressive context hygiene*.
@@ -62,9 +65,11 @@ Two agents work this repo. These rules exist because real collisions already hap
     `git checkout -- <file>`. (Real incident: `docs/LESSONS.md` L-016.)
 11. **CONSENSUS for shared decisions (user rule: "both have to agree and talk each other and get to a consensus … follow the
     best, smart and light conclusion for the mission").**
-    - **Mission (the tie-breaker):** ship DOGEON live — a playable 16-bit DOGE RPG + the real DogeOS DeFi loop (mint, pools,
-      DEX, staking, classes, opt-in multiplayer) — reproducible in TryNoah, before the deadline. Prefer the lightest change
-      that serves it.
+    - **Mission (the tie-breaker): the `dogeon-mission` skill** ([`.agents/skills/dogeon-mission/SKILL.md`](./.agents/skills/dogeon-mission/SKILL.md)) —
+      the user's charter: priorities 1–5, hard rules R1–R6, the scope fence and the 5-question decision test. It settles
+      disagreements; where it is silent, ask the user. Headlines: **Web3/mint must actually work** · the loop is
+      **play → resources → mint → defeat monsters/boss** · **preserve the Dogecoin coin art** · **stay light: no new effects
+      or sound** · Healer heals **others too** · reproducible in TryNoah before the deadline.
     - A decision is **shared** if it changes the other brain's lane, the structure of a shared file (`AGENTS.md`, `CLAUDE.md`,
       `MASTER_PROMPT.md`, the inboxes), architecture, or scope. Lane-local decisions need no vote — just log and inform.
     - **Propose → answer → act:** write `P-NNN` in the *other* brain's inbox: problem, recommended option, lightest

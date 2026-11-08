@@ -797,7 +797,7 @@ function stakeMenu(n){openMenu(n,'DOGE STAKING: EARN 0.8% OF DEX FEES',()=>{
   if(chainData.dexFees>0n)o.push({label:`SYNC DEX FEES TO STAKERS (${fromWei(chainData.dexFees)} DOGE)`,act:()=>{syncDexFees();return wallet.msg;}});
   o.push({label:'REFRESH',act:()=>{refreshChain().then(()=>setWalletMsg('STAKING REFRESHED.')).catch(e=>setWalletMsg(walletErr(e)));return 'REFRESHING...';}});
   o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;refreshChain().catch(()=>{});}
-function marketMenu(n){openMenu(n,'BARKSWAP POOL DEX: MINT, SWAP & LP',()=>{const o=[],blk=chainBlockRow();
+function marketMenu(n){openMenu(n,'DOGEON POOL DEX: MINT, SWAP & LP',()=>{const o=[],blk=chainBlockRow();
   if(blk){o.push({label:blk,act:()=>'SEE CONTRACTS/README.MD TO DEPLOY.'});o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;}
   const mi=mktUI.mint||0,mt=MINTABLE[mi],starter=mt.type===1&&mt.level===2&&bagCount('wood')>0&&bagCount('stone')>0;
   o.push({label:`MINT < ${itemName(mt)} > NFT (${fromWei(chainData.fee||10n**17n)} DOGE)`,adj:d=>{mktUI.mint=(mi+d+MINTABLE.length)%MINTABLE.length;},act:()=>{mintNft(mt.type,mt.level,starter?'starter':undefined);return wallet.msg;}});
@@ -822,7 +822,7 @@ function marketMenu(n){openMenu(n,'BARKSWAP POOL DEX: MINT, SWAP & LP',()=>{cons
     o.push({label:`CREATE POOL: ${g.length} ${itemName(g[0])} + < ${amt} > DOGE`,adj:d=>{mktUI.lp[k]=Math.max(0,Math.min(PRICES.length-1,li+d));},act:()=>{addLp(g.map(it=>it.id),toWei(amt));return wallet.msg;}});}
   if(chainData.loaded&&!chainData.listings.length&&!poolKeys.size)o.push({label:'NO POOLS YET. MINT AN ITEM ABOVE, THEN CREATE POOL!',act:()=>'MINT AN ITEM TOKEN FIRST, THEN ADD IT TO THE POOL WITH DOGE.'});
   o.push({label:'REFRESH',act:()=>{refreshChain().then(()=>setWalletMsg('MARKET REFRESHED.')).catch(e=>setWalletMsg(walletErr(e)));return 'REFRESHING...';}});
-  o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;ui.barkswap=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));}
+  o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;ui.pooldex=true;refreshChain().catch(e=>setWalletMsg(walletErr(e)));}
 
 // ================= UI (dialog / menus) =================
 function openDialog(npc,lines,onEnd){ui={type:'dialog',npc,pages:lines,idx:0,chars:0,onEnd};sfx(660,0.04,'square',0.03);}
@@ -1270,7 +1270,7 @@ function drawUI(){
     ctx.fillStyle='#3848a0';ctx.fillRect(36,y+24,248,1);
     if(top>0)text('^',282,y+16,'#ffe040');if(top+MENU_ROWS<all.length)text('V',282,y+h-10,'#ffe040');
     opts.forEach((o,i)=>{const yy=y+29+i*11,idx=i+top,sel=idx===ui.sel,lb=o.label||'';
-      const isMint=ui.barkswap&&/^MINT /.test(lb),isBal=ui.barkswap&&/^WALLET ITEMS/.test(lb),isPool=ui.barkswap&&/^(POOL | SWAP | ADD |CREATE POOL)/.test(lb);
+      const isMint=ui.pooldex&&/^MINT /.test(lb),isBal=ui.pooldex&&/^WALLET ITEMS/.test(lb),isPool=ui.pooldex&&/^(POOL | SWAP | ADD |CREATE POOL)/.test(lb);
       if(!sel){if(isMint){ctx.fillStyle='#3a2208';ctx.fillRect(36,yy-2,248,10);}else if(isBal){ctx.fillStyle='#101838';ctx.fillRect(36,yy-2,248,10);}else if(isPool){ctx.fillStyle='#0c2624';ctx.fillRect(36,yy-2,248,10);}}
       if(sel){ctx.fillStyle=isMint?'#b86810':'#2a48d0';ctx.fillRect(36,yy-2,248,9);text('>',40,yy,'#ffe040');}
       const afford=!o.cost||P.doge>=o.cost,col=sel?'#fff':isMint?'#ffd860':isPool?'#80f8c0':isBal?'#f8e090':'#c8d0f0';

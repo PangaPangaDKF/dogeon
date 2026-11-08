@@ -1,6 +1,6 @@
 ---
 name: dogeon-game
-description: Full context, exact stack, live DogeOS Chikyū contract registry, ABI selectors, BarkSwap DEX card, and gameplay invariants for DOGEON ("The Grand Heist"), the single-file 16-bit Shiba-vs-cats Web3 Action RPG in index.html. Load before planning, designing, balancing, drawing sprites, writing Web3/Solidity integrations, or recreating the project on TryNoah AI.
+description: Full context, exact stack, live DogeOS Chikyū contract registry, ABI selectors, DOGEON Pool DEX card, and gameplay invariants for DOGEON ("The Grand Heist"), the single-file 16-bit Shiba-vs-cats Web3 Action RPG in index.html. Load before planning, designing, balancing, drawing sprites, writing Web3/Solidity integrations, or recreating the project on TryNoah AI.
 ---
 
 # DOGEON — Master Game & Web3 Context Skill
@@ -52,10 +52,10 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
    - **WARRIOR (`id:1`):** `+25` Max HP (`85` base), `+15%` armor (`0.15`), `1.35x` melee damage, `0.95x` speed, wider heavy cleave (`+4 px` reach + screen shake) on `Space`, and `GROUND POUND` AoE slam (`12 MP`) on `K`/`Q`.
    - **ARCHER (`id:2`):** `60` base Max HP, `1.25x` speed, `1.0x` damage. **Pressing `Space` (`attack()`) shoots a fast ranged ARROW (`0 MP` cost, `speed=280`, `+1` combat XP on hit) and draws a wooden bow in `drawSlash()`!** Pressing `K`/`Q` (`quickShot()`) fires a **3-arrow spread volley** (`6 MP`).
    - **HEALER (`id:3`):** `-15` Max HP (`45` base), `1.25x` speed (fast), `+5%` armor, weak melee (`0.65x`, draws glowing staff in `drawSlash()`, **restores `+2 MP` on hit**), and `MEND` (`K`/`Q`, `10 MP` → `+20 HP × bark skill`).
-5. **BarkSwap-Styled Pool DEX (`marketMenu`, `ui.barkswap`, `D-036`):**
+5. **DOGEON Pool DEX (`marketMenu`, `ui.pooldex`, `D-036`):**
    - Opened at the Sphinx NPC via `NFT MARKET: SWAP + LIQUIDITY POOLS`. Uses ONLY our game contracts (`DogeItems` + `DogeDEX`).
    - Header shows `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <staked>`.
-   - Row 0 (`MINT < ITEM > NFT (0.1 DOGE)`) mints item tokens directly (consuming `1 WOOD + 1 STONE` for starter Hammer Lv2 if in bag); Row 1 (`WALLET ITEMS (N): #id ITEM...`) shows the player's minted item tokens balance; below that are `CREATE POOL` / `POOL` / `SWAP` / `ADD LP` / `REMOVE LP` rows styled with BarkSwap's amber/slate/emerald card colors in `drawUI()`.
+   - Row 0 (`MINT < ITEM > NFT (0.1 DOGE)`) mints item tokens directly (consuming `1 WOOD + 1 STONE` for starter Hammer Lv2 if in bag); Row 1 (`WALLET ITEMS (N): #id ITEM...`) shows the player's minted item tokens balance; below that are `CREATE POOL` / `POOL` / `SWAP` / `ADD LP` / `REMOVE LP` rows styled with an amber/slate/emerald card colors in `drawUI()`.
 6. **Instant Wallet Popup & Mouse UX (`D-036`):**
    - `chainAct()` never awaits `refreshChain()` before `await fn()` (so MetaMask/Bitget opens immediately on click/keypress).
    - Full mouse hover/wheel/click support on canvas (`cvPos`). In `tests/sim.mjs`, always close menus with `api.press('escape'); api.step(DT);` (never `api.get().ui = null`, which only mutates the wrapper object).

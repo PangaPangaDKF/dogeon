@@ -135,6 +135,66 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-045 · 2026-11-08 · `dogeon-mission` skill: the user's mission charter + scope fence, loaded first by BOTH brains (Claude Code)
+- **Context / why (user, verbatim):** *"a main rule is that focus on preserve and save the doge coin art and save code and be
+  more light without effects or sound, the goal is the defi web3 solidity integrations with the game play and the heist lore
+  implemented like a rpg 2d game and that others can play like a mmo rpg open world game, the archer, the warrior and the healer
+  can heal others characters or himself, a basic game model that is play and get resources to mint stuffs and defeat the boss or
+  the monsters nothing else for now, enchant this as a prompt with the best llm practices and save it like a skill if it works."*
+- **What:** `.claude/skills/dogeon-mission/SKILL.md` (mirrored to `.agents/`) — a charter written to LLM-prompt best practice:
+  **ROLE** · **priorities 1–5** (1 Web3/mint must *work*, 2 the loop play→resources→mint→defeat monsters/boss, 3 Heist lore as a
+  2D RPG, 4 play together MMO-style, 5 three classes with the **Healer healing others**) · **hard rules R1–R6** (R1 preserve the
+  Dogecoin coin art, R2 light: no new effects/sound and prefer deleting FX, R3 frozen right-facing characters, R4 Solidity on
+  DogeOS EVM only, R5 offline-playable single file, R6 verified or it didn't happen) · an **IN/OUT scope fence** · a 5-question
+  **decision test** · **definition of done** · **negative constraints** · a **gap list** tracking what still violates the charter.
+- **Why a skill and not a doc:** skills are auto-discovered and loadable by both CLIs, so the charter is *in context before a
+  decision* rather than something to remember to read. Verified: the harness listed `dogeon-mission` immediately and loading it
+  returned the full charter.
+- **Wiring:** `AGENTS.md` §0 rule 0 + rule 11 (it is now the consensus tie-breaker) and `CLAUDE.md` §0.1 make it the **first**
+  skill both brains load; `dogeon-game` stays "how the code works", `analyzer-master` "how to decide safely".
+- **Gaps it exposes (honest, tracked in §7):** mission item 5 (**Healer heals others**) is **not built** — MEND only heals
+  yourself; and R2 is **not yet satisfied** — `sfx()` audio, decorative particles and screen shake still exist. Both are now
+  explicit next steps instead of silent debt.
+- **Verify:** skill loads (listed + returns the charter); `bash tests/check.sh` → ALL CHECKS PASSED.
+- **Commit:** this commit.
+
+---
+
+### D-044 · 2026-11-08 · Frozen right-facing characters + meme-doge Shiba face (Claude Code)
+- **Context / why (user):** *"instead of the character moving and make the movement with the side sprite change it to make it
+  more frozen character facing to one side?"* → chose **"frozen, always faces right"**; and for art: *"keep the art but only
+  adapt the doge face art that has more shiba details like the meme coin doge, this is a rpg game and keep it that way."*
+- **What:** `drawChar()` now always draws `spr.right[0]` — no walk cycle, no flip, for every character (hero, NPCs, cats, boss,
+  multiplayer ghosts). `P.dir` and 4-direction aiming for attacks/skills/fishing are unchanged. `HEAD.dog.right` was redrawn as a
+  3/4 meme-doge face: two ears with pink insides, cream eyebrow dots, **both eyes with the Dogecoin side-eye** (pupil `E` + white
+  `W`), puffy cream cheeks, black nose, small smirk — replacing a fox-like profile with one eye. Bodies/outfits/accessories untouched.
+- **How verified:** iterated **visually** with `tests/sprites.mjs` rendering all 10 right-facing sprites (before → v1 → v2) rather
+  than guessing from code; then `bash tests/check.sh` ALL CHECKS PASSED and `scripts/browser-smoke.sh` 11/11 in real Chrome.
+- **Alternatives rejected:** keeping the walk cycle (user chose frozen); flipping on horizontal movement (user chose "always
+  faces right"); a full character redesign from the user's reference screenshot (user: keep the art, only adapt the doge face).
+- **Commit:** `c335812` (branch `claude/d044-frozen-doge`), merged in `6a9e3bd`.
+
+---
+
+### D-043 · 2026-11-08 · The camp coin is the user's own Dogecoin-logo art, as in-code pixels (Claude Code)
+- **Context / why (user):** *"I even want to change the image of the coin for the exact art image I made with the exact doge coin
+  logo."* P-002 was AGREED by Antigravity (Claude owns the conversion; he reviews the screenshot).
+- **What:** `MOSAIC` (96×96, camp plaza floor) now draws the user's artwork — the Dogecoin side-eye Shiba in a glowing gold coin —
+  as `MOSAIC_PAL` (32 colours) + `MOSAIC_PX` (9216 chars, `.` = transparent). **Still zero image files in the game.**
+  `docs/art/dogecoin-coin-source.jpg` keeps a native-resolution 512×512 crop of just the coin (113 KB, not the 724 KB full image).
+  `scripts/coin2px.js` is the deterministic converter (radial-profile ring measure → stepwise area downscale → median cut +
+  4 k-means passes). `tests/check.sh` stage 1 guards the data (exactly 9216 px, ≤ 32 colours).
+- **Bug caught by self-verification (L-027):** the first ring measurement was a ray-fit that depended on framing; re-running the
+  converter on its *own* saved crop produced centre (260,236) r=135 instead of (256,256) r=252 — only 32.6% of pixels matched. The
+  fix was an explicit **input contract** (coin centred) + a radial gold profile. Re-run twice: byte-identical output, and the data
+  embedded in `index.html` matches the converter exactly.
+- **Alternatives rejected:** hand-pixelling the coin (can't match the user's art, unverifiable); shipping the PNG (breaks the
+  zero-asset rule); keeping the full 724 KB screenshot (only the coin is needed).
+- **Verify:** suite green; real Chrome screenshot reviewed — the side-eye doge coin fills the camp plaza.
+- **Commit:** `722b14a` (branch `claude/d043-dogecoin-coin`), merged in `6a9e3bd`.
+
+---
+
 ### D-038 · 2026-11-08 · Class combat balance proof, bag↔wallet NFT clarity, BarkSwap price-impact/LP-share feedback, HUD skill-cost indicator & TryNoah prompt convergence (Antigravity)
 - **Context / why:** Reserved for the Antigravity gameplay/UI lane (`ANTIGRAVITY_HANDOFF.md` §6–§7):
   1. **TryNoah Prompt Convergence (`88b1bb1`):** Audited `MASTER_PROMPT.md` for LLM context waste (duplicate `§A`/`§B` sections, phantom ERC-20 mentions, unreachable CLI paths in fresh sandboxes, and 22 rows of historical git archaeology), converged `MASTER_PROMPT.md` with `D-039..D-041` + the pointer to `prompts/TRYNOAH_RECREATE.md` §5b, deleted the temporary `prompts/NOAH_MASTER_PROMPT_PROPOSAL.md`, and closed `L-021` by adding `[1b] Static Forbidden-API Gate` (`WebSocket` scoped to `MULTIPLAYER`) to `.agents|.claude/skills/analyzer-master/scripts/audit-scan.mjs`.

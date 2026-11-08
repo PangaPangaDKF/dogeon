@@ -74,7 +74,7 @@ click CONNECT. It is fully playable with no wallet. Deploy it and give me the pu
 4. `I` → bag shows `WOOD x3` / `STONE x3`.
 5. Talk (`E`) to a faction trainer → pick a class **offline** (free) → sprite changes, HUD class tag updates.
 6. Sphinx (`E`) → `CONNECT WALLET` → wallet prompts to **add/switch to DogeOS Chikyū (0x5fdaf3)**.
-7. Sphinx → `NFT MARKET: SWAP + LIQUIDITY POOLS` → BarkSwap DEX opens; Row 0 mints an item (0.1 DOGE).
+7. Sphinx → `NFT MARKET: SWAP + LIQUIDITY POOLS` → DOGEON Pool DEX opens; Row 0 mints an item (0.1 DOGE).
 8. Sphinx → `ON-CHAIN STAKING` → stake / claim / unstake.
 
 ---
@@ -82,7 +82,7 @@ click CONNECT. It is fully playable with no wallet. Deploy it and give me the pu
 ## 2. Path B — BLUEPRINT rebuild (only if TryNoah must author the code)
 
 1. Paste **all of `MASTER_PROMPT.md` §A** (the single-prompt full-stack blueprint). It already carries the exact
-   stack rules, the 4 live Chikyū addresses, all 30 four-byte selectors, class stats and the BarkSwap DEX spec.
+   stack rules, the 4 live Chikyū addresses, all 30 four-byte selectors, class stats and the DOGEON Pool DEX spec.
 2. Then paste **`docs/RECREATION_MANIFEST.md`** as the completeness contract and instruct:
    *"Implement every row of this manifest. When done, list each item and mark it DONE or MISSING."*
 3. Expect to iterate — see §3 to find what it dropped.
@@ -123,7 +123,7 @@ the addresses baked into `index.html` are live and correct.
 - [ ] Every manifest §1–§8 row exists in the rebuild.
 - [ ] Wallet connect adds **and** switches to `0x5fdaf3`; app still fully playable with the wallet rejected.
 - [ ] All 3 professions: offline free pick, on-chain `choose()` binds one class per wallet forever.
-- [ ] BarkSwap DEX: mint → wallet items row → create pool → swap both ways → add/remove LP → withdraw proceeds.
+- [ ] DOGEON Pool DEX: mint → wallet items row → create pool → swap both ways → add/remove LP → withdraw proceeds.
 - [ ] Staking: stake, claim, unstake, and `flushStakerFees()` sync.
 - [ ] `node scripts/trynoah-manifest.mjs --verify` exits 0.
 - [ ] After any redeploy: `bash scripts/e2e-chikyu.sh` → all PASS (fee split 1:4 on-chain).

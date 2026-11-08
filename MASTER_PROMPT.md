@@ -38,7 +38,7 @@ When cloning, rebuilding, or extending this repository, execute strictly in this
 | **Step 3** | **Dogecoin Art, Tiles & Seeded Map** | `index.html` §5 `CHARACTER SPRITES` · §6 `TILES` · §7 `MAP` + [`docs/ART_STYLE.md`](./docs/ART_STYLE.md) (§4.2–4.3) | Build `16×20` Shiba/Cat/Partner sprites, `16×16` tiles (`T`), `96×96` camp DOGE coin `MOSAIC`, `80×60` map (`mulberry(4242)`), 9 camp `PADS`, dungeon, 5 ponds. |
 | **Step 4** | **Game State, 3 Classes, Combat & AI** | `index.html` §8 `GAME STATE` · §9 `COLLISION` · §10 `FX` · §11 `COMBAT` · §12 `ENEMY AI` (§4.4) | Starter bag (`WOOD x3`, `STONE x3`), 12-slot `BAG_SIZE`, 3 distinct classes (`WARRIOR`, `ARCHER`, `HEALER`), 8 enemy types (`ETYPES`), fishing, `MARKET`. |
 | **Step 5** | **DogeOS EIP-1193 Web3 Layer** | `index.html` §13 `CHAIN` (§3) | Wire `CHAIN`, `CONTRACTS['0x5fdaf3']`, `REDSTONE`, all 30 4-byte `SEL` selectors, raw 32-byte ABI helpers (`W32`, `A32`, `words`, `arrAt`), and 21 on-chain actions. |
-| **Step 6** | **UI Menus & BarkSwap Pool DEX** | `index.html` §14 `UI` (§4.5) | Build all 11 menus (`marketMenu` with `ui.barkswap=true`, LP share & price impact, `invMenu` with `ON-CHAIN ITEMS`, `stakeMenu`, `bankMenu`, `shopMenu`, `professorMenu`, etc.). |
+| **Step 6** | **UI Menus & DOGEON Pool DEX** | `index.html` §14 `UI` (§4.5) | Build all 11 menus (`marketMenu` with `ui.pooldex=true`, LP share & price impact, `invMenu` with `ON-CHAIN ITEMS`, `stakeMenu`, `bankMenu`, `shopMenu`, `professorMenu`, etc.). |
 | **Step 7** | **Opt-In Multiplayer, HUD & Loop** | `index.html` §15 `MULTIPLAYER` · §16 `UPDATE` · §17 `RENDER` · §18 `LOOP` + `server/relay.mjs` (§4.6) | Keep `netTick(dt)` in `update()` and `netDraw(list,ox,oy)` in `drawWorld()`, `hudTag()` class/MP indicator in `drawHUD()`, and 60 FPS loop. |
 | **Step 8** | **6-Stage Verification Gate** | `tests/check.sh`, `scripts/trynoah-manifest.mjs` | Run `bash tests/check.sh` (static + syntax + sim + forge + manifest drift guard + relay) → **ALL CHECKS PASSED**. |
 
@@ -48,7 +48,7 @@ When cloning, rebuilding, or extending this repository, execute strictly in this
 
 ### A. Repository File Map
 ```text
-index.html                         # Complete 16-bit RPG + BarkSwap DEX + DogeOS EIP-1193 client (~1,316 lines, 0 external deps)
+index.html                         # Complete 16-bit RPG + DOGEON Pool DEX + DogeOS EIP-1193 client (~1,316 lines, 0 external deps)
 contracts/                         # Foundry project (Solidity ^0.8.24, OpenZeppelin v5.1, EVM Paris)
   foundry.toml                     # RPC endpoints: chikyu = https://rpc.testnet.dogeos.com, local = http://127.0.0.1:8545
   apply-deployment.mjs             # Copies contracts/deployments/<chainId>.json addresses into index.html CONTRACTS
@@ -109,7 +109,7 @@ Every section in [`index.html`](./index.html) is marked by `// =================
 | **14** | `UI (dialog / menus)` | `L813–1038` | `RECIPES`, `MINTABLE`, `openDialog`, `openMenu`, `uiAct`, `professorMenu`, `shopMenu`, `SCHOOL`/`schoolMenu`, `bankMenu`, `FACTIONS`/`HEIST_STORY`/`factionMenu`/`elderMenu`, `PARTNERS`/`partnerMenu`, `invMenu`, `updateUI`. |
 | **15** | `MULTIPLAYER (opt-in, D-040)` | `L1039–1076` | Opt-in `?mp=ws(s)://...` ghost sync (`NET_URL`, `NET_ROOM`, `NET_HZ=10`, `NET_TTL=5`, `NET_MAX=8`, `net`, `netConnect`, `netSend`, `netOnMsg`, `netTick`, `netDraw`). Only section allowed to reference `WebSocket`. |
 | **16** | `UPDATE` | `L1077–1145` | Main `update(dt)` simulation step: title particles, `updMarket(dt)`, `netTick(dt)` hook, menu/dialog pause, player movement, rest/regen, fishing, projectiles, pickups, death/respawn. |
-| **17** | `RENDER` | `L1146–1302` | Pure rendering (`render()`, `drawWorld()`, `netDraw(list,ox,oy)` hook, `drawSlash()`, `drawFishing()`, `hudTag()`, `drawHUD()`, `drawUI()` with BarkSwap card styling, `drawTitle()`, `drawWin()`). |
+| **17** | `RENDER` | `L1146–1302` | Pure rendering (`render()`, `drawWorld()`, `netDraw(list,ox,oy)` hook, `drawSlash()`, `drawFishing()`, `hudTag()`, `drawHUD()`, `drawUI()` with DOGEON Pool DEX card styling, `drawTitle()`, `drawWin()`). |
 | **18** | `LOOP` | `L1303–1316` | `newGame()`, `requestAnimationFrame(loop)`, and `window.__DOGEON` test harness hook. |
 
 ---
@@ -278,7 +278,7 @@ const SEL={
 
 ---
 
-## 4. GAMEPLAY, DOGECOIN ART, 3 CLASSES, BARKSWAP POOL DEX & MULTIPLAYER SPECIFICATION
+## 4. GAMEPLAY, DOGECOIN ART, 3 CLASSES, DOGEON POOL DEX & MULTIPLAYER SPECIFICATION
 
 ### 4.1 Controls, Mouse UX & WebAudio (§1–§3)
 - **Keyboard:** `WASD`/Arrows move; `Space`/`J` basic attack (`attack()`); `K`/`Q` class skill (`useSkill()`); `E`/`Enter` talk/advance/execute menu row (`uiAct()`); `A`/`D` or `Left`/`Right` adjust menu value (`row.adj(-1/+1)`); `R` rest (`REST_DELAY=3`s stillness, heals `+10 HP/s` up to `REST_CAP=0.6` (60% maxHp) and `+8 MP/s` to 100% maxMp); `I`/`Tab` inventory (`invMenu()`); `F` fish (`startFish()`, `3..5`s); `Escape` close menu/dialog.
@@ -309,9 +309,9 @@ const SEL={
   3. **`HEALER` (`id:3`, Barkitects, Mender Brighttail):** `spd:1.25`, `dmg:0.65`, `armor:0.05`, `hp:-15` (`45` Max HP). `Space`: mystic staff swing (`0.65×` dmg, **restores `+2 MP` on hit**). `K`/`Q` (`mend()`, `10 MP`): heals `Math.round(20 * skillMul(P.skills.bark, 'bark'))` HP anywhere.
 - **HUD Class & Skill Cost Tag (`hudTag()` in `drawHUD()`, §17):** Displays active class + `Space` attack + `K` skill MP cost (`WARRIOR [SPC:CLEAVE K:SLAM 12MP]`, `ARCHER [SPC:ARROW K:VOLLEY 6MP]`, `HEALER [SPC:STAFF K:MEND 10MP]`, or `NO CLASS [K:BARK 10MP]`).
 
-### 4.5 BarkSwap-Styled Pool DEX (`marketMenu`), Bag Boundary (`invMenu`) & DeFi Menus (§13–§14)
-- **BarkSwap Pool DEX (`marketMenu(n)` at the Sphinx NPC):**
-  - Title: `'BARKSWAP POOL DEX: MINT, SWAP & LP'`, flags `ui.chain = true; ui.barkswap = true;`.
+### 4.5 DOGEON Pool DEX (`marketMenu`), Bag Boundary (`invMenu`) & DeFi Menus (§13–§14)
+- **DOGEON Pool DEX (`marketMenu(n)` at the Sphinx NPC):**
+  - Title: `'DOGEON POOL DEX: MINT, SWAP & LP'`, flags `ui.chain = true; ui.pooldex = true;`.
   - Header (`drawUI`): `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <fromWei(chainData.staked)>`.
   - **Row 0 (Direct / Starter Item Mint):** `MINT < ${itemName(mt)} > NFT (${fromWei(chainData.fee||10n**17n)} DOGE)` (`A/D` or mouse `<`/`>` cycles the 9 `MINTABLE` items; uses `'starter'` wood+stone source if available for Hammer Lv2, else mints directly on `DogeItems`).
   - **Row 1 (Wallet Minted Items Balance):** `WALLET ITEMS (${inv.length}): ${invTxt}` showing `#id ITEM` tokens in `myFree()`.
@@ -325,7 +325,7 @@ const SEL={
       - ` ADD <N> ITEMS + <X> DOGE AS LP` (`addLp(ids, need, p)`, 99% `minShares` guard)
       - ` REMOVE MY LP (<lp>%)` (`removeLp(p)`, `minItems` + 99% `minDoge` guard)
     - Per unpooled wallet NFT: `SELL #<id> <ITEM> FOR < <price> > DOGE` and `CREATE POOL: <N> <ITEM> + < <amt> > DOGE`.
-  - **BarkSwap Visual Card Styling (`drawUI` when `ui.barkswap === true`):** Selected `#3a2208`/`#ffd860`; `MINT ` `#281a08`/`#ffc850`; `WALLET ITEMS` `#101838`/`#f8e090`; `POOL `/` SWAP`/`CREATE POOL` `#0c2624`/`#80f8c0`.
+  - **Pool DEX Card Styling (`drawUI` when `ui.pooldex === true`):** Selected `#3a2208`/`#ffd860`; `MINT ` `#281a08`/`#ffc850`; `WALLET ITEMS` `#101838`/`#f8e090`; `POOL `/` SWAP`/`CREATE POOL` `#0c2624`/`#80f8c0`.
 - **Inventory Bag vs Wallet Boundary (`invMenu()`, §14):** Always renders `ON-CHAIN ITEMS (${nfts.length}): ${nfts.length?'SAFE ON DEATH':'MINT AT SPHINX/FORGE'}` above individual `NFT #id` rows so players see that off-chain bag items drop on death while wallet NFTs are permanent on DogeOS.
 - **Sphinx Staking (`stakeMenu`) & Partner NPCs (`partnerMenu`):**
   - `stakeMenu`: `STAKE < ${amt} > DOGE (EARN 0.8% FEES)`, `YOUR STAKE`, `PENDING REWARDS (CLAIM)`, `UNSTAKE ALL`, `SYNC DEX FEES TO STAKERS` (`flushStakerFees()`).
@@ -347,9 +347,9 @@ const SEL={
 | D-024..D-026 | Grand Heist lore, Elder factions, Partner NPCs (Relotto, Noah, Bitget), RedStone DOGE/USD oracle | `SPR.clover/noah/bitget`, `LINKS`, `bankMenu`, `SCHOOL/schoolMenu`, `FACTIONS/HEIST_STORY`, `PARTNERS`, `REDSTONE/refreshOracle/oracleRow` |
 | D-027..D-033 | `DogeProfession.sol`, `DogeStaking.sol`, 1% DEX protocol fee split (0.2% / 0.8%), 4-contract Chikyū deploy | `DogeProfession.sol`, `DogeStaking.sol`, `SPR.tWarrior/tArcher/tHealer`, `CLASSES`, `chooseProfession`, `useSkill/groundPound/quickShot/mend`, `stakeMenu` |
 | D-034..D-035 | Pre-decision diagnostic gate (`audit-scan.mjs`), `chainChanged` reload, 100% Web3 sim test coverage | `.agents/skills/analyzer-master/scripts/audit-scan.mjs`, `hookWallet()`, `spawnEnemy()`, `tests/sim.mjs` D-035 scenarios |
-| D-036 | **BarkSwap Pool DEX, Distinct Class Mechanics, Starter Bag (`WOOD`/`STONE`) Minting, Wallet Items Balance & Mouse UX** | `CLASSES`, `applyClass/syncMaxHp`, `attack()`, `quickShot()`, `drawWorld()`, `drawSlash()`, `MINTABLE`, `marketMenu()`, `stakeMenu()`, `drawUI()`, `cvPos()` |
+| D-036 | **DOGEON Pool DEX, Distinct Class Mechanics, Starter Bag (`WOOD`/`STONE`) Minting, Wallet Items Balance & Mouse UX** | `CLASSES`, `applyClass/syncMaxHp`, `attack()`, `quickShot()`, `drawWorld()`, `drawSlash()`, `MINTABLE`, `marketMenu()`, `stakeMenu()`, `drawUI()`, `cvPos()` |
 | D-037 | **Reproducibility & release: generated recreation manifest, blueprint drift guard, dual-brain protocol, shared lessons ledger** | `scripts/trynoah-manifest.mjs` (`--out` / `--verify`), `docs/RECREATION_MANIFEST.md`, `prompts/TRYNOAH_RECREATE.md` (Path A exact vs Path B blueprint), `tests/check.sh` stage 5, `AGENTS.md` §1b, `docs/LESSONS.md`, `scripts/publish-github.sh` |
-| D-038 | **GitHub Repo Map + DogeOS Solidity Architecture Guide in `MASTER_PROMPT.md`, Class TTK & MP balance proof, `invMenu` `ON-CHAIN ITEMS` clarity, BarkSwap LP-share/price-impact rows, HUD skill MP cost (`hudTag`), & `L-021`/`L-027` gates** | `hudTag()`, `drawHUD()`, `invMenu()`, `marketMenu()`, `PARTNERS.noah`, `MASTER_PROMPT.md` §0–§4, `.agents|.claude/skills/analyzer-master/scripts/audit-scan.mjs`, `tests/sim.mjs` D-038 scenario |
+| D-038 | **GitHub Repo Map + DogeOS Solidity Architecture Guide in `MASTER_PROMPT.md`, Class TTK & MP balance proof, `invMenu` `ON-CHAIN ITEMS` clarity, DOGEON Pool DEX LP-share/price-impact rows, HUD skill MP cost (`hudTag`), & `L-021`/`L-027` gates** | `hudTag()`, `drawHUD()`, `invMenu()`, `marketMenu()`, `PARTNERS.noah`, `MASTER_PROMPT.md` §0–§4, `.agents|.claude/skills/analyzer-master/scripts/audit-scan.mjs`, `tests/sim.mjs` D-038 scenario |
 | D-039 | **Dead-code removal & live on-chain E2E proof of the full DeFi loop on DogeOS Chikyū (17/17 PASS)** | `scripts/e2e-chikyu.sh`, `scripts/trynoah-manifest.mjs` (`HUD_H`), `docs/RECREATION_MANIFEST.md` |
 | D-040 | **Opt-in ghost multiplayer (`?mp=ws(s)://host&room=&name=`) & zero-dep self-hostable relay** | `NET_URL/NET_ROOM/NET_HZ/NET_TTL/NET_MAX/NET_PEERS`, `net/netConnect/netTick/netDraw`, `server/relay.mjs`, `tests/relay.mjs` (stage 6) |
 | D-041 | **Real-browser Chrome smoke test (single-player + 3-player multiplayer, 11/11 PASS)** | `scripts/browser-smoke.sh` (`agent-browser` CDP session + scripted WebSocket peers) |

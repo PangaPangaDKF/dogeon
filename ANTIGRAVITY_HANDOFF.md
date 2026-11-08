@@ -216,9 +216,9 @@ These are yours and are high-leverage:
    refill). The user stated: *basic doge = weak attack; monsters are always strong; professions make you stronger.* Assert it:
    add sim checks that each profession beats the basic doge's TTK on the same enemy.
 2. **Bag items ↔ chain clarity.** The bag shows WOOD/STONE + materials; minted items live in the wallet. Make the boundary
-   obvious in `invMenu` (e.g., an "ON-CHAIN ITEMS (N)" row mirroring BarkSwap's `WALLET ITEMS`), so players understand
+   obvious in `invMenu` (e.g., an "ON-CHAIN ITEMS (N)" row mirroring the Pool DEX's `WALLET ITEMS`), so players understand
    "bag = off-chain, at risk on death; wallet NFTs = on-chain, safe". Pure UI — no contract change.
-3. **BarkSwap row feedback.** Show price impact and LP share per pool row (the data is already in `chainData.pools`:
+3. **DOGEON Pool DEX row feedback.** Show price impact and LP share per pool row (the data is already in `chainData.pools`:
    `doge`, `n`, `shares`, `mine`, `buy`, `sell`). Keep labels ≤ 50 chars.
 4. **HUD skill-cost indicator** (class + `K/Q` MP cost), so the class choice is visible in play.
 
@@ -259,7 +259,7 @@ git log --oneline -1 && git diff --numstat       # HEAD moved? an additive edit 
 | 1 | Release tooling: manifest, drift guard, runbook, protocol, lessons, publish script | Claude | ✅ D-037 |
 | 2 | Dead code (game) + live on-chain E2E of the full DeFi loop | Claude | ✅ D-039 |
 | 3 | Converge the 3 Noah prompt files into MASTER_PROMPT + runbook | **Antigravity** | ⏳ §6 |
-| 4 | Class balance, bag↔wallet clarity, BarkSwap feedback, HUD skill cost | **Antigravity** | ⏳ D-038 |
+| 4 | Class balance, bag↔wallet clarity, DOGEON Pool DEX feedback, HUD skill cost | **Antigravity** | ⏳ D-038 |
 | 5 | Multiplayer: research open-source options + an opt-in "host a server" option | Claude | ✅ D-040 |
 | 5b | Real-browser smoke (Chrome via your `agent-browser`): play + 3-player multiplayer, 11/11 | Claude | ✅ D-041 |
 | 6 | Project weight (art + skill packs) | **User decides** | ❓ §3 |
@@ -285,7 +285,7 @@ STEP 2 — Converge the Noah prompts (handoff §6):
 
 STEP 3 — D-038 gameplay polish (handoff §7), in this order:
 1. Class balance with `balance-check`: sim assertions that each profession beats the basic doge's time-to-kill; MP economy.
-2. Bag vs wallet clarity in `invMenu` ("ON-CHAIN ITEMS (N)" row). 3. BarkSwap price-impact + LP-share per row.
+2. Bag vs wallet clarity in `invMenu` ("ON-CHAIN ITEMS (N)" row). 3. DOGEON Pool DEX price-impact + LP-share per row.
 4. HUD class + K/Q MP cost.
 For each: failing sim assertion first → fix → `bash tests/check.sh` → `node scripts/trynoah-manifest.mjs --out
 docs/RECREATION_MANIFEST.md` → update @MASTER_PROMPT.md → log D-038 in @docs/DECISIONS.md → commit.

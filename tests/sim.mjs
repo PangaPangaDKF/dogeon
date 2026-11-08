@@ -1039,7 +1039,7 @@ await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChan
   if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.delist)) fail('delistNft', JSON.stringify(eth.sent.at(-1)));
   else pass('delistNft', 'delisted #7 via SEL.delist');
 
-  // D-036: starter material mint (1 WOOD + 1 STONE) + BarkSwap Pool DEX wallet items balance & CREATE POOL row
+  // D-036: starter material mint (1 WOOD + 1 STONE) + DOGEON Pool DEX wallet items balance & CREATE POOL row
   const woodBefore = api.bagCount('wood'), stoneBefore = api.bagCount('stone');
   await api.mintNft(1, 2, 'starter'); await idle(api);
   if (api.bagCount('wood') !== woodBefore - 1 || api.bagCount('stone') !== stoneBefore - 1 || !eth.sent.at(-1).data.startsWith('0x' + api.SEL.mint)) fail('starter mint', `wood=${api.bagCount('wood')} stone=${api.bagCount('stone')}`);
@@ -1048,8 +1048,8 @@ await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChan
   api.chainData.inv = [{ id: 1, type: 1, level: 2 }];
   api.marketMenu(npc(api, 'bank'));
   const mktRows = api.get().ui.build().map(r => r.label);
-  if (!api.get().ui.barkswap || !mktRows.some(l => /^WALLET ITEMS \(1\): #1 HAMMER LV2/.test(l)) || !mktRows.some(l => /^CREATE POOL: 1 HAMMER LV2/.test(l))) fail('barkswap pool dex', mktRows.join(' | '));
-  else pass('barkswap pool dex', 'BarkSwap-styled Pool DEX shows WALLET ITEMS (1): #1 HAMMER LV2 + CREATE POOL row');
+  if (!api.get().ui.pooldex || !mktRows.some(l => /^WALLET ITEMS \(1\): #1 HAMMER LV2/.test(l)) || !mktRows.some(l => /^CREATE POOL: 1 HAMMER LV2/.test(l))) fail('pool dex', mktRows.join(' | '));
+  else pass('pool dex', 'DOGEON Pool DEX shows WALLET ITEMS (1): #1 HAMMER LV2 + CREATE POOL row');
   api.press('escape'); api.step(DT);
 
   api.disconnectWallet(); await flush();
@@ -1145,7 +1145,7 @@ scenario('D-040 multiplayer option: off by default, opt-in ?mp relays state, hos
   else fail('net ttl', 'peers kept: ' + Object.keys(api.net.peers).join());
 });
 
-scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, BarkSwap LP/impact rows, HUD skill MP cost', () => {
+scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, pool DEX LP/impact rows, HUD skill MP cost', () => {
   const api = boot(SEED + 38, { eth: mockEth({ known: true }) }); startGame(api);
   const g = api.get(), P = g.P;
 
@@ -1207,7 +1207,7 @@ scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, BarkSwa
     fail('invMenu on-chain clarity', invOff.join(' | ') + ' // ' + invOn.join(' | '));
   else pass('invMenu on-chain clarity', 'invMenu shows ON-CHAIN ITEMS (N): SAFE ON DEATH vs off-chain bag items');
 
-  // 4. BarkSwap Pool DEX LP share + price-impact feedback (all labels <= 50 chars)
+  // 4. DOGEON Pool DEX LP share + price-impact feedback (all labels <= 50 chars)
   api.chainData.pools = [{ key: 258n, type: 1, level: 2, doge: 2n * 10n ** 18n, n: 2, shares: 2n * 10n ** 18n, mine: 10n ** 18n, buy: 206n * 10n ** 16n, sell: 65n * 10n ** 16n }];
   api.marketMenu(npc(api, 'bank'));
   const dexRows = api.get().ui.build().map(r => r.label);
@@ -1215,8 +1215,8 @@ scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, BarkSwa
   if (!dexRows.some(l => /^POOL HAMMER LV2: 2 ITEMS \/ 2 DOGE \(LP 50%\)/.test(l))
     || !dexRows.some(l => /^ SWAP 2\.06 DOGE -> 1 HAMMER LV2 \(\+106%\)/.test(l))
     || !dexRows.some(l => /^ SWAP 1 HAMMER LV2 -> 0\.65 DOGE \(-35%\)/.test(l))
-    || maxLen > 50) fail('barkswap feedback', `maxLen=${maxLen} rows=${dexRows.join(' | ')}`);
-  else pass('barkswap feedback', `BarkSwap rows show LP 50% + (+106%)/(-35%) price impact (max label ${maxLen} <= 50 chars)`);
+    || maxLen > 50) fail('pool dex feedback', `maxLen=${maxLen} rows=${dexRows.join(' | ')}`);
+  else pass('pool dex feedback', `pool DEX rows show LP 50% + (+106%)/(-35%) price impact (max label ${maxLen} <= 50 chars)`);
   api.press('escape'); api.step(DT);
 });
 
