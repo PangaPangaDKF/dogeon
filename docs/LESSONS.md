@@ -200,8 +200,7 @@
   not — it checks line budget, selector parity, collisions and sim coverage. The only real enforcement is `tests/check.sh`
   stage 1. Anyone trusting the description would have assumed double coverage.
 - **RULE:** Before relying on a check, **read its code or make it fail once.** A doc claim is not a guard.
-- **Action for Antigravity:** either add the forbidden-API scan to `audit-scan.mjs` (scoping `WebSocket` to MULTIPLAYER the
-  way `check.sh` does) or correct the description in `CLAUDE_CODE_HANDOFF.md` / the `analyzer-master` skill.
+- **Action for Antigravity (closed in `audit-scan.mjs`):** added `[1b] Static Forbidden-API Gate` (scoping `WebSocket` to `MULTIPLAYER` exactly like `tests/check.sh` and `trynoah-manifest.mjs`) + non-zero exit code on failure in `.agents|.claude/skills/analyzer-master/scripts/audit-scan.mjs`.
 
 ### L-022 · 2026-11-08 · Claude Code · name collisions by MEANING, not just by syntax
 - **What happened:** The multiplayer state was first named `mp` / `MP_*` / `mpTick`. It compiled fine — but `mp` already

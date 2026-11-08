@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Bundled diagnostic script for the `analyzer-master` skill (agentskills@1.0).
-// Checks: line budget, static rules, SEL/contract parity, orphan identifiers, and test coverage gaps in tests/sim.mjs.
+// Checks: line budget, forbidden APIs (L-021), SEL/contract parity, top-level collisions, and test coverage gaps in tests/sim.mjs.
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +26,14 @@ for (let i = 0; i < sections.length; i++) {
   sections[i].span = end - sections[i].line + 1;
 }
 console.log('    Largest sections:', sections.sort((a, b) => b.span - a.span).slice(0, 5).map(s => `${s.name} (${s.span}L)`).join(', '));
+
+// 1b. Forbidden APIs & external assets (L-021; WebSocket allowed only inside MULTIPLAYER section)
+const htmlNoNet = html.replace(/\/\/ =+ MULTIPLAYER[\s\S]*?(?=\/\/ =+ )/, '');
+const forbidden = ['alert(', 'confirm(', 'prompt(', 'fetch(', 'XMLHttpRequest', 'WebSocket', 'import('].filter(p =>
+  (p === 'WebSocket' ? htmlNoNet : html).includes(p)
+);
+if (/(src|href)="https?:\/\//.test(html)) forbidden.push('external src/href URL');
+console.log(`[1b] Static Forbidden-API Gate: ${forbidden.length === 0 ? 'OK (0 forbidden calls; WebSocket scoped to MULTIPLAYER)' : 'FORBIDDEN: ' + forbidden.join(', ')}`);
 
 // 2. SEL selector usage check
 const selBlock = js.match(/const SEL=\{([^}]+)\}/);
@@ -65,3 +73,4 @@ if (uncalledInSim.length === 0) {
 } else {
   console.log(`    GAP DETECTED — Never tested in tests/sim.mjs: ${uncalledInSim.join(', ')}`);
 }
+if (lines.length > 1500 || forbidden.length || unusedSel.length || dupes.length || uncalledInSim.length) process.exit(1);

@@ -26,7 +26,7 @@ tests/
 ### Hard Invariants (NEVER VIOLATE)
 1. **Single-File Zero-Dependency Frontend (`index.html` < 1,500 lines):**
    - Native resolution `<canvas id="c" width="320" height="224">` with `image-rendering: pixelated` and integer CSS scaling (`Math.max(1, Math.min(Math.floor(innerWidth/320), Math.floor(innerHeight/224)))`).
-   - **FORBIDDEN in `index.html`:** `alert(`, `confirm(`, `prompt(`, `fetch(`, `XMLHttpRequest`, `WebSocket`, `import(`, external `<script src>`, `<link href>`, external images, fonts, or audio files. All graphics, fonts, maps, and sounds are procedural in JS.
+   - **FORBIDDEN in `index.html`:** `alert(`, `confirm(`, `prompt(`, `fetch(`, `XMLHttpRequest`, `import(`, external `<script src>`, `<link href>`, external images, fonts, or audio files (`WebSocket` is allowed ONLY inside the opt-in `MULTIPLAYER` section when `?mp=` is set). All graphics, fonts, maps, and sounds are procedural in JS.
 2. **Strict Contract Scope:**
    - Use ONLY the 4 game contracts (`DogeItems`, `DogeDEX`, `DogeProfession`, `DogeStaking`) + the RedStone oracle (`feed` + `adapter`). Do NOT add extra contracts or external ERC-20 tokens.
 3. **Offline-First Invariant:**
@@ -183,6 +183,8 @@ Structure `<script>` in `index.html` into these 12 sections in order:
 - **Elder Heist Hub (`elderMenu`) & Partner NPCs (`partnerMenu`):**
   - Elder (`quest`): 5-page `HEIST_STORY`, 3 `FACTIONS` (`DEMOLITION DOGS`, `KERNEL CREW`, `BARKITECTS`), `JOIN <FACTION>`, and `OPEN HEIST.DOGEOS.COM`.
   - Partners: Cloverheart (`https://relotto.app/`, `https://app.relotto.app`), Noah (`https://trynoah.ai/?utm_source=ambassador&utm_medium=affiliate&utm_campaign=ambassador_program&utm_content=afft5eetm&ref=AFF-T5EETM`), Bitget Wallet Card (`https://web3.bitget.com/share/41bYlR?inviteCode=VovB4P5R`, `https://web3.bitget.com/card`).
+- **Opt-In Multiplayer (`MULTIPLAYER` section, `D-040`):**
+  - Off by default (zero network calls without `?mp=ws(s)://host&room=&name=`). Uses native `WebSocket` (`net*`/`NET_*` identifiers; `netTick(dt)` in `update()`, `netDraw(list,ox,oy)` in `drawWorld()`) with the zero-dep self-hostable relay `server/relay.mjs`. See [`prompts/TRYNOAH_RECREATE.md`](./prompts/TRYNOAH_RECREATE.md) §5b for protocol and deployment details.
 
 ---
 
@@ -212,7 +214,7 @@ Structure `<script>` in `index.html` into these 12 sections in order:
 
 ---
 
-## G. Canonical Subsystem Ledger (`D-014..D-037`)
+## G. Canonical Subsystem Ledger (`D-014..D-041`)
 
 | ID | Subsystem | Canonical Symbols (`index.html` / `contracts/src/`) |
 |---|---|---|
@@ -223,3 +225,6 @@ Structure `<script>` in `index.html` into these 12 sections in order:
 | D-034..D-035 | Pre-decision diagnostic gate (`audit-scan.mjs`), `chainChanged` reload, 100% Web3 sim test coverage | `.agents/skills/analyzer-master/scripts/audit-scan.mjs`, `hookWallet()`, `spawnEnemy()`, `tests/sim.mjs` D-035 scenarios |
 | D-036 | **BarkSwap Pool DEX, Distinct Class Mechanics, Starter Bag (`WOOD`/`STONE`) Minting, Wallet Items Balance & Mouse UX** | `CLASSES`, `applyClass/syncMaxHp`, `attack()`, `quickShot()`, `drawWorld()`, `drawSlash()`, `MINTABLE`, `marketMenu()`, `stakeMenu()`, `drawUI()`, `cvPos()` |
 | D-037 | **Reproducibility & release: generated recreation manifest, blueprint drift guard, dual-brain protocol, shared lessons ledger** | `scripts/trynoah-manifest.mjs` (`--out` / `--verify`), `docs/RECREATION_MANIFEST.md`, `prompts/TRYNOAH_RECREATE.md` (Path A exact vs Path B blueprint), `tests/check.sh` stage 5, `AGENTS.md` §1b, `docs/LESSONS.md` (L-001..L-016), `scripts/publish-github.sh` |
+| D-039 | **Dead-code removal & live on-chain E2E proof of the full DeFi loop on DogeOS Chikyū (17/17 PASS)** | `scripts/e2e-chikyu.sh`, `scripts/trynoah-manifest.mjs` (`HUD_H`), `docs/RECREATION_MANIFEST.md` |
+| D-040 | **Opt-in ghost multiplayer (`?mp=ws(s)://host&room=&name=`) & zero-dep self-hostable relay** | `NET_URL/NET_ROOM/NET_HZ/NET_TTL/NET_MAX/NET_PEERS`, `net/netConnect/netTick/netDraw`, `server/relay.mjs`, `tests/relay.mjs` (stage 6) |
+| D-041 | **Real-browser Chrome smoke test (single-player + 3-player multiplayer, 11/11 PASS)** | `scripts/browser-smoke.sh` (`agent-browser` CDP session + scripted WebSocket peers) |
