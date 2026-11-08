@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {DogeItems} from "../src/DogeItems.sol";
 import {DogeDEX} from "../src/DogeDEX.sol";
+import {DogeStaking} from "../src/DogeStaking.sol";
 import {IPriceFeed} from "../src/IPriceFeed.sol";
 import {MockPriceFeed} from "../src/mocks/MockPriceFeed.sol";
 
@@ -36,6 +37,7 @@ contract Reenterer {
 contract DogeDEXTest is Test {
     DogeItems items;
     DogeDEX dex;
+    DogeStaking staking;
     MockPriceFeed feed;
     address treasury = makeAddr("treasury");
     address alice = makeAddr("alice"); // crafter / seller / LP
@@ -46,7 +48,8 @@ contract DogeDEXTest is Test {
     function setUp() public {
         items = new DogeItems(FEE, treasury);
         feed = new MockPriceFeed(7164240); // $0.0716 at 8 decimals (last RedStone DOGE value seen on Chikyu)
-        dex = new DogeDEX(items, IPriceFeed(address(feed)));
+        staking = new DogeStaking();
+        dex = new DogeDEX(items, IPriceFeed(address(feed)), treasury, address(staking));
         vm.deal(alice, 100 ether);
         vm.deal(bob, 100 ether);
         vm.prank(alice);
@@ -83,14 +86,17 @@ contract DogeDEXTest is Test {
         vm.prank(bob);
         dex.buy{value: 2 ether}(id);
         assertEq(items.ownerOf(id), bob);
-        assertEq(dex.proceeds(alice), 2 ether);
+        // 1% protocol fee: seller nets 1.98, project 0.2% (0.004), stakers 0.8% (0.016). D-030.
+        assertEq(dex.proceeds(alice), 1.98 ether);
+        assertEq(dex.proceeds(treasury), 0.004 ether);
+        assertEq(dex.stakerFees(), 0.016 ether);
         (packed,,) = dex.activeListings(0, 100);
         assertEq(packed.length, 0);
 
         uint256 before = alice.balance;
         vm.prank(alice);
         dex.withdraw();
-        assertEq(alice.balance - before, 2 ether);
+        assertEq(alice.balance - before, 1.98 ether);
         vm.prank(alice);
         vm.expectRevert(DogeDEX.NothingToWithdraw.selector);
         dex.withdraw();
@@ -228,8 +234,8 @@ contract DogeDEXTest is Test {
         dex.buy{value: 1 ether}(id);
         uint256 dexBal = address(dex).balance;
         r.pull();
-        assertEq(address(r).balance, 1 ether, "paid once");
-        assertEq(address(dex).balance, dexBal - 1 ether);
+        assertEq(address(r).balance, 0.99 ether, "paid once"); // seller nets 1% less (protocol fee, D-030)
+        assertEq(address(dex).balance, dexBal - 0.99 ether);
         assertEq(dex.proceeds(address(r)), 0);
     }
 
@@ -372,7 +378,7 @@ contract DogeDEXTest is Test {
     }
 
     function test_NoOracleConfigured() public {
-        DogeDEX bare = new DogeDEX(items, IPriceFeed(address(0)));
+        DogeDEX bare = new DogeDEX(items, IPriceFeed(address(0)), treasury, address(staking));
         (uint256 p,, bool fresh) = bare.dogeUsd();
         assertEq(p, 0);
         assertFalse(fresh);
@@ -383,5 +389,37 @@ contract DogeDEXTest is Test {
         vm.prank(alice);
         dex.addLiquidity{value: 10 ether}(ids, 0);
         assertEq(dex.poolTvlUsd(FISH_KEY), 2 * 10 * 7164240); // 20 DOGE of value * $0.0716 (8 dec)
+    }
+
+    /// 1% protocol fee on a pool swap splits 0.2% project / 0.8% stakers and flushes into the staking vault (D-030).
+    function test_ProtocolFeeSplitsAndFlushesToStakers() public {
+        uint256[] memory ids = _fish(alice, 4);
+        vm.prank(alice);
+        dex.addLiquidity{value: 4 ether}(ids, 0); // 4 fish + 4 DOGE pool
+        // bob stakes so he earns the holders' fee share
+        vm.prank(bob);
+        staking.stake{value: 1 ether}();
+
+        uint256 q = dex.buyQuote(FISH_KEY); // pool price + 1%
+        vm.prank(bob);
+        uint256 tid = dex.buyFromPool{value: q}(FISH_KEY);
+
+        uint256 projFee = dex.proceeds(treasury);
+        uint256 stkFee = dex.stakerFees();
+        assertGt(stkFee, 0);
+        assertApproxEqAbs(stkFee, projFee * 4, 8); // 0.8% : 0.2% = 4 : 1
+
+        uint256 flushed = stkFee;
+        dex.flushStakerFees();
+        assertEq(dex.stakerFees(), 0);
+        assertEq(staking.totalRewards(), flushed);
+        assertApproxEqAbs(staking.pendingRewards(bob), flushed, 1e9); // sole staker gets it (accumulator dust aside)
+
+        // selling the item back also pays the protocol fee (seller nets 1% less)
+        uint256 net = dex.sellQuote(FISH_KEY);
+        vm.prank(bob);
+        uint256 got = dex.sellToPool(tid, net);
+        assertEq(got, net);
+        assertGt(dex.stakerFees(), 0);
     }
 }

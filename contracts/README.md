@@ -7,6 +7,9 @@ Two contracts, built and tested with Foundry. Design notes are in `docs/DECISION
 | `src/DogeItems.sol` | ERC-721 (OpenZeppelin v5.1). The Mechanic mints gear and food: `mint(to, itemType, level)` with an **exact 0.1 DOGE fee** that goes to the treasury. Metadata (JSON + SVG card) is fully on-chain. ERC721Enumerable. `inventoryOf(owner)` (O(balance)) returns packed `(id<<16 \| type<<8 \| level)`. `burn(id)` uses an item up. |
 | `src/DogeDEX.sol` | The Sphinx DEX. **Listings**: `list`, `buy` (exact price), `delist`. **Pools (LP with DOGE)**: one pool per (type, level). `addLiquidity(ids[], minShares)` + DOGE gives shares (first LP: 1e18 per item, min 0.001 DOGE), `removeLiquidity(key, shares, minItems, minDoge)`, `buyFromPool` / `sellToPool` on a constant-product curve with a 2% fee for LPs. Listings paginated: `activeListings(offset, limit)`, `listedCount()`. Pull payments: `withdraw()`. No admin. Nothing is for sale until a player creates it. Audited in D-022. **RedStone oracle (D-024):** `dogeUsd()` (never reverts; `fresh=false` if missing/stale) and `poolTvlUsd(key)`, display only. Feed set at deploy: env `DOGE_USD_FEED`, else RedStone DOGE `0x434F8D17c0301cfEa143dba912972E24B827C968` on Chikyū, else a mock on anvil. |
 | `src/DogeProfession.sol` | The faction/class registry (D-027). `choose(uint8)` picks **1 WARRIOR / 2 ARCHER / 3 HEALER**, payable with an exact fee (env `PROF_FEE_WEI`, default 0.05 DOGE), **one per wallet forever**. The game reads `professionOf(addr)` to drive your mechanic + skill. `roster()` = (warriors, archers, healers). Pull-payment treasury (`withdraw`). `ReentrancyGuard`. No admin. |
+| `src/DogeStaking.sol` | Stake DOGE, earn the holders' share of DEX fees (D-030). `stake()` / `unstake(amount)` / `claim()` / `pendingRewards(addr)`, MasterChef accumulator, pull-style payouts, `receive()` credits rewards. No admin, no lockup. |
+
+**DEX protocol fee (D-030):** every DogeDEX trade pays a **1% protocol fee** on top of the 2% LP fee, split **0.2% to the project treasury** and **0.8% to DOGE stakers**. It is skimmed outside the pool reserves, so the constant-product curve, k-invariant and solvency are unchanged. `flushStakerFees()` pushes the stakers' slice into `DogeStaking`. The DEX constructor takes `(items, feed, treasury, stakingPool)`.
 
 Item types: 1 HAMMER (lv 1-4) · 2 ARMOR (lv 1-2) · 3 RAW FISH · 4 COOKED FISH · 5 BONE CHARM · 6 MOON BISCUIT (lv 1).
 
@@ -15,7 +18,7 @@ Item types: 1 HAMMER (lv 1-4) · 2 ARMOR (lv 1-2) · 3 RAW FISH · 4 COOKED FISH
 cd contracts
 forge install foundry-rs/forge-std --no-git
 forge install OpenZeppelin/openzeppelin-contracts@v5.1.0 --no-git
-forge test            # 37 tests incl. 3 fuzz tests, 5 audit regressions, 3 oracle tests, 9 profession tests (k never drops, DEX stays solvent)
+forge test            # 45 tests incl. 4 fuzz tests, 5 audit regressions, 3 oracle, 9 profession, 7 staking (k never drops, DEX stays solvent)
 ```
 
 ## Try it locally (no wallet, no real DOGE)

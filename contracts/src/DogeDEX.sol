@@ -19,8 +19,16 @@ contract DogeDEX is ReentrancyGuard {
     /// @notice RedStone DOGE/USD push feed (Chainlink-compatible). Display and USD views only: swap prices always come from
     ///         the pool reserves, never from the oracle (D-024). address(0) = no oracle.
     IPriceFeed public immutable dogeUsdFeed;
+    /// @notice Project treasury: gets the 0.2% project cut of every trade (collected with withdraw()). D-030.
+    address public immutable treasury;
+    /// @notice DogeStaking vault: gets the 0.8% stakers' cut via flushStakerFees(). address(0) => that cut also goes to treasury.
+    address public immutable stakingPool;
     uint256 public constant ORACLE_MAX_AGE = 1 days; // RedStone DogeOS heartbeat is 24 h
     uint256 public constant FEE_BPS = 200; // 2% swap fee, kept by the pool (LPs)
+    uint256 public constant PROTO_FEE_BPS = 100; // 1% protocol fee on every trade (D-030), on TOP of the pool curve
+    uint256 public constant PROJECT_BPS = 20; // 0.2% of the trade to the project treasury
+    uint256 public constant STAKER_BPS = 80; // 0.8% of the trade to DOGE stakers
+    uint256 public stakerFees; // DOGE accrued for stakingPool, pushed out by flushStakerFees()
     uint256 public constant BPS = 10_000;
     uint256 public constant SHARES_PER_ITEM = 1e18; // first LP: shares scale with items, so S >> y (audit D-022)
     uint256 public constant MIN_FIRST_DOGE = 0.001 ether; // no dust-priced pools
@@ -75,9 +83,38 @@ contract DogeDEX is ReentrancyGuard {
     error NothingToWithdraw();
     error TransferFailed();
 
-    constructor(DogeItems items_, IPriceFeed feed_) {
+    constructor(DogeItems items_, IPriceFeed feed_, address treasury_, address stakingPool_) {
         items = items_;
         dogeUsdFeed = feed_;
+        treasury = treasury_ == address(0) ? msg.sender : treasury_;
+        stakingPool = stakingPool_;
+    }
+
+    /// @dev Split a trade `base` into the project (0.2%) and staker (0.8%) protocol-fee slices.
+    function _protoSplit(uint256 base) internal pure returns (uint256 proj, uint256 stk) {
+        proj = (base * PROJECT_BPS) / BPS;
+        stk = (base * STAKER_BPS) / BPS;
+    }
+
+    /// @dev Accrue the protocol fee for a trade of size `base`. Project slice -> treasury proceeds; staker slice ->
+    ///      stakerFees (or treasury if no staking pool). Returns the total protocol fee taken.
+    function _accrueProto(uint256 base) internal returns (uint256) {
+        (uint256 proj, uint256 stk) = _protoSplit(base);
+        if (proj > 0) proceeds[treasury] += proj;
+        if (stk > 0) {
+            if (stakingPool == address(0)) proceeds[treasury] += stk;
+            else stakerFees += stk;
+        }
+        return proj + stk;
+    }
+
+    /// @notice Push the stakers' accrued fee share into the staking vault (permissionless). No-op if nothing/no pool.
+    function flushStakerFees() external nonReentrant returns (uint256 amt) {
+        amt = stakerFees;
+        if (amt == 0 || stakingPool == address(0)) return 0;
+        stakerFees = 0;
+        (bool ok,) = stakingPool.call{value: amt}("");
+        if (!ok) revert TransferFailed(); // revert restores stakerFees
     }
 
     function keyOf(uint256 tokenId) public view returns (uint256) {
@@ -112,8 +149,9 @@ contract DogeDEX is ReentrancyGuard {
         if (l.seller == address(0)) revert NotListed(tokenId);
         if (msg.value != l.price) revert WrongPayment(msg.value, l.price);
         _unlist(tokenId);
-        proceeds[l.seller] += msg.value;
-        emit Bought(tokenId, msg.sender, l.seller, msg.value);
+        uint256 proto = _accrueProto(l.price); // 1% protocol fee out of the sale (D-030)
+        proceeds[l.seller] += l.price - proto;
+        emit Bought(tokenId, msg.sender, l.seller, l.price);
         items.transferFrom(address(this), msg.sender, tokenId);
     }
 
@@ -174,21 +212,37 @@ contract DogeDEX is ReentrancyGuard {
         }
     }
 
-    /// @notice DOGE needed to buy one item now (0 if not possible). cost = ceil(x / (y-1)), plus the fee.
-    function buyQuote(uint256 key) public view returns (uint256) {
+    /// @dev Pool-side DOGE to buy one item: ceil(x/(y-1)) + 2% LP fee. 0 if the pool can't sell (keeps k > 0).
+    function _poolBuy(uint256 key) internal view returns (uint256) {
         Pool storage p = _pools[key];
         uint256 y = p.ids.length;
-        if (y < 2) return 0; // the last item can never be bought (keeps k > 0)
+        if (y < 2) return 0;
         uint256 cost = (p.doge + (y - 2)) / (y - 1); // ceil(x/(y-1))
         return cost + (cost * FEE_BPS) / BPS;
     }
 
-    /// @notice DOGE paid for selling one item now (0 if no pool). out = floor(x / (y+1)), minus the fee.
-    function sellQuote(uint256 key) public view returns (uint256) {
+    /// @dev Pool-side DOGE paid for selling one item: floor(x/(y+1)) - 2% LP fee. 0 if no pool.
+    function _poolSell(uint256 key) internal view returns (uint256) {
         Pool storage p = _pools[key];
         if (p.shares == 0) return 0;
         uint256 out = p.doge / (p.ids.length + 1);
         return out - (out * FEE_BPS) / BPS;
+    }
+
+    /// @notice Total DOGE a buyer sends to buy one item now: pool price + 1% protocol fee. 0 if not possible.
+    function buyQuote(uint256 key) public view returns (uint256) {
+        uint256 pp = _poolBuy(key);
+        if (pp == 0) return 0;
+        (uint256 proj, uint256 stk) = _protoSplit(pp);
+        return pp + proj + stk;
+    }
+
+    /// @notice Net DOGE a seller receives for selling one item now: pool payout - 1% protocol fee. 0 if no pool.
+    function sellQuote(uint256 key) public view returns (uint256) {
+        uint256 ps = _poolSell(key);
+        if (ps == 0) return 0;
+        (uint256 proj, uint256 stk) = _protoSplit(ps);
+        return ps - proj - stk;
     }
 
     /// @notice Deposit NFTs of ONE (type, level) plus DOGE. The first deposit sets the price (>= MIN_FIRST_DOGE) and gets
@@ -257,14 +311,15 @@ contract DogeDEX is ReentrancyGuard {
     function buyFromPool(uint256 key) external payable nonReentrant returns (uint256 tokenId) {
         Pool storage p = _pools[key];
         if (p.shares == 0) revert PoolMissing(key);
-        uint256 price = buyQuote(key);
-        if (price == 0) revert PoolTooThin(key);
-        if (msg.value < price) revert NotEnoughDoge(msg.value, price);
-        p.doge += price;
-        if (msg.value > price) proceeds[msg.sender] += msg.value - price;
+        uint256 pp = _poolBuy(key);
+        if (pp == 0) revert PoolTooThin(key);
+        uint256 total = pp + _accrueProto(pp); // pool price + 1% protocol fee (D-030)
+        if (msg.value < total) revert NotEnoughDoge(msg.value, total);
+        p.doge += pp; // only the pool price enters the reserve; curve/k unchanged from the audit
+        if (msg.value > total) proceeds[msg.sender] += msg.value - total;
         tokenId = p.ids[p.ids.length - 1];
         p.ids.pop();
-        emit SwapBuy(key, msg.sender, tokenId, price);
+        emit SwapBuy(key, msg.sender, tokenId, total);
         items.transferFrom(address(this), msg.sender, tokenId);
     }
 
@@ -273,10 +328,11 @@ contract DogeDEX is ReentrancyGuard {
         uint256 key = keyOf(tokenId);
         Pool storage p = _pools[key];
         if (p.shares == 0) revert PoolMissing(key);
-        payout = sellQuote(key);
-        if (payout == 0) revert ZeroPayout(); // selling for 0 would inflate y for free (audit D-022)
+        uint256 ps = _poolSell(key);
+        if (ps == 0) revert ZeroPayout(); // selling for 0 would inflate y for free (audit D-022)
+        payout = ps - _accrueProto(ps); // net to the seller after the 1% protocol fee (D-030)
         if (payout < minOut) revert Slippage(payout, minOut);
-        p.doge -= payout;
+        p.doge -= ps; // full pool payout leaves the reserve; curve/k unchanged from the audit
         p.ids.push(tokenId);
         proceeds[msg.sender] += payout;
         emit SwapSell(key, msg.sender, tokenId, payout);

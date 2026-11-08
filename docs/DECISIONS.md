@@ -35,6 +35,36 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-030 · 2026-11-08 · Staking + a 1% DEX protocol fee (0.2% project / 0.8% stakers) — contracts (Phase 5 part 4/N)
+- Feature: `contracts/src/DogeStaking.sol` (new) — stake DOGE, earn the holders' share of DEX fees. MasterChef accumulator
+  (`accRewardPerShare`, `rewardDebt`, pull-style `claim`), `stake/unstake/claim`, `pendingRewards`, `totalStaked`; `receive()`
+  credits any DOGE sent as reward; orphaned rewards (fees that arrive with zero stakers) held in `residual` and folded in on the
+  next stake. `DogeDEX` gains a **1% protocol fee on every trade** (`PROTO_FEE_BPS=100`), split **0.2% to the project treasury**
+  (`PROJECT_BPS=20`) and **0.8% to stakers** (`STAKER_BPS=80`), skimmed ON TOP of the pool curve: `buyFromPool` takes it on top of
+  the pool price, `sellToPool`/`buy` take it out of the seller's payout. Pool reserves (`p.doge`) move by exactly the old
+  pool price/payout, so the audited curve, k-invariant and solvency are byte-for-byte unchanged. `flushStakerFees()` (permissionless)
+  pushes the stakers' accrued slice into the staking vault. Public `buyQuote/sellQuote` now include the fee; internal `_poolBuy/_poolSell`
+  hold the untouched pool math. New constructor args `(treasury, stakingPool)`; `Deploy.s.sol` deploys staking first, then the DEX.
+- Why: User: "you can stake doge and you get a fee from the transactions on the dex ... a 0.2% goes to the project funds pool and the
+  rest ... 0.8% goes to holders." Keeping the fee OFF the reserves preserves the D-022 audit guarantees (the alternative — taking it
+  from reserves — would change k and the LP economics and void the audit).
+- Files: `contracts/src/DogeStaking.sol` (new), `contracts/src/DogeDEX.sol` (fee + split + flush + quote refactor),
+  `contracts/script/Deploy.s.sol` (+staking, records `stake`), `contracts/test/DogeStaking.t.sol` (new, 7 incl. a fuzz),
+  `contracts/test/DogeDEX.t.sol` (2 value assertions updated for the fee + 1 new fee-flow test), `contracts/README.md`.
+- Bug caught by tests: the first staker after a dry spell got nothing because `residual` was folded into the accumulator AFTER
+  setting their `rewardDebt`. Fix: set the debt BEFORE folding, so they are entitled to the orphaned rewards (`test_RewardWithNoStakersBecomesResidualThenPaid`).
+- Tool: Claude Code (Opus 4.8), Foundry 1.5.1, `solidity-security`. 45 forge tests pass (was 37: +7 staking, +1 DEX fee flow).
+  Selectors (cast sig): stake 0x3a4b66f1 · unstake(uint256) 0x2e17de78 · claim 0x4e71d92d · pendingRewards(address) 0x31d7a262 ·
+  staked(address) 0x98807d84 · totalStaked 0x817b1cd2 · flushStakerFees 0x6811406e · stakerFees 0x67f7cf97.
+- Alternatives rejected: fee taken from pool reserves (changes k, voids the audit); external call to the staking vault during each
+  swap (reentrancy/DoS surface → accrue-and-flush instead); a settable fee/treasury (kept them immutable, no admin, like the rest).
+- Verify: `forge test` → 45 passed, 0 failed; pool-invariant fuzz + solvency still green (curve unchanged).
+- Next: game wiring (Sphinx on-chain staking rows: stake/unstake/claim/flush, show pending rewards), then redeploy the full set
+  (items, dex, prof, staking) to Chikyu and re-wire `CONTRACTS['0x5fdaf3']`.
+- Commit: this commit.
+
+---
+
 ### D-029 · 2026-11-08 · Signature class skills: GROUND POUND / QUICK SHOT / MEND (Phase 5 part 3/N)
 - Feature: K/Q (the WOW bark) now runs your class's signature skill when you have a class, via `useSkill()`:
   - **WARRIOR → GROUND POUND** (12 MP): a radial shockwave that damages and knocks back every cat within ~46 px, + screen shake and a ring of embers.

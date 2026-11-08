@@ -5,6 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {DogeItems} from "../src/DogeItems.sol";
 import {DogeDEX} from "../src/DogeDEX.sol";
 import {DogeProfession} from "../src/DogeProfession.sol";
+import {DogeStaking} from "../src/DogeStaking.sol";
 import {IPriceFeed} from "../src/IPriceFeed.sol";
 import {MockPriceFeed} from "../src/mocks/MockPriceFeed.sol";
 
@@ -15,7 +16,7 @@ import {MockPriceFeed} from "../src/mocks/MockPriceFeed.sol";
 /// Chikyu:  cast wallet import dogeon --interactive   (your key stays in the encrypted Foundry keystore, never in a file)
 ///          forge script script/Deploy.s.sol --rpc-url chikyu --broadcast --account dogeon --sender <your address>
 contract Deploy is Script {
-    function run() external returns (DogeItems items, DogeDEX dex, DogeProfession prof) {
+    function run() external returns (DogeItems items, DogeDEX dex, DogeProfession prof, DogeStaking staking) {
         uint256 fee = vm.envOr("MINT_FEE_WEI", uint256(0.1 ether));
         uint256 profFee = vm.envOr("PROF_FEE_WEI", uint256(0.05 ether));
         vm.startBroadcast();
@@ -26,13 +27,15 @@ contract Deploy is Script {
         address feed = vm.envOr("DOGE_USD_FEED", address(0));
         if (feed == address(0) && block.chainid == 6281971) feed = 0x434F8D17c0301cfEa143dba912972E24B827C968;
         if (feed == address(0) && block.chainid == 31337) feed = address(new MockPriceFeed(7164240));
-        dex = new DogeDEX(items, IPriceFeed(feed));
+        staking = new DogeStaking(); // stake DOGE, earn the 0.8% holders' share of DEX fees (D-030)
+        dex = new DogeDEX(items, IPriceFeed(feed), treasury, address(staking)); // 0.2% project / 0.8% stakers
         prof = new DogeProfession(profFee, treasury); // one class per wallet, paid (D-027)
         vm.stopBroadcast();
 
         console.log("DogeItems ", address(items));
         console.log("DogeDEX   ", address(dex));
         console.log("DogeProf  ", address(prof));
+        console.log("DogeStake ", address(staking));
         string memory j = "deploy";
         vm.serializeUint(j, "chainId", block.chainid);
         vm.serializeUint(j, "mintFee", fee);
@@ -40,6 +43,7 @@ contract Deploy is Script {
         vm.serializeAddress(j, "items", address(items));
         vm.serializeAddress(j, "dogeUsdFeed", address(dex.dogeUsdFeed()));
         vm.serializeAddress(j, "prof", address(prof));
+        vm.serializeAddress(j, "stake", address(staking));
         string memory out = vm.serializeAddress(j, "dex", address(dex));
         vm.writeJson(out, string.concat("deployments/", vm.toString(block.chainid), ".json"));
     }
