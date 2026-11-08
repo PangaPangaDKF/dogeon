@@ -179,6 +179,46 @@
   after any contract/CHAIN change or redeploy). A mock can't catch a wrong selector, a fee-order bug or a bad deploy.
 - **Enforced by:** `scripts/e2e-chikyu.sh` (run it after every redeploy and before a release / TryNoah handoff).
 
+### L-019 · 2026-11-08 · Claude Code · a "missed" negative test can be the test's bug
+- **What happened:** To prove the new rule "`WebSocket` only inside MULTIPLAYER", I planted a leak *before* the `UPDATE`
+  marker. The rule "missed" it — because that line sits at the tail of the MULTIPLAYER section, where it is allowed. The rule
+  was right; the test was wrong. "Fixing" the rule would have broken it.
+- **RULE:** When a negative test passes unexpectedly, **print where the fault landed** (e.g. `grep -n -B1`) before touching
+  the rule. Plant faults in at least two different places (I re-ran with leaks inside UPDATE and inside CORE: both caught).
+- **Enforced by:** this entry + the D-040 negative tests recorded in `docs/DECISIONS.md`.
+
+### L-020 · 2026-11-08 · Claude Code · "differs from HEAD" ≠ "my test touched it"; Git Bash /tmp ≠ Windows /tmp
+- **What happened:** After running negative tests on a copy, `git diff --quiet index.html` said the real file "changed" — a
+  false alarm, because it legitimately held my uncommitted feature. Separately, native Windows `node` could not open
+  `/tmp/neg.html` (Git Bash maps `/tmp` elsewhere; node looked for `C:\tmp`).
+- **RULE:** To prove a test didn't contaminate a file, grep for the **specific fault marker**, not for "any diff". For files
+  shared between Git Bash and native tools, use the session scratchpad path (or `cygpath -w`), never `/tmp`.
+- **Enforced by:** this entry.
+
+### L-021 · 2026-11-08 · Claude Code (found in Antigravity's tooling) · a documented check that does not exist
+- **What happened:** The D-034 handoff says `audit-scan.mjs` checks forbidden APIs (`fetch`, `WebSocket`, …). Its code does
+  not — it checks line budget, selector parity, collisions and sim coverage. The only real enforcement is `tests/check.sh`
+  stage 1. Anyone trusting the description would have assumed double coverage.
+- **RULE:** Before relying on a check, **read its code or make it fail once.** A doc claim is not a guard.
+- **Action for Antigravity:** either add the forbidden-API scan to `audit-scan.mjs` (scoping `WebSocket` to MULTIPLAYER the
+  way `check.sh` does) or correct the description in `CLAUDE_CODE_HANDOFF.md` / the `analyzer-master` skill.
+
+### L-022 · 2026-11-08 · Claude Code · name collisions by MEANING, not just by syntax
+- **What happened:** The multiplayer state was first named `mp` / `MP_*` / `mpTick`. It compiled fine — but `mp` already
+  means **mana** in 48 places (`P.mp`, `SKILL_MP`, `noMp`, `maxMp`). A reader, Antigravity or a TryNoah rebuild could easily
+  conflate "multiplayer" with "mana points".
+- **RULE:** When naming, grep for **semantic** collisions (same abbreviation, different meaning), not only identifier
+  clashes. Pick a free namespace — here `net*` / `NET_*` (the URL param stays `?mp=` because it is user-facing and unambiguous).
+- **Enforced by:** `CLAUDE.md` code map + `AGENTS.md` §1 note ("`mp` means mana").
+
+### L-023 · 2026-11-08 · Claude Code · new features must not shift a seeded RNG
+- **What happened (avoided by design):** the sim seeds `Math.random`; many checks depend on exact seeded outcomes
+  ("29 enemies at 648,600", "ninjas 37%", "min 217.6 px"). Generating the multiplayer id at load would have consumed one
+  random number in *every* game and shifted all of them.
+- **RULE:** A feature that needs randomness must draw it **lazily, only when the feature is enabled**. Then spot-check that
+  seeded values are byte-identical before and after (they were).
+- **Enforced by:** the lazy `net.id` in `netConnect()`; the D-040 determinism spot-check.
+
 ---
 
 ## Final Conclusions (the distilled decision rules for BOTH brains)
@@ -201,3 +241,7 @@
 10. **Prove the bug before fixing it, and fix the class, not the instance** — then encode the class as a rule here.
 11. **Mocks prove logic; only the live chain proves deployment.** Run `scripts/e2e-chikyu.sh` after any contract or CHAIN change.
     A tool warning about changed files is a cue to run the collision check, not a verdict. (L-017, L-018)
+12. **Verify the verifier.** A negative test that "passes" may have planted the fault in the wrong place; a documented
+    check may not exist; "differs from HEAD" may be your own legit work. Make each check fail once on purpose. (L-019..L-021)
+13. **Names carry meaning; randomness carries state.** Grep new names for semantic clashes (`mp` = mana) and keep new
+    features off the seeded RNG unless enabled. (L-022, L-023)

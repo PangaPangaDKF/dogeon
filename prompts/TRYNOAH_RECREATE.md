@@ -126,6 +126,7 @@ the addresses baked into `index.html` are live and correct.
 - [ ] `node scripts/trynoah-manifest.mjs --verify` exits 0.
 - [ ] After any redeploy: `bash scripts/e2e-chikyu.sh` → all PASS (fee split 1:4 on-chain).
 - [ ] No legacy DOGE-shop constants (`SWORD_COST`/`ARMOR_COST` were removed in D-039 — gear comes only from forge `RECIPES`).
+- [ ] Multiplayer stays **off** without `?mp=`; with it, two browser tabs on the same relay see each other (§5b).
 
 ---
 
@@ -147,6 +148,28 @@ node scripts/trynoah-manifest.mjs --out docs/RECREATION_MANIFEST.md   # refresh 
 before `DogeDEX` (the DEX takes `stakingPool` as an immutable constructor arg).
 
 ---
+
+## 5b. Multiplayer option (D-040) — optional, self-hosted, costs Noah nothing
+
+`index.html` already contains an **opt-in** multiplayer mode that is **off by default**, so a Path-A deploy needs no
+extra work and makes zero network calls unless a player opts in.
+
+- **Turn it on:** open the game with `?mp=wss://YOUR-RELAY&room=heist&name=YOU`. Up to 8 players per room (env
+  `MAX_ROOM`) see each other's doge: class sprite, facing, walk animation, HP bar and name.
+- **Host the relay (zero dependencies):** `node server/relay.mjs` → one process serves **both** the game page and the
+  WebSocket relay on `:8787`. Local test with friends on the same network: `http://<your-ip>:8787/?mp=ws://<your-ip>:8787`.
+  On the internet, the page must use `wss://` → run the relay behind TLS (Caddy/nginx) or on a host that terminates TLS
+  (Render, Fly.io, Railway, a VPS). Health check: `GET /health`.
+- **What it is NOT:** shared enemies, shared loot and server-side combat. Those need an *authoritative* server (the
+  open-source path is [Colyseus](https://github.com/colyseus/colyseus), MIT, self-hostable) and were deliberately left out:
+  too expensive to build before the deadline. Serverless P2P alternative: [Trystero](https://github.com/dmotz/trystero)
+  (MIT) — rejected because it is a library and would break the zero-dependency rule.
+- **Protocol (for a Path-B rebuild):** client → `{t:'join',room,id}` once, then `{t:'st',id,x,y,d,m,c,h,n,dead}` at 10 Hz;
+  relay → other players' `st` messages and `{t:'bye',id}` / `{t:'full'}`. The relay only forwards a client's **own** id
+  (no spoofing). Clients must treat peer data as untrusted (whitelist ids, finite coords, sanitized names, capped peers).
+- **Proof:** `node tests/relay.mjs` (real WebSocket clients: 3 players see each other, room isolation, anti-spoof, room
+  cap, bye) and the sim's D-040 scenario (off by default, opt-in relays state, hostile data rejected). Both run in
+  `tests/check.sh` (stages 3 and 6).
 
 ## 5. Publishing the GitHub repo
 

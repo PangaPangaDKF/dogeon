@@ -35,6 +35,7 @@ function makeSandbox(opts = {}) {
   const sb = {
     console, setTimeout: opts.realTimers ? setTimeout : () => 0, clearTimeout() {},
     location: { search: opts.search || '' },
+    ...(opts.WebSocket ? { WebSocket: opts.WebSocket } : {}), // D-040: inject a mock socket; absent = no WebSocket global
     performance: { now: () => 0 },
     innerWidth: 960, innerHeight: 672,
     // no AudioContext -> sfx() hits its try/catch and stays silent; window.open is a spy (links never leave the test)
@@ -68,6 +69,7 @@ globalThis.__api = {
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
   CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy,
+  net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
   applyClass, syncMaxHp,
 };`;
@@ -1097,6 +1099,50 @@ scenario('D-035: boss summon aggro (I-3), spawnEnemy >= 200px (I-4), title parti
   const nearState = minion.state;
   if (farState !== 'wander' || nearState !== 'chase') fail('boss minion aggro', `far=${farState} near=${nearState}`);
   else pass('boss minion aggro', 'boss-summoned cat wanders when player leaves boss room, chases inside boss room');
+});
+
+scenario('D-040 multiplayer option: off by default, opt-in ?mp relays state, hostile peer data sanitized, ghosts drop on silence', () => {
+  // 1. default: no ?mp -> no socket ever built (single-player + sandboxed publish unchanged)
+  let built = 0;
+  class SpyWS { constructor() { built++; } }
+  const off = boot(SEED + 40, { WebSocket: SpyWS }); startGame(off);
+  for (let i = 0; i < 60; i++) off.step(DT);
+  if (built === 0 && off.NET_URL === '') pass('net off by default', 'no ?mp -> zero WebSocket constructions, zero network');
+  else fail('net off by default', `built=${built} url=${off.NET_URL}`);
+
+  // 2. opt-in: connects to the given relay, joins the room, broadcasts own state at ~10 Hz
+  const sent = []; let sock = null;
+  class FakeWS { constructor(url) { this.url = url; this.readyState = 0; sock = this; } send(s) { sent.push(JSON.parse(s)); } close() { this.readyState = 3; if (this.onclose) this.onclose(); } }
+  const api = boot(SEED + 41, { WebSocket: FakeWS, search: '?mp=ws%3A%2F%2Frelay.test%3A8787&room=r1&name=al%20ice' }); startGame(api);
+  api.step(DT);
+  if (!sock || sock.url !== 'ws://relay.test:8787') { fail('net connect', 'no socket or wrong url: ' + (sock && sock.url)); return; }
+  sock.readyState = 1; sock.onopen();
+  for (let i = 0; i < 30; i++) api.step(DT); // 0.5 s -> ~5 state messages at 10 Hz
+  const join = sent.find(m => m.t === 'join'), sts = sent.filter(m => m.t === 'st');
+  if (join && join.room === 'r1' && sts.length >= 3 && sts.every(m => Number.isFinite(m.x) && m.n === 'ALICE' && /^[a-z0-9]+$/.test(m.id)))
+    pass('net opt-in', `joined r1, ${sts.length} state msgs in 0.5 s, name sanitized "al ice" -> ALICE, wallet address never sent`);
+  else fail('net opt-in', JSON.stringify(sent.slice(0, 3)));
+
+  // 3. peer data is untrusted: one valid ghost accepted, hostile messages rejected or clamped
+  const msg = o => sock.onmessage({ data: typeof o === 'string' ? o : JSON.stringify(o) });
+  msg({ t: 'st', id: 'bob1', x: 700, y: 600, d: 'left', m: 1, c: 'warrior', h: 70, n: 'bob<script>', dead: 0 });
+  msg({ t: 'st', id: '__proto__', x: 1, y: 1 });                         // prototype-pollution attempt
+  msg({ t: 'st', id: 'evil', x: 'NaN', y: 1 });                           // non-finite coords
+  msg({ t: 'st', id: 'mal', x: 5, y: 5, c: 'constructor', d: 'sideways', h: 999, n: '' });
+  msg('{garbage');
+  const p = api.net.peers;
+  const okSan = p.bob1 && p.bob1.n === 'BOBSCRIPT' && p.bob1.c === 'warrior' && p.bob1.d === 'left'
+    && !Object.prototype.hasOwnProperty.call(p, 'evil') && Object.getPrototypeOf(p) === null
+    && p.mal && p.mal.c === '' && p.mal.d === 'down' && p.mal.h === 100 && p.mal.n === 'DOGE';
+  if (okSan) pass('net sanitize', 'ghost accepted; __proto__ / NaN / garbage rejected; class, dir, hp, name clamped');
+  else fail('net sanitize', JSON.stringify(Object.keys(p)) + ' ' + JSON.stringify(p.bob1) + ' ' + JSON.stringify(p.mal));
+
+  // 4. ghosts render in drawWorld without throwing; a peer silent for > NET_TTL seconds is dropped
+  try { for (let i = 0; i < 5; i++) api.step(DT); pass('net draw', 'ghost players render in the y-sorted world without errors'); }
+  catch (e) { fail('net draw', e.message); }
+  for (let i = 0; i < (api.NET_TTL + 1) * 60; i++) api.step(DT);
+  if (!Object.keys(api.net.peers).length) pass('net ttl', `silent peers drop after ${api.NET_TTL}s`);
+  else fail('net ttl', 'peers kept: ' + Object.keys(api.net.peers).join());
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

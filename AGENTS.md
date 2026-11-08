@@ -15,7 +15,7 @@
    - Commit with a Conventional Commit message (one logical feature/fix per commit).
 
 ## 1. Architecture & Stack Constraints
-- **Single-file game (`index.html`)**: Vanilla JS + HTML5 Canvas 2D (`320×224`, `16×16` tiles, `16×20` sprites, 3×5 uppercase pixel font). Zero external assets, zero build step, no `fetch`/`XMLHttpRequest`/`WebSocket`/`alert`/`confirm`/`prompt`.
+- **Single-file game (`index.html`)**: Vanilla JS + HTML5 Canvas 2D (`320×224`, `16×16` tiles, `16×20` sprites, 3×5 uppercase pixel font). Zero external assets, zero build step, no `fetch`/`XMLHttpRequest`/`alert`/`confirm`/`prompt`. **`WebSocket` is allowed ONLY in the opt-in `MULTIPLAYER` section, only with `?mp=`** (D-040; enforced by `tests/check.sh` stage 1 — do not move it elsewhere, and do not "fix" it away). Multiplayer identifiers are `net*`/`NET_*` because `mp` means mana.
 - **Web3 & DogeOS Chikyū Testnet (`chainId: 0x5fdaf3` / `6281971`)**: Plain EIP-1193 (`window.ethereum` / `window.bitkeep.ethereum`) in the `CHAIN` section only after player clicks `CONNECT`. Must remain 100% playable offline with no wallet.
 - **Smart Contracts (`contracts/`)**: Foundry (`solc 0.8.24`, `cancun`).
   - `DogeItems.sol`: ERC-721Enumerable items (1..6), exact `mintFee`, on-chain SVG `tokenURI`, `inventoryOf`.
@@ -63,7 +63,10 @@ Two agents work this repo. These rules exist because real collisions already hap
 
 ## 2. Verification Commands
 ```bash
-bash tests/check.sh          # Full suite: static checks + syntax + sim.mjs + forge test
-node tests/sim.mjs           # Fast headless simulation (88+ checks)
+bash tests/check.sh          # Full suite, 6 stages: static + syntax + sim.mjs + forge + recreation drift guard + relay
+node tests/sim.mjs           # Fast headless simulation (~115 checks)
+node tests/relay.mjs         # Multiplayer relay with REAL WebSocket clients (3 players, rooms, anti-spoof, cap)
+node server/relay.mjs        # Host multiplayer: serves the game + relay on :8787 (zero deps)
+DEPLOY_KEY=... bash scripts/e2e-chikyu.sh   # LIVE on-chain DeFi loop (after any contract/CHAIN change)
 node tests/sprites.mjs index.html tests/out/sprites.png  # Visual sprite sheet verification
 ```

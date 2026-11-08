@@ -35,6 +35,49 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-040 · 2026-11-08 · Opt-in multiplayer option: native-WebSocket ghost players + zero-dep self-hostable relay (Claude Code)
+- **Context / why (user):** *"the mmo rpg multiplayer too … at least 3 players or at least the option i can host a server for that
+  but you should just add the option not develop that because will be more expensive for noah and impossible to finish before the
+  dead line … implement it if there is a possibility, search for options on repos or posts for an open source option."*
+- **Research (sourced, see `prompts/TRYNOAH_RECREATE.md` §5b):** [Trystero](https://github.com/dmotz/trystero) (MIT, active —
+  serverless WebRTC P2P via public Nostr relays, optional self-hosted ws-relay); [Colyseus](https://github.com/colyseus/colyseus)
+  (MIT, self-hostable authoritative Node server: rooms + state sync); Socket.IO and small WebSocket relays.
+- **Decision:** a plain **WebSocket relay** + the browser's **native** `WebSocket`. It is the only option that adds **zero client
+  dependencies** (Trystero/Colyseus/Socket.IO all need a client library → would break the single-file rule), the relay is
+  ~110 lines with **no npm install**, and it delivers exactly "the option": up to 8 players per room see each other.
+  Colyseus is documented as the scale-up path for a real MMO (shared enemies/loot) — **not built**, per the user's cost/deadline call.
+- **What was built:**
+  1. `index.html` `MULTIPLAYER` section (+40 lines, 1313/1500): opt-in via `?mp=ws(s)://host&room=&name=`; `netTick` broadcasts
+     own state at 10 Hz (runs before the UI early-return, so you stay visible inside menus); `netDraw` adds ghosts to the y-sorted
+     world (class sprite via `frameOf`, name tag, HP bar); silent peers drop after 5 s. Two one-line hooks only, no `drawHUD` change
+     (that is in Antigravity's D-038).
+  2. `server/relay.mjs`: hand-written RFC 6455 server on Node's built-in `http`/`crypto`. Serves `index.html` **and** relays, so a
+     host runs one command for friends. Rooms, own-id-only relaying (anti-spoof), 1 KB payload cap, 20 msg/s rate limit, MAX_ROOM,
+     30 s idle drop, `/health`. Never sees a wallet or key.
+  3. `tests/relay.mjs` (new, check.sh **stage 6**): REAL WebSocket clients → 9/9 (3 players see each other, room isolation, no echo,
+     anti-spoof, garbage tolerated, 4th player refused at MAX_ROOM=3, bye, health, page served).
+  4. `tests/sim.mjs` D-040 scenario → 5/5 (off by default = zero sockets; opt-in joins + 10 Hz state; hostile peer data
+     rejected/clamped; ghosts render; TTL drop).
+  5. `tests/check.sh` stage 1 + `scripts/trynoah-manifest.mjs`: `WebSocket` **allowed only inside MULTIPLAYER** (like wallet
+     calls only in CHAIN, D-016); leaks anywhere else fail the build.
+- **Security / correctness choices:** peer data is untrusted → id whitelist `/^[a-z0-9]{1,12}$/` (blocks `__proto__`), peers map
+  is `Object.create(null)`, finite coords required, direction/class whitelisted, HP clamped, names sanitized to the pixel-font
+  charset (12 chars), peers capped at 32. **Privacy:** the default name is random `DOGE-XXX`; the wallet address is never sent.
+  **Determinism (L-023):** the net id is drawn lazily only when `?mp` is set, so seeded sims are byte-identical (verified:
+  29 enemies @648,600; ninjas 37 %; min spawn 217.6 px — unchanged). **Naming (L-022):** `net*`/`NET_*`, because `mp` = mana.
+- **Mistakes made and caught this cycle (→ LESSONS):** first negative test planted the leak inside the allowed section and
+  "missed" (L-019: the test was wrong, not the rule — re-ran with leaks in UPDATE and CORE, both caught); a "real file changed"
+  false alarm and a Git-Bash-`/tmp` path error (L-020); found that `audit-scan.mjs` doesn't actually do the forbidden-API scan its
+  docs describe (L-021, flagged to Antigravity).
+- **Alternatives rejected:** Trystero (library → breaks zero-deps; no "host your own server" story by default); Colyseus now (the
+  authoritative MMO the user said is too costly for the deadline — kept as the documented next step); Socket.IO (client library);
+  sharing enemies/loot through the dumb relay (would need server authority to be cheat-resistant).
+- **Verify:** `bash tests/check.sh` → **ALL CHECKS PASSED (6 stages)**; `node tests/relay.mjs` 9/9; sim 0 failed (≈115 checks).
+- **Tool:** Claude Code (Opus 5.5), WebSearch (3 queries), `analyzer-master` gate (`audit-scan`: 1314/1500, 0 collisions).
+- **Commit:** this commit.
+
+---
+
 ### D-039 · 2026-11-08 · Dead-code removal + LIVE on-chain E2E proof of the whole DeFi loop (Claude Code; D-038 reserved for Antigravity)
 - **Context / why:** User: *"remove dead code to remove weight"* and *"make sure that everything works as intended, the mint the
   pools the dex"*. The 110-check headless sim proves the game logic, but it drives a **mock** EIP-1193 provider — it cannot prove

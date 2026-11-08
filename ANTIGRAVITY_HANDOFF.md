@@ -22,6 +22,27 @@
 
 ---
 
+## 0b. NEW since the first version of this file — `D-040` multiplayer option (read before touching `update`/`drawWorld`)
+
+- **Shipped:** opt-in ghost multiplayer. `?mp=ws(s)://host&room=heist&name=YOU` → up to 8 players per room see each other's
+  doge (class sprite, facing, walk, HP, name). **Off by default — zero network without `?mp`.** Host: `node server/relay.mjs`
+  (zero deps; serves the game + relay on :8787). Proof: `tests/relay.mjs` 9/9 with REAL WebSocket clients (3 players), sim 5/5.
+- **Two one-line hooks live in YOUR lane's functions — please keep them when you edit there:**
+  - `update()`: `netTick(dt);` right after `updMarket(dt);` (before the UI early-return, so players stay visible in menus).
+  - `drawWorld()`: `netDraw(list,ox,oy);` right before `list.sort(...)` (ghosts join the y-sort).
+  I did **not** touch `drawHUD` (your D-038 HUD work is safe).
+- **Names:** `net*` / `NET_*` on purpose — `mp` means **mana** in 48 places. Please don't reintroduce `mp` for multiplayer.
+- **`tests/check.sh` is now 6 stages:** stage 1 allows `WebSocket` **only** inside the `MULTIPLAYER` section (like wallet calls
+  only in CHAIN); stage 6 runs the real relay test. Don't move `WebSocket` elsewhere and don't "fix" the rule away.
+- **Found in your tooling (L-021):** `audit-scan.mjs` doesn't actually scan forbidden APIs although its docs/handoff say it does.
+  Either add that scan (scope `WebSocket` to MULTIPLAYER exactly like `check.sh`) or fix the description. Your call — your lane.
+- **For your MASTER_PROMPT merge (§6):** add §G rows for **D-039** and **D-040**, plus one paragraph pointing to
+  `prompts/TRYNOAH_RECREATE.md` §5b for the multiplayer option/protocol (don't restate it — one source of truth).
+- **Not built (user's cost/deadline call):** shared enemies/loot/server combat. Next step if the user wants a real MMO:
+  Colyseus (MIT, self-hostable) — documented in the runbook, coordinate here before starting.
+
+---
+
 ## 1. What I did, and WHY
 
 ### D-037 — Reproducibility & release (`a599b97`)
@@ -72,7 +93,7 @@ These need **the user's** decision, not ours:
 |---|---|---|
 | **Delete `docs/art/` reference images** | 1.54 MB = **37% of the repo**, 0 code references. The user's own NPC source images (D-024). | Deleting the user's assets is their call. (Still in git history either way.) |
 | **Prune skill packs** | Every skill is mirrored in `.agents/` **and** `.claude/` (~2× weight). Out-of-scope packs: `rust-best-practices` (no Rust here, 212 KB), `game-design-document` (Python docx/pdf/pptx generators, 880 KB), `caveman-compress` (Python, 208 KB). | Some were **explicit user requests** (D-003), and the mirror is how *you* load skills. Removing them could break your tooling. |
-| **Multiplayer** | User wants "at least 3 players, or at least the option to host a server — just add the option, don't fully develop it", and asked us to research open-source options. | **Claude Code is taking this as `D-040`** (research + an opt-in option). Don't start a parallel implementation — collision risk. |
+| **Multiplayer → real MMO** | ✅ The *option* shipped in D-040 (ghosts, self-hosted relay, 3+ players proven). Still the user's call: a shared world (enemies/loot) needs an authoritative server (Colyseus) — the cost the user said to defer. | Don't build it without the user asking; coordinate here first. |
 
 ---
 
@@ -184,7 +205,7 @@ git log --oneline -1 && git diff --numstat       # HEAD moved? an additive edit 
 | 2 | Dead code (game) + live on-chain E2E of the full DeFi loop | Claude | ✅ D-039 |
 | 3 | Converge the 3 Noah prompt files into MASTER_PROMPT + runbook | **Antigravity** | ⏳ §6 |
 | 4 | Class balance, bag↔wallet clarity, BarkSwap feedback, HUD skill cost | **Antigravity** | ⏳ D-038 |
-| 5 | Multiplayer: research open-source options + an opt-in "host a server" option | Claude | ⏳ D-040 |
+| 5 | Multiplayer: research open-source options + an opt-in "host a server" option | Claude | ✅ D-040 |
 | 6 | Project weight (art + skill packs) | **User decides** | ❓ §3 |
 | 7 | GitHub repo | User (token) | 🔑 one command ready |
 | 8 | TryNoah deploy (Path A) + browser acceptance test | User / either | after 3–7 |
@@ -215,5 +236,7 @@ docs/RECREATION_MANIFEST.md` → update @MASTER_PROMPT.md → log D-038 in @docs
 
 RULES: claim D-NNN before coding; pre-commit `git log -1 && git diff --numstat`; append any error you hit to
 @docs/LESSONS.md as L-019+; leave a clean tree and update @CLAUDE_CODE_HANDOFF.md "CURRENT SNAPSHOT" with your next suggestion.
-Do NOT touch contracts/**, the CHAIN section, scripts/**, prompts/TRYNOAH_RECREATE.md, or multiplayer without coordinating here.
+Do NOT touch contracts/**, the CHAIN or MULTIPLAYER sections, server/**, scripts/**, prompts/TRYNOAH_RECREATE.md without
+coordinating here. KEEP the one-line hooks `netTick(dt);` in update() and `netDraw(list,ox,oy);` in drawWorld() when you edit those.
+The suite is 6 stages now (stage 6 = real multiplayer relay); all must pass.
 ```

@@ -31,6 +31,16 @@ Talk to a faction trainer in camp to pick a class. It is **free and local** with
   node tests/serve.mjs        # then open http://localhost:8080
   ```
 
+## Play with friends (optional multiplayer)
+One person hosts — no install needed, just Node:
+```bash
+node server/relay.mjs        # serves the game AND the relay on port 8787
+```
+Everyone opens `http://<host-ip>:8787/?mp=ws://<host-ip>:8787&room=heist&name=YOURNAME` and sees each other's doge
+(class, movement, HP, name). Up to 8 per room. Over the internet use `wss://` (put the relay behind HTTPS).
+Without `?mp=` the game is single-player and makes no network calls. Enemies and loot are not shared yet — each player
+fights their own cats.
+
 ## Controls
 | Key | Action |
 |---|---|

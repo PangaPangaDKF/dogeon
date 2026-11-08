@@ -1034,11 +1034,50 @@ function updateUI(dt){
   }
 }
 
+// ================= MULTIPLAYER (opt-in, D-040) =================
+// OFF unless the URL has ?mp=ws(s)://host[:port] (optional &room=NAME &name=NAME). Native browser WebSocket only: no library,
+// no CDN. Without ?mp the game makes ZERO network calls, so single-player and sandboxed publishing are unchanged.
+// Scope = "the option": up to NET_MAX players see each other's doge (class sprite, facing, walk, HP, name). Shared enemies and
+// loot need an authoritative server (e.g. Colyseus) and are deliberately NOT built. Host the relay: `node server/relay.mjs`.
+// Peer data is untrusted: ids are whitelisted (no __proto__), coords must be finite, names sanitized + capped, peers capped.
+const netParam=k=>{try{const m=location.search.match(new RegExp('[?&]'+k+'=([^&]+)'));return m?decodeURIComponent(m[1]):'';}catch(e){return '';}};
+const NET_URL=netParam('mp'),NET_ROOM=(netParam('room').match(/^[\w-]{1,24}$/)||['heist'])[0];
+const NET_HZ=10,NET_TTL=5,NET_MAX=8,NET_PEERS=32; // send rate, seconds before a silent peer drops, ghosts drawn, peers tracked
+const net={ws:null,on:false,id:'',name:'',peers:Object.create(null),t:0};
+const netClean=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9.\-]/g,'').slice(0,12);
+function netConnect(){
+  if(!NET_URL||typeof WebSocket==='undefined'||net.ws)return;
+  net.id=net.id||Math.random().toString(36).slice(2,8); // lazy: normal play never draws this random number (seeded sims stay identical)
+  net.name=net.name||netClean(netParam('name'))||'DOGE-'+net.id.slice(0,3).toUpperCase(); // never the wallet address (privacy)
+  try{const ws=new WebSocket(NET_URL);net.ws=ws;
+    ws.onopen=()=>{net.on=true;ws.send(JSON.stringify({t:'join',room:NET_ROOM,id:net.id}));toast('MULTIPLAYER: ROOM '+NET_ROOM.toUpperCase()+' AS '+net.name,2);};
+    ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
+      if(!m||typeof m.id!=='string'||!/^[a-z0-9]{1,12}$/.test(m.id)||m.id===net.id)return;
+      if(m.t==='bye'){delete net.peers[m.id];return;}
+      if(m.t!=='st'||!Number.isFinite(m.x)||!Number.isFinite(m.y))return;
+      if(!net.peers[m.id]&&Object.keys(net.peers).length>=NET_PEERS)return;
+      net.peers[m.id]={x:m.x,y:m.y,d:['down','up','left','right'].includes(m.d)?m.d:'down',m:!!m.m,c:Object.prototype.hasOwnProperty.call(CLASSES,m.c)?m.c:'',
+        h:Math.max(0,Math.min(100,m.h|0)),n:netClean(m.n)||'DOGE',dead:!!m.dead,seen:time};};
+    ws.onclose=()=>{net.on=false;net.ws=null;net.peers=Object.create(null);};
+  }catch(e){net.ws=null;}}
+function netTick(dt){ // from update(): broadcast own state at NET_HZ, drop silent peers
+  if(!NET_URL)return;
+  if(!net.ws)netConnect();
+  for(const k in net.peers)if(time-net.peers[k].seen>NET_TTL)delete net.peers[k];
+  net.t-=dt;if(net.t>0||!net.on||!net.ws||net.ws.readyState!==1)return;net.t=1/NET_HZ;
+  net.ws.send(JSON.stringify({t:'st',id:net.id,x:Math.round(P.x),y:Math.round(P.y),d:P.dir,m:P.moving?1:0,c:P.prof||'',h:Math.round(100*P.hp/P.maxHp),n:net.name,dead:P.dead?1:0}));}
+function netDraw(list,ox,oy){ // from drawWorld(): ghosts join the y-sorted entity list
+  let n=0;for(const k in net.peers){const g=net.peers[k];if(g.dead||++n>NET_MAX)continue;
+    list.push({y:g.y,f:()=>{drawChar(SPR[g.c?CLASSES[g.c].spr:'hero'],g.d,frameOf({dir:g.d,anim:time},g.m),g.x,g.y+4,1,ox,oy);
+      textC(g.n,Math.round(g.x-ox),Math.round(g.y-30-oy),'#80f0ff');
+      const bx=Math.round(g.x-7-ox),by=Math.round(g.y-22-oy);ctx.fillStyle='#000';ctx.fillRect(bx-1,by-1,16,4);ctx.fillStyle='#063';ctx.fillRect(bx,by,14,2);ctx.fillStyle='#3f8';ctx.fillRect(bx,by,Math.round(14*g.h/100),2);}});}}
+
 // ================= UPDATE =================
 function update(dt){
   time+=dt;
   if(scene==='title'){updateParts(dt);if(kp('enter',' ')){newGame();scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
   updMarket(dt);
+  netTick(dt); // opt-in multiplayer (no-op without ?mp); before the UI early-return so you stay visible while in menus
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
   if(winT>0)winT-=dt;
   shakeT=Math.max(0,shakeT-dt);
@@ -1145,6 +1184,7 @@ function drawWorld(){
     if(P.fishing)drawFishing(ox,oy);
     else if(!ui&&!P.resting&&waterAt(P.dir)){const b=Math.round(Math.sin(time*6));text('F',P.x-1-ox,P.y-30+b-oy,'#80c0ff');}
   }});
+  netDraw(list,ox,oy); // other players (opt-in multiplayer, D-040)
   list.sort((a,b)=>a.y-b.y);for(const o of list)o.f();
   for(const p of projs){if(p.kind==='bone')ctx.drawImage(BONE[Math.floor(time*12)%2],Math.round(p.x-4-ox),Math.round(p.y-4-oy));
     else if(p.kind==='arrow'){const hz=p.dir==='left'||p.dir==='right',x=Math.round(p.x-ox),y=Math.round(p.y-oy);ctx.fillStyle='#caa060';if(hz)ctx.fillRect(x-5,y-1,10,2);else ctx.fillRect(x-1,y-5,2,10);ctx.fillStyle='#fff0c0';ctx.fillRect(x+(p.vx>0?3:p.vx<0?-5:-1),y+(p.vy>0?3:p.vy<0?-5:-1),2,2);}
