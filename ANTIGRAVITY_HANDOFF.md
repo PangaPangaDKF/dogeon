@@ -22,7 +22,21 @@
 
 ---
 
-## 0a. NEWEST — `D-041` real-browser smoke test (uses your `agent-browser` install — thank you)
+## 00. NEWEST — `D-042` claimed by Claude Code (weight cut + exact art record) · thanks for `88b1bb1`
+
+- **`D-042` is Claude Code's** (please don't reuse the number). Its `docs/DECISIONS.md` entry is **not written yet on
+  purpose**: you had `DECISIONS.md` open with your uncommitted D-038 entry, and we share one working tree, so writing into it
+  would race your edit (L-011/L-016). I'll add the D-042 entry right after you commit D-038. Full details are in the D-042
+  commit message meanwhile.
+- **What D-042 did (user-approved):** recorded the exact art style in **`docs/ART_STYLE.md`** first (palettes measured in real
+  Chrome from the 3 reference images, the doge face template, the DOGE coin recipe), then removed the 3 reference images and 7
+  out-of-scope skill packs from BOTH `.agents/` and `.claude/` + `skills-lock.json`. Repo **4.30 MB → 1.42 MB (−66%)**.
+- **Read `docs/ART_STYLE.md` before drawing anything** — the user stressed DOGEON's identity is Dogecoin.
+- **Pending from the user:** their own coin art with the exact Dogecoin logo, to replace the camp `MOSAIC` coin (plan in
+  `docs/ART_STYLE.md` §3b). That touches `CHARACTER SPRITES`/`MAP` — coordinate here before either of us starts it.
+- **Thank you for `88b1bb1`:** prompt convergence done and L-021 closed with a real gate. That's the loop working.
+
+## 0a. `D-041` real-browser smoke test (uses your `agent-browser` install — thank you)
 
 - `bash scripts/browser-smoke.sh` → **11/11 PASS in real Chrome**: zero page errors, Enter starts, starter bag, basic doge,
   K skill spends MP, and 3-player multiplayer in both directions. Screenshots: `tests/out/smoke-camp.png`,
@@ -100,8 +114,8 @@ These need **the user's** decision, not ours:
 
 | Pending decision | Facts | Why we must ask |
 |---|---|---|
-| **Delete `docs/art/` reference images** | 1.54 MB = **37% of the repo**, 0 code references. The user's own NPC source images (D-024). | Deleting the user's assets is their call. (Still in git history either way.) |
-| **Prune skill packs** | Every skill is mirrored in `.agents/` **and** `.claude/` (~2× weight). Out-of-scope packs: `rust-best-practices` (no Rust here, 212 KB), `game-design-document` (Python docx/pdf/pptx generators, 880 KB), `caveman-compress` (Python, 208 KB). | Some were **explicit user requests** (D-003), and the mirror is how *you* load skills. Removing them could break your tooling. |
+| **Delete `docs/art/` reference images** | ✅ **Done in D-042 (user approved).** The exact look is recorded first in `docs/ART_STYLE.md` (measured palettes, doge face template, coin recipe); originals restorable from git history. | User asked for the exact Dogecoin art style to be preserved — read `docs/ART_STYLE.md` before drawing anything. |
+| **Prune skill packs** | ✅ **Done in D-042 (user approved):** removed `rust-best-practices`, `game-design-document`, `caveman-compress`, `megacave`, `ultracave`, `cavecrew`, `migration` from BOTH mirrors + `skills-lock.json`. Repo 4.30 MB → 1.42 MB. | If you relied on one of those, tell the user — reinstalling is one `npx skills add`. |
 | **Multiplayer → real MMO** | ✅ The *option* shipped in D-040 (ghosts, self-hosted relay, 3+ players proven). Still the user's call: a shared world (enemies/loot) needs an authoritative server (Colyseus) — the cost the user said to defer. | Don't build it without the user asking; coordinate here first. |
 
 ---

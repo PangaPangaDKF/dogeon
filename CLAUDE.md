@@ -15,7 +15,8 @@
 
 **Project files:** `AGENTS.md` (workspace rules) · `prompts/ANALYZER_PROMPT_MASTER.md` (pre-decision master prompt) · `docs/DECISIONS.md` (history + open issues) · `docs/LESSONS.md` (dual-brain error→rule ledger) · `prompts/TRYNOAH_RECREATE.md` + `docs/RECREATION_MANIFEST.md` + `scripts/` (reproducibility & release) · `contracts/` (Foundry: DogeItems ERC-721 + DogeDEX + DogeProfession + DogeStaking, see its README) · `prompts/SESSION_PROMPT.md` (session opener) ·
 `tests/check.sh`, `tests/sim.mjs` · skills in `.claude/skills/` and `.agents/skills/` (own: `dogeon-game`, `terminal-testing`;
-installed: `find-skills`, `agent-browser`, `avalanche-skills`, `avax-*`, `solidity-security`, `caveman*`, `game-design-theory`, `pixel-art-sprites`, `balance-check`, `game-design-document`).
+installed: `find-skills`, `agent-browser`, `avalanche-skills`, `avax-*`, `solidity-security`, `caveman*`, `game-design-theory`, `pixel-art-sprites`, `balance-check`; D-042 removed the out-of-scope `rust-best-practices`, `game-design-document`, `caveman-compress`, `megacave`, `ultracave`, `cavecrew`, `migration`).
+**Art:** `docs/ART_STYLE.md` is the authority on the exact look (measured palettes, the doge face template, the DOGE coin recipe) — read it before drawing anything.
 
 ## 1. What this is
 DOGEON ("The Grand Heist", Phase 4) is a 16-bit top-down action RPG set in the DogeOS Grand Heist lore, with a DeFi + educational purpose. MVP in the style of the Sega Genesis

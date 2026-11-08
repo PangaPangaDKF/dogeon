@@ -19,7 +19,7 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 ## 0a. RESUME HERE — Phase 4 "The Grand Heist" (built in D-024)
 
 **Brief:** `prompts/PHASE4_BRIEF.md` v1.1 (all acceptance boxes ticked). The user's vision: DOGEON = Grand Heist lore RPG with DeFi + education.
-- New NPCs (sprites from `docs/art/npc-*.png`, preview `docs/art/sprites-phase4-preview.png`): Cloverheart → Relotto (relotto.app, a recycling-rewards app,
+- New NPCs (sprites drawn from the user's reference images — removed from the tree in D-042, still in git history; their exact look is recorded in `docs/ART_STYLE.md`; preview `docs/art/sprites-phase4-preview.png`): Cloverheart → Relotto (relotto.app, a recycling-rewards app,
   NOT a lottery, not in the DogeOS ecosystem list), Noah → trynoah.ai (AI dApp builder, NOT a "Solana fork"; listed on dogeos.com/ecosystem),
   Bitget Wallet Card → web3.bitget.com/pt-BR/wallet-download + /card. Positions `PADS2`: beside the fire (37,38)/(43,38), by the Sphinx (43,31).
 - Elder = Keeper of the Heist (story, factions + weaknesses, JOIN → `P.faction`, heist.dogeos.com). Sphinx = DogeOS DeFi hub + SPHINX SCHOOL (8 lessons).
