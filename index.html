@@ -719,7 +719,7 @@ function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
   o.push({label:'LEAVE',act:null});return o;});ui.chain=true;}
 // ---- Phase 4 "The Grand Heist" (D-024): links, Sphinx DeFi hub + school, Elder heist lore + factions, partner NPCs ----
 const LINKS={bitgetCard:'https://web3.bitget.com/card',relottoApp:'https://app.relotto.app',dogeos:'https://www.dogeos.com/',docs:'https://docs.dogeos.com/en/getting-started/overview',faucet:'https://faucet.testnet.dogeos.com',
-  heist:'https://heist.dogeos.com/',redstone:'https://www.redstone.finance/',noah:'https://trynoah.ai/',bitget:'https://web3.bitget.com/pt-BR/wallet-download',relotto:'https://relotto.app/'};
+  heist:'https://heist.dogeos.com/',redstone:'https://www.redstone.finance/',noah:'https://trynoah.ai/?utm_source=ambassador&utm_medium=affiliate&utm_campaign=ambassador_program&utm_content=afft5eetm&ref=AFF-T5EETM',bitget:'https://web3.bitget.com/pt-BR/wallet-download',bitgetShare:'https://web3.bitget.com/share/41bYlR?inviteCode=VovB4P5R',relotto:'https://relotto.app/'};
 // links open only on an explicit menu choice; the URL is printed too, so it still works when popups are blocked
 const shortUrl=u=>String(u).replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'').toUpperCase();
 function openLink(url){if(!url)return 'LINK COMING SOON.';try{window.open(url,'_blank','noopener,noreferrer');}catch(e){}return 'LINK: '+shortUrl(url).slice(0,56);}
@@ -816,7 +816,7 @@ const PARTNERS={ // stories are factual (sources in docs/DECISIONS.md D-024); no
     'Connect it at the Sphinx and the DogeOS testnet is added for you. Same door as MetaMask.',
     'The card: top up with USDT, USDC, ETH or SOL and spend where card payments work. 50+ countries. ID check required.',
     'Fees and rewards vary by region. Always read the terms first. Very careful. Much smart.'],
-    links:[['DOWNLOAD BITGET WALLET','bitget'],['ABOUT THE BITGET WALLET CARD','bitgetCard']]},
+    links:[['JOIN BITGET WALLET (INVITE)','bitgetShare'],['DOWNLOAD BITGET WALLET','bitget'],['ABOUT THE BITGET WALLET CARD','bitgetCard']]},
 };
 function partnerTalk(n){const p=PARTNERS[n.id];if(!p)return;
   if(!n.met){n.met=true;openDialog(n,p.story,()=>partnerMenu(n));}else partnerMenu(n);}

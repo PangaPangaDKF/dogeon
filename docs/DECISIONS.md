@@ -35,6 +35,20 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-026 · 2026-11-08 · Creator referral links on the Noah and Bitget NPCs
+- What: The Noah NPC's TRYNOAH.AI link now carries the user's ambassador referral
+  (`trynoah.ai/?...&ref=AFF-T5EETM`), and the Bitget Wallet Card NPC gained a first "JOIN BITGET WALLET (INVITE)" row with the
+  user's share link (`web3.bitget.com/share/41bYlR?inviteCode=VovB4P5R`). `LINKS.noah` updated; new `LINKS.bitgetShare`.
+  `tests/sim.mjs` partner-link expected URLs updated to match.
+- Why: The user is an ambassador/affiliate for both and asked to route their links through the in-game NPCs.
+- Verify (both links fetched live first): Bitget share page reflects invite code `VovB4P5R` ("linked automatically once you sign up");
+  trynoah loads 200 (JS app, ref handled client-side). `node tests/sim.mjs` → `npc noah`/`npc bitget` PASS, 0 failed.
+- Tool: Claude Code (Opus 4.8); web-fetch subagent verified both URLs resolve.
+- Alternatives rejected: replacing the Bitget download/card rows (kept them; added the invite as a new first row so all three remain).
+- Commit: this commit.
+
+---
+
 ### D-025 · 2026-11-08 · Contracts LIVE on DogeOS Chikyū (first real-testnet deploy)
 - What: Deployed the audited `DogeItems` + `DogeDEX` to Chikyū (chain 6281971) and wrote the addresses into `index.html`
   `CONTRACTS['0x5fdaf3']` via `contracts/apply-deployment.mjs 6281971`. The game's NFT market is now live on the public testnet

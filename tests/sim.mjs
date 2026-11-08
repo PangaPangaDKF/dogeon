@@ -797,7 +797,7 @@ function readDialog(api) { const pages = []; for (let i = 0; i < 20 && api.get()
 
 scenario('partner NPCs: Cloverheart (Relotto), Noah, Bitget Wallet Card tell their story and open their links', () => {
   const api = boot(SEED + 28); startGame(api);
-  const want = { lotto: [/RELOTTO/i, 'https://relotto.app/'], noah: [/single prompt/i, 'https://trynoah.ai/'], bitget: [/Bitget Wallet/i, 'https://web3.bitget.com/pt-BR/wallet-download'] };
+  const want = { lotto: [/RELOTTO/i, 'https://relotto.app/'], noah: [/single prompt/i, 'https://trynoah.ai/?utm_source=ambassador&utm_medium=affiliate&utm_campaign=ambassador_program&utm_content=afft5eetm&ref=AFF-T5EETM'], bitget: [/Bitget Wallet/i, 'https://web3.bitget.com/share/41bYlR?inviteCode=VovB4P5R'] };
   for (const [id, [storyRe, url]] of Object.entries(want)) {
     const n = npc(api, id);
     if (!n || !api.inCampT(Math.floor(n.x / 16), Math.floor(n.y / 16))) { fail(`npc ${id}`, 'missing or outside the camp'); continue; }
