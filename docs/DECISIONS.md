@@ -35,6 +35,31 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-027 · 2026-11-08 · DogeProfession contract — one class per wallet, paid on-chain (Phase 5 "Factions of the Heist", part 1/N)
+- Feature: `contracts/src/DogeProfession.sol` — the on-chain class system. Classes map to the three Heist factions:
+  1 WARRIOR (Demolition Dogs), 2 ARCHER (Kernel Crew), 3 HEALER (Barkitects). `choose(uint8)` is payable with an exact fee
+  (default 0.05 DOGE, env `PROF_FEE_WEI`), **one per wallet forever** (`AlreadyChosen`), fee → treasury via pull payment
+  (`withdraw`, like DogeDEX). Views: `professionOf`, `hasProfession`, `roster()` (warriors/archers/healers), `fee`, `totalChosen`.
+  `ReentrancyGuard` on state-changers. `script/Deploy.s.sol` now deploys it and records `prof` + `profFee` in the deployment JSON.
+- Why: The user wants each player to pick ONE faction/profession per wallet by signing a transaction and paying DOGE gas + a fee
+  ("you only can choose 1 profession for wallet and you need to sign a transaction and pay doge gas and a fee to get the profession").
+  Each class gets a distinct mechanic + skill in the game (archer and healer are faster). On-chain async multiplayer (user's choice),
+  no server. Faction lore reuses the existing Phase 4 `FACTIONS` archive text.
+- Tool: Claude Code (Opus 4.8), Foundry 1.5.1, `solidity-security` discipline. 9 new forge tests (incl. a 512-run fuzz) → 37 total pass.
+  Selectors (cast sig): `choose(uint8)` 0xf94e349d · `professionOf(address)` 0x31544fd8 · `fee()` 0xddca3f43 ·
+  `hasProfession(address)` 0x1a8d819b · `roster()` 0x0cbf77ab · `withdraw()` 0x3ccfd60b.
+- Gotcha logged: in the first test draft, passing `prof.ARCHER()` as a call ARGUMENT consumed the preceding `vm.prank`/
+  `vm.expectRevert` (an extra external call), so `choose` ran as the test contract. Fix: use plain literals 1/2/3 for class ids in tests.
+- Alternatives rejected: changeable/respec profession (user said ONE per wallet → immutable); storing class in DogeItems
+  (separate concern, keep contracts focused like Items/DEX); a server-side class registry (user chose on-chain, no server).
+- Verify: `forge test --match-contract DogeProfessionTest` → 9 passed; full suite 37 passed, 0 failed.
+- Next (same phase): game wiring (faction NPCs in camp + on-chain `choose` tx + read on death/connect), then class mechanics
+  (warrior tank / archer fast-ranged / healer fast-mend), then staking-earns-DEX-fees, then on-chain party/PvP/loot-steal, then
+  redeploy the full set to Chikyu and re-wire `CONTRACTS['0x5fdaf3']`.
+- Commit: this commit.
+
+---
+
 ### D-026 · 2026-11-08 · Creator referral links on the Noah and Bitget NPCs
 - What: The Noah NPC's TRYNOAH.AI link now carries the user's ambassador referral
   (`trynoah.ai/?...&ref=AFF-T5EETM`), and the Bitget Wallet Card NPC gained a first "JOIN BITGET WALLET (INVITE)" row with the
