@@ -92,15 +92,15 @@ All skills live in both `.claude/skills/` (for Claude Code) and `.agents/skills/
 
 ## 4. How the Prompt System Works (`MASTER_PROMPT.md` + `SESSION_PROMPT.md`)
 
-1. **[`MASTER_PROMPT.md`](./MASTER_PROMPT.md) §A (Single-Prompt Full-Stack Blueprint for TryNoah AI):**
-   - Self-contained, zero-waste blueprint containing the exact stack, live DogeOS Chikyū addresses, 4-byte `SEL` selectors, and gameplay/DEX specs so pasting it into **TryNoah AI** recreates the entire app in one prompt.
-2. **[`MASTER_PROMPT.md`](./MASTER_PROMPT.md) §B (Enchanted Example Skill Prompt):**
-   - Demonstrates the 4-block LLM prompt engineering standard:
-     1. *Context & Hard Constraints* (`@index.html`, `< 1,500` lines, zero deps, verification command).
-     2. *Exact On-Chain Registry & Selectors* (`CONTRACTS`, `SEL`).
-     3. *Deterministic Implementation Spec* (exact functions, state mutations, UI rows, class stats).
-     4. *Negative Constraints* (what NOT to do).
-3. **[`prompts/SESSION_PROMPT.md`](./prompts/SESSION_PROMPT.md) (v2.3) & [`CLAUDE.md`](./CLAUDE.md):**
+1. **[`MASTER_PROMPT.md`](./MASTER_PROMPT.md) (Zero-Waste Single-Prompt Repo Blueprint for TryNoah AI):**
+   - Purged of all duplicate sections, meta-commentary, removed ERC-20 references, and historical git archaeology so TryNoah AI never wastes context tokens or wanders.
+   - Ordered in the exact sequence an autonomous builder writes the repo:
+     - **§1:** Role, Repository Tree & Hard Invariants (`index.html` < 1,500 lines, 0 external deps, offline-first, instant `chainAct`).
+     - **§2:** Live DogeOS Chikyū Testnet Registry (`0x5fdaf3`), all 27 4-byte `SEL` selectors, bit-packing (`id<<16 | type<<8 | level`), and raw hex ABI helpers.
+     - **§3:** Exact 12-Section Architecture of `index.html` (every constant, NPC pad, recipe, starter bag `WOOD x3` + `STONE x3`, `WARRIOR`/`ARCHER`/`HEALER` combat mechanics, and BarkSwap Pool DEX rows).
+     - **§4:** Solidity Contracts Specification (`DogeItems.sol`, `DogeDEX.sol`, `DogeProfession.sol`, `DogeStaking.sol`).
+     - **§G:** Compact Canonical Subsystem Ledger (`D-014..D-036`).
+2. **[`prompts/SESSION_PROMPT.md`](./prompts/SESSION_PROMPT.md) (v2.3) & [`CLAUDE.md`](./CLAUDE.md):**
    - Enforces **RULE #0** (run `audit-scan.mjs` first) and **RULE #1** (tests green → `docs/DECISIONS.md` → update `MASTER_PROMPT.md` + `dogeon-game` skill → commit).
 
 ---

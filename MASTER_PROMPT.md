@@ -1,168 +1,224 @@
-# DOGEON — Master Prompt & Zero-Waste Full-Stack Blueprint (TryNoah AI / Claude Code / AGY)
+# DOGEON ("The Grand Heist") — Zero-Waste Master Prompt for TryNoah AI
 
-> **Purpose of this Master Prompt:**
-> 1. **One-Shot Full Project Recreation (TryNoah AI / Autonomous Builders):** Copy **Section A** into TryNoah AI (`https://trynoah.ai`) or any agentic coding environment to recreate the entire **DOGEON ("The Grand Heist")** 16-bit Web3 Action RPG + DogeOS Chikyū DeFi & NFT Ecosystem from a single prompt with **zero wasted context** and **zero missing implementations**.
-> 2. **Enchanted Example Skill Prompt (Section B):** Reusable, high-density prompt engineering template demonstrating how to specify Web3 DeFi UI (`barkswap.fi/swap`), multi-asset ERC-20 integration, starter bag NFT minting, and distinct class combat mechanics (`WARRIOR`, `ARCHER`, `HEALER`).
-> 3. **Pre-Decision Gate & Feature Ledger (Sections C–G):** Rules (`RULE #0` & `RULE #1`), reusable task templates, and the canonical shipped feature ledger (`D-014..D-036`).
+Copy this file directly into **TryNoah AI** (or any autonomous coding model) to clone the complete **DOGEON** repository (`index.html` + `contracts/src/*.sol` + `tests/*`) with zero context waste and 100% deterministic parity.
 
 ---
 
-## A. Single-Prompt Full-Stack Recreation Blueprint (Paste into TryNoah AI / LLM Builder)
+## 1. ROLE, REPOSITORY TREE & HARD INVARIANTS
 
-```markdown
-# ROLE & OBJECTIVE
-Build **DOGEON ("The Grand Heist")**, a complete, production-ready 16-bit Sega Genesis-style top-down Web3 Action RPG and DeFi Hub on **DogeOS Chikyū Testnet (`chainId: 0x5fdaf3` / `6281971`)** inside a single zero-dependency file `index.html` (< 1,500 lines), backed by 4 audited Solidity ^0.8.24 contracts in `contracts/src/`.
+Build **DOGEON ("The Grand Heist")**, a 16-bit Sega Genesis-style top-down Web3 Action RPG and DeFi Hub on **DogeOS Chikyū Testnet (`chainId: 0x5fdaf3` / `6281971`)**.
 
-## 1. EXACT TECHNICAL STACK & HARD CONSTRAINTS (NEVER VIOLATE)
-- **Frontend (`index.html`):** Single HTML file with inline CSS + vanilla ES2022 JavaScript + HTML5 `<canvas width="320" height="224">` (`image-rendering: pixelated`, integer window scaling).
-- **Zero External Dependencies:** NO npm runtime packages, NO ethers.js/viem/wagmi CDN, NO external images/fonts/audio files, NO `fetch()`, `XMLHttpRequest`, `WebSocket`, `import()`, `alert()`, `confirm()`, or `prompt()`.
-- **Procedural Assets in Code:**
-  - **Font:** 3×5 uppercase bitmap glyph table `FONT` (including `#`, `^`, `$`, `%`, `/`, `<`, `>`, `[`, `]`, `|`), rendered via `text(s,x,y,col,scale)` and `textC()`.
-  - **Sprites:** 16×20 character sprites built from string templates (`HEAD.dog`, `HEAD.cat`, `TOP`, `LEGS`) + palette roles (`O F C P E N R W T A B L K`) + per-direction accessory painter `acc(g,dir,frame)`.
-  - **Tiles:** 16×16 procedural tile atlas `TL` (`GRASS, FLOWERS, TREE, WATER, PATH, WALL, FLOOR, FENCE, GATE, TORCH, STAIRS, PILLAR, RUG, DOOR, CRYSTAL, PAD, FIRE`).
-  - **Audio:** WebAudio synthesizer `sfx(freq,dur,type,vol,slide)`; resume `AudioContext` on `click` and `keydown` user gestures.
-- **Web3 Transport:** EIP-1193 provider (`window.ethereum || window.bitkeep?.ethereum`) ONLY after user clicks `CONNECT WALLET`. All contract reads (`eth_call`) and writes (`eth_sendTransaction` + `eth_getTransactionReceipt`) use precomputed 4-byte selectors (`SEL`) and 32-byte hex ABI helpers (`W32`, `A32`, `words`, `arrAt`, `unpack`, `toWei`, `fromWei`).
-- **Offline Playability Invariant:** Every on-chain feature (classes, BarkSwap DEX, NFT market, staking, oracle) MUST degrade gracefully when offline (`!chainReady() || !addrs().x`). The full RPG is 100% playable without a wallet.
-- **Input Support:** Full Keyboard (`WASD`/Arrows, `Space`/`J` attack, `K`/`Q` class skill, `E`/`Enter` interact, `R` rest, `I`/`Tab` inventory, `F` fish, `Esc` close) AND full Mouse support on canvas (`mousemove` row hover, `wheel` scroll, `click` `<`/`>` preset adjusters or row activation).
+### Repository Layout
+```text
+index.html                         # Entire playable RPG + Web3 DeFi client in ONE file (< 1,500 lines, 0 external deps)
+contracts/
+  src/
+    DogeItems.sol                  # ERC721Enumerable game items (type 1..6), 0.1 DOGE mint fee, on-chain SVG tokenURI
+    DogeDEX.sol                    # Fixed-price NFT listings + constant-product (x*y=k) item/DOGE AMM pools + RedStone view
+    DogeProfession.sol             # Permanent 1-class-per-wallet registry (1=WARRIOR, 2=ARCHER, 3=HEALER), 0.05 DOGE fee
+    DogeStaking.sol                # MasterChef (1e18 accRewardPerShare) native DOGE staking earning 0.8% of DEX volume
+tests/
+  check.sh                         # Static rules + node --check + node tests/sim.mjs + forge test
+  sim.mjs                          # Deterministic headless VM simulation (seed 4242) with mockEth() E2E Web3 assertions
+  serve.mjs                        # Zero-dep localhost HTTP server so browser wallets inject window.ethereum
+```
 
-## 2. LIVE DOGEOS CHIKYŪ TESTNET REGISTRY (`0x5fdaf3` / `6281971`)
-- **Chain Config:** `id: '0x5fdaf3'`, `name: 'DogeOS Chikyu Testnet'`, `rpc: 'https://rpc.testnet.dogeos.com'`, `explorer: 'https://dogeos-testnet.l2scan.co'`, `faucet: 'https://faucet.testnet.dogeos.com'`, native currency `DOGE` (18 decimals). Support `?chain=local` for local Foundry Anvil (`0x7a69`, `http://127.0.0.1:8545`).
-- **Core Game Contracts (`CONTRACTS['0x5fdaf3']`):**
-  - `items` (`DogeItems.sol`, ERC721Enumerable, on-chain SVG `tokenURI`, `0.1 DOGE` mint fee): `0x207641C60474526a353960F3967d5c412026F62e`
-  - `dex` (`DogeDEX.sol`, NFT marketplace + constant-product `x*y=k` NFT/DOGE AMM pools, 2% LP fee + 1% protocol fee split 0.2% treasury / 0.8% stakers, pull-payment `proceeds`): `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10`
-  - `prof` (`DogeProfession.sol`, 1 class per wallet forever, `0.05 DOGE` fee): `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`
-  - `stake` (`DogeStaking.sol`, MasterChef `1e18` precision DOGE staking vault earning 0.8% of DEX volume): `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`
-- **RedStone Oracle (`REDSTONE['0x5fdaf3']`):**
-  - `feed`: `0x434F8D17c0301cfEa143dba912972E24B827C968` (`latestRoundData()` = `0xfeaf968c`, 8 decimals)
-  - `adapter`: `0xB08342D907D2df47B6F73e25F4fa033978B344B1` (`getLastUpdateDetailsUnsafe(bytes32("DOGE"))` = `0x729bfda4` + `'444f4745'.padEnd(64,'0')`, fallback when feed reverts on >24h stale heartbeat)
-- **Precomputed 4-Byte Function Selectors (`SEL`):**
+### Hard Invariants (NEVER VIOLATE)
+1. **Single-File Zero-Dependency Frontend (`index.html` < 1,500 lines):**
+   - Native resolution `<canvas id="c" width="320" height="224">` with `image-rendering: pixelated` and integer CSS scaling (`Math.max(1, Math.min(Math.floor(innerWidth/320), Math.floor(innerHeight/224)))`).
+   - **FORBIDDEN in `index.html`:** `alert(`, `confirm(`, `prompt(`, `fetch(`, `XMLHttpRequest`, `WebSocket`, `import(`, external `<script src>`, `<link href>`, external images, fonts, or audio files. All graphics, fonts, maps, and sounds are procedural in JS.
+2. **Strict Contract Scope:**
+   - Use ONLY the 4 game contracts (`DogeItems`, `DogeDEX`, `DogeProfession`, `DogeStaking`) + the RedStone oracle (`feed` + `adapter`). Do NOT add extra contracts or external ERC-20 tokens.
+3. **Offline-First Invariant:**
+   - Touch `window.ethereum || window.bitkeep?.ethereum` ONLY after the player explicitly selects `CONNECT WALLET`.
+   - Every Web3 feature (`chooseProfession`, `marketMenu`, `stakeMenu`, `invMenu`, `shopMenu`, `refreshOracle`) MUST work or degrade cleanly when offline (`!chainReady()`).
+4. **Instant Wallet Popup (`chainAct`):**
+   - Inside `chainAct(done, fn)`, NEVER `await refreshChain()` before `await fn()`. Call `await fn()` immediately using cached/default fees (`chainData.fee = 10n**17n`, `chainData.profFee = 5n*10n**16n`) so MetaMask/Bitget opens on the user gesture without delay.
+
+---
+
+## 2. LIVE DOGEOS CHIKYŪ TESTNET REGISTRY & ABI ENCODING
+
+```js
+const CHAIN={id:'0x5fdaf3',idDec:6281971,name:'DogeOS Chikyu Testnet',rpc:'https://rpc.testnet.dogeos.com',explorer:'https://dogeos-testnet.l2scan.co',faucet:'https://faucet.testnet.dogeos.com',currency:{name:'Dogecoin',symbol:'DOGE',decimals:18}};
+// Support ?chain=local for Foundry Anvil: {id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''}
+const CONTRACTS={
+  '0x5fdaf3':{
+    items:'0x207641C60474526a353960F3967d5c412026F62e',
+    dex:'0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10',
+    prof:'0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055',
+    stake:'0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d'
+  },
+  '0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',prof:'',stake:''}
+};
+const REDSTONE={'0x5fdaf3':{feed:'0x434F8D17c0301cfEa143dba912972E24B827C968',adapter:'0xB08342D907D2df47B6F73e25F4fa033978B344B1'}};
+const SEL={
+  mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',
+  setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',
+  list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',
+  addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',
+  withdraw:'3ccfd60b',dogeUsd:'435a3613',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',
+  chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',
+  stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',
+  flushFees:'6811406e',stakerFeesView:'67f7cf97'
+};
+```
+
+### Raw Hex ABI Helpers (No ethers.js / viem)
+- `W32 = n => BigInt(n).toString(16).padStart(64,'0')`
+- `A32 = a => String(a).toLowerCase().replace(/^0x/,'').padStart(64,'0')`
+- `words = h => { h=String(h||'0x').replace(/^0x/,''); const o=[]; for(let i=0;i+64<=h.length;i+=64) o.push(BigInt('0x'+h.slice(i,i+64))); return o; }`
+- `arrAt(w, slot)`: `const off=Number(w[slot]/32n), n=Number(w[off]); return w.slice(off+1, off+1+n);`
+- `toWei = d => BigInt(Math.round(d*1e4))*10n**14n`, `fromWei = w => Number(BigInt(w)/10n**14n)/1e4`
+- **Bit-Packed Item Encoding:** `packed = (id << 16) | (type << 8) | level` → `unpack = p => ({id:Number(p>>16n), type:Number((p>>8n)&255n), level:Number(p&255n)})`
+- **Pool Key Encoding:** `keyOfIt = it => (BigInt(it.type)<<8n) | BigInt(it.level)`
+- **Item Types:** `ITEM_TYPES = {1:'HAMMER', 2:'ARMOR', 3:'RAW FISH', 4:'COOKED FISH', 5:'BONE CHARM', 6:'MOON BISCUIT'}` (`itemName = it => (ITEM_TYPES[it.type]||'ITEM') + (it.type<=2 ? ' LV'+it.level : '')`).
+- **Preset DOGE Amounts:** `PRICES = [0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50]`, `LIST_PAGE = 100`, `LIST_MAX = 500`.
+
+---
+
+## 3. EXACT 12-SECTION ARCHITECTURE OF `index.html`
+
+Structure `<script>` in `index.html` into these 12 sections in order:
+
+### Section 1 & 2: Canvas, Input (Keyboard + Mouse) & WebAudio
+- **Controls:**
+  - `WASD` / Arrow keys: 4-dir movement (`dirOf(vx,vy)`).
+  - `Space` / `J`: basic attack (`attack()`).
+  - `K` / `Q`: class skill (`useSkill()` — `GROUND POUND`, `ARROW VOLLEY`, `MEND`, or default `bark()` `WOW` wave if no class).
+  - `E` / `Enter`: talk to nearby NPC / advance dialog / execute selected menu row (`uiAct()`).
+  - `A` / `D` or `Left` / `Right` inside menus: adjust row value (`row.adj(-1)` / `row.adj(1)`).
+  - `R`: rest (`P.resting = true`; heals after `REST_DELAY = 3`s of stillness at `+10 HP/s` up to `REST_CAP = 0.6` (60% maxHp) and `+8 MP/s` up to 100% maxMp).
+  - `I` / `Tab`: toggle 12-slot inventory menu (`invMenu()`).
+  - `F`: cast fishing line (`startFish()`) when standing still facing a `T.WATER` tile (`FISH_MIN=3..FISH_MAX=5`s divided by fishing skill multiplier).
+  - `Escape`: close active menu or dialog.
+  - **Mouse (`cvPos`):** Convert client coordinates to `320×224` canvas space. On title/win screen, click starts/restarts. In dialogs, click advances. In menus (`x:16..304, y:36..206`, `MENU_ROWS=13`, row height `10`px starting at `y=41`), `mousemove` selects the hovered row, `wheel` scrolls `ui.sel`, clicking `<`/`>` (`x<82` or `x>238` when `row.adj` exists) calls `row.adj(-1/+1)`, and clicking a row executes `uiAct()`.
+- **Audio (`sfx(freq, dur, type='square', vol=0.05, slide=0)`):** Lazy `AudioContext` creation; call `ac.resume()` on both `keydown` and `mousedown` when `ac.state === 'suspended'`.
+
+### Section 3, 4 & 5: 3×5 Bitmap Font, 16×16 Tile Atlas & 16×20 Sprites
+- **`FONT`:** 3×5 bitmask table for `A-Z`, `0-9`, and punctuation `. , ! ? : - + / ( ) ' $ % # ^ < > [ ] |`. Render with `text(str, x, y, col='#fff', scale=1)` and `textC(str, y, col, scale)`.
+- **Tile IDs (`T`):** `GRASS:0, FLOWER:1, TALL:2, DIRT:3, STONE:4, WATER:5, TREE:6, ROCK:7, BUSH:8, FENCE:9, WALL:10, DFLOOR:11, GATE:12, TENT:13, FIRE:14, DOOR:15, CRYSTAL:16, PAD:17`. `SOLID = new Set([T.WATER, T.TREE, T.ROCK, T.BUSH, T.FENCE, T.WALL, T.TENT, T.FIRE, T.CRYSTAL])`.
+- **`MOSAIC`:** 96×96 golden coin floor mosaic rendered at `(CX*16-48, MOS_Y*16-48)` inside the camp using `HEAD.dog.down` at 4× scale.
+- **Character Sprites (`SPR`):** Built via `buildChar({head, pal, acc})` (`[down0, down1, up0, up1, side0, side1]` + mirrored left frames) or `staticSpr(rows, pal)`:
+  - Player & Class Sprites: `SPR.hero`, `SPR.tWarrior` (crimson helm + heavy pauldrons), `SPR.tArcher` (forest hood + quiver/feather), `SPR.tHealer` (teal mystic hood + cyan staff orb).
+  - Camp NPCs: `SPR.merchant` (Wrenchpaw), `SPR.bank` (Great Sphinx), `SPR.sage` (Elder Shibe), `SPR.clover` (Cloverheart / Relotto), `SPR.noah` (Noah AI Brain N-01), `SPR.bitget` (Bitget Wallet Card).
+  - Enemies: `SPR.alley`, `SPR.archer`, `SPR.frog`, `SPR.ninja`, `SPR.bull`, `SPR.knight`, `SPR.brute`, `SPR.boss` (24×28 Cat Lord).
+
+### Section 6: Deterministic Map Generation (`genMap()`, `mulberry(4242)`)
+- **Dimensions:** `MW = 80, MH = 60` tiles (`1280×960` px).
+- **Sanctuary Camp:** `CAMP = {x0:33, y0:27, x1:47, y1:41}`, center `CX = 40, CY = 34`, campfire brazier at `(CX, FY=38)`, mosaic center `MOS_Y = 33`. 3-tile-wide cardinal gates flanked by `T.DOOR`, corner `T.TENT`s, 4 `T.CRYSTAL`s, and 9 `T.PAD` tiles:
+  - `PADS = [[40,29], [36,34], [44,34]]` (Sphinx N, Elder W, Wrenchpaw E)
+  - `PADS2 = [[37,38], [43,38], [43,31]]` (Cloverheart, Noah, Bitget Card)
+  - `PADS3 = [[36,40], [44,40], [40,31]]` (Warrior trainer SW, Archer trainer SE, Healer trainer N)
+- **Northern Dungeon Ruins:** `DUN = {x0:26, y0:2, x1:54, y1:17}`, boss gate row `GATE_ROW = 9` (`T.GATE` at `Math.abs(x-CX)<=1`, opens after `P.bruteKills >= 3` and talking to Elder Shibe).
+- **5 Fishing Ponds:** 3 base ellipses `(64,44,7,4.5)`, `(13,46,4.5,3.2)`, `(12,14,3.5,3)` + 2 post-vegetation ponds `PONDS_EXTRA = [[54,25,3.5,2.5], [24,53,4,2.5]]` with cleared `GRASS` shore rings (`d < 2.2`).
+
+### Section 7 & 8: Game State, Starter Bag, Classes, Combat & Market Simulation
+- **Starter Player State (`newGame()`):**
   ```js
-  const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',flushFees:'6811406e',stakerFeesView:'67f7cf97'};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,
+     hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,
+     wood:3,stone:3,orb:2,scrap:2,horn:2,steel:2,
+     sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,
+     resting:false,dead:false,deathT:0,kills:0,bruteKills:0,
+     bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],
+     skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,credits:{},faction:null,prof:null};
   ```
+- **12-Slot Bag (`BAG_SIZE = 12`):** `FOODS = {raw_fish:{name:'RAW FISH',heal:15,col:'#80c0e0'}, cooked_fish:{name:'COOKED FISH',heal:25,col:'#f0a040'}}`. Food stacks to `5`; materials (`wood, stone, orb, scrap, horn, steel`) stack to `20` (`MAT_TYPES`). Campfire (`dist(P.x,P.y,CX*16+8,FY*16+8)<28`) cooks `raw_fish` → `cooked_fish` on `E` or from `invMenu()`.
+- **Enemy Table (`ETYPES`) & Spawning:**
+  - `alley` (`15 HP, 6 dmg, whisk`), `archer` (`12 HP, 5 dmg, whisk`, shoots `bone`), `frog` (`14 HP, 6 dmg, orb`, shoots `spit`), `ninja` (`18 HP, 62 spd, 8 dmg, scrap`, `+25%` spawn near ponds `NINJA_WATER={r:4,p:0.25}`), `bull` (`55 HP, 14 dmg, horn`), `knight` (`35 HP, 10 dmg, steel`), `brute` (`48 HP, 12 dmg, 3× whisk`), `boss` (`320 HP, 12 dmg`, 8-way radial bones + summons 2 `alley` minions below 50% HP that only chase when player is in `zone==='boss'`).
+  - `FIELD_POP = 22`, `DUN_POP = 6`, `SPAWN_EVERY = 3`s, minimum spawn distance `dist(x,y,P.x,P.y) >= 200` px.
+  - **Camp Safety:** `solidFor(tx,ty,ent)` blocks `ent.enemy && inCampT(tx,ty)`; enemy projectiles vanish on `inCampT`; `hurtPlayer()` returns immediately if `playerInCamp()`.
+- **Three Distinct Professions (`CLASSES`, `applyClass`, `syncMaxHp`, `attack`, `useSkill`, `drawWorld`, `drawSlash`):**
+  - `syncMaxHp()`: `base = 60 + (classOf()?.hp || 0) + P.hpUps * 15`; adjusts `P.maxHp` and `P.hp`.
+  - `drawWorld()`: draws `SPR[classOf()?.spr || 'hero']` so choosing a class visibly transforms the player character.
+  - **1. `WARRIOR` (`id:1`, Demolition Dogs, Sergeant Ironpaw):**
+    - Stats: `spd: 0.95`, `dmg: 1.35`, `armor: 0.15`, `hp: +25` (`85` base Max HP).
+    - `Space` (`attack()`): heavy melee cleave (`+4 px` reach, `1.35×` knockback, `shake(0.08)`, golden/crimson arc in `drawSlash`).
+    - `K`/`Q` (`groundPound()`, `12 MP`): radial AoE (`R=46`) damaging + knocking back all nearby enemies.
+  - **2. `ARCHER` (`id:2`, Kernel Crew, Scout Fleetwhisker):**
+    - Stats: `spd: 1.25`, `dmg: 1.0`, `armor: 0`, `hp: 0` (`60` base Max HP).
+    - **`Space` (`attack()`): predetermined ranged basic attack (`0 MP` cost, `atkCd = 0.24`s)!** Fires a fast `'arrow'` projectile (`basic: true`, `speed = 280`, grants `P.skills.combat++` on hit) and draws a wooden bow + string in `drawSlash()`.
+    - `K`/`Q` (`quickShot()`, `6 MP`): fires a 3-arrow fan (`angles [-0.22, 0, 0.22]`, `speed = 300`).
+  - **3. `HEALER` (`id:3`, Barkitects, Mender Brighttail):**
+    - Stats: `spd: 1.25` (fast), `dmg: 0.65` (weak melee), `armor: 0.05`, `hp: -15` (`45` base Max HP).
+    - `Space` (`attack()`): light mystic staff swing (`0.65×` damage, **restores `+2 MP` on hit**, draws glowing emerald/cyan staff in `drawSlash()`).
+    - `K`/`Q` (`mend()`, `10 MP`): heals `Math.round(20 * skillMul(P.skills.bark, 'bark'))` HP anywhere.
+- **Skill-by-Use Multipliers (`SKILL_BONUS = 0.08` per tier):**
+  - `SKILL_THRESH = {combat:[0,10,25,50,100], fishing:[0,5,15,30,60], bark:[0,8,20,45,80]}`.
+- **Simulated Market (`MARKET`) + RedStone Anchor:**
+  - Ticks once per second (`updMarket(dt)`), mean-reverting toward `oracle.loaded ? oracle.price : 0.25`. Sentiment `mkt.sent ∈ [-1, 1]` scales enemy damage (`+50%` in bear) and player damage (`+50%` in bull).
 
-## 3. GAMEPLAY MECHANICS, CLASSES, STARTER BAG & DEFI INTERFACES
-1. **World & Sanctuary Camp (`MW=80, MH=60`):**
-   - Walled Sanctuary Camp (`x:33..47, y:27..41`, campfire at `CX=40, CY=34`, `FY=38`) where enemies cannot enter (`solidFor` blocks `ent.enemy`) and `hurtPlayer()` immediately returns.
-   - Northern Dungeon Ruins (`x:26..54, y:2..17`, boss gate at `GATE_ROW=9`), 5 fishing ponds outside camp (`PONDS_EXTRA`).
-   - 8 enemy types (`alley`, `archer`, `frog`->`orb`, `ninja`->`scrap`, `bull`->`horn`, `knight`->`steel`, `brute`->3×`whisk`, `boss` Cat Lord -> Golden Yarn). Field cap `FIELD_POP=22`, dungeon cap `DUN_POP=6`, spawn distance `>=200` px from player.
-2. **Starter Bag & NFT Minting (`newGame`, `invMenu`, `shopMenu`, `marketMenu`):**
-   - Every new player starts with `wood:3, stone:3, orb:2, scrap:2, horn:2, steel:2` and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]` (12-slot bag, food stacks 5, materials stack 20).
-   - Players can immediately mint a `HAMMER LV2 NFT` (`type:1, level:2`) by spending `1 WOOD + 1 STONE` (`mintNft(1,2,'starter')`) from `invMenu` (`I`/`Tab`) or `shopMenu` (Wrenchpaw's Forge), craft 7 recipes (`RECIPES`) for mint credits (`creditOk`/`takeOffChain`/`putBack`), preserve caught fish (`raw_fish`/`cooked_fish`), OR directly mint any item at Row 0 of `marketMenu()` (`MINT < ITEM > NFT (0.1 DOGE)`).
-   - Owning a gear NFT on-chain (`chainData.inv`) equips it automatically (`swordLv()`, `armorLv()`).
-3. **Three Distinct Professions (`CLASSES`, `applyClass`, `syncMaxHp`, `attack`, `useSkill`):**
-   - **Hero Sprite Transformation:** Choosing a profession immediately transforms the player sprite (`SPR[classOf()?.spr || 'hero']`).
-   - **WARRIOR (`id:1`, Demolition Dogs, Sergeant Ironpaw):** `+25` Max HP (`85` base HP), `+15%` armor (`0.15`), `1.35x` melee damage, `0.95x` move speed. `Space` performs a wide heavy cleave (`+4 px` hitbox + screen shake). `K`/`Q` casts `GROUND POUND` (`12 MP`, radial AoE damage + knockback).
-   - **ARCHER (`id:2`, Kernel Crew, Scout Fleetwhisker):** `60` base Max HP, `1.25x` move speed, `1.0x` damage. **`Space` fires a predetermined ranged basic ARROW (`0 MP` cost, `speed=280`, grants `+1` combat XP on hit, draws bow & string in `drawSlash`)!** `K`/`Q` casts `ARROW VOLLEY` (`6 MP`, 3-arrow fan at `speed=300`).
-   - **HEALER (`id:3`, Barkitects, Mender Brighttail):** `-15` Max HP (`45` base HP), `1.25x` move speed (fast), `+5%` armor, weak melee (`0.65x` damage, draws glowing staff in `drawSlash`, **restores `+2 MP` on hit**). `K`/`Q` casts `MEND` (`10 MP`, heals `+20 HP * bark skill` anywhere).
-   - Offline pick is free and switchable; connected pick calls `DogeProfession.choose(id)` (`0.05 DOGE`) and permanently binds one class per wallet.
-4. **BarkSwap-Styled Pool DEX (`marketMenu`) & Sphinx DeFi Hub (`bankMenu`, `stakeMenu`):**
-   - **BarkSwap Pool DEX (`marketMenu`, `ui.barkswap=true`):** Opened when choosing `NFT MARKET: SWAP + LIQUIDITY POOLS` at the Sphinx NPC. Styled with BarkSwap's amber CTA (`#3a2208`/`#ffd860`), dark-slate wallet item balance (`#101838`/`#f8e090`), and emerald pool/swap cards (`#0c2624`/`#80f8c0`):
-     - Header shows `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <staked>`.
-     - Row 0: `MINT < ITEM > NFT (0.1 DOGE)` (`A/D` or mouse `<`/`>` cycles `MINTABLE`; consumes `1 WOOD + 1 STONE` when minting starter Hammer Lv2 or mints directly on `DogeItems`).
-     - Row 1: `WALLET ITEMS (N): #id ITEM, ...` so the player immediately sees their minted item tokens in their wallet after minting.
-     - Pool & Swap rows: `CREATE POOL: N ITEM + < AMT > DOGE` (`addLp`), `POOL ITEM: N ITEMS / X DOGE`, `SWAP X DOGE -> 1 ITEM` (`buyPool`), `SWAP 1 ITEM -> X DOGE` (`sellPool`), `ADD N ITEMS + X DOGE AS LP` (`addLp`), `REMOVE MY LP` (`removeLp`), and `SELL #id ITEM FOR < PRICE > DOGE` (`listNft`).
-   - **Instant Wallet Popup (`chainAct`):** Never block `eth_sendTransaction` behind slow RPC reads; call `await fn()` immediately on user click/keypress with safe default fees (`fee=10n**17n`, `profFee=5n*10n**16n`), then refresh chain state afterward.
-```
-
----
-
-## B. Enchanted Example Skill Prompt (Best LLM Practices Template)
-
-Use this exact prompt structure when instructing an AI agent (TryNoah AI, Claude Code, or Antigravity) to build or extend full-stack Web3 + gameplay features without wasting context:
-
-```markdown
-# TASK: BarkSwap-Styled Pool DEX + Starter Bag Item Minting + Distinct Class Combat Mechanics
-
-## 1. CONTEXT & ARCHITECTURAL BOUNDARIES
-- **Target File:** `@index.html` (single-file 320×224 Canvas 2D RPG, must stay < 1,500 lines, zero external dependencies, no `fetch`/`alert`).
-- **Scope Rule:** Focus strictly on the 4 game contracts (`DogeItems`, `DogeDEX`, `DogeProfession`, `DogeStaking`). Do NOT add extra contracts or external tokens.
-- **Verification Gate:** Run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs && bash tests/check.sh` after edits. Every Web3 function must be exported in `tests/sim.mjs` `HARNESS` and asserted in a deterministic scenario.
-
-## 2. EXACT ON-CHAIN REGISTRY & ABI SELECTORS (DogeOS Chikyū `0x5fdaf3`)
-- **Deployed Game Contracts:**
-  - `items` (`DogeItems.sol`, ERC-721 minted item tokens): `0x207641C60474526a353960F3967d5c412026F62e`
-  - `dex` (`DogeDEX.sol`, item/DOGE pool & swap contract): `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10`
-  - `prof` (`DogeProfession.sol`, 1 class per wallet): `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`
-  - `stake` (`DogeStaking.sol`, 0.8% DEX fee staking vault): `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`
-- **Selectors (`SEL`):** `mint: '352926a8'`, `inventoryOf: '7eaebb15'`, `addLiquidity: 'c5bb3168'`, `removeLiquidity: 'f88bf15a'`, `buyFromPool: '66c1dbf3'`, `sellToPool: '0de77491'`, `chooseProf: 'f94e349d'`, `stakeDoge: '3a4b66f1'`.
-
-## 3. DETERMINISTIC IMPLEMENTATION SPEC
-1. **BarkSwap-Styled Pool DEX at the Sphinx NPC (`marketMenu`, `drawUI`):**
-   - When the player selects `NFT MARKET: SWAP + LIQUIDITY POOLS` at the Sphinx NPC, open `marketMenu(n)` (`BARKSWAP POOL DEX: MINT, SWAP & LP`, `ui.barkswap = true`).
-   - Header (`drawUI`) displays `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <staked>`.
-   - Row 0: `MINT < ITEM > NFT (0.1 DOGE)` (`A/D` or mouse `<`/`>` cycles `MINTABLE`; uses `1 WOOD + 1 STONE` for starter Hammer Lv2 or mints directly on `DogeItems`).
-   - Row 1: `WALLET ITEMS (N): #id ITEM, ...` displaying the live balance and IDs of minted item tokens in the player's wallet (`myFree()`).
-   - Pool & Swap rows: `CREATE POOL: N ITEM + < AMT > DOGE` (`addLp` on `DogeDEX`), `POOL ITEM: N ITEMS / X DOGE`, `SWAP X DOGE -> 1 ITEM` (`buyPool`), `SWAP 1 ITEM -> X DOGE` (`sellPool`), `ADD N ITEMS + X DOGE AS LP` (`addLp`), and `REMOVE MY LP` (`removeLp`).
-   - In `drawUI()`, when `ui.barkswap` is true, highlight `MINT` in amber (`#3a2208`/`#ffd860`), `WALLET ITEMS` in dark-slate (`#101838`/`#f8e090`), and `POOL`/`SWAP`/`CREATE POOL` in emerald (`#0c2624`/`#80f8c0`).
-2. **Starter Bag Materials & Direct Minting (`newGame`, `mintNft`, `invMenu`, `shopMenu`):**
-   - Initialize `P` in `newGame()` with `wood:3, stone:3, orb:2, scrap:2, horn:2, steel:2` and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]`.
-   - Support `mintNft(1, 2, 'starter')` consuming `1 WOOD + 1 STONE` (refunding both on reverted tx) from `invMenu` (`I`/`Tab`), `shopMenu`, and `marketMenu` Row 0.
-3. **Distinct Class Gameplay Mechanics (`CLASSES`, `applyClass`, `syncMaxHp`, `attack`, `quickShot`, `drawWorld`, `drawSlash`):**
-   - `applyClass(cls, onchain)` sets `P.prof = cls`, updates `P.maxHp = 60 + P.hpUps*15 + (classOf()?.hp || 0)` via `syncMaxHp()`, and transforms the hero sprite (`SPR[classOf()?.spr || 'hero']`).
-   - **ARCHER (`id:2`):** `spd:1.25, dmg:1.0, hp:0` (`60` maxHp). `Space` (`attack()`) fires a ranged `'arrow'` projectile (`0 MP` cost, `speed=280`, `+1` combat XP on hit) and draws a wooden bow in `drawSlash()`. `K`/`Q` (`quickShot()`) fires a 3-arrow spread volley (`6 MP`).
-   - **HEALER (`id:3`):** `spd:1.25, dmg:0.65, hp:-15` (`45` maxHp), `armor:0.05`. Weak melee staff swing (`Space`) restores `+2 MP` on hit and draws a cyan/emerald staff in `drawSlash()`. `K`/`Q` (`mend()`, `10 MP`) heals `+20 HP * bark skill`.
-   - **WARRIOR (`id:1`):** `spd:0.95, dmg:1.35, hp:+25` (`85` maxHp), `armor:0.15`. Heavy melee cleave (`+4 px` reach + screen shake) on `Space`; `GROUND POUND` AoE slam (`12 MP`) on `K`/`Q`.
-
-## 4. NEGATIVE CONSTRAINTS (DO NOT DO)
-- Do NOT add extra contracts or external ERC-20 tokens outside `DogeItems`, `DogeDEX`, `DogeProfession`, and `DogeStaking`.
-- Do NOT await `refreshChain()` before `await fn()` inside `chainAct()` (blocks the browser wallet popup).
-- Do NOT break the offline fallback when `wallet.connected === false`.
-- Do NOT mutate `api.get().ui = null` in tests to close menus; send `api.press('escape'); api.step(DT);`.
-```
+### Section 9 & 10: Web3 Actions & BarkSwap-Styled Pool DEX (`marketMenu`)
+- **Forge Recipes (`RECIPES` at Wrenchpaw `shopMenu`) & 1-Craft-1-Item Rule (`D-021`):**
+  - `HAMMER LV2` (`2 STEEL + 1 SCRAP`, `nft:[1,2]`), `HAMMER LV3` (`3 STEEL + 2 HORN`, `nft:[1,3]`), `HAMMER LV4` (`5 STEEL + 3 HORN + 2 ORB`, `nft:[1,4]`), `DOGE ARMOR LV1` (`2 STEEL + 1 HORN`, `nft:[2,1]`), `DOGE ARMOR LV2` (`4 STEEL + 2 SCRAP + 2 HORN`, `nft:[2,2]`), `BONE CHARM` (`2 ORB + 1 SCRAP`, `nft:[5,1]`), `MOON BISCUIT` (`1 ORB + 1 HORN`, `nft:[6,1]`).
+  - Crafting grants `P.credits['type:level']`. Minting with `src==='credit'` calls `takeOffChain(t,l)` before `etx` and only refunds (`putBack`) if `!e.sent || e.reverted`.
+  - **Starter Mint (`mintNft(1, 2, 'starter')`):** Consumes `1 WOOD + 1 STONE` from `P.bag` (refunded if `!e.sent || e.reverted`), available in `invMenu()`, `shopMenu()`, and `marketMenu()` Row 0.
+  - **Gear Auto-Equip:** `swordLv() = Math.max(P.sword, Math.min(4, nftBest(1)))`, `armorLv() = Math.max(P.armor, Math.min(2, nftBest(2)))`.
+- **BarkSwap-Styled Pool DEX (`marketMenu(n)` at the Sphinx NPC):**
+  - Title: `'BARKSWAP POOL DEX: MINT, SWAP & LP'`, flags `ui.chain = true; ui.barkswap = true;`.
+  - Header (`drawUI`): `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <fromWei(chainData.staked)>`.
+  - **Row 0 (Direct / Starter Item Mint):** `MINT < ${itemName(mt)} > NFT (${fromWei(chainData.fee||10n**17n)} DOGE)` (`A/D` or mouse `<`/`>` cycles `MINTABLE`; uses `'starter'` source if `mt` is Hammer Lv2 and player has Wood+Stone, else mints directly on `DogeItems`).
+  - **Row 1 (Wallet Minted Items Balance):** `WALLET ITEMS (${inv.length}): ${invTxt}` showing `#id ITEM` tokens currently in `chainData.inv`.
+  - **Marketplace & Pool Rows (`DogeDEX`):**
+    - `WITHDRAW PROCEEDS: <X> DOGE` (`withdrawProceeds()`, when `chainData.proceeds > 0n`)
+    - `DELIST <ITEM> #<id>` (`delistNft`) / `BUY <ITEM> #<id> FOR <X> DOGE` (`buyListing`)
+    - For each active pool (`p.shares > 0n`):
+      - `POOL <ITEM>: <N> ITEMS / <X> DOGE`
+      - ` SWAP <X> DOGE -> 1 <ITEM>` (`buyPool(p)`)
+      - ` SWAP 1 <ITEM> -> <X> DOGE` (`sellPool(mine[0], p)`)
+      - ` ADD <N> ITEMS + <X> DOGE AS LP` (`addLp(ids, need, p)` with `minShares = 99%` slippage guard)
+      - ` REMOVE MY LP (<pct>%)` (`removeLp(p)` with `minItems` and `99% minDoge` guard)
+    - For each unpooled wallet NFT:
+      - `SELL #<id> <ITEM> FOR < <price> > DOGE` (`listNft(it, price)`)
+      - `CREATE POOL: <N> <ITEM> + < <amt> > DOGE` (`addLp(ids, toWei(amt))`)
+  - **BarkSwap Card Styling in `drawUI()` (`when ui.barkswap === true`):**
+    - Selected row: `#3a2208` fill with `#ffd860` text.
+    - `MINT ` row: `#281a08` fill with `#ffc850` text.
+    - `WALLET ITEMS` row: `#101838` fill with `#f8e090` text.
+    - `POOL ` / ` SWAP` / `CREATE POOL` rows: `#0c2624` fill with `#80f8c0` text.
+- **Sphinx DeFi Hub (`bankMenu`) & Staking (`stakeMenu`):**
+  - `bankMenu`: Connect/Wallet rows, `NFT MARKET: SWAP + LIQUIDITY POOLS` (`marketMenu`), `ON-CHAIN STAKING: EARN 0.8% OF DEX FEES` (`stakeMenu`), Faucet link, Camp Vault stake/unstake (`+1%`, redirects to `stakeMenu` if `P.doge===0 && wallet.connected`), Whiskers->DOGE swap (`1 whisk = 3 DOGE`), Bone Charm (`50 DOGE`), Moon Biscuit (`40 DOGE`), `oracleRow()`, `SPHINX SCHOOL: DEFI 101 LESSONS` (8 lessons), DogeOS links, `DISCONNECT WALLET`.
+  - `stakeMenu`: Row 0 is `STAKE < ${amt} > DOGE (EARN 0.8% FEES)` (`stakeDoge(amt)`), followed by `YOUR STAKE`, `PENDING REWARDS (CLAIM)` (`claimStakeRewards()`), conditional `UNSTAKE ALL` (`unstakeStake()`), and conditional `SYNC DEX FEES TO STAKERS` (`syncDexFees()`).
+- **Elder Heist Hub (`elderMenu`) & Partner NPCs (`partnerMenu`):**
+  - Elder (`quest`): 5-page `HEIST_STORY`, 3 `FACTIONS` (`DEMOLITION DOGS`, `KERNEL CREW`, `BARKITECTS`), `JOIN <FACTION>`, and `OPEN HEIST.DOGEOS.COM`.
+  - Partners: Cloverheart (`https://relotto.app/`, `https://app.relotto.app`), Noah (`https://trynoah.ai/?utm_source=ambassador&utm_medium=affiliate&utm_campaign=ambassador_program&utm_content=afft5eetm&ref=AFF-T5EETM`), Bitget Wallet Card (`https://web3.bitget.com/share/41bYlR?inviteCode=VovB4P5R`, `https://web3.bitget.com/card`).
 
 ---
 
-## C. Pre-Decision Gate & Iteration Templates
+## 4. SOLIDITY CONTRACTS SPECIFICATION (`contracts/src/*.sol`)
 
-### RULE #0 — Analyzer Prompt Master Gate (ALWAYS RUN FIRST)
-Before taking any decision or editing any file, run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs`, follow `prompts/ANALYZER_PROMPT_MASTER.md`, and verify all 4 gates:
-1. **Line Budget & Zero-Dep Gate:** `index.html` < 1,500 lines, 0 external assets/fetch/alerts.
-2. **Selector & Collision Gate:** Every `SEL.*` key used; 0 top-level identifier collisions.
-3. **Offline & Economy Invariant Gate:** Every Web3 action has an offline fallback; 1 craft = 1 item (`creditOk` + `putBack`/`takeOffChain`).
-4. **100% Web3 Sim Coverage Gate:** Every Web3 action function is exported and tested in `tests/sim.mjs`.
-
-### C1. Web3 / DeFi Feature (`index.html` CHAIN + UI sections)
-```
-Feature: <one sentence>. Chain: DogeOS Chikyu testnet (CHAIN.id 0x5fdaf3).
-Rules: EIP-1193 window.ethereum only after CONNECT; precomputed 4-byte selector in SEL; instant wallet popup in chainAct();
-offline fallback when !chainReady(); async status via setWalletMsg(); handle 4001 (rejected), -32002 (pending), 4902 (add chain).
-Verify: export in tests/sim.mjs HARNESS, add mockEth() assertions, run audit-scan.mjs + bash tests/check.sh.
-```
-
-### C2. Solidity Contract (`contracts/src/`, Foundry)
-```
-Contract: <name + one sentence>. Solidity ^0.8.24, OpenZeppelin v5.1, checks-effects-interactions, pull payments for ETH/DOGE
-payouts, custom errors, events on every state mutation, no admin drain on user funds. Run forge test (45+ tests).
-```
-
-### C3. Pixel Art / Character Sprite (`CHARACTER SPRITES` section)
-```
-Create a 16x20 sprite using buildChar({head:HEAD.dog|cat, pal:{O,F,C,P,E,N,R,W,T,A,B,L,K}, acc(g,dir,frame)}) or staticSpr().
-Integer coordinates only, dark outline, max 3 shades per material. Render via `node tests/sprites.mjs` to inspect visually.
-```
+1. **`DogeItems.sol` (`ERC721Enumerable`):**
+   - `uint256 public constant mintFee = 0.1 ether;`
+   - `mint(address to, uint8 itemType, uint8 level) payable returns (uint256 id)`: requires `itemType ∈ 1..6`, valid `level`, `msg.value >= mintFee`; refunds excess DOGE; packs `(id << 16) | (itemType << 8) | level`.
+   - `burn(uint256 id)`: owner/approved burns consumable NFT.
+   - `inventoryOf(address owner) external view returns (uint256[] memory packed)`.
+   - `tokenURI(uint256 id)`: returns `data:application/json;base64,...` with on-chain SVG badge.
+2. **`DogeDEX.sol` (`ReentrancyGuard`, `IERC721Receiver`):**
+   - Fixed-price listings: `list(uint256 id, uint256 price)`, `delist(uint256 id)`, `buy(uint256 id) payable`, `listedCount()`, `activeListings(uint256 offset, uint256 limit)`.
+   - Constant-product AMM pools (`key = (uint16(itemType) << 8) | uint16(level)`):
+     - `addLiquidity(uint256[] calldata ids, uint256 minShares) payable returns (uint256 mintedShares)` (`1e18` shares per item on new pool, `MIN_FIRST_DOGE = 1e12`).
+     - `removeLiquidity(uint256 key, uint256 shareAmt, uint256 minItems, uint256 minDoge)`.
+     - `buyFromPool(uint256 key) payable returns (uint256 id)` & `sellToPool(uint256 id, uint256 minOut)`: **2% LP fee** stays in pool reserves + **1% protocol fee** outside reserves split **20% treasury (`0.2%`) / 80% stakers (`0.8%`)**.
+     - Pull-payment `proceeds[seller]` + `withdraw()`; `flushStakerFees()` forwards accrued staker fees to `DogeStaking.notifyRewardAmount{value}()` (fallback-safe if no stakers).
+     - `dogeUsd() view returns (uint256 price8, uint256 updatedAt)` reads RedStone feed on Chikyū.
+3. **`DogeProfession.sol`:**
+   - `uint256 public constant profFee = 0.05 ether;`
+   - `mapping(address => uint8) public professionOf;` (`1 = WARRIOR`, `2 = ARCHER`, `3 = HEALER`).
+   - `choose(uint8 classId) external payable`: reverts with `AlreadyChosen()` if `professionOf[msg.sender] != 0` or `InvalidClass()` if `classId < 1 || classId > 3`.
+4. **`DogeStaking.sol` (`ReentrancyGuard`):**
+   - MasterChef accumulator `accRewardPerShare` (`1e18` precision).
+   - `stake() external payable`, `unstake(uint256 amount)`, `claim()`, `notifyRewardAmount() external payable`, `pendingRewards(address user) external view returns (uint256)`.
 
 ---
 
-## G. Feature Ledger (Every Shipped Feature, Key Code, and Decision Log)
-Update this table in the same commit as each feature (**RULE #1**).
+## G. Canonical Subsystem Ledger (`D-014..D-036`)
 
-| Iter | Feature | Key code (`index.html` unless noted) | Log |
-|---|---|---|---|
-| P3 IT-1 | Rest cap 60%, 12-slot bag (I/Tab), skill-by-use | `REST_CAP`, `BAG_SIZE`, `FOODS`, `addToBag/bagCount/bagRemove`, `invMenu()`, `P.skills`, `P.iT` (was `P.inv`) | D-014 |
-| P3 IT-2 | Fishing at 5 ponds, per-skill tiers, field pop 22 / spawn 3 s | `PONDS_EXTRA`, `SKILL_THRESH{combat,fishing,bark}`, `skillLv/skillMul(xp,kind)`, `FISH_MIN/MAX`, `waterAt/startFish/stopFish/updFish`, `drawFishing()`, `FIELD_POP/DUN_POP/SPAWN_EVERY` | D-015 |
-| P3 IT-3 | Real wallet connect + DogeOS Chikyu add/switch, balance, disconnect, offline fallback | CHAIN section: `CHAIN`, `wallet`, `eth()`, `connectWallet()`, `switchChain()`, `refreshBal()`, `hookWallet()`, `disconnectWallet()`, `walletRows()`, `setWalletMsg()`; `tests/serve.mjs` | D-016 |
-| P3 fix | IT-2 review fixes: ponds carved after vegetation, face-water-only cast, no cast while moving, up-cast drawn above head, ninjas favour ponds | `genMap()` pond pass + shore ring, `startFish()`, `waterAt()`, `NINJA_WATER`, `nearWaterT()` | D-017 |
-| P3 IT-4 | Contracts: DogeItems ERC-721 crafter mint (0.1 DOGE fee, on-chain SVG) + DogeDEX listings and DOGE/item LP pools (x·y=k, 2% LP fee, pull payments, no admin) | `contracts/src/DogeItems.sol`, `contracts/src/DogeDEX.sol`, `contracts/script/Deploy.s.sol`, `tests/check.sh` stage 4 | D-018 |
-| P3 IT-5 | Game ↔ contracts: forge mint credits + PRESERVE fish, bag NFT rows (eat = burn), owning gear NFT = wearing it, Sphinx NFT MARKET, scrolling menus, `?chain=local` anvil mode | `CONTRACTS`, `SEL`, `W32/A32/words/arrAt/unpack`, `ecall/etx`, `chainData`, `refreshChain`, `chainAct`, `ensureApproved`, `mintNft/useNft/listNft/delistNft/buyListing/addLp/removeLp/buyPool/sellPool/withdrawProceeds`, `swordLv/armorLv`, `marketMenu`, `MENU_ROWS` | D-019 |
-| P3 IT-6 | Survival tests (rest cap, bag, food, cook, skills, death), bag slot + materials rows, death empties the bag (preserve fish as NFTs), player README | `respawn()`, `invMenu()`, `tests/sim.mjs` IT-6 scenarios, `README.md` | D-020 |
-| P3 fix | IT-5 review fixes: mint moves crafted items on chain (no dupes), no refund on unknown tx outcome, account switch resets NFTs, `0x` = "deploy first", drained pools re-creatable, `#`/`^` glyphs | `creditOk/takeOffChain/putBack`, `etx` `.sent/.reverted`, `resetChainData()`, `ecall` 0x guard, `marketMenu` shares filter, `FONT` | D-021 |
-| P3 audit | Contract audit fixes: no zero-share LP theft (1e18 shares/item first LP, MIN_FIRST_DOGE, ZeroShares, minShares, ZeroPayout), removeLiquidity slippage, ERC721Enumerable inventory, paginated listings | `DogeDEX.addLiquidity(ids,minShares)`, `removeLiquidity(key,amt,minItems,minDoge)`, `activeListings(offset,limit)`, `listedCount()`, `DogeItems is ERC721Enumerable` | D-022 |
-| P3 tool | Deploy helper writes deployed addresses into `CONTRACTS` after checking contract code on the RPC | `contracts/apply-deployment.mjs` | D-023 |
-| P4 | **The Grand Heist**: partner NPCs (Cloverheart/Relotto, Noah/trynoah.ai, Bitget Wallet Card), Elder = Heist lore + factions + heist.dogeos.com, Sphinx = DogeOS DeFi hub, DogeDEX RedStone `dogeUsd()` | `SPR.clover/noah/bitget`, `staticSpr`, `PADS2`, `LINKS`, `openLink/linkRow`, `bankMenu` hub, `SCHOOL/schoolMenu`, `elderMenu/factionMenu/FACTIONS/HEIST_STORY`, `PARTNERS/partnerTalk/partnerMenu`, `REDSTONE/oracle/refreshOracle/oracleRow` | D-024 |
-| P4 live | First Chikyū deploy (`DogeItems` + `DogeDEX`) + creator referral links on Noah & Bitget NPCs | `CONTRACTS['0x5fdaf3']`, `LINKS.noah`, `LINKS.bitgetShare` | D-025, D-026 |
-| P5 IT-1..3 | **Factions of the Heist**: `DogeProfession.sol` (one class/wallet, paid `choose`), 3 faction trainers in camp (`PADS3`), WARRIOR/ARCHER/HEALER passive stats + `GROUND POUND`/`QUICK SHOT`/`MEND` skills | `contracts/src/DogeProfession.sol`; `SPR.tWarrior/tArcher/tHealer`, `CLASSES`, `classOf/classSpd/classDmg/classArmor`, `chooseProfession`, `professorTalk/professorMenu`, `useSkill/groundPound/quickShot/mend` | D-027, D-028, D-029 |
-| P5 IT-4..6 | **On-chain DOGE Staking + 1% DEX Fee Split**: `DogeStaking.sol` (MasterChef), `DogeDEX` 1% protocol fee (0.2% project / 0.8% stakers, outside reserves), `stakeMenu()` in Sphinx UI, full 4-contract redeploy live on Chikyū | `contracts/src/DogeStaking.sol`, `DogeDEX._protoSplit/_accrueProto/flushStakerFees`; `stakeDoge/unstakeStake/claimStakeRewards/syncDexFees`, `stakeMenu`, `CONTRACTS['0x5fdaf3']` | D-030, D-031, D-032 |
-| P5 clean | Finishing pass: dead code removal (`solidFor` duplicate check I-9, `ITEM_ICONS`, `SEL.poolTvlUsd`) | `solidFor()`, `MAT_ICONS`, `SEL` | D-033 |
-| P5 meta | **Analyzer Prompt Master & Rule #0 Gate + Solidity/Web3/Browser Skills**: pre-decision analyzer prompt (`prompts/ANALYZER_PROMPT_MASTER.md`), `AGENTS.md` workspace rule file, `find-skills`, `agent-browser`, `avalanche-skills` + `avax-*` EVM/Audit/Security skill packs | `prompts/ANALYZER_PROMPT_MASTER.md`, `AGENTS.md`, `CLAUDE.md`, `prompts/SESSION_PROMPT.md`, `.claude/skills/`, `.agents/skills/` | D-034 |
-| P5 audit | **Audit Hardening & 100% Web3 Action Test Coverage**: `chainChanged` reload (G-1), Sphinx/STAKE live-testnet copy (G-2), boss minion aggro range (I-3), `spawnEnemy` ≥200 px (I-4), title particles `dt` (I-5), `AudioContext` gesture resume (I-8), and full Phase 5 Web3 test scenario (G-7) | `hookWallet()`, `talk()`, `SCHOOL`, `updEnemy()`, `spawnEnemy()`, `update()`, `drawTitle()`; `tests/sim.mjs` D-035 scenarios | D-035 |
-| P5 ux | **BarkSwap-Styled Pool DEX, Distinct Class Mechanics, Starter Bag Materials (`WOOD`/`STONE`), Wallet Minted Items Balance & Mouse UX**: `marketMenu` (`BARKSWAP POOL DEX: MINT, SWAP & LP`, `ui.barkswap=true`) with Row-0 `MINT < ITEM > NFT`, Row-1 `WALLET ITEMS (N)` balance, and `CREATE POOL` / `SWAP` / `ADD LP` on `DogeDEX`; Archer `Space` basic arrow (`0 MP`) + 3-arrow volley (`K`/`Q`); Healer weak melee (`+2 MP` on hit) + `-15` HP + fast speed + `MEND`; Warrior `+25` HP + `+15%` armor + wider cleave; hero sprite transform; starter `WOOD x3` + `STONE x3` bag minting; Row-0 staking; and mouse controls | `CLASSES`, `applyClass/syncMaxHp`, `attack()`, `quickShot()`, `drawWorld()`, `drawSlash()`, `MINTABLE`, `marketMenu()`, `stakeMenu()`, `drawUI()`, `cvPos()` | D-036 |
+| ID | Subsystem | Canonical Symbols (`index.html` / `contracts/src/`) |
+|---|---|---|
+| D-014..D-015 | Rest cap (60%), 12-slot bag, skill-by-use, 5 fishing ponds, field/dungeon pop | `REST_CAP`, `BAG_SIZE`, `FOODS`, `MAT_TYPES`, `addToBag/bagCount/bagRemove`, `invMenu()`, `SKILL_THRESH`, `PONDS_EXTRA`, `startFish/updFish`, `FIELD_POP/DUN_POP` |
+| D-016..D-023 | EIP-1193 DogeOS Chikyū wallet, `DogeItems` + `DogeDEX`, 1-craft-1-item credits, slippage & pagination | `CHAIN`, `CONTRACTS`, `SEL`, `connectWallet/switchChain/disconnectWallet`, `DogeItems.sol`, `DogeDEX.sol`, `creditOk/takeOffChain/putBack`, `apply-deployment.mjs` |
+| D-024..D-026 | Grand Heist lore, Elder factions, Partner NPCs (Relotto, Noah, Bitget), RedStone DOGE/USD oracle | `SPR.clover/noah/bitget`, `LINKS`, `bankMenu`, `SCHOOL/schoolMenu`, `FACTIONS/HEIST_STORY`, `PARTNERS`, `REDSTONE/refreshOracle/oracleRow` |
+| D-027..D-033 | `DogeProfession.sol`, `DogeStaking.sol`, 1% DEX protocol fee split (0.2% / 0.8%), 4-contract Chikyū deploy | `DogeProfession.sol`, `DogeStaking.sol`, `SPR.tWarrior/tArcher/tHealer`, `CLASSES`, `chooseProfession`, `useSkill/groundPound/quickShot/mend`, `stakeMenu` |
+| D-034..D-035 | Pre-decision diagnostic gate (`audit-scan.mjs`), `chainChanged` reload, 100% Web3 sim test coverage | `.agents/skills/analyzer-master/scripts/audit-scan.mjs`, `hookWallet()`, `spawnEnemy()`, `tests/sim.mjs` D-035 scenarios |
+| D-036 | **BarkSwap Pool DEX, Distinct Class Mechanics, Starter Bag (`WOOD`/`STONE`) Minting, Wallet Items Balance & Mouse UX** | `CLASSES`, `applyClass/syncMaxHp`, `attack()`, `quickShot()`, `drawWorld()`, `drawSlash()`, `MINTABLE`, `marketMenu()`, `stakeMenu()`, `drawUI()`, `cvPos()` |
