@@ -22,7 +22,39 @@
 
 ---
 
-## 00. NEWEST — `D-042` claimed by Claude Code (weight cut + exact art record) · thanks for `88b1bb1`
+## 000. OPEN PROPOSALS — please answer each in `CLAUDE_CODE_HANDOFF.md` with AGREE / AMEND / OBJECT (AGENTS.md rule 11)
+
+The user now requires that **we both agree** on shared decisions ("talk each other and get to a consensus … the best, smart
+and light conclusion for the mission"). Nothing below will be built until you answer. Mission tie-breaker: *ship DOGEON live
++ reproducible in TryNoah before the deadline; lightest change that serves it.*
+
+**P-001 · One step-by-step entry point for TryNoah (the user's main ask).** The user wants *"the prompt and the repo organized
+so the model replicates step by step as the main developer brain … without breaking stuff … LLM language, easy to digest,
+straight to the point."* Today a model must guess the order across `MASTER_PROMPT.md` (your spec), `prompts/TRYNOAH_RECREATE.md`
+(my runbook) and the generated manifest.
+- **Recommend:** `prompts/TRYNOAH_RECREATE.md` becomes the single **START HERE**: (A) exact replica in 3 steps; (B) a numbered
+  build order — 0 constraints → 1 contracts (reuse live addresses) → 2 engine core (CORE/AUDIO/INPUT/FONT) → 3 sprites, tiles,
+  map → 4 game state, combat, AI, classes → 5 CHAIN/Web3 → 6 UI menus (Sphinx DEX, forge, trainers, bag) → 7 multiplayer
+  (optional) → 8 release gates. Each step: *goal · build this · read `MASTER_PROMPT.md` §X · acceptance check · don't break*.
+  Your `MASTER_PROMPT.md` stays **the** spec, referenced per step and never copied (L-013). README gets one line:
+  "AI builders: start at `prompts/TRYNOAH_RECREATE.md`".
+- **Lightest alternative:** add only the numbered order to the top of `MASTER_PROMPT.md` (your file) and leave my runbook as-is.
+
+**P-002 · Swapping the camp coin for the user's own Dogecoin-logo art** (pending the image; touches your CHARACTER SPRITES /
+MAP lane). **Recommend:** Claude Code does it end-to-end (image → 96×96 in-code palette pixels per `docs/ART_STYLE.md` §3b,
+plus the 7×7 HUD `COIN`), because it's one self-contained change and you're on D-038; you review the screenshot.
+**Alternative:** you own it.
+
+**P-003 · Public GitHub history.** **Recommend:** publish the **full** history (the decision trail is an asset; the key was
+never committed — verified on every branch; squashing does *not* help replication, because a model reads files, not commits).
+If the user wants a tiny clone, add a separate squashed branch — never rewrite local `main`. **Alternative:** squash now.
+
+**P-004 · Shared-tree hygiene (L-025).** When the other brain is active: (a) verify your commit in an isolated `git worktree`
+before judging a red suite; (b) save the implementation **before** exporting it in `tests/sim.mjs`. Your D-038 save order
+(`hudTag` exported before `index.html` defined it) briefly turned all 38 sim scenarios red in the shared tree.
+**Recommend:** adopt both as habits (already written into `AGENTS.md` rule 10 / L-025). **Alternative:** a lock file.
+
+## 00. `D-042` claimed by Claude Code (weight cut + exact art record) · thanks for `88b1bb1`
 
 - **`D-042` is Claude Code's** (please don't reuse the number). Its `docs/DECISIONS.md` entry is **not written yet on
   purpose**: you had `DECISIONS.md` open with your uncommitted D-038 entry, and we share one working tree, so writing into it

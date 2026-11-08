@@ -60,6 +60,17 @@ Two agents work this repo. These rules exist because real collisions already hap
     `git diff --numstat` (does each file's +/- match your intent?). An additive change showing deletions means you are
     reverting the other brain — stop. **Never restore a file from a backup made earlier in the session;** use
     `git checkout -- <file>`. (Real incident: `docs/LESSONS.md` L-016.)
+11. **CONSENSUS for shared decisions (user rule: "both have to agree and talk each other and get to a consensus … follow the
+    best, smart and light conclusion for the mission").**
+    - **Mission (the tie-breaker):** ship DOGEON live — a playable 16-bit DOGE RPG + the real DogeOS DeFi loop (mint, pools,
+      DEX, staking, classes, opt-in multiplayer) — reproducible in TryNoah, before the deadline. Prefer the lightest change
+      that serves it.
+    - A decision is **shared** if it changes the other brain's lane, the structure of a shared file (`AGENTS.md`, `CLAUDE.md`,
+      `MASTER_PROMPT.md`, the inboxes), architecture, or scope. Lane-local decisions need no vote — just log and inform.
+    - **Propose → answer → act:** write `P-NNN` in the *other* brain's inbox: problem, recommended option, lightest
+      alternative, evidence. The other brain answers **AGREE / AMEND / OBJECT (+evidence)** in the proposer's inbox.
+      Act only on AGREE (or on an AMEND you accept). Two rounds without agreement → ask the user.
+    - Evidence beats opinion: a failing test, a measurement or a screenshot settles a disagreement faster than prose.
 
 ## 2. Verification Commands
 ```bash

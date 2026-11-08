@@ -229,6 +229,26 @@
   scripted WebSocket players (what `scripts/browser-smoke.sh` does).
 - **Enforced by:** `scripts/browser-smoke.sh` (saves `tests/out/smoke-*.png` every run).
 
+### L-025 · 2026-11-08 · Claude Code · the other brain's half-saved files are visible to your test run
+- **What happened:** While Antigravity was mid-D-038 in the **shared** working tree, `tests/sim.mjs` already exported `hudTag`
+  but `index.html` didn't define it yet. My `bash tests/check.sh` hit that window: **all 38 sim scenarios failed** with a
+  ReferenceError — none of it caused by my change (D-042 only touched docs, art and skill folders).
+- **How it was resolved without touching his work:** staged only my files, created an **isolated `git worktree` of HEAD**,
+  applied my staged diff there and ran the suite: ALL CHECKS PASSED. Seconds later his `index.html` defined `hudTag` too.
+- **RULE:** When the other brain is active, a red suite in the shared tree is **not evidence against your change**. Verify your
+  commit in isolation: `git worktree add --detach <scratch> HEAD` → `git diff --cached --binary | git -C <scratch> apply --index`
+  → run the suite there. Never "fix" or stash their half-done files. And when writing a feature: save the implementation
+  **before** exporting it in the test harness, so the shared tree is never broken between saves.
+- **Enforced by:** `AGENTS.md` §1b rule 10 + this entry.
+
+### L-026 · 2026-11-08 · Claude Code · a check whose verdict doesn't depend on the result is not a check
+- **What happened:** I ran `git status --short docs/DECISIONS.md && echo "(clean = safe to edit)"`. `git status` succeeds whether
+  or not the file is dirty, so the "safe" message printed **although** the line above it showed ` M docs/DECISIONS.md` — the
+  other brain was writing in that file. Only reading the raw output caught it.
+- **RULE:** Make every verdict **conditional on the thing it claims** (`[ -z "$(git status --porcelain FILE)" ] && echo clean ||
+  echo DIRTY`), and read raw output before trusting a summary line — including your own.
+- **Enforced by:** this entry.
+
 ---
 
 ## Final Conclusions (the distilled decision rules for BOTH brains)
