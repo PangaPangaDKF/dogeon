@@ -35,6 +35,29 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-032 · 2026-11-08 · Full set redeployed to Chikyū (items+dex+prof+staking) + offline class-pick fix (Phase 5 part 6 = complete)
+- What: Redeployed the whole contract set to DogeOS Chikyū with the new DEX (1% fee + staking) and the profession + staking contracts,
+  and wired all four into `CONTRACTS['0x5fdaf3']`. This supersedes the D-025 deploy (which was items+dex only, to prove the pipeline).
+  - **DogeItems** `0x207641C60474526a353960F3967d5c412026F62e` · **DogeDEX** `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10`
+  - **DogeProfession** `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055` · **DogeStaking** `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`
+  - Verified on-chain: `dex.stakingPool()` = the staking address, `dex.PROTO_FEE_BPS()` = 100, `prof.fee()` = 5e16 (0.05 DOGE),
+    `stake.totalStaked()` = 0. DOGE/USD feed still RedStone `0x434F…C968`.
+- Regression caught by the sim (and fixed here): once `CONTRACTS.prof` held a real address, `chooseProfession` took the on-chain
+  branch even with NO wallet, so offline players could not pick a class (breaks the "playable offline" invariant). Fix: the free LOCAL
+  pick now triggers when `!chainReady() || !addrs().prof` (offline OR registry absent); the on-chain oath only when connected AND deployed.
+  The sim profession scenario now runs against the live addresses, so it covers this.
+- Why: Deliver the staking + profession features live on the testnet, per the user ("stake doge … fee from the dex", "one profession
+  per wallet … sign a transaction"). PvP deferred by the user's choice.
+- Tool: Claude Code (Opus 4.8), Foundry 1.5.1 (scratchpad). Deploy cost a few ten-thousandths of a DOGE; deployer
+  `0x7BE839793765F18E36cC97b5312d094F6AE282Ca` (~90.9 DOGE before). Key kept only in the session scratchpad; verified not in any tracked file.
+  Foundry `cache/.../run-latest.json` (sensitive) is gitignored and deleted; `broadcast/.../6281971/` (public tx record) committed.
+- Verify: `node tests/sim.mjs` 0 failed (incl. the offline class-pick fix); `forge test` 45 passed; `cast` wiring checks above.
+- Phase 5 "Factions of the Heist" status: COMPLETE — professions (contract + trainers + classes + skills) and staking (contract + 1%
+  fee split + UI) are live on Chikyu. Deferred: on-chain party/PvP/loot (user chose "skip for now").
+- Commit: this commit.
+
+---
+
 ### D-031 · 2026-11-08 · On-chain staking in the Sphinx UI (Phase 5 part 5/N)
 - Feature: The Sphinx DeFi hub gains an **ON-CHAIN STAKING: EARN 0.8% OF DEX FEES** row → `stakeMenu()`. It shows your staked DOGE
   and pending rewards, and lets you **stake** a preset DOGE amount (A/D to pick), **unstake all**, **claim rewards**, and

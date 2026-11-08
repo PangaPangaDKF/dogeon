@@ -642,7 +642,7 @@ function walletRows(){
 // dev: open with ?chain=local to use a local anvil chain (contracts/README.md); Chikyu addresses go in CONTRACTS after deploy
 const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catch(e){return false;}})();
 if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
-const CONTRACTS={'0x5fdaf3':{items:'0x596Ad480C01f20019Ab01F124B6F8655A3D046f0',dex:'0x5a76f70E0603C3e774ae4e9F2C4F225D1f7FBa51',prof:'',stake:''},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',prof:'',stake:''}};
+const CONTRACTS={'0x5fdaf3':{items:'0x207641C60474526a353960F3967d5c412026F62e',dex:'0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10',prof:'0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055',stake:'0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d'},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',prof:'',stake:''}};
 const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',poolTvlUsd:'25da0b68',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',flushFees:'6811406e',stakerFeesView:'67f7cf97'};
 const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
 const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50],LIST_PAGE=100,LIST_MAX=500; // sell / LP presets in DOGE, picked with A/D in the market menu
@@ -688,7 +688,7 @@ async function refreshChain(){
 }
 // Phase 5 (D-028): claim your class on-chain. One per wallet forever; pays profFee DOGE + gas. Local pick stays free when offline.
 function chooseProfession(cls){const c=CLASSES[cls];if(!c)return;
-  if(!addrs().prof){P.prof=cls;setWalletMsg(`YOU TRAIN AS A ${c.name} (LOCAL). THE ON-CHAIN REGISTRY IS NOT DEPLOYED HERE YET.`);return;}
+  if(!chainReady()||!addrs().prof){P.prof=cls;setWalletMsg(`YOU TRAIN AS A ${c.name} (LOCAL). CONNECT AT THE SPHINX TO SWEAR IT ON-CHAIN.`);return;} // offline / registry not here: free local pick (game stays playable with no wallet)
   if(chainData.profession){setWalletMsg(`THIS WALLET IS LOCKED IN AS A ${CLASSES[CLASS_IDS[chainData.profession]].name}. ONE CLASS PER WALLET.`);return;}
   return chainAct(`YOU ARE NOW A ${c.name}, SWORN ON-CHAIN. SUCH OATH.`,async()=>{await etx(addrs().prof,SEL.chooseProf+W32(c.id),chainData.profFee);P.prof=cls;});}
 // Phase 5 (D-030): on-chain DOGE staking — stake real testnet DOGE, earn the holders' 0.8% share of every DEX trade

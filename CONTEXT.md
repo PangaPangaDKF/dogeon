@@ -27,9 +27,13 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
   On 2026-11-07 the feed was STALE (latestRoundData reverts), so the game falls back to the adapter's `getLastUpdateDetailsUnsafe("DOGE")` and marks it STALE.
   DogeDEX `dogeUsd()` (0x435a3613) never reverts. Local anvil now deploys MockPriceFeed: items 0x5FbDB2315678afecb367f032d93F642f64180aa3,
   feed 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512, **dex 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0** (written by `node contracts/apply-deployment.mjs 31337`).
-- **LIVE on Chikyū (D-025, 2026-11-08):** items `0x596Ad480C01f20019Ab01F124B6F8655A3D046f0`, dex `0x5a76f70E0603C3e774ae4e9F2C4F225D1f7FBa51`,
-  DOGE/USD feed `0x434F8D17c0301cfEa143dba912972E24B827C968`. Deployer `0x7BE839793765F18E36cC97b5312d094F6AE282Ca`. Addresses are in `index.html` `CONTRACTS['0x5fdaf3']`.
+- **LIVE on Chikyū (D-032, 2026-11-08, full Phase 5 set — supersedes the D-025 items+dex deploy):**
+  items `0x207641C60474526a353960F3967d5c412026F62e`, dex `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10`,
+  prof `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`, stake `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`,
+  DOGE/USD feed `0x434F8D17c0301cfEa143dba912972E24B827C968`. Deployer `0x7BE839793765F18E36cC97b5312d094F6AE282Ca`. All four in `index.html` `CONTRACTS['0x5fdaf3']`.
   Foundry 1.5.1 lives in the session scratchpad (`scratchpad/foundry/forge.exe` etc.); re-download the Windows zip if the scratchpad is gone.
+- **Phase 5 "Factions of the Heist" (D-027..D-032):** professions (one class/wallet, paid `choose`), 3 faction trainers, warrior/archer/healer
+  passive stats + GROUND POUND/QUICK SHOT/MEND skills, and DOGE staking (stake → earn 0.8% of a new 1% DEX fee; project keeps 0.2%). PvP deferred by the user.
 - Tests: 88 sim PASS (incl. anvil e2e + oracle) + 28 forge. Versions: SESSION_PROMPT v2.1, skill v2.1, DECISIONS to D-024. Art check: `node tests/sprites.mjs index.html out.png`.
 
 ---
