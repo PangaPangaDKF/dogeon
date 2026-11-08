@@ -248,7 +248,6 @@ const [STEEL_IC,sti]=mk(7,7);rect(sti,1,1,5,5,'#a0a8b0');rect(sti,2,2,3,3,'#d0d8
 const [FISH_IC,fig]=mk(9,7);rect(fig,2,1,5,5,'#80c0e0');rect(fig,3,2,3,3,'#a0d8f0');px(fig,1,2,'#80c0e0');px(fig,1,4,'#80c0e0');px(fig,7,3,'#80c0e0');px(fig,0,3,'#60a0b8');px(fig,8,2,'#60a0b8');px(fig,8,4,'#60a0b8');px(fig,4,2,'#204060');
 const [CFISH_IC,cfg2]=mk(9,7);rect(cfg2,2,1,5,5,'#f0a040');rect(cfg2,3,2,3,3,'#f8c060');px(cfg2,1,2,'#f0a040');px(cfg2,1,4,'#f0a040');px(cfg2,7,3,'#f0a040');px(cfg2,0,3,'#c08030');px(cfg2,8,2,'#c08030');px(cfg2,8,4,'#c08030');px(cfg2,4,2,'#604020');
 const MAT_ICONS={orb:ORB_IC,scrap:SCRAP_IC,horn:HORN_IC,steel:STEEL_IC};
-const ITEM_ICONS={raw_fish:FISH_IC,cooked_fish:CFISH_IC,orb:ORB_IC,scrap:SCRAP_IC,horn:HORN_IC,steel:STEEL_IC,whisk:WHISK};
 function makeBone(vert){const [c,g]=mk(9,9);const P=(x,y,col)=>vert?px(g,y,x,col):px(g,x,y,col);for(let x=1;x<7;x++)P(x,4,'#f4f4f4');for(const x of [2,4])for(const y of [2,3,5,6])P(x,y,'#dcdcdc');P(7,3,'#f4f4f4');P(7,4,'#f4f4f4');P(7,5,'#f4f4f4');P(8,4,'#f4f4f4');P(0,3,'#dcdcdc');P(0,5,'#dcdcdc');P(7,4,'#202020');return c;}
 const BONE=[makeBone(false),makeBone(true)];
 
@@ -472,7 +471,7 @@ function spawnEnemy(zone){
 function summon(b){let n=0;for(const e of enemies)if(e.zone==='boss'&&!e.boss&&!e.dead)n++;if(n>=4)return;for(const ox of [-24,24]){const x=b.x+ox,y=b.y+10;if(!blocked({hw:5,hh:4,enemy:true},x,y)){const e=makeEnemy('alley',x,y,'boss');e.cool=0;enemies.push(e);puff(x,y,'#c0a0e0',8);}}sfx(300,0.3,'sawtooth',0.04,300);}
 
 // ================= COLLISION =================
-function solidFor(tx,ty,ent){if(ent.boss&&ty>=GATE_ROW)return true;const t=get(tx,ty);if(t===T.GATE)return !state.gateOpen;if(SOLID.has(t))return true;if(ent.enemy&&inCampT(tx,ty))return true;if(ent.boss&&ty>=GATE_ROW)return true;return false;}
+function solidFor(tx,ty,ent){if(ent.boss&&ty>=GATE_ROW)return true;const t=get(tx,ty);if(t===T.GATE)return !state.gateOpen;if(SOLID.has(t))return true;if(ent.enemy&&inCampT(tx,ty))return true;return false;}
 function blocked(ent,x,y){
   const x0=Math.floor((x-ent.hw)/16),x1=Math.floor((x+ent.hw-0.01)/16),y0=Math.floor((y-ent.hh)/16),y1=Math.floor((y+ent.hh-0.01)/16);
   for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++)if(solidFor(tx,ty,ent))return true;
@@ -643,7 +642,7 @@ function walletRows(){
 const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catch(e){return false;}})();
 if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
 const CONTRACTS={'0x5fdaf3':{items:'0x207641C60474526a353960F3967d5c412026F62e',dex:'0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10',prof:'0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055',stake:'0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d'},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',prof:'',stake:''}};
-const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',poolTvlUsd:'25da0b68',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',flushFees:'6811406e',stakerFeesView:'67f7cf97'};
+const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',flushFees:'6811406e',stakerFeesView:'67f7cf97'};
 const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
 const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50],LIST_PAGE=100,LIST_MAX=500; // sell / LP presets in DOGE, picked with A/D in the market menu
 const W32=n=>BigInt(n).toString(16).padStart(64,'0'),A32=a=>String(a).toLowerCase().replace(/^0x/,'').padStart(64,'0');

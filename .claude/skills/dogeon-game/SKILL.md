@@ -5,10 +5,12 @@ description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bi
 
 # DOGEON — game context skill
 
-Version: 2.2 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 2.3 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
-**RULE #1 (user):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
-improve `prompts/SESSION_PROMPT.md` + this skill → update `CLAUDE.md`/`CONTEXT.md` → commit. Never batch features.
+**RULE #0 (Pre-Decision Analyzer Gate — THE NUMBER ONE RULE):** before taking ANY decision or editing ANY file, execute `prompts/ANALYZER_PROMPT_MASTER.md` (Phase 1 Explore with `@file#lines` & subagents → Phase 2 Verify Baseline with `bash tests/check.sh` & failing test first → Phase 3 Plan & Invariant Gate → Phase 4 Surgical Execution).
+
+**RULE #1 (user — Feature Closeout):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
+improve `prompts/SESSION_PROMPT.md` + this skill → update `AGENTS.md`/`CLAUDE.md`/`CONTEXT.md` + `MASTER_PROMPT.md` §G → commit. Never batch features.
 
 **Current phase:** Phase 5 "Factions of the Heist" is COMPLETE (D-027..D-032): on-chain professions (one class/wallet, paid
 `DogeProfession.choose`), 3 faction trainers in camp, warrior/archer/healer passive stats + GROUND POUND/QUICK SHOT/MEND skills, and

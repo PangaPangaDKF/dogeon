@@ -4,6 +4,7 @@
 > When an architectural decision changes, update this file in the same commit.
 
 ## 0. Session protocol (always)
+0. **RULE #0 (Pre-Decision Gate — NEVER SKIP):** Before taking ANY decision or editing ANY file, follow the **Analyzer Prompt Master** (`prompts/ANALYZER_PROMPT_MASTER.md`): Explore (`@file#lines`, visual evidence, parallel subagents for multi-lens audits) → Verify Baseline (`bash tests/check.sh`, reproduce bugs with a failing test first) → Plan & Invariant Gate (game invariants, Solidity CEI/solvency, offline fallback, name collisions, seeded RNG).
 1. Load the project skill **`dogeon-game`** (`.claude/skills/dogeon-game/`) before planning or editing.
 2. One task per session. Plan mode for anything touching more than one section.
 3. After every verified change: append an entry to `docs/DECISIONS.md` (what, why, tool, alternatives),
@@ -12,9 +13,9 @@
    improve it in the same commit. Note it in `docs/DECISIONS.md` under "Process".
 5. Test with the `terminal-testing` skill: `bash tests/check.sh` (Git Bash or Ubuntu/WSL) must pass (stage 4 = `forge test` on `contracts/`).
 
-**Project files:** `docs/DECISIONS.md` (history + open issues) · `contracts/` (Foundry: DogeItems ERC-721 + DogeDEX, see its README) · `prompts/SESSION_PROMPT.md` (session opener) ·
-`tests/check.sh`, `tests/sim.mjs` · skills in `.claude/skills/` (own: `dogeon-game`, `terminal-testing`;
-installed: `find-skills`, `caveman*`, `game-design-theory`, `pixel-art-sprites`, `balance-check`, `game-design-document`).
+**Project files:** `AGENTS.md` (workspace rules) · `prompts/ANALYZER_PROMPT_MASTER.md` (pre-decision master prompt) · `docs/DECISIONS.md` (history + open issues) · `contracts/` (Foundry: DogeItems ERC-721 + DogeDEX + DogeProfession + DogeStaking, see its README) · `prompts/SESSION_PROMPT.md` (session opener) ·
+`tests/check.sh`, `tests/sim.mjs` · skills in `.claude/skills/` and `.agents/skills/` (own: `dogeon-game`, `terminal-testing`;
+installed: `find-skills`, `agent-browser`, `avalanche-skills`, `avax-*`, `solidity-security`, `caveman*`, `game-design-theory`, `pixel-art-sprites`, `balance-check`, `game-design-document`).
 
 ## 1. What this is
 DOGEON ("The Grand Heist", Phase 4) is a 16-bit top-down action RPG set in the DogeOS Grand Heist lore, with a DeFi + educational purpose. MVP in the style of the Sega Genesis
@@ -50,7 +51,7 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 | AUDIO | `sfx(freq, dur, type, vol, slide)` |
 | INPUT | `keys` (held) and `pressed` (this frame only, cleared at end of `loop`). Helpers `kd()` held, `kp()` just pressed. Keys are lowercased `e.key` (`' '` = Space, `'arrowup'`, `'enter'`, `'escape'`) |
 | PIXEL FONT 3x5 | `FONT` glyph table (5 rows × 3-bit numbers), `text()`, `textC()` centered, `wrap()`. Uppercase only |
-| CHARACTER SPRITES | String templates `HEAD.dog/cat`, `TOP`, `LEGS`. `buildChar({head, pal, acc})` → `{down,up,right,left}[frame]` canvases. `SPR.hero/merchant/bank/sage/alley/archer/brute/boss/frog/ninja/bull/knight`, faction trainers `SPR.tWarrior/tArcher/tHealer` (D-028). Icons `SHADOW COIN WHISK YARN BONE ORB_IC SCRAP_IC HORN_IC STEEL_IC FISH_IC CFISH_IC`. `ITEM_ICONS` map |
+| CHARACTER SPRITES | String templates `HEAD.dog/cat`, `TOP`, `LEGS`. `buildChar({head, pal, acc})` → `{down,up,right,left}[frame]` canvases. `SPR.hero/merchant/bank/sage/alley/archer/brute/boss/frog/ninja/bull/knight`, faction trainers `SPR.tWarrior/tArcher/tHealer` (D-028). Icons `SHADOW COIN WHISK YARN BONE ORB_IC SCRAP_IC HORN_IC STEEL_IC FISH_IC CFISH_IC`. `MAT_ICONS` map (ground-item icons) |
 | TILES | Tile ids `T.*`, `SOLID` set, procedural tile painters, atlas `TL` |
 | MAP | `MW=80, MH=60` tiles. `CAMP` (33..47, 27..41), fire at `CX=40, CY=34`. `DUN` ruins (26..54, 2..17), `GATE_ROW=9`. 5 ponds (3 inline + `PONDS_EXTRA`). `genMap()` (seed 4242, deterministic). `tileCanvas()` picks the variant per tile |
 | GAME STATE | Balance tables `SWORD_DMG SWORD_COST ARMOR_RED ARMOR_COST`, `MARKET` (price sim), `REST_DELAY REST_CAP(0.6) RESPAWN_FRAC`, `SKILL_THRESH{combat,fishing,bark}` `SKILL_BONUS skillLv(xp,kind) skillMul(xp,kind)`, fishing `FISH_MIN FISH_MAX waterAt() findWater() startFish() stopFish() updFish()`, pressure `FIELD_POP(22) DUN_POP(6) SPAWN_EVERY(3)`, `BAG_SIZE(12) FOODS`, bag helpers `addToBag/bagCount/bagRemove`, enemy stats `ETYPES` (with `ai` and `mat` fields), `RECIPES` (forge), classes `CLASSES{warrior,archer,healer}` + `CLASS_IDS CLASS_COL classOf classSpd classDmg classArmor` (D-028), globals, `NPCS` (+ trainers on `PADS3`), `newGame()` (`P.prof`), `makeEnemy()`, `spawnEnemy(zone)`, `summon()` |

@@ -280,9 +280,10 @@ C:\Users\dulbi\dogeon\
 
 ## 8. User's standing rules
 
+-1. **RULE #0 — Analyzer Prompt Master Gate (THE NUMBER ONE RULE BEFORE ANY DECISION):** Before taking ANY decision or writing ANY code, follow `prompts/ANALYZER_PROMPT_MASTER.md` and `AGENTS.md`: Explore (`@file#lines`, visual evidence, parallel audit subagents) → Verify Baseline (`bash tests/check.sh`, write failing test first for bugs) → Plan & Invariant Gate (game invariants, Solidity CEI/solvency, offline fallback, name collisions, seeded RNG) → Surgical Execution.
 0. **RULE #1 — feature closeout:** after EVERY feature: tests green → `docs/DECISIONS.md` entry (feature, change, reference,
-   files, code) → improve `prompts/SESSION_PROMPT.md` + `dogeon-game` skill (bump version) → update `CLAUDE.md` + this file → commit.
-   **Keep looping** through the iterations until Phase 3 is done; full permissions granted, nothing dangerous.
+   files, code) → improve `prompts/SESSION_PROMPT.md` + `dogeon-game` skill (bump version) → update `AGENTS.md` + `CLAUDE.md` + this file + `MASTER_PROMPT.md` §G → commit.
+   **Keep looping** through the iterations until done; full permissions granted, nothing dangerous.
 1. **Always commit** after verified changes (Conventional Commits, end with `Co-Authored-By: Claude <model> <noreply@anthropic.com>`)
 2. **Log decisions** in `docs/DECISIONS.md`
 3. **Improve the prompt/skill** if the iteration taught something

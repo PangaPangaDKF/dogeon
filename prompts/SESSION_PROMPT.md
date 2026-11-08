@@ -1,6 +1,12 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 2.1 · 2026-11-07 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 2.2 · 2026-11-08 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+
+> ## RULE #0 — Pre-Decision Analyzer Gate (THE NUMBER ONE RULE — NEVER SKIP)
+> Before taking ANY decision or writing ANY code, run the **Analyzer Prompt Master** (`prompts/ANALYZER_PROMPT_MASTER.md`):
+> 1. **Explore first:** Read `AGENTS.md`, `CLAUDE.md`, `dogeon-game` skill, and the last 5 `docs/DECISIONS.md` entries. Pinpoint exact `@file#Lstart-Lend` ranges and inspect visual evidence (`tests/sprites.mjs` / screenshots) when touching UI/art. Fan out parallel read-only subagents for multi-lens audits (Funds/Reentrancy, State/DoS, Gameplay Economy).
+> 2. **Establish the verification loop:** Confirm `bash tests/check.sh` is green; reproduce any reported bug with a failing test first before proposing code.
+> 3. **Plan & Invariant Gate:** Check all game invariants, Solidity CEI/solvency/slippage rules, offline wallet fallback (`!chainReady() || !addrs().x`), top-level name collisions, and seeded RNG before editing. Get approval on multi-section plans.
 
 > ## RULE #1 — Feature closeout (user rule, never skip)
 > Every finished feature, before starting the next one:
@@ -103,8 +109,10 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 29. **Fact-check user-supplied descriptions of third parties** before they become game text (Relotto was not a lottery, Noah is not a
     "Solana fork"). Say what changed and why in the reply.
 30. **Look at the art** — `node tests/sprites.mjs index.html out.png` and Read the PNG before calling sprites done.
+31. **Pre-Decision Analyzer Gate (`prompts/ANALYZER_PROMPT_MASTER.md`)** — always run Explore → Verify Baseline → Plan & Invariant Gate before taking any decision, keep `AGENTS.md` at workspace root for CLI auto-discovery, and use `/fork` or `/rewind` to recover cleanly from speculative paths (D-034).
 
 ## Changelog
+- 2.2 (2026-11-08) — Added RULE #0 (`prompts/ANALYZER_PROMPT_MASTER.md` pre-decision gate), practice 31, and CLI best practices (`AGENTS.md`, verification loops, Explore-Plan-Execute, parallel audit subagents) (D-034).
 - 2.1 (2026-11-07) — Practices 27-30 from Phase 4 (D-023, D-024). MASTER_PROMPT C9 partner NPC template.
 - 2.0 (2026-11-07) — Practice 26 contract audit loop (D-022). Phase 3 complete.
 - 1.9 (2026-11-07) — Practice 25 economy lens (D-021).

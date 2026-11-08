@@ -29,9 +29,39 @@ Severity: 🔴 breaks a design invariant · 🟠 real bug · 🟡 minor / edge c
 | I-6 | 🟡 | Esc on the Elder's dialog runs `onEnd`, so skipping still accepts the quest / grants the reward. Might be intended. Ask. | `:385` | Code reading |
 | I-7 | 🟡 | Input uses `e.key`, so non-QWERTY layouts (AZERTY) get unusable WASD. `e.code` is layout-independent. | `:41` | Code reading |
 | I-8 | 🟡 | `AudioContext` is created inside the rAF loop, not in the key handler. Safari/iOS may keep it suspended (no sound). | `:37` | Code reading |
-| I-9 | ⚪ | `solidFor` checks `ent.boss&&ty>=GATE_ROW` twice (dead code). | `:245` | Code reading |
+| ~~I-9~~ | ✅ | **Fixed in D-033.** `solidFor` checked `ent.boss&&ty>=GATE_ROW` twice (dead code); duplicate removed. | `solidFor` | Code reading |
 
 When an issue is fixed: strike it here, link the D-entry, and promote its sim WARN to a FAIL.
+
+---
+
+### D-034 · 2026-11-08 · Analyzer Prompt Master (`prompts/ANALYZER_PROMPT_MASTER.md`), Rule #0 pre-decision gate, `AGENTS.md`, and Solidity/Browser skills
+- What:
+  1. Created `prompts/ANALYZER_PROMPT_MASTER.md` synthesizing the Antigravity CLI best practices (Verification Loops first, Explore → Plan → Execute, Context Enrichment via `@file#lines` & visual evidence, Workspace Rules `AGENTS.md`, Sandbox/Permission hygiene, TUI session control `Esc`/`/rewind`/`/fork`, and Parallel Subagent Fan-Out + `-p`) with DOGEON's Solidity security & 16-bit game invariants.
+  2. Created `AGENTS.md` at the workspace root for automatic CLI rule discovery and promoted **RULE #0 (Pre-Decision Analyzer Gate)** to the #1 pre-decision rule across `AGENTS.md`, `CLAUDE.md`, `prompts/SESSION_PROMPT.md` (v2.2), `.claude/skills/dogeon-game/SKILL.md` (v2.3), and `CONTEXT.md`.
+  3. Added requested skills: `find-skills` (`vercel-labs/skills`), `agent-browser` (`vercel-labs/agent-browser`), `avalanche-skills` index + chain-agnostic EVM/Solidity/Audit/DeFi/Testing skills (`avax-evm-foundry`, `avax-security`, `avax-audit`, `avax-testing`, `avax-nft-basics`, `avax-defi-primitives`, `avax-evm-wallet-integration`, `avax-frontend-ux`, `avax-performance-optimization`) synced across both `.claude/skills/` and `.agents/skills/`.
+  4. Backfilled `MASTER_PROMPT.md` §G ledger with D-025..D-034.
+- Why: User requested installing `find-skills`, `agent-browser`, `avalanche-skills`, and Solidity/gaming developer skills, then creating an **Analyzer Prompt Master** from the CLI best practices and establishing a #1 rule to follow that prompt before taking any decision.
+- Tool: Antigravity (`agy`), `npx skills add`, `bash tests/check.sh`.
+- Alternatives rejected: Keeping rules only in `CLAUDE.md` (CLI agents auto-discover `AGENTS.md`/`GEMINI.md` at workspace root); editing game/contract code before running the Explore → Plan → Execute pre-decision gate.
+- Verify: `bash tests/check.sh` → static rules PASS, `node --check` PASS, `tests/sim.mjs` 0 failed / 0 warnings, `forge test` 45 passed (`ALL CHECKS PASSED`).
+- Commit: this commit.
+
+---
+
+### D-033 · 2026-11-08 · Finishing pass: remove dead code (scope narrowed by the user)
+- What: Removed confirmed dead code from `index.html`: the duplicated `ent.boss&&ty>=GATE_ROW` check in `solidFor` (old issue **I-9**,
+  now fixed), the unused `ITEM_ICONS` map (ground items render via `MAT_ICONS`; fish icons `FISH_IC/CFISH_IC` kept — fishing is only
+  postponed), and the unused `SEL.poolTvlUsd` selector (the game never calls that DEX view). Updated `CLAUDE.md` code map.
+- Why: The user narrowed scope — "food and fishing will be postponed, only gameplay and defi and web3 and solidity and mint and pools
+  and wallet connect with rpc ... we are finishing" and "remove dead code and ... improve just what we have." No new NFT types /
+  redeploys (they chose the lighter route); no new food/fishing/crafting content.
+- Checked but KEPT (not dead): all `SPR.*` (looked up dynamically via `SPR[n.spr]` / `SPR[e.def.spr]`); every `function`/top-level
+  `const` else (scan found no other orphans).
+- Tool: Claude Code (Opus 4.8); grep ref-count scan (`SEL.<k>`, `SPR.<k>`, functions, top-level consts).
+- Verify: `node tests/sim.mjs` → 0 failed, 0 warnings.
+- Mark I-9 fixed in "Open issues".
+- Commit: this commit.
 
 ---
 
