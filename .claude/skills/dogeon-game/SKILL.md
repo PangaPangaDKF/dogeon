@@ -5,13 +5,20 @@ description: Full context for DOGEON ("The Cat Invasion"), the single-file 16-bi
 
 # DOGEON — game context skill
 
-Version: 2.1 (2026-11-07). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 2.2 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #1 (user):** after every finished feature → tests green → DECISIONS entry (feature, change, reference, files, code) →
 improve `prompts/SESSION_PROMPT.md` + this skill → update `CLAUDE.md`/`CONTEXT.md` → commit. Never batch features.
 
-**Current phase:** Phase 4 "The Grand Heist" — `prompts/PHASE4_BRIEF.md` (Heist lore, partner NPCs, Sphinx DeFi hub, RedStone).
-Phase 3 "Doge Chain" (`prompts/PHASE3_BRIEF.md`) is complete: survival + real web3 on DogeOS Chikyū.
+**Current phase:** Phase 5 "Factions of the Heist" is COMPLETE (D-027..D-032): on-chain professions (one class/wallet, paid
+`DogeProfession.choose`), 3 faction trainers in camp, warrior/archer/healer passive stats + GROUND POUND/QUICK SHOT/MEND skills, and
+DOGE staking (stake → earn 0.8% of a new 1% DEX protocol fee; project treasury keeps 0.2%). PvP/party/loot was deferred by the user
+("skip PvP for now"); if picked up later, build it as a SEPARATE opt-in on-chain arena, not entangled with the field death penalty.
+Phase 4 "The Grand Heist" and Phase 3 "Doge Chain" are complete. See `docs/DECISIONS.md` D-032 for the live Chikyū addresses.
+
+**Web3 lesson (D-032):** when a `CONTRACTS[]` address goes from empty to a real one, re-check every offline / no-wallet path — gate the
+free local fallback on `!chainReady()||!addrs().x`, never on the contract being absent, so the game stays playable with no wallet even
+after deployment. The sim caught this only because its profession scenario ran against the live addresses.
 
 ## 1. The game in one breath
 Top-down action RPG, Sega Genesis look (320×224, 16×16 tiles, outlined chunky pixels, blue dialog boxes),

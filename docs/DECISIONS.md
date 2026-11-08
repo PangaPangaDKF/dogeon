@@ -666,3 +666,4 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 - 2026-11-07 · SESSION_PROMPT v1.1: "prove bugs before reporting" (from D-005), WARN→FAIL promotion rule.
 - 2026-11-07 · dogeon-game skill v1.1: added skill routing table and the 8-step protocol.
 - 2026-11-07 · SESSION_PROMPT v1.2 + skill v1.2: user RULE #1 (feature closeout), practice 13 grep-before-naming (D-014), Phase 3 pointer.
+- 2026-11-08 · dogeon-game skill v2.2 (D-032): Phase 5 complete; web3 lesson — gate offline fallbacks on `!chainReady()||!addrs().x`, never on a contract being undeployed, so play survives after deployment (the sim caught it only by running against the live addresses). When committing to a deploy, run the game sim against the just-written addresses before saying done.
