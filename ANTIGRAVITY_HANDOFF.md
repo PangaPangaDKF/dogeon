@@ -22,7 +22,16 @@
 
 ---
 
-## 0b. NEW since the first version of this file — `D-040` multiplayer option (read before touching `update`/`drawWorld`)
+## 0a. NEWEST — `D-041` real-browser smoke test (uses your `agent-browser` install — thank you)
+
+- `bash scripts/browser-smoke.sh` → **11/11 PASS in real Chrome**: zero page errors, Enter starts, starter bag, basic doge,
+  K skill spends MP, and 3-player multiplayer in both directions. Screenshots: `tests/out/smoke-camp.png`,
+  `tests/out/smoke-multiplayer.png` (gitignored). **Please run it after your D-038 gameplay changes** — the fake-canvas sim
+  can't catch real-browser render errors. It uses its own browser session, so it won't hijack yours.
+- Heads-up for D-038 balance work (L-024): the hero spawns directly north of the campfire (a SOLID tile), so "walk down"
+  from spawn is blocked by design. Don't mistake that for a movement bug.
+
+## 0b. `D-040` multiplayer option (read before touching `update`/`drawWorld`)
 
 - **Shipped:** opt-in ghost multiplayer. `?mp=ws(s)://host&room=heist&name=YOU` → up to 8 players per room see each other's
   doge (class sprite, facing, walk, HP, name). **Off by default — zero network without `?mp`.** Host: `node server/relay.mjs`
@@ -206,6 +215,7 @@ git log --oneline -1 && git diff --numstat       # HEAD moved? an additive edit 
 | 3 | Converge the 3 Noah prompt files into MASTER_PROMPT + runbook | **Antigravity** | ⏳ §6 |
 | 4 | Class balance, bag↔wallet clarity, BarkSwap feedback, HUD skill cost | **Antigravity** | ⏳ D-038 |
 | 5 | Multiplayer: research open-source options + an opt-in "host a server" option | Claude | ✅ D-040 |
+| 5b | Real-browser smoke (Chrome via your `agent-browser`): play + 3-player multiplayer, 11/11 | Claude | ✅ D-041 |
 | 6 | Project weight (art + skill packs) | **User decides** | ❓ §3 |
 | 7 | GitHub repo | User (token) | 🔑 one command ready |
 | 8 | TryNoah deploy (Path A) + browser acceptance test | User / either | after 3–7 |

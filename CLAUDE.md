@@ -123,6 +123,8 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
 2. Open `index.html` in a browser (or Live Server). Check the DevTools console: **zero errors**.
 3. Title → Enter → walk out of camp → slash a cat → pick up a whisker → rest with R → trade at the bank.
 4. For AI/boss changes, use the console to jump: `state.gateOpen=true; P.x=40*16+8; P.y=7*16+8`.
-5. Optional real-browser check (not written yet, see DECISIONS D-004): a Playwright `tests/smoke.mjs` that loads
-   the page, presses Enter, runs input, fails on any `pageerror`, saves `tests/out/smoke.png`.
+5. **Release gates** (run before a TryNoah handoff/deploy; not in `check.sh` because they need extra tooling):
+   - `bash scripts/browser-smoke.sh` — **real Chrome** via `agent-browser` (D-041): zero page errors, Enter starts, starter
+     bag, K skill, and 3-player multiplayer both ways. Screenshots → `tests/out/smoke-*.png`. Closes the old D-004 item.
+   - `DEPLOY_KEY=… bash scripts/e2e-chikyu.sh` — the **deployed** contracts on DogeOS Chikyū (D-039), after any contract/CHAIN change.
 6. Log the decision in `docs/DECISIONS.md` and commit with a Conventional Commit message.

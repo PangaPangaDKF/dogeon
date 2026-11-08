@@ -35,6 +35,30 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-041 · 2026-11-08 · Real-browser smoke test: single-player + 3-player multiplayer verified in real Chrome (Claude Code)
+- **Context / why:** User: *"make sure that everything works as intended … the game play the skills and the mmo rpg multiplayer"*.
+  Every proof so far ran **outside** a browser: the sim uses a fake canvas and a mock wallet; forge, the live E2E and the relay
+  test don't render anything. A runtime error that only real Chrome throws (canvas API misuse, a bad sprite frame, a TDZ at load)
+  would slip through all of them and break the TryNoah / static deploy. Closes the long-open D-004 item ("a real-browser smoke
+  test, not written yet").
+- **What was done:** drove **real Chrome** with the `agent-browser` skill (installed by Antigravity; own session, never the shared
+  default). Results: page loads with zero page errors and zero console messages; Enter starts the game; starter bag WOOD x3 +
+  STONE x3; spawns as the basic doge (no class); K skill spends MP (30→20); hammer swing works; zero errors during play.
+  **Multiplayer, 3 players:** this browser + 2 scripted WebSocket players in room `smoke` — the browser shows both ghosts with the
+  right class sprites, name tags and HP bars (screenshot reviewed), and the scripted players received the browser's state
+  (90–186 messages). Encoded as **`scripts/browser-smoke.sh`** → **11/11 PASS**, screenshots to `tests/out/` (gitignored).
+- **Apparent bug that wasn't (L-024):** the hero moved only 3 px while holding S — the screenshot showed it pressed against the
+  campfire, a SOLID tile directly south of spawn. Correct collision; nothing changed.
+- **Design note:** one real browser + scripted players instead of two tabs, because Chrome pauses `requestAnimationFrame` in
+  background tabs and the game broadcasts from its rAF loop (two tabs would give a false "multiplayer broken").
+- **Not in `tests/check.sh`:** it needs Chrome + agent-browser and takes ~30 s, so it is a **release gate** (like
+  `scripts/e2e-chikyu.sh`), run before a TryNoah handoff/deploy; it SKIPs cleanly when agent-browser is absent.
+- **Verify:** `bash scripts/browser-smoke.sh` → 11 passed, 0 failed; `bash tests/check.sh` → ALL CHECKS PASSED (6 stages).
+- **Tool:** Claude Code (Opus 5.5), `agent-browser` 0.41.2 skill (Chrome over CDP), Node scripted WebSocket players.
+- **Commit:** this commit.
+
+---
+
 ### D-040 · 2026-11-08 · Opt-in multiplayer option: native-WebSocket ghost players + zero-dep self-hostable relay (Claude Code)
 - **Context / why (user):** *"the mmo rpg multiplayer too … at least 3 players or at least the option i can host a server for that
   but you should just add the option not develop that because will be more expensive for noah and impossible to finish before the

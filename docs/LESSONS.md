@@ -219,6 +219,17 @@
   seeded values are byte-identical before and after (they were).
 - **Enforced by:** the lazy `net.id` in `netConnect()`; the D-040 determinism spot-check.
 
+### L-024 · 2026-11-08 · Claude Code · an "obvious bug" that a screenshot disproved
+- **What happened:** In the first real-Chrome run, holding `S` for 1.5 s moved the hero only 3 px. It looked like a broken
+  input or a stalled `requestAnimationFrame` in headless Chrome. The screenshot showed the hero standing on top of the
+  campfire: spawn is tile (40,37) and the fire is a SOLID tile at (40,38), directly south. Correct collision, not a bug.
+- **RULE:** Before reporting a gameplay "bug" from numbers alone, **look at the frame** (screenshot / `tests/sprites.mjs`) and
+  check the map tile in the direction of travel. Many "movement bugs" are level geometry.
+- **Corollary (multiplayer testing):** Chrome pauses `requestAnimationFrame` in **background tabs**, and the game only
+  broadcasts from its rAF loop — so two tabs in one browser is a bad multiplayer test. Use one real browser player plus
+  scripted WebSocket players (what `scripts/browser-smoke.sh` does).
+- **Enforced by:** `scripts/browser-smoke.sh` (saves `tests/out/smoke-*.png` every run).
+
 ---
 
 ## Final Conclusions (the distilled decision rules for BOTH brains)

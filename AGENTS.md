@@ -68,5 +68,6 @@ node tests/sim.mjs           # Fast headless simulation (~115 checks)
 node tests/relay.mjs         # Multiplayer relay with REAL WebSocket clients (3 players, rooms, anti-spoof, cap)
 node server/relay.mjs        # Host multiplayer: serves the game + relay on :8787 (zero deps)
 DEPLOY_KEY=... bash scripts/e2e-chikyu.sh   # LIVE on-chain DeFi loop (after any contract/CHAIN change)
+bash scripts/browser-smoke.sh                # REAL Chrome (agent-browser): 0 page errors, play, 3-player multiplayer (release gate)
 node tests/sprites.mjs index.html tests/out/sprites.png  # Visual sprite sheet verification
 ```

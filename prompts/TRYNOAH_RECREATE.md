@@ -66,6 +66,8 @@ click CONNECT. It is fully playable with no wallet. Deploy it and give me the pu
 - **Requirement in all cases:** HTTPS origin so `window.ethereum` is injected. No other config needed.
 
 ### A4. Post-deploy acceptance test (run in the browser)
+> Steps 1–4 (+ multiplayer) are automated in **`bash scripts/browser-smoke.sh`** (real Chrome via `agent-browser`, D-041):
+> last run **11/11 PASS** with zero page errors. Point it at a deployed URL by serving that build, or run it locally first.
 1. Page loads at 320×224 scaled, pixelated, **zero console errors**.
 2. Title → `Enter` → you spawn in camp as the basic doge.
 3. Walk out, `Space` to hit a cat, pick up a whisker, hold `R` in camp to rest (caps at 60% HP).
