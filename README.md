@@ -71,10 +71,11 @@ fights their own cats.
 5. The Sphinx **NFT MARKET** is empty until players create it: **sell** an NFT at a price, **create a pool** (items + DOGE)
    that others can swap against, **add / remove LP**, **swap** DOGE ↔ item, and **withdraw** your proceeds.
 
-The contracts live in `contracts/` (Foundry). Until they are deployed to Chikyū the market says
-"NFT CONTRACTS NOT DEPLOYED ON CHIKYU YET". Deploy steps: `contracts/README.md`.
+The contracts live in `contracts/` (Foundry) and are **live and verified on Chikyū testnet** (DogeItems, DogeDEX, DogeProfession, DogeStaking).
 
-## For developers
-- `bash tests/check.sh` → static rules, syntax, headless game simulation, `forge test`.
-- Local chain: `anvil` + deploy (see `contracts/README.md`), then open `http://localhost:8080/?chain=local`.
-- Project memory: `CLAUDE.md`, `CONTEXT.md`, `docs/DECISIONS.md`, `MASTER_PROMPT.md`, `prompts/`.
+## Developer Guides & Documentation
+- **TryNoah AI Guide:** [`TRYNOAH.md`](TRYNOAH.md) — Comprehensive guide for TryNoah AI replication, extension, and system prompts.
+- **Dual Brain Skills Report:** [`docs/DUAL_BRAIN_SKILLS.md`](docs/DUAL_BRAIN_SKILLS.md) — Full catalog of skills used by Antigravity CLI and Claude Code.
+- **Hosting & Multiplayer Scaling:** [`docs/HOSTING_AND_MULTIPLAYER.md`](docs/HOSTING_AND_MULTIPLAYER.md) — Vercel deployment, persistent WebSocket relays, and instant local tunneling (`cloudflared`/`ngrok`).
+- **Quick Verification:** `bash tests/check.sh` → static rules, syntax, headless game simulation, `forge test`, drift guards.
+- **Project Memory:** `CLAUDE.md`, `CONTEXT.md`, `docs/DECISIONS.md`, `MASTER_PROMPT.md`, `prompts/`.
