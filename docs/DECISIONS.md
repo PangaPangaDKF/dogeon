@@ -23,15 +23,32 @@ Severity: 🔴 breaks a design invariant · 🟠 real bug · 🟡 minor / edge c
 |---|---|---|---|---|
 | ~~I-1~~ | ✅ | **Fixed in D-007.** An in-flight bone can hit the player standing just inside the camp gap. Its tile check uses the bone's tile, but its hitbox is 8 px wide, and `hurtPlayer` has no camp guard. | `index.html:435`, `hurtPlayer` | Proven: sim WARN "camp gap bone" |
 | ~~I-2~~ | ✅ | **Fixed in D-007.** `parts[]` grows without limit while a dialog/menu is open. `drawFire()` (render) keeps pushing particles but `update()` returns before `updateParts()`. Embers also freeze mid-air. | `:405`, `:472` | Proven: sim WARN "particles during UI" (+535 in 30 s) |
-| I-3 | 🟡 | Boss-summoned alleys (`zone:'boss'`) aggro anywhere on the map with no chase range, and they're never culled except on death/respawn. | `:320` | Code reading |
-| I-4 | 🟡 | Spawns need ≥170 px from the player, but the view half-diagonal is ~195 px, so cats can pop in at screen corners. | `:233` | Geometry |
-| I-5 | 🟡 | On the title screen, `updateParts(1/60)` runs inside render, and the fire spawns particles per render frame. On 120/144 Hz screens both run faster/denser. | `:550`, `:472` | Code reading |
+| ~~I-3~~ | ✅ | **Fixed in D-035.** Boss-summoned alleys (`zone:'boss'`) aggro anywhere on the map with no chase range, and they're never culled except on death/respawn. | `updEnemy` | Proven: sim D-035 "boss minion aggro" |
+| ~~I-4~~ | ✅ | **Fixed in D-035.** Spawns need ≥170 px from the player, but the view half-diagonal is ~195 px, so cats can pop in at screen corners (raised to ≥200 px). | `spawnEnemy` | Proven: sim D-035 "spawn distance" |
+| ~~I-5~~ | ✅ | **Fixed in D-035.** On the title screen, `updateParts(1/60)` ran inside render; moved `updateParts(dt)` into `update(dt)` on the title branch so title particles are frame-rate independent. | `update`, `drawTitle` | Proven: sim D-035 "title particles dt" |
 | I-6 | 🟡 | Esc on the Elder's dialog runs `onEnd`, so skipping still accepts the quest / grants the reward. Might be intended. Ask. | `:385` | Code reading |
 | I-7 | 🟡 | Input uses `e.key`, so non-QWERTY layouts (AZERTY) get unusable WASD. `e.code` is layout-independent. | `:41` | Code reading |
-| I-8 | 🟡 | `AudioContext` is created inside the rAF loop, not in the key handler. Safari/iOS may keep it suspended (no sound). | `:37` | Code reading |
+| ~~I-8~~ | ✅ | **Fixed in D-035.** `AudioContext` is resumed inside the `click` and `keydown` user-gesture handlers if suspended (`if(AC&&AC.state==='suspended')AC.resume();`). | `:24`, `:41` | Code reading |
 | ~~I-9~~ | ✅ | **Fixed in D-033.** `solidFor` checked `ent.boss&&ty>=GATE_ROW` twice (dead code); duplicate removed. | `solidFor` | Code reading |
 
 When an issue is fixed: strike it here, link the D-entry, and promote its sim WARN to a FAIL.
+
+---
+
+### D-035 · 2026-11-08 · Audit hardening & 100% Web3 action test coverage (G-1..G-7, I-3, I-4, I-5, I-8)
+- What:
+  1. **G-1 (`hookWallet` `chainChanged` reload bug):** When switching back to `CHAIN.id` (`wallet.chainOk === true`), `chainChanged` now calls `refreshChain().catch(()=>{}); refreshOracle();` (matching `accountsChanged`), so the player's on-chain NFTs, profession, staking balances, and RedStone oracle reload automatically instead of staying blank after `resetChainData()`.
+  2. **G-2 (Stale Phase 2 Sphinx copy):** Updated the Sphinx's first-time intro page 4 (`talk` for `bank`) and the `SCHOOL` `'STAKE'` lesson so they no longer say `"This is a SIMULATED DEX. No real transactions"` or `"not the chain"`, and instead explain both the off-chain camp vault (+1%, safe on death) and live DogeOS Chikyū testnet NFTs, LP pools, and DOGE staking (earning 0.8% of DEX trades).
+  3. **G-3 / I-3 (`updEnemy` boss minion aggro):** Changed `if(e.zone==='boss'&&!e.boss)aggro=!P.dead&&!inCamp;` to `if(e.zone==='boss'&&!e.boss)aggro=!P.dead&&!inCamp&&(zoneOf(P.x,P.y)==='boss'||d<e.def.chase);` so boss-summoned alley cats only aggro across the boss room or within their normal chase radius.
+  4. **G-4 / I-4 (`spawnEnemy` corner pop-in):** Raised minimum player distance in `spawnEnemy` from `170` px to `200` px (exceeding the 320×224 screen half-diagonal of `195.2` px).
+  5. **G-5 / I-5 (`drawTitle` frame-rate dependent particles):** Moved `updateParts(dt)` into `update(dt)` on the `scene==='title'` branch and removed `updateParts(1/60)` from `drawTitle()`.
+  6. **G-6 / I-8 (`AudioContext` gesture resume):** Added `if(AC&&AC.state==='suspended')AC.resume();` inside the `click` and `keydown` listeners so strict browsers (Safari/iOS) resume audio on user gesture.
+  7. **G-7 (100% Web3 action test coverage in `tests/sim.mjs`):** Added two `D-035` scenarios to `tests/sim.mjs` covering `connectWallet`, `disconnectWallet`, `chooseProfession` (on-chain connected path + 1-class-per-wallet lock), `stakeDoge`, `claimStakeRewards`, `unstakeStake`, `syncDexFees`, `delistNft`, `chainChanged` reload, boss minion aggro, `>=200` px spawn distance, title `dt` particles, and Sphinx dialog copy. Also removed stale `findWater()` reference from `CLAUDE.md`.
+- Why: Full codebase audit using the new `/analyzer-master` skill (`node .agents/skills/analyzer-master/scripts/audit-scan.mjs`) uncovered `G-1..G-7` and open issues `I-3, I-4, I-5, I-8`.
+- Tool: Antigravity (`agy`), `/analyzer-master` (`audit-scan.mjs`), `bash tests/check.sh`.
+- Alternatives rejected: Modifying deployed Solidity contracts for informational notes (would require redeploying and invalidating live Chikyū addresses when all 45 Foundry tests and solvency invariants already hold).
+- Verify: `node .agents/skills/analyzer-master/scripts/audit-scan.mjs` → 0 coverage gaps, 0 selector orphans, 0 collisions; `bash tests/check.sh` → `ALL CHECKS PASSED`.
+- Commit: this commit.
 
 ---
 

@@ -68,6 +68,7 @@ globalThis.__api = {
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
   CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy,
+  disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
 };`;
 
 function boot(seed, opts) {
@@ -945,6 +946,113 @@ await scenarioAsync('RedStone oracle on Chikyu: stale feed falls back to the las
   for (let f = 0; f < 60 * 120; f++) api.step(DT); // 2 minutes of market ticks
   const p = api.get().mkt.p;
   if (p < 0.0716424 / 5 || p > 0.0716424 * 5) fail('market anchor', `price ${p} drifted outside the oracle band`); else pass('market anchor', `game DOGE $${p.toFixed(4)} drifts around the RedStone price`);
+});
+
+// ---------- D-035: Audit hardening & Phase 5 on-chain coverage (G-1..G-7, I-3, I-4, I-5, I-8) ----------
+await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChanged reload & disconnect', async () => {
+  const eth = mockEth({ known: true });
+  const w = n => BigInt(n).toString(16).padStart(64, '0');
+  let profId = 0, staked = 2n * 10n ** 18n, rewards = 5n * 10n ** 16n, dexFees = 8n * 10n ** 16n;
+  eth.callResult = c => {
+    const d = (c.data || '').replace(/^0x/, ''), sel = d.slice(0, 8);
+    if (sel === '7eaebb15' || sel === 'c5c63e65') return '0x' + w(32) + w(0); // empty dynamic uint256[]
+    if (sel === 'aa4df6f0') return '0x' + w(96) + w(128) + w(160) + w(0) + w(0) + w(0); // empty activeListings
+    if (sel === 'e985e9c5') return '0x' + w(1); // approved
+    if (sel === '31544fd8') return '0x' + w(profId); // professionOf
+    if (sel === 'ddca3f43') return '0x' + w(10n ** 16n); // profFee = 0.01 DOGE
+    if (sel === '98807d84') return '0x' + w(staked); // stakedOf
+    if (sel === '31d7a262') return '0x' + w(rewards); // pendingRewards
+    if (sel === '67f7cf97') return '0x' + w(dexFees); // stakerFeesView
+    return '0x' + w(0);
+  };
+  const api = boot(SEED + 35, { eth, realTimers: true }); startGame(api);
+  const ok = await api.connectWallet(); await flush(); await idle(api);
+  if (!ok || !api.wallet.connected || !api.chainData.loaded) fail('connectWallet', `ok=${ok} loaded=${api.chainData.loaded}`);
+  else pass('connectWallet', 'connected directly & loaded Chikyu state');
+
+  // G-1: switching to wrong network clears chainData; switching back to Chikyu reloads chainData & oracle
+  eth.handlers.chainChanged('0x1'); await flush();
+  const dropped = !api.wallet.chainOk && !api.chainData.loaded;
+  eth.handlers.chainChanged('0x5fdaf3'); await flush();
+  for (let i = 0; i < 30 && !api.chainData.loaded; i++) await flush();
+  if (!dropped || !api.wallet.chainOk || !api.chainData.loaded) fail('chainChanged reload', `dropped=${dropped} chainOk=${api.wallet.chainOk} loaded=${api.chainData.loaded}`);
+  else pass('chainChanged reload', 'switching back to Chikyu reloads chainData automatically');
+
+  // on-chain chooseProfession locks wallet to one class
+  profId = 1;
+  await api.chooseProfession('warrior'); await idle(api);
+  const txProf = eth.sent.at(-1);
+  if (api.get().P.prof !== 'warrior' || !txProf || !txProf.data.startsWith('0x' + api.SEL.chooseProf)) fail('on-chain prof', `prof=${api.get().P.prof} tx=${JSON.stringify(txProf)}`);
+  else pass('on-chain prof', 'chooseProfession sent SEL.chooseProf + profFee');
+  const sentBeforeLock = eth.sent.length;
+  await api.chooseProfession('archer');
+  if (api.get().P.prof !== 'warrior' || eth.sent.length !== sentBeforeLock || !/LOCKED IN/.test(api.wallet.msg)) fail('prof lock', `prof=${api.get().P.prof} msg="${api.wallet.msg}"`);
+  else pass('prof lock', 'second on-chain class change refused (one class per wallet)');
+
+  // stakeDoge, claimStakeRewards, unstakeStake, syncDexFees, delistNft
+  await api.stakeDoge(1); await idle(api);
+  if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.stakeDoge)) fail('stakeDoge', JSON.stringify(eth.sent.at(-1)));
+  else pass('stakeDoge', 'staked 1 DOGE via SEL.stakeDoge');
+  await api.claimStakeRewards(); await idle(api);
+  if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.claimStake)) fail('claimStakeRewards', JSON.stringify(eth.sent.at(-1)));
+  else pass('claimStakeRewards', 'claimed rewards via SEL.claimStake');
+  await api.unstakeStake(); await idle(api);
+  if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.unstakeDoge)) fail('unstakeStake', JSON.stringify(eth.sent.at(-1)));
+  else pass('unstakeStake', 'unstaked via SEL.unstakeDoge');
+  await api.syncDexFees(); await idle(api);
+  if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.flushFees)) fail('syncDexFees', JSON.stringify(eth.sent.at(-1)));
+  else pass('syncDexFees', 'flushed DEX fees to stakers via SEL.flushFees');
+  await api.delistNft({ id: 7, type: 1, level: 2, price: 10n ** 18n, mine: true }); await idle(api);
+  if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.delist)) fail('delistNft', JSON.stringify(eth.sent.at(-1)));
+  else pass('delistNft', 'delisted #7 via SEL.delist');
+
+  api.disconnectWallet(); await flush();
+  if (api.wallet.connected || api.chainData.loaded) fail('disconnectWallet', `connected=${api.wallet.connected} loaded=${api.chainData.loaded}`);
+  else pass('disconnectWallet', 'wallet disconnected and chainData cleared');
+});
+
+scenario('D-035: boss summon aggro (I-3), spawnEnemy >= 200px (I-4), title particles dt (I-5), Sphinx dialog (G-2)', () => {
+  const api = boot(SEED + 36);
+  // I-5: on title screen, step(DT) advances particles in update(dt) exactly once per frame
+  api.get().parts.push({ x: 100, y: 100, vx: 60, vy: 0, life: 1, col: '#fff' });
+  api.step(DT);
+  const px = api.get().parts[0] && api.get().parts[0].x;
+  if (Math.abs(px - 101) > 1e-4) fail('title particles dt', `x=${px}, expected 101 (1 update per step, not 2)`);
+  else pass('title particles dt', 'title particles update once per step(dt) in update()');
+
+  startGame(api);
+  const g = api.get(), P = g.P;
+
+  // G-2: Sphinx first-time dialog and STAKE school lesson reflect real DogeOS testnet + camp vault
+  const bank = npc(api, 'bank'); bank.met = false; api.talk(bank);
+  const sphinxPages = readDialog(api);
+  api.press('escape'); api.step(DT); // close bankMenu opened by dialog onEnd
+  const stakeLesson = api.SCHOOL.find(([t]) => t === 'STAKE')[1].join(' ');
+  if (sphinxPages.some(p => /No real transactions/i.test(p)) || !/0\.8%/.test(stakeLesson)) fail('sphinx dialog', sphinxPages.join(' / ') + ' || ' + stakeLesson);
+  else pass('sphinx dialog', 'Sphinx intro + STAKE lesson describe both off-chain vault and on-chain DogeOS contracts');
+
+  // I-4: spawnEnemy never spawns closer than 200px (screen half-diagonal is 195.2px)
+  P.x = 20 * 16 + 8; P.y = 45 * 16 + 8; api.get().enemies.splice(0);
+  let minDist = Infinity;
+  for (let i = 0; i < 60; i++) {
+    const live = api.get().enemies, before = live.length; api.spawnEnemy('field');
+    if (live.length > before) { const e = live.at(-1); minDist = Math.min(minDist, Math.hypot(e.x - P.x, e.y - P.y)); }
+  }
+  if (minDist < 200) fail('spawn distance', `minDist=${minDist.toFixed(1)} < 200px`);
+  else pass('spawn distance', `60 field spawns all >= 200px from player (min ${minDist.toFixed(1)}px)`);
+
+  // I-3: boss-summoned minion (zone:'boss', !boss) wanders when player is far outside boss room, chases inside boss room
+  api.get().enemies.splice(0);
+  const minion = api.makeEnemy('alley', api.CX * 16 + 8, 6 * 16 + 8, 'boss');
+  api.get().enemies.push(minion);
+  P.x = 20 * 16 + 8; P.y = 50 * 16 + 8; // far away in field
+  api.step(DT);
+  const farState = minion.state;
+  P.x = api.CX * 16 + 8; P.y = 8 * 16 + 8; // inside boss room
+  api.step(DT);
+  const nearState = minion.state;
+  if (farState !== 'wander' || nearState !== 'chase') fail('boss minion aggro', `far=${farState} near=${nearState}`);
+  else pass('boss minion aggro', 'boss-summoned cat wanders when player leaves boss room, chases inside boss room');
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

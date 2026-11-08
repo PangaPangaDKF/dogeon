@@ -21,7 +21,7 @@ const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
 function resize(){let s=Math.min(innerWidth/W,innerHeight/H);if(s>=1)s=Math.floor(s);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';}
 addEventListener('resize',resize);resize();
-cv.addEventListener('click',()=>{cv.focus();});
+cv.addEventListener('click',()=>{cv.focus();if(AC&&AC.state==='suspended')AC.resume();});
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 const R=(a,b)=>a+Math.random()*(b-a);
 const dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
@@ -38,7 +38,7 @@ function sfx(f,d=0.08,type='square',v=0.05,slide=0){try{if(!AC)AC=new (window.Au
 
 // ================= INPUT =================
 const keys={},pressed={};
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(!keys[k])pressed[k]=true;keys[k]=true;if([' ','arrowup','arrowdown','arrowleft','arrowright','tab'].includes(k))e.preventDefault();});
+addEventListener('keydown',e=>{if(AC&&AC.state==='suspended')AC.resume();const k=e.key.toLowerCase();if(!keys[k])pressed[k]=true;keys[k]=true;if([' ','arrowup','arrowdown','arrowleft','arrowright','tab'].includes(k))e.preventDefault();});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 const kd=(...ks)=>ks.some(k=>keys[k]);
@@ -458,7 +458,7 @@ function spawnEnemy(zone){
     if(zone==='dun'){tx=DUN.x0+1+Math.floor(Math.random()*(DUN.x1-DUN.x0-1));ty=GATE_ROW+1+Math.floor(Math.random()*7);}
     else{tx=3+Math.floor(Math.random()*(MW-6));ty=3+Math.floor(Math.random()*(MH-6));if(inDunT(tx,ty))continue;if(tx>=CAMP.x0-3&&tx<=CAMP.x1+3&&ty>=CAMP.y0-3&&ty<=CAMP.y1+3)continue;}
     const x=tx*16+8,y=ty*16+8;
-    if(P&&dist(x,y,P.x,P.y)<170)continue;
+    if(P&&dist(x,y,P.x,P.y)<200)continue;
     if(blocked({hw:7,hh:6,enemy:true},x,y))continue;
     const dc=dist(x,y,CX*16+8,CY*16+8),r=Math.random();let type;
     if(zone==='dun')type=r<0.2?'alley':r<0.35?'archer':r<0.5?'frog':r<0.65?'ninja':r<0.8?'knight':'brute';
@@ -570,7 +570,7 @@ function updEnemy(e,dt){
   if(Math.abs(e.kbx)+Math.abs(e.kby)>6){move(e,e.kbx*dt,e.kby*dt);const k=Math.pow(0.002,dt);e.kbx*=k;e.kby*=k;return;}else{e.kbx=e.kby=0;}
   let aggro=!P.dead&&!inCamp&&d<e.def.chase;
   if(e.boss)aggro=!P.dead&&zoneOf(P.x,P.y)==='boss';
-  if(e.zone==='boss'&&!e.boss)aggro=!P.dead&&!inCamp;
+  if(e.zone==='boss'&&!e.boss)aggro=!P.dead&&!inCamp&&(zoneOf(P.x,P.y)==='boss'||d<e.def.chase);
   const ux=(P.x-e.x)/(d||1),uy=(P.y-e.y)/(d||1);
   const bs=1+MARKET.bearSpd*bearF();let mx=0,my=0,spd=e.def.spd*bs;
   if(e.state==='wind'){e.t-=dt;if(e.t<=0){e.state='dash';e.t=0.45;e.dx=ux;e.dy=uy;sfx(110,0.25,'sawtooth',0.06,-50);}}
@@ -617,7 +617,7 @@ async function switchChain(){
 async function refreshBal(){if(!wallet.addr||!wallet.chainOk){wallet.bal=null;return;}const h=await eth().request({method:'eth_getBalance',params:[wallet.addr,'latest']});wallet.bal=Number(BigInt(h)/10n**14n)/1e4;}
 function hookWallet(e){if(wallet.hooked||!e.on)return;wallet.hooked=true;
   e.on('accountsChanged',a=>{if(!a||!a.length)disconnectWallet('WALLET DISCONNECTED.');else{wallet.addr=a[0];resetChainData();refreshChain().catch(()=>{});refreshBal().catch(()=>{});}});
-  e.on('chainChanged',id=>{wallet.chainOk=String(id).toLowerCase()===CHAIN.id;resetChainData();refreshBal().catch(()=>{});if(!wallet.chainOk)setWalletMsg('WRONG NETWORK. PICK CONNECT TO SWITCH BACK.');});}
+  e.on('chainChanged',id=>{wallet.chainOk=String(id).toLowerCase()===CHAIN.id;resetChainData();refreshBal().catch(()=>{});if(wallet.chainOk){refreshChain().catch(()=>{});refreshOracle();}else setWalletMsg('WRONG NETWORK. PICK CONNECT TO SWITCH BACK.');});}
 async function connectWallet(){
   const e=eth();if(!e){setWalletMsg('NO WALLET FOUND. GAME STILL WORKS OFFLINE.');return false;}
   if(wallet.busy)return false;wallet.busy=true;setWalletMsg('CHECK YOUR WALLET...');
@@ -789,7 +789,7 @@ function talk(n){
     if(!n.met){n.met=true;openDialog(n,['Wrenchpaw here. I forge gear from monster parts.','Bring me ORB, SCRAP, HORN or STEEL from fallen foes.','I burn the materials and craft upgrades. No refunds. Very forge.'],()=>shopMenu(n));}
     else shopMenu(n);
   }else if(n.id==='bank'){
-    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX, door to DogeOS. I connect your wallet, add the DogeOS testnet and teach you DeFi.','Swap your whiskers for DOGE, or trade DOGE for upgrades.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','This is a SIMULATED DEX. No real transactions. Much wow.'],()=>bankMenu(n));}
+    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX, door to DogeOS. I connect your wallet, add the DogeOS testnet and teach you DeFi.','Swap your whiskers for DOGE, or trade DOGE for upgrades.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','Connect a wallet for real DogeOS testnet NFTs, pools and staking, or play offline!'],()=>bankMenu(n));}
     else bankMenu(n);
   }else if(n.id==='quest'){if(state.stage===0)questTalk(n);else elderMenu(n);}
   else if(n.cls){professorTalk(n);}
@@ -852,7 +852,7 @@ const SCHOOL=[
   ['FAUCET + GAS',['Every transaction costs a small fee called gas, paid in DOGE.','A faucet gives free testnet DOGE for gas. Get some before you mint or trade.']],
   ['SWAP',['A swap trades one asset for another at the price of a pool.','Bigger trades move the price more. That is slippage. I always protect you with a limit.']],
   ['LIQUIDITY POOL',['A pool holds two things: here, items and DOGE. Liquidity providers deposit both and get shares.','Traders pay a 2% fee that stays in the pool, so LPs earn. The price follows x times y equals k.','Risk: when prices move you can end with more of the cheaper side. That is impermanent loss.']],
-  ['STAKE',['Staking locks coins to earn a reward. My vault keeps your DOGE safe when you fall and pays 1% when you unstake.','This vault is part of the game, not the chain. On DogeOS, real staking lives in its apps.']],
+  ['STAKE',['Staking locks coins to earn a reward. My vault keeps your DOGE safe when you fall and pays 1% when you unstake.','My camp vault is off-chain (+1%, safe on death). On-chain staking pays you 0.8% of every DEX trade!']],
   ['ORACLE (REDSTONE)',['Contracts cannot see the outside world. An oracle brings real prices on-chain.','RedStone posts signed DOGE and BTC prices on the DogeOS testnet, so swaps and other DeFi built here have real prices.','My DEX reads DOGE/USD from RedStone. Trade prices still come from the pool itself; the oracle is for display and safety.']],
   ['NFT',['An NFT is a token with its own id. Your crafted gear and preserved fish are NFTs you truly own.','Owning gear NFTs means wearing them. Sell them, pool them, or eat the fish. Your call.']],
 ];
@@ -1005,7 +1005,7 @@ function updateUI(dt){
 // ================= UPDATE =================
 function update(dt){
   time+=dt;
-  if(scene==='title'){if(kp('enter',' ')){newGame();scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
+  if(scene==='title'){updateParts(dt);if(kp('enter',' ')){newGame();scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
   updMarket(dt);
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
   if(winT>0)winT-=dt;
@@ -1183,7 +1183,7 @@ const LOGO={D:['11110','10001','10001','10001','10001','10001','11110'],O:['0111
 function logo(x,y,s,col,hi){let cx=x;for(const ch of 'DOGEON'){const g=LOGO[ch];for(let r=0;r<7;r++)for(let c=0;c<5;c++)if(g[r][c]==='1'){ctx.fillStyle=r<2?hi:col;ctx.fillRect(cx+c*s,y+r*s,s,s);}cx+=6*s;}}
 function drawTitle(){
   cam.x=(Math.sin(time*0.05)*0.5+0.5)*(MW*16-W);cam.y=360+Math.sin(time*0.07)*100;
-  drawTiles(cam.x,cam.y);drawFire(cam.x,cam.y);updateParts(1/60);
+  drawTiles(cam.x,cam.y);drawFire(cam.x,cam.y);
   ctx.fillStyle='rgba(4,4,20,0.62)';ctx.fillRect(0,0,W,H);
   const s=5,tw=6*6*s-s,x=Math.round((W-tw)/2),y=22;
   for(const [dx,dy] of [[-2,0],[2,0],[0,-2],[0,2],[-2,-2],[2,2],[-2,2],[2,-2]])logo(x+dx,y+dy,s,'#1a0a00','#1a0a00');

@@ -201,6 +201,7 @@ Update this table in the same commit as each feature (user RULE #1).
 | P5 IT-4..6 | **On-chain DOGE Staking + 1% DEX Fee Split**: `DogeStaking.sol` (MasterChef), `DogeDEX` 1% protocol fee (0.2% project / 0.8% stakers, outside reserves), `stakeMenu()` in Sphinx UI, full 4-contract redeploy live on Chikyū | `contracts/src/DogeStaking.sol`, `DogeDEX._protoSplit/_accrueProto/flushStakerFees`; `stakeDoge/unstakeStake/claimStakeRewards/syncDexFees`, `stakeMenu`, `CONTRACTS['0x5fdaf3']` | D-030, D-031, D-032 |
 | P5 clean | Finishing pass: dead code removal (`solidFor` duplicate check I-9, `ITEM_ICONS`, `SEL.poolTvlUsd`) | `solidFor()`, `MAT_ICONS`, `SEL` | D-033 |
 | P5 meta | **Analyzer Prompt Master & Rule #0 Gate + Solidity/Web3/Browser Skills**: pre-decision analyzer prompt (`prompts/ANALYZER_PROMPT_MASTER.md`), `AGENTS.md` workspace rule file, `find-skills`, `agent-browser`, `avalanche-skills` + `avax-*` EVM/Audit/Security skill packs | `prompts/ANALYZER_PROMPT_MASTER.md`, `AGENTS.md`, `CLAUDE.md`, `prompts/SESSION_PROMPT.md`, `.claude/skills/`, `.agents/skills/` | D-034 |
+| P5 audit | **Audit Hardening & 100% Web3 Action Test Coverage**: `chainChanged` reload (G-1), Sphinx/STAKE live-testnet copy (G-2), boss minion aggro range (I-3), `spawnEnemy` ≥200 px (I-4), title particles `dt` (I-5), `AudioContext` gesture resume (I-8), and full Phase 5 Web3 test scenario (G-7) | `hookWallet()`, `talk()`, `SCHOOL`, `updEnemy()`, `spawnEnemy()`, `update()`, `drawTitle()`; `tests/sim.mjs` D-035 scenarios | D-035 |
 
 ### C9. Partner / ecosystem NPC (Phase 4)
 ```

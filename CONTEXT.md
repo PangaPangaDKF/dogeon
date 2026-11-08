@@ -32,9 +32,10 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
   prof `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`, stake `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`,
   DOGE/USD feed `0x434F8D17c0301cfEa143dba912972E24B827C968`. Deployer `0x7BE839793765F18E36cC97b5312d094F6AE282Ca`. All four in `index.html` `CONTRACTS['0x5fdaf3']`.
   Foundry 1.5.1 lives in the session scratchpad (`scratchpad/foundry/forge.exe` etc.); re-download the Windows zip if the scratchpad is gone.
-- **Phase 5 "Factions of the Heist" (D-027..D-032):** professions (one class/wallet, paid `choose`), 3 faction trainers, warrior/archer/healer
-  passive stats + GROUND POUND/QUICK SHOT/MEND skills, and DOGE staking (stake → earn 0.8% of a new 1% DEX fee; project keeps 0.2%). PvP deferred by the user.
-- Tests: 88 sim PASS (incl. anvil e2e + oracle) + 28 forge. Versions: SESSION_PROMPT v2.1, skill v2.1, DECISIONS to D-024. Art check: `node tests/sprites.mjs index.html out.png`.
+- **Phase 5 "Factions of the Heist" (D-027..D-035):** professions (one class/wallet, paid `choose`), 3 faction trainers, warrior/archer/healer
+  passive stats + GROUND POUND/QUICK SHOT/MEND skills, DOGE staking (stake → earn 0.8% of a new 1% DEX fee; project keeps 0.2%),
+  `/analyzer-master` pre-decision diagnostic skill (`D-034`), and full audit hardening + 100% Web3 action test coverage (`D-035`: `chainChanged` reload, Sphinx live-testnet copy, I-3/I-4/I-5/I-8 fixed). PvP deferred by the user.
+- Tests: 100% Web3 action coverage in `tests/sim.mjs` (0 failed, 0 warnings) + 45 forge tests (`ALL CHECKS PASSED`). Versions: SESSION_PROMPT v2.2, skill v2.3, DECISIONS to D-035. Art check: `node tests/sprites.mjs index.html out.png`.
 
 ---
 
