@@ -36,10 +36,14 @@ try {
   const a = await client('alice', 'r1'), b = await client('bob', 'r1'), c = await client('cara', 'r1'), x = await client('xavi', 'r2');
   await wait(150);
   st(a, 11); st(b, 22); st(c, 33); st(x, 99);
+  a.ws.send(JSON.stringify({ t: 'heal', id: a.id, amt: 20, x: 11, y: 100, r: 72 }));
   await wait(300);
   if (saw(a, 'bob') && saw(a, 'cara') && saw(b, 'alice') && saw(b, 'cara') && saw(c, 'alice') && saw(c, 'bob'))
     pass('3 players', 'alice, bob and cara (room r1) each receive the other two');
   else fail('3 players', JSON.stringify({ a: a.got, b: b.got, c: c.got }));
+  if (b.got.some(m => m.t === 'heal' && m.id === 'alice' && m.amt === 20))
+    pass('healer heal relay', 'healer pulse relayed to other players in the room');
+  else fail('healer heal relay', 'heal pulse not relayed to room peers');
   if (!saw(a, 'xavi') && !saw(x, 'alice')) pass('room isolation', 'room r2 never sees r1 and vice versa');
   else fail('room isolation', 'cross-room leak');
   if (!saw(a, 'alice')) pass('no echo', 'a player never receives its own state'); else fail('no echo', 'own state echoed back');

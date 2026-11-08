@@ -58,7 +58,7 @@ function onMessage(c, text) {
     c.room = room; c.id = m.id; r.add(c); rooms.set(room, r);
     return;
   }
-  if (m.t === 'st' && m.id === c.id) broadcast(c, text); // only your OWN state is relayed (no id spoofing); clients validate fields
+  if ((m.t === 'st' || m.t === 'heal') && m.id === c.id) broadcast(c, text); // only your OWN state/events are relayed (no id spoofing); clients validate fields
 }
 
 function onData(c, chunk) {

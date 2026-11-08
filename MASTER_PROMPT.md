@@ -335,10 +335,11 @@ const SEL={
 - Off by default (zero network calls without `?mp=ws(s)://host&room=&name=`).
 - Uses `net*`/`NET_*` identifiers (`mp` is reserved for mana in 48 places).
 - Keep the two 1-line hooks: `netTick(dt);` inside `update(dt)` (right after `updMarket(dt);`) and `netDraw(list,ox,oy);` inside `drawWorld()` (right before `list.sort(...)`).
+- **Mission Item 5 Support:** Healer `MEND` broadcasts `{t:'heal', id:net.id, amt:heal, x, y, r:72}` over the relay, healing self AND all party peers within range.
 
 ---
 
-## G. Canonical Subsystem Ledger (`D-014..D-042`)
+## G. Canonical Subsystem Ledger (`D-014..D-046`)
 
 | ID | Subsystem | Canonical Symbols (`index.html` / `contracts/src/`) |
 |---|---|---|
@@ -354,3 +355,8 @@ const SEL={
 | D-040 | **Opt-in ghost multiplayer (`?mp=ws(s)://host&room=&name=`) & zero-dep self-hostable relay** | `NET_URL/NET_ROOM/NET_HZ/NET_TTL/NET_MAX/NET_PEERS`, `net/netConnect/netTick/netDraw`, `server/relay.mjs`, `tests/relay.mjs` (stage 6) |
 | D-041 | **Real-browser Chrome smoke test (single-player + 3-player multiplayer, 11/11 PASS)** | `scripts/browser-smoke.sh` (`agent-browser` CDP session + scripted WebSocket peers) |
 | D-042 | **Exact Dogecoin art style record (`docs/ART_STYLE.md`) & repository weight pruning (4.30 MB → 1.42 MB, −66%)** | `docs/ART_STYLE.md` (measured hex palettes, 16×10 Shiba head template, 96×96 DOGE coin recipe), pruned non-Solidity skill packs |
+| D-043 | **Camp coin is the user's Dogecoin-logo art in-code (`MOSAIC_PAL`, `MOSAIC_PX`, 96×96, 32 colors)** | `MOSAIC_PAL`, `MOSAIC_PX`, `docs/art/dogecoin-coin-source.jpg`, `scripts/coin2px.js` |
+| D-044 | **Frozen right-facing characters & meme-doge Shiba face (`drawChar()` draws `spr.right[0]`, 3/4 side-eye face)** | `HEAD.dog.right`, `drawChar`, `tests/sprites.mjs` |
+| D-045 | **User Mission Charter skill (`dogeon-mission`), scope fence, and plain-language game guide (`docs/GAME_GUIDE.md`)** | `.agents|.claude/skills/dogeon-mission/SKILL.md`, `docs/GAME_GUIDE.md`, `CLAUDE.md`, `AGENTS.md` |
+| D-046 | **Healer heals self AND nearby party members in multiplayer (Mission Item 5 closed)** | `mend()`, `netConnect` `onmessage` (`t:'heal'`), `server/relay.mjs`, `tests/relay.mjs`, `tests/sim.mjs` D-046 scenario |
+

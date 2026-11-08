@@ -1145,6 +1145,29 @@ scenario('D-040 multiplayer option: off by default, opt-in ?mp relays state, hos
   else fail('net ttl', 'peers kept: ' + Object.keys(api.net.peers).join());
 });
 
+scenario('D-046: Healer heals self and peers in multiplayer (Mission Item 5)', () => {
+  const sent = []; let sock = null;
+  class FakeWS { constructor(url) { this.url = url; this.readyState = 0; sock = this; } send(s) { sent.push(JSON.parse(s)); } close() {} }
+  const api = boot(SEED + 46, { WebSocket: FakeWS, search: '?mp=ws%3A%2F%2Frelay.test%3A8787&room=heist&name=healer' });
+  startGame(api);
+  api.step(DT); // netConnect() runs inside netTick()
+  if (sock) { sock.readyState = 1; if (sock.onopen) sock.onopen(); }
+  api.applyClass('healer', false);
+  const P = api.get().P;
+  P.hp = 20; P.mp = 30;
+  api.useSkill(); // MEND
+  const healMsg = sent.find(m => m.t === 'heal');
+  if (P.hp === 40 && healMsg && healMsg.amt === 20 && healMsg.r === 72)
+    pass('healer mend pulse', `MEND healed self (20->40) and sent pulse: amt=${healMsg.amt} r=${healMsg.r}`);
+  else fail('healer mend pulse', `hp=${P.hp} msg=${JSON.stringify(healMsg)}`);
+
+  // Receiving a heal pulse from a peer heals P
+  P.hp = 15;
+  sock.onmessage({ data: JSON.stringify({ t: 'heal', id: 'bob9', amt: 25, x: Math.round(P.x), y: Math.round(P.y), r: 72 }) });
+  if (P.hp === 40) pass('receive peer heal', 'received peer heal pulse: hp 15->40');
+  else fail('receive peer heal', `hp=${P.hp}`);
+});
+
 scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, pool DEX LP/impact rows, HUD skill MP cost', () => {
   const api = boot(SEED + 38, { eth: mockEth({ known: true }) }); startGame(api);
   const g = api.get(), P = g.P;

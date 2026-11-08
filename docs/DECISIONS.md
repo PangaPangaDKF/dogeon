@@ -135,6 +135,21 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-046 · 2026-11-08 · Healer heals self AND nearby party members in multiplayer (Mission Item 5) (Antigravity)
+- **Context / why:** Closes the explicit gap identified in `D-045` and fulfills Mission Item 5 (*"the Healer heals itself AND other players"*):
+  previously `MEND` only restored HP to the casting player and refused to cast if `P.hp >= P.maxHp`, meaning a healthy Healer could not support damaged peers.
+- **What was done:**
+  1. `index.html`: `mend()` checks nearby peers (`Object.values(net.peers)` within `72` px). If any hurt ally is in range, `mend()` executes even if the Healer is at full HP. It deducts `10 MP`, restores `+heal` to `P.hp`, and when connected to multiplayer (`net.on`), broadcasts `{t:'heal', id:net.id, amt:heal, x:Math.round(P.x), y:Math.round(P.y), r:72}`.
+  2. `index.html` (`netConnect()` / `onmessage`): handles incoming `{t:'heal'}` packets. If the receiving player is alive and within range (`Math.hypot(P.x-m.x, P.y-m.y) <= (m.r||72)`), it restores `amt` HP (capped at `maxHp`), spawns green healing floater text (`+amt`), and plays the healing audio tone.
+  3. `server/relay.mjs`: updated message filter to relay both `{t:'st'}` and `{t:'heal'}` events while enforcing `m.id === c.id` to prevent sender spoofing.
+  4. `tests/relay.mjs`: added real WebSocket check verifying `heal` pulse relay between connected room clients (10/10 PASS).
+  5. `tests/sim.mjs`: added `D-046` scenario verifying that a Healer casting `MEND` broadcasts the pulse and that receiving peers are healed (33/33 scenarios PASS).
+  6. `scripts/browser-smoke.sh`: 11/11 PASS in real Chrome with zero page errors.
+- **Verify:** `bash tests/check.sh` (all 6 stages pass) + `bash scripts/browser-smoke.sh` (11/11 in real Chrome).
+- **Commit:** this commit.
+
+---
+
 ### D-045 · 2026-11-08 · `dogeon-mission` skill: the user's mission charter + scope fence, loaded first by BOTH brains (Claude Code)
 - **Context / why (user, verbatim):** *"a main rule is that focus on preserve and save the doge coin art and save code and be
   more light without effects or sound, the goal is the defi web3 solidity integrations with the game play and the heist lore

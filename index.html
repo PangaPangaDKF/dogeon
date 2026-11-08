@@ -578,9 +578,13 @@ function quickShot(){if(noMp(SKILL_MP.archer))return;stopFish('REELED IN');P.mp-
   for(const da of [0,-0.22,0.22]){const a=base+da;projs.push({x:P.x+v[0]*9,y:P.y-6+v[1]*9,vx:Math.round(Math.cos(a)*300),vy:Math.round(Math.sin(a)*300),life:0.85,kind:'arrow',dir:P.dir,dmg,hits:new Set()});}
   sfx(760,0.12,'triangle',0.045,-200);}
 // HEALER: MEND — spend MP to heal HP (MP only refills by resting in camp or staff hits, D-028)
-function mend(){if(noMp(SKILL_MP.healer))return;if(P.hp>=P.maxHp){toast('ALREADY FULL HP.',1.2);sfx(440,0.1,'sine',0.03);return;}
+// Mission item 5: Healer heals itself AND other players (multiplayer pulse)
+function mend(){if(noMp(SKILL_MP.healer))return;
+  const allies=Object.values(net.peers).filter(p=>!p.dead&&p.h<100&&Math.hypot(p.x-P.x,p.y-P.y)<=72);
+  if(P.hp>=P.maxHp&&!allies.length){toast('ALREADY FULL HP.',1.2);sfx(440,0.1,'sine',0.03);return;}
   stopFish('REELED IN');P.mp-=SKILL_MP.healer;P.skills.bark++;
   const heal=Math.round(20*skillMul(P.skills.bark,'bark'));P.hp=Math.min(P.maxHp,P.hp+heal);
+  if(net.on&&net.ws&&net.ws.readyState===1)net.ws.send(JSON.stringify({t:'heal',id:net.id,amt:heal,x:Math.round(P.x),y:Math.round(P.y),r:72}));
   for(let i=0;i<10;i++)parts.push({x:P.x+(Math.random()*12-6),y:P.y+4+(Math.random()*8-4),vx:0,vy:-34,life:0.6,col:i%2?'#70f0b0':'#d8fff0'});
   floater(P.x,P.y-12,'+'+heal,'#80ffb0');sfx(620,0.14,'sine',0.05,220);sfx(880,0.2,'sine',0.04,180);}
 function damageEnemy(e,dmg,kx,ky){
@@ -1070,6 +1074,13 @@ function netConnect(){
     ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
       if(!m||typeof m.id!=='string'||!/^[a-z0-9]{1,12}$/.test(m.id)||m.id===net.id)return;
       if(m.t==='bye'){delete net.peers[m.id];return;}
+      if(m.t==='heal'&&Number.isFinite(m.x)&&Number.isFinite(m.y)){
+        if(!P.dead&&Math.hypot(P.x-m.x,P.y-m.y)<=(m.r||72)){
+          const amt=Math.max(1,m.amt|0);P.hp=Math.min(P.maxHp,P.hp+amt);
+          floater(P.x,P.y-12,'+'+amt,'#80ffb0');sfx(620,0.14,'sine',0.05,220);
+        }
+        return;
+      }
       if(m.t!=='st'||!Number.isFinite(m.x)||!Number.isFinite(m.y))return;
       if(!net.peers[m.id]&&Object.keys(net.peers).length>=NET_PEERS)return;
       net.peers[m.id]={x:m.x,y:m.y,d:['down','up','left','right'].includes(m.d)?m.d:'down',m:!!m.m,c:Object.prototype.hasOwnProperty.call(CLASSES,m.c)?m.c:'',
