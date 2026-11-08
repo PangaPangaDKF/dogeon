@@ -16,6 +16,15 @@ done
 # WebSocket is allowed ONLY inside the opt-in MULTIPLAYER section (D-040), the way wallet calls live only in CHAIN (D-016)
 if awk '/\/\/ =+ MULTIPLAYER/{m=1;next} /\/\/ =+ /{m=0} !m' index.html | grep -qF 'WebSocket'; then
   bad "WebSocket used outside the opt-in MULTIPLAYER section"; else ok "WebSocket only inside the opt-in MULTIPLAYER section"; fi
+# the DOGE coin = the user's Dogecoin-logo art as in-code pixels (D-043): must stay exactly 96x96 with <= 32 colours
+if node - <<'EOF'
+const s = require('fs').readFileSync('index.html', 'utf8');
+const pal = (s.match(/const MOSAIC_PAL='([^']+)'/) || [, ''])[1].split(',');
+const m = s.slice(s.indexOf('const MOSAIC_PX=')).match(/^const MOSAIC_PX=\n([\s\S]*?);\n/);
+const px = m ? m[1].replace(/[\s+']/g, '') : '';
+process.exit(px.length === 9216 && /^[0-9a-v.]+$/.test(px) && pal.length >= 2 && pal.length <= 32 && pal.every(h => /^[0-9a-f]{6}$/.test(h)) ? 0 : 1);
+EOF
+then ok "DOGE coin art data intact (96x96 = 9216 px, <= 32 colours)"; else bad "DOGE coin art data corrupted (MOSAIC_PX / MOSAIC_PAL)"; fi
 if grep -Eq '(src|href)="https?://' index.html; then bad "external asset URL found"; else ok "no external assets"; fi
 lines=$(wc -l < index.html | tr -d ' ')
 if [ "$lines" -gt 1500 ]; then note "index.html is $lines lines (>1500): time to plan the ES-module split"; else ok "index.html size: $lines lines"; fi
