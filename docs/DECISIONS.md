@@ -35,6 +35,28 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-029 · 2026-11-08 · Signature class skills: GROUND POUND / QUICK SHOT / MEND (Phase 5 part 3/N)
+- Feature: K/Q (the WOW bark) now runs your class's signature skill when you have a class, via `useSkill()`:
+  - **WARRIOR → GROUND POUND** (12 MP): a radial shockwave that damages and knocks back every cat within ~46 px, + screen shake and a ring of embers.
+  - **ARCHER → QUICK SHOT** (6 MP): a fast (300 px/s), cheap, long arrow projectile (new `kind:'arrow'`, rendered as a little dart).
+  - **HEALER → MEND** (12 MP): spend MP to heal ~18 HP (×skill), capped at maxHp. Heals above the 60% rest cap, but MP refills ONLY by resting in camp, so the camp-sanctuary + greed-vs-safety invariants hold (MP is the limiter). No class → unchanged default WOW bark.
+  - All three gain skill with use (`P.skills.bark`, ×8%/tier) and scale with hammer level + bull market + `classDmg`.
+- Why: The user's "each faction has a mechanic and skill" — the professions needed real, distinct active skills, not just stat tweaks.
+- Files: `index.html` (`SKILL_MP`, `useSkill`, `groundPound`, `quickShot`, `mend`, `noMp`; K/Q routes to `useSkill`; `arrow` render
+  case in the projectile draw; the projectile loop already damages any non-`bone` player projectile), `tests/sim.mjs` (+1 scenario,
+  exports the skill fns + `makeEnemy`).
+- Tool: Claude Code (Opus 4.8); `design-action-combat`, `game-feel`. Reused `damageEnemy`'s mass-scaled knockback (don't add a second
+  knockback on top — it overwrites `e.kbx/kby`); tuned GROUND POUND to pass a 1.5× unit vector so normal cats fly, brutes resist, boss barely moves.
+- Alternatives rejected: a separate skill key (kept K/Q so muscle memory and the tutorial text still apply); letting MEND ignore MP
+  (would trivialize the no-easy-heal rule → MP-gated, camp-refill only); making QUICK SHOT pierce (kept single-hit like WOW via `hits`).
+- Verify: `node tests/sim.mjs` → "class skills" scenario PASS (ground pound damages + knocks back + -12 MP; quick shot fast arrow -6 MP;
+  mend heals -MP); all others 0 failed.
+- Next: staking-earns-DEX-fees (contract + DEX protocol-fee routing + Sphinx UI), then on-chain party/PvP/loot-steal, then redeploy the
+  full set (items, dex, prof, staking, pvp) to Chikyu and re-wire `CONTRACTS`.
+- Commit: this commit.
+
+---
+
 ### D-028 · 2026-11-08 · Faction trainers + class identity in-game (Phase 5 part 2/N)
 - Feature: Three faction-trainer NPCs now stand in the safe camp, each tied to a class/faction: Sergeant Ironpaw (WARRIOR /
   Demolition Dogs) and Scout Fleetwhisker (ARCHER / Kernel Crew) flank the south gate, Mender Brighttail (HEALER / Barkitects) by

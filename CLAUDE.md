@@ -99,7 +99,7 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
 - **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+40 DOGE) → 2 slay 3 brutes (+80 DOGE,
   opens ruins gate) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 DOGE).
 - **Enemy populations:** field 22 (`FIELD_POP`), ruins lower hall 6 (`DUN_POP`), respawn one every 3 s (`SPAWN_EVERY`) out of view. Types: alley, archer, frog, ninja, bull, knight, brute.
-- **Controls:** WASD/arrows move, Space/J slash (hammer swing), K/Q "WOW" bark (10 MP), E talk, hold R rest, I/Tab bag, F fish, Esc close.
+- **Controls:** WASD/arrows move, Space/J slash (hammer swing), K/Q class skill (`useSkill()` → WOW bark, or GROUND POUND/QUICK SHOT/MEND by class, D-029), E talk, hold R rest, I/Tab bag, F fish, Esc close.
 
 ## 5. Coding rules for this project
 - Keep everything in `index.html` until we decide to split (then: `src/*.js` as ES modules, no bundler).

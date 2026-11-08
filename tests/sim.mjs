@@ -67,6 +67,7 @@ globalThis.__api = {
   swordLv, armorLv, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
   CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
+  useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy,
 };`;
 
 function boot(seed, opts) {
@@ -848,6 +849,32 @@ scenario('faction trainers: pick a class locally, its mechanic applies, one clas
   if (api.get().P.prof !== 'archer') fail('switch archer', 'P.prof=' + api.get().P.prof);
   else if (!(api.classSpd() > 1.2 && api.classDmg() === 1)) fail('archer stats', `spd ${api.classSpd()} dmg ${api.classDmg()}`);
   else pass('switch archer', `ARCHER: spd x${api.classSpd()} faster, dmg x${api.classDmg()} — still one class`);
+});
+
+scenario('class skills: GROUND POUND knocks back, QUICK SHOT flies fast, MEND spends MP to heal (D-029)', () => {
+  const api = boot(SEED + 31); startGame(api);
+  // WARRIOR: ground pound damages + knocks back an adjacent cat and costs 12 MP
+  let P = api.get().P; P.prof = 'warrior'; P.mp = 30;
+  const e = api.makeEnemy('alley', P.x + 18, P.y, 'field'); api.get().enemies.push(e);
+  const hp0 = e.hp, mp0 = P.mp; api.useSkill();
+  if (!(e.hp < hp0 || e.dead)) fail('ground pound', `enemy hp ${hp0}->${e.hp}`);
+  else if (!(e.kbx !== 0 || e.kby !== 0 || e.dead)) fail('ground pound', 'no knockback');
+  else if (api.get().P.mp !== mp0 - api.SKILL_MP.warrior) fail('ground pound mp', `mp ${mp0}->${api.get().P.mp}`);
+  else pass('ground pound', `cat ${hp0}->${e.hp} hp, knocked back, -${api.SKILL_MP.warrior} MP`);
+  // ARCHER: quick shot is a fast, cheap arrow
+  P = api.get().P; P.prof = 'archer'; P.mp = 30; P.dir = 'right'; api.get().projs.length = 0;
+  const mpA = P.mp; api.useSkill();
+  const arrow = api.get().projs.find(p => p.kind === 'arrow');
+  if (!arrow) fail('quick shot', 'no arrow projectile fired');
+  else if (Math.abs(arrow.vx) + Math.abs(arrow.vy) < 300) fail('quick shot', 'arrow too slow: ' + arrow.vx);
+  else if (api.get().P.mp !== mpA - api.SKILL_MP.archer) fail('quick shot mp', 'mp ' + api.get().P.mp);
+  else pass('quick shot', `arrow speed ${Math.abs(arrow.vx) + Math.abs(arrow.vy)}, -${api.SKILL_MP.archer} MP`);
+  // HEALER: mend trades MP for HP (above the 60% rest cap is allowed; MP only refills in camp)
+  P = api.get().P; P.prof = 'healer'; P.hp = 20; P.maxHp = 60; P.mp = 30;
+  const hpH = P.hp, mpH = P.mp; api.useSkill();
+  if (!(api.get().P.hp > hpH)) fail('mend heal', `hp ${hpH}->${api.get().P.hp}`);
+  else if (!(api.get().P.mp < mpH)) fail('mend mp', 'MP not spent');
+  else pass('mend', `healed ${hpH}->${api.get().P.hp} hp for ${mpH - api.get().P.mp} MP`);
 });
 
 scenario('Sphinx = DogeOS DeFi hub: connect, market, faucet, stake, oracle, school, dogeos.com, docs', () => {
