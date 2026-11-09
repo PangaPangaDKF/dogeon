@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-059 · 2026-11-09 · Gear redeploy step 2/5 — deployed new DogeItems + DogeDEX to Chikyū (Claude Code)
+- What: Deployed the updated `DogeItems` → **`0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4`** and a fresh `DogeDEX` → **`0xD381e28AC54399EfeA53DCE17D0b627883c00B6e`** on DogeOS Chikyū. **Partial** deploy (via `forge create`) that KEEPS the existing `DogeProfession` (`0x7AEF68…`) and `DogeStaking` (`0x4a1BF1…`), so the user's on-chain class + any staking survive (`DogeStaking.receive()` accepts fees from any sender, so the new DEX wires to the old vault). Updated `CONTRACTS` in `index.html` + all live-reference docs (`TRYNOAH.md`, `MASTER_PROMPT.md`, both `dogeon-game` skills, `CLAUDE_CODE_HANDOFF.md`, `CONTEXT.md`, `e2e-chikyu.sh`, `deployments/6281971.json`). History (`DECISIONS.md`) and broadcast artifacts keep the old addresses.
+- On-chain verify: `maxLevel(7)=1`, `maxLevel(15)=1`, `maxLevel(16)=0`, `typeName(7)="DOGE SWORD"`, `typeName(13)="DOGE BOW"`; `dex.items()` = new items; `dex.stakingPool()` = existing stake.
+- Also fixed a latent hole: the manifest's class-extractor regex hadn't been updated for the D-054 `mp:` field, so the drift guard silently reported **0 classes** since then. Fixed the regex (+ an ±maxMP column); guard again verifies 3 classes.
+- Tool: Claude Code (Opus 4.8); `forge create` with the scratchpad `key.env` (never printed/committed); deployer `0x7BE8…82Ca`. Verify: drift guard OK (4 addresses, 30 selectors, 3 classes). Next (step 3): wire the 9 items into `MINTABLE` + a game-side `gearStats` engine (+ATK/+DEF/+HP/+MP), then e2e + browser-smoke (steps 4–5).
+
 ### D-058 · 2026-11-09 · Gear redeploy step 1/5 — add 9 DOGE gear types to DogeItems (Claude Code)
 - What: Added item types 7–15 to `DogeItems.sol` (DOGE SWORD, LEATHER ARMOR, SHIELD, STAFF, ROBE, WHIP, BOW, HEMP SHIRT, QUIVER), additive — types 1–6 unchanged so the existing forge/combat/DEX/sim keep working. `maxLevel` returns 1 for 7–15; `typeName`/`_color` give DOGE-prefixed names + colours. Stat bonuses will live game-side (GEAR_STATS). Updated the "unknown type" test (7→20) and added `test_DogeGearTypes`.
 - Why: User: "redeploy the contract for the gear." Step 1 of the 5-step redeploy plan in `docs/HARDCORE_MODE.md` §5b: (1) contract types [this], (2) deploy DogeItems+DogeDEX to Chikyū, (3) wire MINTABLE + a gearStats engine in index.html, (4) sim, (5) e2e + browser-smoke + docs/TRYNOAH/manifest.

@@ -14,8 +14,8 @@ set -uo pipefail
 
 R="${RPC:-https://rpc.testnet.dogeos.com}"
 CAST="${CAST:-$(command -v cast || echo "$HOME/.foundry/bin/cast")}"
-ITEMS=0x207641C60474526a353960F3967d5c412026F62e
-DEX=0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10
+ITEMS=0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4
+DEX=0xD381e28AC54399EfeA53DCE17D0b627883c00B6e
 STAKE=0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d
 KEY_FISH=769          # (type 3 RAW FISH << 8) | level 1
 PAUSE="${PAUSE:-2}"  # the public RPC rate-limits bursts ("Too many connections")

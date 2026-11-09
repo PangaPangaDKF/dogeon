@@ -43,8 +43,8 @@ const sel = Object.fromEntries([...block(html, 'const SEL=').matchAll(/(\w+):'([
 const redstone = Object.fromEntries([...block(html, 'const REDSTONE=').matchAll(/(\w+):'(0x[0-9a-fA-F]{40})'/g)].map(m => [m[1], m[2]]));
 
 const clsBlock = block(html, 'const CLASSES=');
-const classes = [...clsBlock.matchAll(/(\w+):\{id:(\d+),name:'([^']+)'[^}]*?spr:'(\w+)',trainer:'([^']+)',\s*spd:([\d.]+),dmg:([\d.]+),armor:([\d.-]+),hp:(-?\d+),skill:'([^']+)'/g)]
-  .map(m => ({ key: m[1], id: +m[2], name: m[3], spr: m[4], trainer: m[5], spd: +m[6], dmg: +m[7], armor: +m[8], hp: +m[9], skill: m[10] }));
+const classes = [...clsBlock.matchAll(/(\w+):\{id:(\d+),name:'([^']+)'[^}]*?spr:'(\w+)',trainer:'([^']+)',\s*spd:([\d.]+),dmg:([\d.]+),armor:([\d.-]+),hp:(-?\d+),mp:(-?\d+),skill:'([^']+)'/g)]
+  .map(m => ({ key: m[1], id: +m[2], name: m[3], spr: m[4], trainer: m[5], spd: +m[6], dmg: +m[7], armor: +m[8], hp: +m[9], mp: +m[10], skill: m[11] }));
 
 const mintable = [...block(html, 'const MINTABLE=').matchAll(/\{type:(\d+),level:(\d+)\}/g)].map(m => ({ type: +m[1], level: +m[2] }));
 const itemTypes = Object.fromEntries([...block(html, 'const ITEM_TYPES=').matchAll(/(\d+):'([^']+)'/g)].map(m => [m[1], m[2]]));
@@ -132,9 +132,9 @@ const md = () => {
   L.push('');
 
   L.push('## 5. Professions (exact stats — `CLASSES`)');
-  L.push('| key | id | name | sprite | trainer | speed | dmg | armor | ±maxHP | K/Q skill |');
-  L.push('|---|---|---|---|---|---|---|---|---|---|');
-  for (const c of classes) L.push(`| \`${c.key}\` | ${c.id} | ${c.name} | \`${c.spr}\` | ${c.trainer} | ${c.spd}x | ${c.dmg}x | +${c.armor} | ${c.hp >= 0 ? '+' : ''}${c.hp} | ${c.skill} |`);
+  L.push('| key | id | name | sprite | trainer | speed | dmg | armor | ±maxHP | ±maxMP | K/Q skill |');
+  L.push('|---|---|---|---|---|---|---|---|---|---|---|');
+  for (const c of classes) L.push(`| \`${c.key}\` | ${c.id} | ${c.name} | \`${c.spr}\` | ${c.trainer} | ${c.spd}x | ${c.dmg}x | +${c.armor} | ${c.hp >= 0 ? '+' : ''}${c.hp} | ${c.mp >= 0 ? '+' : ''}${c.mp} | ${c.skill} |`);
   L.push('');
 
   L.push('## 6. Items, mintables, recipes');

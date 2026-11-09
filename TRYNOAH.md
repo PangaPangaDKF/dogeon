@@ -65,8 +65,8 @@ Explorer `https://dogeos-testnet.l2scan.co` · Faucet `faucet.testnet.dogeos.com
 
 | Contract | Address |
 |---|---|
-| **DogeItems** (ERC-721 + Enumerable) | `0x207641C60474526a353960F3967d5c412026F62e` |
-| **DogeDEX** (listings + `x*y=k` pools + 1% protocol fee) | `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10` |
+| **DogeItems** (ERC-721 + Enumerable) | `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4` |
+| **DogeDEX** (listings + `x*y=k` pools + 1% protocol fee) | `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e` |
 | **DogeProfession** (one class per wallet) | `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055` |
 | **DogeStaking** (MasterChef DOGE vault) | `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d` |
 | **RedStone DOGE/USD feed** | `0x434F8D17c0301cfEa143dba912972E24B827C968` |

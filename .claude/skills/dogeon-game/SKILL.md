@@ -29,8 +29,8 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
 ## 2. Live DogeOS Chikyū Testnet Registry (`0x5fdaf3` / `6281971`)
 - **RPC:** `https://rpc.testnet.dogeos.com` · **Explorer:** `https://dogeos-testnet.l2scan.co` · **Faucet:** `https://faucet.testnet.dogeos.com`
 - **Deployed Game Contracts (`CONTRACTS['0x5fdaf3']`):**
-  - `items` (`DogeItems.sol`, ERC721Enumerable, packed `id<<16|type<<8|level`, `0.1 DOGE` mint fee): `0x207641C60474526a353960F3967d5c412026F62e`
-  - `dex` (`DogeDEX.sol`, NFT listings + `x*y=k` NFT/DOGE AMM pools, 2% LP fee + 1% protocol fee split 0.2% treasury / 0.8% stakers, pull-payment `proceeds`): `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10`
+  - `items` (`DogeItems.sol`, ERC721Enumerable, packed `id<<16|type<<8|level`, `0.1 DOGE` mint fee): `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4`
+  - `dex` (`DogeDEX.sol`, NFT listings + `x*y=k` NFT/DOGE AMM pools, 2% LP fee + 1% protocol fee split 0.2% treasury / 0.8% stakers, pull-payment `proceeds`): `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e`
   - `prof` (`DogeProfession.sol`, 1 class per wallet forever, `0.05 DOGE` fee): `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`
   - `stake` (`DogeStaking.sol`, MasterChef `1e18` precision DOGE staking vault): `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`
 - **RedStone DOGE/USD Oracle (`REDSTONE['0x5fdaf3']`):**

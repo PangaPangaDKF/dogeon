@@ -13,8 +13,8 @@ Derived from source on 2026-11-09. `index.html` = **1384 lines**, 18 sections, 3
 ## 2. Live contract registry (`CONTRACTS`)
 | chain | key | address |
 |---|---|---|
-| `0x5fdaf3` | `items` | `0x207641C60474526a353960F3967d5c412026F62e` |
-| `0x5fdaf3` | `dex` | `0xaecaABe03eA9b0b8aA0eFdD2104A445DdBbdcF10` |
+| `0x5fdaf3` | `items` | `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4` |
+| `0x5fdaf3` | `dex` | `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e` |
 | `0x5fdaf3` | `prof` | `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055` |
 | `0x5fdaf3` | `stake` | `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d` |
 | `0x7a69` | `items` | `0x5FbDB2315678afecb367f032d93F642f64180aa3` |
@@ -81,8 +81,11 @@ const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966
 - `latestRoundData()`
 
 ## 5. Professions (exact stats — `CLASSES`)
-| key | id | name | sprite | trainer | speed | dmg | armor | ±maxHP | K/Q skill |
-|---|---|---|---|---|---|---|---|---|---|
+| key | id | name | sprite | trainer | speed | dmg | armor | ±maxHP | ±maxMP | K/Q skill |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `warrior` | 1 | WARRIOR | `tWarrior` | SERGEANT IRONPAW | 0.95x | 1.35x | +0.15 | +25 | -10 | GROUND POUND |
+| `archer` | 2 | ARCHER | `tArcher` | SCOUT FLEETWHISKER | 1.25x | 1x | +0 | +0 | +0 | ARROW VOLLEY |
+| `healer` | 3 | HEALER | `tHealer` | MENDER BRIGHTTAIL | 1.25x | 0.65x | +0.05 | -15 | +20 | MEND |
 
 ## 6. Items, mintables, recipes
 - **Item types:** 1=HAMMER · 2=ARMOR · 3=RAW FISH · 4=COOKED FISH · 5=BONE CHARM · 6=MOON BISCUIT
