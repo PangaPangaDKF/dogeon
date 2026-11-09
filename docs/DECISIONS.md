@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-057 · 2026-11-09 · Mini-boss per region (field + ruins elites) (Claude Code)
+- What: `makeMini`/`spawnMini` spawn one scaled-up elite in the field and one in the ruins at `newGame` (3.5× HP, 1.6× dmg, +speed, bigger hitbox, drawn 1.5×). Tagged `zone:'mini'` so they're excluded from the `FIELD_POP`/`DUN_POP` refill (unique, never respawn). Guaranteed drops: material (`dropP:1`, `drop:3`) + 3 DOGE coins + a toast. Projectile hitbox scaled for minis.
+- Why: User: "each region has a mini boss… a little bit more big and faster and strong." Gives each region a hardcore target. No new sfx/FX (R2) — reuses the existing death puff; only a text toast.
+- Tool: Claude Code (Opus 4.8). Verify: sim `D-057` (2 elites brute+knight, mini drops 3 whisk + 3 coins, field pop stays 52); `check.sh` green.
+- Alternatives rejected: a new `boss`-flag ETYPES entry per region — rejected; a `mini` flag on a cloned def is lighter and reuses existing AI/sprites.
+
 ### D-056 · 2026-11-09 · Harder + more enemies: 2× base HP/damage and field pop 22 → 52 (Claude Code)
 - What: Set the 7 normal `ETYPES` to **+100% HP and +100% damage vs the original baseline** (2×; supersedes D-052's +50%), and raised `FIELD_POP` 22 → 52 (+30 field enemies).
 - Why: User: "i want the enemies 100% more hard and 30 more enemies." Pushes the hardcore survival feel (too many, too strong to solo).

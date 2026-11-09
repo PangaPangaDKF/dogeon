@@ -475,6 +475,21 @@ scenario('D-055: rare drops — most kills drop nothing, a few give materials/co
   pass('rare drops', `${dropped}/${N} alley kills dropped anything; the rest dropped nothing`);
 });
 
+scenario('D-057: mini-boss per region — two elites spawn, drop guaranteed loot, excluded from refill', () => {
+  const api = boot(SEED + 57); startGame(api);
+  const g = api.get();
+  const minis = g.enemies.filter(e => e.mini);
+  if (minis.length !== 2) { fail('mini count', `${minis.length} mini-bosses spawned (expected 2)`); return; }
+  const m = minis[0];
+  if (!(m.maxHp > api.ETYPES[m.type].hp * 2) || m.zone !== 'mini') { fail('mini stats', `maxHp=${m.maxHp} base=${api.ETYPES[m.type].hp} zone=${m.zone}`); return; }
+  g.items.length = 0; api.killEnemy(m);
+  const coins = g.items.filter(i => i.kind === 'coin').length, mats = g.items.filter(i => i.kind === m.def.mat).length;
+  if (coins < 3 || mats < 1) { fail('mini loot', `coins=${coins} mats=${mats} (expected >=3 coins, >=1 material)`); return; }
+  const fieldCount = g.enemies.filter(e => e.zone === 'field').length;
+  if (fieldCount !== api.FIELD_POP) { fail('mini refill', `field=${fieldCount}, mini leaked into field accounting (expected ${api.FIELD_POP})`); return; }
+  pass('mini-boss', `2 region elites (${minis.map(e => e.type).join(', ')}); mini dropped ${mats} ${m.def.mat} + ${coins} coins; field pop stays ${fieldCount}`);
+});
+
 scenario('enemy pressure: field population and spawn timer', () => {
   const api = boot(SEED + 16);
   startGame(api);

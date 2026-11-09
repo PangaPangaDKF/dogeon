@@ -134,9 +134,9 @@ types 1–6 and reverts on anything else. The user chose **"build stats now, red
 being built on the existing items first. When ready: redeploy → update `CONTRACTS` in `index.html` + `TRYNOAH.md`/manifest/docs
 → re-run `scripts/e2e-chikyu.sh` (17/17) + `scripts/browser-smoke.sh` → coordinate the shared contract lane with Antigravity.
 
-**Progress so far (Phase 1):** D-052 monsters +50% · D-053 renewable gathering · D-054 per-class Max MP · D-055 rare drops · D-056 2x HP/dmg + 52 field enemies +
+**Progress so far (Phase 1):** D-052 monsters +50% · D-053 renewable gathering · D-054 per-class Max MP · D-055 rare drops · D-056 2x HP/dmg + 52 field enemies · D-057 mini-boss per region +
 rare DOGE coin. Still open in Phase 1: market as a heavier debuff on the exact RedStone price, "cat clothes" junk drop,
-bigger/clearer gear stat bonuses, the 9 `DOGE `-named items (after the redeploy), mini-boss per region.
+bigger/clearer gear stat bonuses, the 9 `DOGE `-named items (contract redeploy IN PROGRESS), "cat clothes" junk.
 
 ## 6. First recommended slice
 **Start with the 9-item gear system (§3.2).** It's architecture-independent, it's mission priority #1 (the real use-case for
