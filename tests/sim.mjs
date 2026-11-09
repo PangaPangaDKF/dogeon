@@ -426,6 +426,28 @@ scenario('fishing: getting hit snaps the line, moving cancels, no water = no fis
   else pass('no water', 'F away from water does nothing');
 });
 
+scenario('D-053: renewable gathering — chop a tree for WOOD, then the node is on cooldown', () => {
+  const api = boot(SEED + 53); startGame(api);
+  api.get().enemies.splice(0); // empty world so only the test touches the player
+  let found = null; // a tree with a walkable, non-camp tile on its left
+  for (let ty = 3; ty < api.MH - 3 && !found; ty++) for (let tx = 3; tx < api.MW - 3; tx++) {
+    if (api.tile(tx, ty) !== api.T.TREE) continue;
+    const nx = tx - 1, ny = ty, nt = api.tile(nx, ny);
+    if (!api.SOLID.has(nt) && nt !== api.T.WATER && !api.inCampT(nx, ny)) { found = { tx, ty, nx, ny }; break; }
+  }
+  if (!found) throw new Error('no tree with a walkable left neighbor found');
+  api.P_ = { x: found.nx * 16 + 8, y: found.ny * 16 + 8, dir: 'right', iT: 99, moving: false };
+  const wood0 = api.bagCount('wood');
+  api.press('f'); api.step(DT);
+  if (!api.get().P.fishing) throw new Error('F facing a tree did not start gathering');
+  for (let f = 0; f < 60 * 4; f++) api.step(DT);
+  const wood1 = api.bagCount('wood');
+  if (wood1 !== wood0 + 1) { fail('gather wood', `wood ${wood0} -> ${wood1} (expected +1)`); return; }
+  api.P_ = { moving: false }; api.press('f'); api.step(DT); // node just harvested -> on cooldown
+  if (api.get().P.fishing || api.bagCount('wood') !== wood1) fail('gather cooldown', 'the node was harvestable again before it renewed');
+  else pass('gather wood', `chopped a tree: WOOD ${wood0} -> ${wood1}, node then on cooldown`);
+});
+
 scenario('enemy pressure: field population and spawn timer', () => {
   const api = boot(SEED + 16);
   startGame(api);
