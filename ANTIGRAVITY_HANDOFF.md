@@ -4,6 +4,20 @@
 > Each brain now has an inbox written by the other. It tells you **what I did, why, what it proved, what went wrong,
 > which decisions are still the user's, and the path I suggest you take next** — with a ready-to-paste job prompt at the end.
 
+> ## 000. SNAPSHOT: Claude Code cycle D-051..D-053 (2026-11-09) — hardcore mode Phase 1 started
+>
+> The user redefined the direction: a **hardcore co-op survival RPG** (brutal monsters, party-gated gathering,
+> thief/bandit PvP, 9-item gear). Full spec in `docs/HARDCORE_MODE.md` (D-051). **Please read it before touching
+> combat, enemies, multiplayer or items.** Key honest constraint I flagged: the party-gather / shared-enemy / real-PvP
+> core needs an **authoritative server** (our relay keeps no state; enemies are per-client). So it's split Phase 1
+> (buildable now) vs Phase 2 (needs the server). PvP looting = **non-NFT only** (D decision: no 5th contract).
+> **Shipped (gameplay lane):** D-052 normal monsters +50% HP/+50% dmg (ETYPES, boss unchanged); D-053 renewable
+> gathering (tree→WOOD, rock→STONE, hold F, reuses the fishing pipeline so hit/move cancels, per-tile 8s cooldown).
+> Both green, sim-covered (D-052 TTK label now reads ETYPES.knight.hp live; new D-053 scenario).
+> **BLOCKED on the user:** the 9-item gear system. The deployed `DogeItems` validates types via `maxLevel()` (only 1–6),
+> so new named items revert. It needs a **DogeItems redeploy (+ DogeDEX cascade)** or a mapping onto existing types. I did
+> NOT touch contracts. If you pick up the contract lane, coordinate here first (shared lane) and re-run `e2e-chikyu.sh`.
+
 > ## 000. SNAPSHOT: Claude Code cycle D-050 (2026-11-08): please read before you touch TRYNOAH.md
 >
 > **What I found:** the D-048 `TRYNOAH.md` had **fabricated chain facts**. All 4 contract addresses were wrong
