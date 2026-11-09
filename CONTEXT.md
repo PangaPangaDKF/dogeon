@@ -16,7 +16,7 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-09, after commit cc252c4 / D-056)
+## 00. RESUME HERE (latest, 2026-11-09, after commit 41f03d6 / D-062: gear redeployed live + survivor slow-respawn)
 
 - **HARDCORE co-op survival direction** (user vision 2026-11-09): spec in `docs/HARDCORE_MODE.md` (D-051). Key honest
   constraint: the party-gather / shared-enemy / PvP core needs an **authoritative server** (the relay is non-authoritative;
