@@ -59,6 +59,10 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
 6. **Instant Wallet Popup & Mouse UX (`D-036`):**
    - `chainAct()` never awaits `refreshChain()` before `await fn()` (so MetaMask/Bitget opens immediately on click/keypress).
    - Full mouse hover/wheel/click support on canvas (`cvPos`). In `tests/sim.mjs`, always close menus with `api.press('escape'); api.step(DT);` (never `api.get().ui = null`, which only mutates the wrapper object).
+7. **Hardcore survival (`D-052..D-063`):** normal `ETYPES` are **2× base HP + damage**; field holds **52** (`FIELD_POP`). Drops are rare — `dropP` per type gates the material + `COIN_DROP_P` (8%) drops a single DOGE coin. **Mini-boss per region** (`makeMini`/`spawnMini`, `zone:'mini'`, `region` field, 3.5× HP, drawn 1.5×, drops 6 materials + 5 coins). **Slow respawn**: dungeon `DUN_RESPAWN=120s`, mini-bosses `MINI_RESPAWN=240s` (separate `dunT`/`miniT` timers) — clear, rest in camp, return to the Cat Lord.
+8. **Gear stats + random loot (`D-058..D-064`):** 9 DOGE gear NFTs = `DogeItems` types **7–15** (DOGE SWORD/LEATHER ARMOR/SHIELD/STAFF/ROBE/WHIP/BOW/HEMP SHIRT/QUIVER), in `MINTABLE`+`ITEM_TYPES`, any class may wield any. `GEAR_STATS` gives base +ATK/+DEF/+HP/+MP; **`itemRoll(id)`** hashes an NFT's on-chain tokenId → a deterministic `{rarity, buff}` (COMMON..LEGENDARY ×1..×6, incl. big MEME buffs). `gearStats()` sums base + every non-food item's rolled buff, applied via `gatk()` (the 4 weapon formulas), `hurtPlayer` (def), and `syncMaxHp`/`syncMaxMp` (resynced after `refreshChain`). Only while `chainReady()` (owning = wearing). No contract stores the roll — it derives from the id.
+9. **Renewable gathering (`D-053`):** face a tree→**WOOD** / rock→**STONE**, hold `F` (reuses the fishing pipeline, so hit/move/attack cancels it), per-tile `GATHER_CD=8s` cooldown (`nodeAt`/`gatherCD`).
+10. **Per-class Max MP (`D-054`):** warrior **20** / archer **30** / healer **50** via `syncMaxMp()` (class `mp` field, mirrors `syncMaxHp`).
 
 ---
 

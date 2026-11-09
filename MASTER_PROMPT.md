@@ -337,6 +337,13 @@ const SEL={
 - Keep the two 1-line hooks: `netTick(dt);` inside `update(dt)` (right after `updMarket(dt);`) and `netDraw(list,ox,oy);` inside `drawWorld()` (right before `list.sort(...)`).
 - **Mission Item 5 Support:** Healer `MEND` broadcasts `{t:'heal', id:net.id, amt:heal, x, y, r:72}` over the relay, healing self AND all party peers within range.
 
+### 4.7 Hardcore Survivor Loop, Gear Stats & Random Loot (`D-052..D-064`)
+- **Survival tuning:** normal `ETYPES` are **2× base HP + damage**; `FIELD_POP=52`; drops are rare (`dropP` per type + `COIN_DROP_P=0.08` for a single DOGE `coin` ground item). **Mini-boss per region** (`makeMini`/`spawnMini`, `zone:'mini'`, `region` field, 3.5× HP, drawn 1.5×, drops 6 materials + 5 coins). **Slow respawn**: `DUN_RESPAWN=120s`, `MINI_RESPAWN=240s` on separate `dunT`/`miniT` timers — the clear → rest in camp → return → boss loop.
+- **Renewable gathering:** face a tree→`wood` / rock→`stone`, hold `F` (reuses the fishing pipeline; hit/move/attack cancels), per-tile `GATHER_CD=8s` (`nodeAt`/`gatherCD`).
+- **Per-class Max MP:** warrior 20 / archer 30 / healer 50 (`syncMaxMp()`, class `mp` field).
+- **9 DOGE gear NFTs:** `DogeItems` types **7–15** (DOGE SWORD/LEATHER ARMOR/SHIELD/STAFF/ROBE/WHIP/BOW/HEMP SHIRT/QUIVER), in `MINTABLE`+`ITEM_TYPES`; any class may wield any. `GEAR_STATS` gives base +ATK/+DEF/+HP/+MP.
+- **Random loot:** `itemRoll(id)` hashes an NFT's on-chain tokenId → deterministic `{rarity, buff}` (`RARITY` COMMON..LEGENDARY ×1..×6; `BUFFS` incl. big MEME buffs). `gearStats()` sums base + every non-food item's rolled buff, applied via `gatk()` (weapon formulas), `hurtPlayer` (def), `syncMaxHp`/`syncMaxMp` (resynced after `refreshChain`). Only while `chainReady()`. The roll is NOT on-chain (derives from the id), so every client agrees.
+
 ---
 
 ## G. Canonical Subsystem Ledger (`D-014..D-046`)

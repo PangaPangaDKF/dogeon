@@ -790,7 +790,13 @@ function nftBest(type){if(!chainReady())return 0;let b=0;for(const it of chainDa
 const swordLv=()=>Math.max(P.sword,Math.min(4,nftBest(1))),armorLv=()=>Math.max(P.armor,Math.min(2,nftBest(2)));
 // D-060 gear stats: owning a DOGE gear NFT (types 7-15) = wearing it. Any class may wield any; bonuses sum. Only when connected.
 const GEAR_STATS={7:{atk:4},8:{def:0.08,hp:15},9:{def:0.12},10:{mp:15},11:{def:0.05,mp:10},12:{atk:3,mp:5},13:{atk:4},14:{def:0.06,hp:10},15:{mp:12}};
-function gearStats(){const s={atk:0,def:0,hp:0,mp:0};if(!chainReady())return s;for(const it of chainData.inv){const g=GEAR_STATS[it.type];if(g){s.atk+=g.atk||0;s.def+=g.def||0;s.hp+=g.hp||0;s.mp+=g.mp||0;}}return s;}
+// D-064 random loot: every minted item carries a rarity + buff, rolled deterministically from its on-chain tokenId (no
+// redeploy — every client computes the same roll). Rarity scales the buff; even a COMMON can roll a huge MEME buff → mint bait.
+const RARITY=[{n:'COMMON',w:60,mult:1,col:'#c8c8d0'},{n:'UNCOMMON',w:25,mult:1.5,col:'#60e060'},{n:'RARE',w:10,mult:2.3,col:'#60a0ff'},{n:'EPIC',w:4,mult:3.6,col:'#c080ff'},{n:'LEGENDARY',w:1,mult:6,col:'#ffc040'}];
+const BUFFS=[{n:'SHARP',s:'atk',v:3},{n:'TOUGH',s:'def',v:0.06},{n:'HEARTY',s:'hp',v:12},{n:'WISE',s:'mp',v:10},
+  {n:'MUCH DMG WOW',s:'atk',v:14,meme:1},{n:'SUCH HEAL',s:'hp',v:45,meme:1},{n:'BIG BRAIN',s:'mp',v:40,meme:1},{n:'DIAMOND PAWS',s:'def',v:0.22,meme:1},{n:'STONKS',s:'atk',v:9,meme:1}];
+function itemRoll(id){id=Number(id)||0;let h=(id*2654435761)>>>0,acc=0,rar=RARITY[RARITY.length-1];for(const t of RARITY){acc+=t.w;if(h%100<acc){rar=t;break;}}const buff=BUFFS[Math.floor(h/97)%BUFFS.length];return {rar,buff,amount:buff.v*rar.mult,label:`${rar.n}: ${buff.n}`};}
+function gearStats(){const s={atk:0,def:0,hp:0,mp:0};if(!chainReady())return s;for(const it of chainData.inv){const g=GEAR_STATS[it.type];if(g){s.atk+=g.atk||0;s.def+=g.def||0;s.hp+=g.hp||0;s.mp+=g.mp||0;}if(it.type!==3&&it.type!==4){const r=itemRoll(it.id);s[r.buff.s]+=r.amount;}}return s;} // non-food items also add their random rolled buff
 const gatk=()=>gearStats().atk;
 function addCredit(t,l){const k=t+':'+l;P.credits[k]=(P.credits[k]||0)+1;}
 // minting moves a crafted item onto the chain, so its off-chain effect goes away (one craft = one item, D-021)
@@ -846,7 +852,7 @@ function marketMenu(n){openMenu(n,'DOGEON POOL DEX: MINT, SWAP & LP',()=>{const 
   const mi=mktUI.mint||0,mt=MINTABLE[mi],starter=mt.type===1&&mt.level===2&&bagCount('wood')>0&&bagCount('stone')>0;
   o.push({label:`MINT < ${itemName(mt)} > NFT (${fromWei(chainData.fee||10n**17n)} DOGE)`,adj:d=>{mktUI.mint=(mi+d+MINTABLE.length)%MINTABLE.length;},act:()=>{mintNft(mt.type,mt.level,starter?'starter':undefined);return wallet.msg;}});
   const inv=myFree(),invTxt=inv.length?inv.slice(0,2).map(it=>'#'+it.id+' '+itemName(it)).join(', ')+(inv.length>2?' +MORE':''):'NONE YET - MINT ONE ABOVE';
-  o.push({label:`WALLET ITEMS (${inv.length}): ${invTxt}`,act:()=>`YOU OWN ${inv.length} MINTED ITEM TOKENS IN YOUR WALLET. ADD THEM TO A POOL BELOW!`});
+  o.push({label:`WALLET ITEMS (${inv.length}): ${invTxt}`,act:()=>inv.length?inv.slice(0,4).map(it=>`#${it.id} ${itemName(it)} [${itemRoll(it.id).label}]`).join(' | '):'MINT AN ITEM ABOVE TO ROLL A RARITY + BUFF.'}); // D-064: show each item's rolled rarity + buff
   if(!chainData.loaded)o.push({label:'LOADING THE CHAIN...',act:()=>{refreshChain().catch(()=>{});return 'REFRESHING...';}});
   if(chainData.proceeds>0n)o.push({label:`WITHDRAW PROCEEDS: ${fromWei(chainData.proceeds)} DOGE`,act:()=>{withdrawProceeds();return wallet.msg;}});
   for(const l of chainData.listings)o.push(l.mine?{label:`DELIST ${itemName(l)} #${l.id} (YOURS, ${fromWei(l.price)})`,act:()=>{delistNft(l);return wallet.msg;}}

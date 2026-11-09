@@ -65,7 +65,7 @@ globalThis.__api = {
   addToBag, bagCount, bagRemove, invMenu,
   tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, DUN_RESPAWN, MINI_RESPAWN, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
   chainData, chainReady, refreshChain, mintNft, useNft, listNft, buyListing, delistNft, addLp, buyPool, sellPool, removeLp, withdrawProceeds,
-  swordLv, armorLv, gearStats, syncMaxHp, syncMaxMp, GEAR_STATS, MINTABLE, ITEM_TYPES, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
+  swordLv, armorLv, gearStats, syncMaxHp, syncMaxMp, GEAR_STATS, MINTABLE, ITEM_TYPES, itemRoll, RARITY, BUFFS, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
   CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy,
@@ -475,6 +475,21 @@ scenario('D-055: rare drops — most kills drop nothing, a few give materials/co
   pass('rare drops', `${dropped}/${N} alley kills dropped anything; the rest dropped nothing`);
 });
 
+scenario('D-064: random loot — deterministic rarity + buff per tokenId, meme buffs, weighted', () => {
+  const api = boot(SEED + 64); startGame(api);
+  const a = api.itemRoll(42), b = api.itemRoll(42); // same id -> same roll (every client agrees)
+  if (a.label !== b.label || a.amount !== b.amount) { fail('roll determinism', `${a.label} != ${b.label}`); return; }
+  const count = {}; // rarity weights: common most, legendary rarest
+  for (let id = 1; id <= 3000; id++) { const r = api.itemRoll(id).rar.n; count[r] = (count[r] || 0) + 1; }
+  if (!(count.COMMON > count.UNCOMMON && count.UNCOMMON > count.RARE && count.RARE > (count.LEGENDARY || 0))) { fail('rarity weights', JSON.stringify(count)); return; }
+  const memes = api.BUFFS.filter(b => b.meme); // meme buffs exist and are big (the mint bait)
+  if (!memes.length || !memes.some(b => b.v >= 14)) { fail('meme buffs', JSON.stringify(api.BUFFS)); return; }
+  let legId = 0; for (let id = 1; id <= 8000 && !legId; id++) if (api.itemRoll(id).rar.n === 'LEGENDARY') legId = id;
+  const lg = api.itemRoll(legId); // legendary multiplies the buff (x6) -> even a common-type item can be huge
+  if (!(legId && lg.amount >= lg.buff.v * 5.9)) { fail('legendary mult', `legId=${legId} ${JSON.stringify(lg)}`); return; }
+  pass('random loot', `id42=${a.label}; dist C${count.COMMON}/U${count.UNCOMMON}/R${count.RARE}/E${count.EPIC || 0}/L${count.LEGENDARY || 0}; legendary #${legId} ${lg.label}`);
+});
+
 scenario('D-063: survivor respawn — dungeon 2min / mini-boss 4min, field stays fast', () => {
   const api = boot(SEED + 62); startGame(api);
   if (api.DUN_RESPAWN < 120 || api.MINI_RESPAWN < api.DUN_RESPAWN) { fail('respawn consts', `dun=${api.DUN_RESPAWN}s mini=${api.MINI_RESPAWN}s (want dun>=120, mini>=dun)`); return; }
@@ -496,15 +511,19 @@ scenario('D-060: DOGE gear stats — owning gear NFTs grants +ATK/+DEF/+HP/+MP (
   api.wallet.connected = true; api.wallet.chainOk = true;
   const P = api.get().P;
   if (api.gearStats().atk !== 0) { fail('gear empty', 'stats non-zero with no gear'); return; }
-  api.chainData.inv = [{ type: 8, level: 1, id: 1 }, { type: 10, level: 1, id: 2 }, { type: 7, level: 1, id: 3 }, { type: 9, level: 1, id: 4 }];
-  const g = api.gearStats(); // SWORD +4atk, LEATHER +0.08def+15hp, STAFF +15mp, SHIELD +0.12def
-  if (g.atk !== 4 || g.hp !== 15 || g.mp !== 15 || !(g.def > 0.19 && g.def < 0.21)) { fail('gear sum', JSON.stringify(g)); return; }
+  const inv = [{ type: 8, level: 1, id: 1 }, { type: 10, level: 1, id: 2 }, { type: 7, level: 1, id: 3 }, { type: 9, level: 1, id: 4 }];
+  api.chainData.inv = inv;
+  const exp = { atk: 0, def: 0, hp: 0, mp: 0 }; // base GEAR_STATS + each item's random rolled buff (D-064)
+  for (const it of inv) { const b = api.GEAR_STATS[it.type] || {}; for (const k in exp) exp[k] += b[k] || 0; const r = api.itemRoll(it.id); exp[r.buff.s] += r.amount; }
+  const g = api.gearStats();
+  for (const k of ['atk', 'def', 'hp', 'mp']) if (Math.abs(g[k] - exp[k]) > 1e-9) { fail('gear sum', `${k}: ${g[k]} != ${exp[k]}`); return; }
+  if (!(g.atk >= 4 && g.hp >= 15 && g.mp >= 15 && g.def > 0.19)) { fail('gear base', `base gear stats missing: ${JSON.stringify(g)}`); return; } // SWORD/LEATHER/STAFF/SHIELD base present
   const hp0 = P.maxHp, mp0 = P.maxMp;
   api.syncMaxHp(); api.syncMaxMp();
-  if (P.maxHp !== hp0 + 15 || P.maxMp !== mp0 + 15) { fail('gear hp/mp', `maxHp ${hp0}->${P.maxHp}, maxMp ${mp0}->${P.maxMp}`); return; }
+  if (Math.abs(P.maxHp - (hp0 + exp.hp)) > 1e-9 || Math.abs(P.maxMp - (mp0 + exp.mp)) > 1e-9) { fail('gear hp/mp', `maxHp ${hp0}->${P.maxHp} (want +${exp.hp}), maxMp ${mp0}->${P.maxMp} (want +${exp.mp})`); return; }
   api.wallet.connected = false; // offline = no gear stats (you must own the NFT on chain)
   if (api.gearStats().atk !== 0) { fail('gear offline', 'gear stats applied while disconnected'); return; }
-  pass('gear stats', `atk+${g.atk} def+${g.def.toFixed(2)} hp+${g.hp} mp+${g.mp}; maxHP ${hp0}->${hp0 + 15}, maxMP ${mp0}->${mp0 + 15}; none offline`);
+  pass('gear stats', `base+buffs: atk ${g.atk.toFixed(1)} def ${g.def.toFixed(2)} hp ${g.hp.toFixed(0)} mp ${g.mp.toFixed(0)}; maxHP +${exp.hp}; none offline`);
 });
 
 scenario('D-057: mini-boss per region — two elites spawn, drop guaranteed loot, excluded from refill', () => {

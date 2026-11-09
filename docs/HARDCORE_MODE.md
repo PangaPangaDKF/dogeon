@@ -134,7 +134,7 @@ types 1–6 and reverts on anything else. The user chose **"build stats now, red
 being built on the existing items first. When ready: redeploy → update `CONTRACTS` in `index.html` + `TRYNOAH.md`/manifest/docs
 → re-run `scripts/e2e-chikyu.sh` (17/17) + `scripts/browser-smoke.sh` → coordinate the shared contract lane with Antigravity.
 
-**Progress so far (Phase 1):** D-052 monsters +50% · D-053 renewable gathering · D-054 per-class Max MP · D-055 rare drops · D-056 2x HP/dmg + 52 field enemies · D-057 mini-boss per region · D-058-060 9 DOGE gear items (deployed, stat engine, 18/18 live E2E) +
+**Progress so far (Phase 1):** D-052 monsters +50% · D-053 renewable gathering · D-054 per-class Max MP · D-055 rare drops · D-056 2x HP/dmg + 52 field enemies · D-057 mini-boss per region · D-058-064 9 DOGE gear items + random rarity/meme buffs + survivor respawns +
 rare DOGE coin. Still open in Phase 1: market as a heavier debuff on the exact RedStone price, "cat clothes" junk drop,
 bigger/clearer gear stat bonuses, the 9 `DOGE `-named items (contract redeploy IN PROGRESS), "cat clothes" junk.
 

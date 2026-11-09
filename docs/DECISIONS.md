@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-064 · 2026-11-09 · Random loot — rarity + buff (incl. meme) per minted item, derived from tokenId (Claude Code)
+- What: `RARITY` tiers (COMMON 60% ×1 … LEGENDARY 1% ×6), a `BUFFS` pool (normal + big MEME buffs: MUCH DMG WOW, SUCH HEAL, BIG BRAIN, DIAMOND PAWS, STONKS), and `itemRoll(id)` that deterministically hashes an NFT's **on-chain tokenId** → {rarity, buff, amount=buff×rarityMult}. `gearStats()` now also adds each non-food owned item's rolled buff, so **every minted item** (commons included) grants a random +ATK/+DEF/+HP/+MP. The Sphinx DEX wallet-items row shows each item's rolled rarity + buff.
+- Why: User: "each minted item can have a random buff and rarity… commons can have random meme buffs that give huge damage/healing to incentivize the mint." Game-analyst lens: variable-ratio reward (the loot slot machine) is the engagement engine; meme jackpots on cheap mints pull new farmers into the mint→DeFi loop. **No contract redeploy** — the roll derives from the tokenId, so every client agrees and the NFT stays the source of truth.
+- Tool: Claude Code (Opus 4.8) + `game-design-theory` skill. Verify: sim `D-064` (deterministic; weights C1801/U750/R302/E117/L30 over 3000 ids; meme buffs exist; legendary ×6) and `D-060` updated to base+buffs; `check.sh` green.
+- Tradeoff: the buff isn't in the on-chain `tokenURI` metadata (it's derived from the id). A future redeploy could bake rarity into the contract if we want it in the NFT's own metadata.
+
 ### D-063 · 2026-11-09 · Survivor tuning — 2min dungeon / 4min mini-boss respawn, mini-bosses respawn + drop more (Claude Code)
 - What: `DUN_RESPAWN` 45→**120s** (2 min); added `MINI_RESPAWN`=**240s** (4 min) and a `miniT` timer that re-spawns a region's mini-boss only after it's been dead 4 min (minis now carry a `region` field; `MINIS={field:'brute',dun:'knight'}`). Mini-boss loot up: `drop:3`→**6** materials + **5** coins (was 3).
 - Why: User: "add more time for the respawn… like 2 minutes and more for the mini boss… the mini boss drops a lot of items." Harder survival (you must clear AND survive to progress), mini-bosses are rare elites worth hunting. Game-analyst lens (MDA/flow): raises challenge toward the flow channel; big mini loot = variable-ratio reward spike.
