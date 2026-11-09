@@ -1196,7 +1196,7 @@ scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, pool DE
   const fWar = simKillFrames('warrior', false);
   const fArc = simKillFrames('archer', true);
   if (!(fWar < fBase && fArc < fBase)) fail('class ttk', `base=${fBase}f warrior=${fWar}f archer=${fArc}f`);
-  else pass('class ttk', `WARRIOR (${fWar}f) and ARCHER (${fArc}f at 48px range) both beat basic doge TTK (${fBase}f) on a 35-HP knight`);
+  else pass('class ttk', `WARRIOR (${fWar}f) and ARCHER (${fArc}f at 48px range) both beat basic doge TTK (${fBase}f) on a ${api.ETYPES.knight.hp}-HP knight`);
 
   // Healer MP-on-hit + MEND sustain loop: 5 staff hits restore +10 MP (1 full MEND = +20 HP), effective HP > basic doge
   api.get().enemies.splice(0); P.dead = false; P.iT = 99; P.kbx = 0; P.kby = 0; P.prof = null; P.maxHp = 60; P.hp = 60;

@@ -424,14 +424,16 @@ function updMarket(dt){
   mkt.sent=Math.max(-1,Math.min(1,Math.log(mkt.p/avg)/MARKET.sentScale));
 }
 const bearF=()=>Math.max(0,-mkt.sent),bullF=()=>Math.max(0,mkt.sent);
+// D-052 HARDCORE: normal monsters are +50% HP and +50% damage vs the old tuning (user: "every normal monster hard to beat
+// even for 3 people"). Boss keeps its tuned stats (it is not a "normal" monster; mini-bosses come later). Keep in the table.
 const ETYPES={
-  alley:{hp:15,spd:48,dmg:6,drop:1,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
-  archer:{hp:12,spd:34,dmg:5,drop:1,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
-  frog:{hp:14,spd:32,dmg:6,drop:1,hw:5,hh:4,chase:150,spr:'frog',mat:'orb',ai:'archer'},
-  ninja:{hp:18,spd:62,dmg:8,drop:1,hw:5,hh:4,chase:130,spr:'ninja',mat:'scrap'},
-  bull:{hp:55,spd:26,dmg:14,drop:1,hw:6,hh:5,chase:130,spr:'bull',mat:'horn',ai:'brute'},
-  knight:{hp:35,spd:38,dmg:10,drop:1,hw:5,hh:4,chase:120,spr:'knight',mat:'steel'},
-  brute:{hp:48,spd:28,dmg:12,drop:3,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
+  alley:{hp:23,spd:48,dmg:9,drop:1,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
+  archer:{hp:18,spd:34,dmg:8,drop:1,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
+  frog:{hp:21,spd:32,dmg:9,drop:1,hw:5,hh:4,chase:150,spr:'frog',mat:'orb',ai:'archer'},
+  ninja:{hp:27,spd:62,dmg:12,drop:1,hw:5,hh:4,chase:130,spr:'ninja',mat:'scrap'},
+  bull:{hp:83,spd:26,dmg:21,drop:1,hw:6,hh:5,chase:130,spr:'bull',mat:'horn',ai:'brute'},
+  knight:{hp:53,spd:38,dmg:15,drop:1,hw:5,hh:4,chase:120,spr:'knight',mat:'steel'},
+  brute:{hp:72,spd:28,dmg:18,drop:3,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
   boss:{hp:320,spd:38,dmg:12,drop:0,hw:10,hh:7,chase:999,spr:'boss',boss:true}
 };
 let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,scene='title',winT=0;
