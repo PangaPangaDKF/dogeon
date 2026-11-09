@@ -39,6 +39,21 @@ contract DogeItemsTest is Test {
         vm.stopPrank();
     }
 
+    function test_DogeGearTypes() public {
+        // D-058: the 9 DOGE gear items are mintable (types 7-15, single level), 16+ is still unknown
+        assertEq(items.maxLevel(7), 1);
+        assertEq(items.maxLevel(15), 1);
+        assertEq(items.maxLevel(16), 0);
+        assertEq(keccak256(bytes(items.typeName(7))), keccak256(bytes("DOGE SWORD")));
+        assertEq(keccak256(bytes(items.typeName(13))), keccak256(bytes("DOGE BOW")));
+        assertEq(keccak256(bytes(items.typeName(15))), keccak256(bytes("DOGE QUIVER")));
+        vm.prank(alice);
+        uint256 id = items.mint{value: FEE}(alice, 7, 1);
+        (uint8 t, uint8 l) = items.items(id);
+        assertEq(t, 7);
+        assertEq(l, 1);
+    }
+
     function test_RevertBadItem() public {
         vm.startPrank(alice);
         vm.expectRevert(abi.encodeWithSelector(DogeItems.BadItem.selector, uint8(1), uint8(5)));
@@ -47,8 +62,8 @@ contract DogeItemsTest is Test {
         items.mint{value: FEE}(alice, 2, 3); // armor max 2
         vm.expectRevert(abi.encodeWithSelector(DogeItems.BadItem.selector, uint8(3), uint8(0)));
         items.mint{value: FEE}(alice, 3, 0); // level 0
-        vm.expectRevert(abi.encodeWithSelector(DogeItems.BadItem.selector, uint8(7), uint8(1)));
-        items.mint{value: FEE}(alice, 7, 1); // unknown type
+        vm.expectRevert(abi.encodeWithSelector(DogeItems.BadItem.selector, uint8(20), uint8(1)));
+        items.mint{value: FEE}(alice, 20, 1); // unknown type (7-15 are now DOGE gear)
         vm.stopPrank();
     }
 

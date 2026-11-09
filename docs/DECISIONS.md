@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-058 · 2026-11-09 · Gear redeploy step 1/5 — add 9 DOGE gear types to DogeItems (Claude Code)
+- What: Added item types 7–15 to `DogeItems.sol` (DOGE SWORD, LEATHER ARMOR, SHIELD, STAFF, ROBE, WHIP, BOW, HEMP SHIRT, QUIVER), additive — types 1–6 unchanged so the existing forge/combat/DEX/sim keep working. `maxLevel` returns 1 for 7–15; `typeName`/`_color` give DOGE-prefixed names + colours. Stat bonuses will live game-side (GEAR_STATS). Updated the "unknown type" test (7→20) and added `test_DogeGearTypes`.
+- Why: User: "redeploy the contract for the gear." Step 1 of the 5-step redeploy plan in `docs/HARDCORE_MODE.md` §5b: (1) contract types [this], (2) deploy DogeItems+DogeDEX to Chikyū, (3) wire MINTABLE + a gearStats engine in index.html, (4) sim, (5) e2e + browser-smoke + docs/TRYNOAH/manifest.
+- Tool: Claude Code (Opus 4.8). Verify: `forge test` 46 passed (was 45). NOT deployed yet — the game still points at the live contract until step 2.
+- Note: additive (not a rename of 1–6) keeps the diff small and avoids rewiring combat/forge/eating; the 9 items add stats on top.
+
 ### D-057 · 2026-11-09 · Mini-boss per region (field + ruins elites) (Claude Code)
 - What: `makeMini`/`spawnMini` spawn one scaled-up elite in the field and one in the ruins at `newGame` (3.5× HP, 1.6× dmg, +speed, bigger hitbox, drawn 1.5×). Tagged `zone:'mini'` so they're excluded from the `FIELD_POP`/`DUN_POP` refill (unique, never respawn). Guaranteed drops: material (`dropP:1`, `drop:3`) + 3 DOGE coins + a toast. Projectile hitbox scaled for minis.
 - Why: User: "each region has a mini boss… a little bit more big and faster and strong." Gives each region a hardcore target. No new sfx/FX (R2) — reuses the existing death puff; only a text toast.

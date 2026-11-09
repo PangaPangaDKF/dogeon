@@ -22,6 +22,16 @@ contract DogeItems is ERC721Enumerable, Ownable, ReentrancyGuard {
     uint8 public constant COOKED_FISH = 4;
     uint8 public constant BONE_CHARM = 5;
     uint8 public constant MOON_BISCUIT = 6;
+    // D-058 DOGE gear items (9; one stat theme each, any class may wield any). Stat bonuses live in the game (GEAR_STATS).
+    uint8 public constant DOGE_SWORD = 7;
+    uint8 public constant DOGE_LEATHER = 8;
+    uint8 public constant DOGE_SHIELD = 9;
+    uint8 public constant DOGE_STAFF = 10;
+    uint8 public constant DOGE_ROBE = 11;
+    uint8 public constant DOGE_WHIP = 12;
+    uint8 public constant DOGE_BOW = 13;
+    uint8 public constant DOGE_HEMP = 14;
+    uint8 public constant DOGE_QUIVER = 15;
 
     struct Item {
         uint8 itemType;
@@ -57,6 +67,7 @@ contract DogeItems is ERC721Enumerable, Ownable, ReentrancyGuard {
         if (itemType == HAMMER) return 4;
         if (itemType == ARMOR) return 2;
         if (itemType >= RAW_FISH && itemType <= MOON_BISCUIT) return 1;
+        if (itemType >= DOGE_SWORD && itemType <= DOGE_QUIVER) return 1; // D-058: the 9 DOGE gear items, single level each
         return 0;
     }
 
@@ -120,6 +131,15 @@ contract DogeItems is ERC721Enumerable, Ownable, ReentrancyGuard {
         if (t == COOKED_FISH) return "COOKED FISH";
         if (t == BONE_CHARM) return "BONE CHARM";
         if (t == MOON_BISCUIT) return "MOON BISCUIT";
+        if (t == DOGE_SWORD) return "DOGE SWORD";
+        if (t == DOGE_LEATHER) return "DOGE LEATHER ARMOR";
+        if (t == DOGE_SHIELD) return "DOGE SHIELD";
+        if (t == DOGE_STAFF) return "DOGE STAFF";
+        if (t == DOGE_ROBE) return "DOGE ROBE";
+        if (t == DOGE_WHIP) return "DOGE WHIP";
+        if (t == DOGE_BOW) return "DOGE BOW";
+        if (t == DOGE_HEMP) return "DOGE HEMP SHIRT";
+        if (t == DOGE_QUIVER) return "DOGE QUIVER";
         return "UNKNOWN";
     }
 
@@ -129,6 +149,15 @@ contract DogeItems is ERC721Enumerable, Ownable, ReentrancyGuard {
         if (t == RAW_FISH) return "#80c0e0";
         if (t == COOKED_FISH) return "#f0a040";
         if (t == BONE_CHARM) return "#e8e8f8";
+        if (t == DOGE_SWORD) return "#d0d0d8";
+        if (t == DOGE_LEATHER) return "#9a6b3a";
+        if (t == DOGE_SHIELD) return "#b0b8c0";
+        if (t == DOGE_STAFF) return "#80e0c0";
+        if (t == DOGE_ROBE) return "#8070d0";
+        if (t == DOGE_WHIP) return "#c04040";
+        if (t == DOGE_BOW) return "#a07840";
+        if (t == DOGE_HEMP) return "#90b060";
+        if (t == DOGE_QUIVER) return "#b09050";
         return "#f0c030";
     }
 
