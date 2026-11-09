@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-065 · 2026-11-09 · Post-boss reward + limited Victor's Market (business model) (Claude Code)
+- What: Defeating the Cat Lord now also drops **10 bonus DOGE coins** and opens a **limited-time Victor's Market** at the Elder (`state.shopT=300s`, counted down in `update`). The market (`victorMarket`) sells premium **consumables** for game DOGE — Champion Feast (+40 HP), War Rations (3 cooked fish), Moon Biscuit (+10 Max MP). Elder menu shows the row only while `state.won && state.shopT>0`.
+- Why: User: "the boss gives you an item… business model could be to sell items for DOGE for a limited time or an NPC after killing the boss." Consumables only — gear still comes from the forge/mint (D-039 holds). Game-analyst lens: a DOGE sink + urgency (limited time) that rewards the victory and gives spent DOGE a purpose.
+- Tool: Claude Code (Opus 4.8). Verify: sim `D-065` (market opens post-boss, Champion Feast +40 HP for 20 DOGE, closes at shopT=0); `check.sh` green.
+- Note on step 3 (true party/shared world): `index.html` is 1407/1500 lines; an authoritative shared-enemy server is a Phase-2 effort that needs the file split (a separate explicit task per CLAUDE.md §2) — scoped, not crammed. See `docs/HARDCORE_MODE.md`.
+
 ### D-064 · 2026-11-09 · Random loot — rarity + buff (incl. meme) per minted item, derived from tokenId (Claude Code)
 - What: `RARITY` tiers (COMMON 60% ×1 … LEGENDARY 1% ×6), a `BUFFS` pool (normal + big MEME buffs: MUCH DMG WOW, SUCH HEAL, BIG BRAIN, DIAMOND PAWS, STONKS), and `itemRoll(id)` that deterministically hashes an NFT's **on-chain tokenId** → {rarity, buff, amount=buff×rarityMult}. `gearStats()` now also adds each non-food owned item's rolled buff, so **every minted item** (commons included) grants a random +ATK/+DEF/+HP/+MP. The Sphinx DEX wallet-items row shows each item's rolled rarity + buff.
 - Why: User: "each minted item can have a random buff and rarity… commons can have random meme buffs that give huge damage/healing to incentivize the mint." Game-analyst lens: variable-ratio reward (the loot slot machine) is the engagement engine; meme jackpots on cheap mints pull new farmers into the mint→DeFi loop. **No contract redeploy** — the roll derives from the tokenId, so every client agrees and the NFT stays the source of truth.

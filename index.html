@@ -488,7 +488,7 @@ const NPCS=[
   {id:'healer',cls:'healer',name:'MENDER BRIGHTTAIL (BARKITECTS)',spr:'tHealer',x:PADS3[2][0]*16+8,y:PADS3[2][1]*16+8,hw:6,hh:4,dir:'down',met:false}
 ];
 function newGame(){
-  state={gateOpen:false,stage:0,won:false};
+  state={gateOpen:false,stage:0,won:false,shopT:0};
   P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,wood:3,stone:3,orb:2,scrap:2,horn:2,steel:2,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,gNode:null,credits:{},faction:null,prof:null};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
@@ -631,7 +631,7 @@ function killEnemy(e){
   if(e.mini){for(let i=0;i<5;i++)items.push({x:e.x+R(-10,10),y:e.y+R(-6,6),kind:'coin',life:18,t:Math.random()*3});toast('MINI-BOSS SLAIN! SUCH LOOT.',2.5);} // D-063: elite drops 6 materials (dropP 1) + 5 coins
   if(state.stage===1){P.kills++;if(P.kills===8)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(state.stage===2&&e.type==='brute'){P.bruteKills++;if(P.bruteKills===3)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
-  if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});state.won=true;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
+  if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});for(let i=0;i<10;i++)items.push({x:e.x+R(-16,16),y:e.y+R(-10,10),kind:'coin',life:30,t:Math.random()*3});state.won=true;state.shopT=300;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
 }
 function shootBone(e,ux,uy,s){projs.push({x:e.x,y:e.y-(e.boss?16:7),vx:ux*s,vy:uy*s,life:2.6,kind:'bone',dmg:e.boss?9:5});sfx(900,0.04,'triangle',0.025,-300);}
 
@@ -1008,13 +1008,22 @@ function factionMenu(n){openMenu(n,'THE HEIST ARCHIVES: FACTIONS',()=>{const o=[
   for(const f of FACTIONS){o.push({label:`READ: ${f.name}`,act:()=>{lesson(n,[f.motto,...f.entry],()=>factionMenu(n));return '';}});
     o.push({label:P.faction===f.id?`  YOUR CREW: ${f.name}`:`  JOIN ${f.name}`,act:()=>{P.faction=f.id;sfx(660,0.2,'triangle',0.05,300);return `WELCOME TO THE ${f.name}. ADD YOUR PAW TO THE PILE.`;}});}
   o.push({label:'BACK',act:()=>{elderMenu(n);return '';}});return o;});}
-function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>[
+function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>{const o=[
   {label:`QUEST: ${questText()}`,act:()=>{questTalk(n);return '';}},
   {label:'THE GRAND HEIST (STORY)',act:()=>{lesson(n,HEIST_STORY,()=>elderMenu(n));return '';}},
   {label:`FACTIONS${factionOf()?' (YOU: '+factionOf().name+')':''}`,act:()=>{factionMenu(n);return '';}},
   linkRow('JOIN THE HEIST: HEIST.DOGEOS.COM',LINKS.heist),
-  {label:'DOGE MARKET REPORT',act:()=>{const pc=Math.round(mkt.sent*MARKET.sentScale*100);return `DOGE $${mkt.p.toFixed(3)} (${pc>=0?'+':''}${pc}%) ${pc>2?'BULL: FIGHTERS HIT HARDER':pc<-2?'BEAR: CATS HIT HARDER':'FLAT'}`;}},
-  {label:'LEAVE',act:null}]);}
+  {label:'DOGE MARKET REPORT',act:()=>{const pc=Math.round(mkt.sent*MARKET.sentScale*100);return `DOGE $${mkt.p.toFixed(3)} (${pc>=0?'+':''}${pc}%) ${pc>2?'BULL: FIGHTERS HIT HARDER':pc<-2?'BEAR: CATS HIT HARDER':'FLAT'}`;}}];
+  if(state.won&&state.shopT>0)o.splice(1,0,{label:`VICTORS MARKET (LIMITED: ${Math.ceil(state.shopT)}S)`,act:()=>{victorMarket(n);return '';}}); // D-065: post-boss limited shop
+  o.push({label:'LEAVE',act:null});return o;});}
+// D-065 post-boss business model: a LIMITED-TIME market (opens when the Cat Lord falls, closes after state.shopT) that
+// sells premium consumables for DOGE. Consumables only — gear still comes from the forge/mint (D-039), not a DOGE shop.
+function victorMarket(n){openMenu(n,'VICTORS MARKET (LIMITED)',()=>[
+  {label:`CLOSES IN ${Math.max(0,Math.ceil(state.shopT))}S — SPEND YOUR SPOILS`,act:()=>'THE CACHE OPENS ONLY AFTER THE CAT LORD FALLS. SPEND YOUR DOGE WHILE IT LASTS!'},
+  {label:'CHAMPION FEAST: +40 HP NOW (20 DOGE)',act:()=>{if(P.doge<20)return 'NOT ENOUGH DOGE.';if(P.hp>=P.maxHp)return 'ALREADY FULL HP.';P.doge-=20;P.hp=Math.min(P.maxHp,P.hp+40);return 'FEAST! +40 HP. SUCH FULL.';}},
+  {label:'WAR RATIONS: 3 COOKED FISH (30 DOGE)',act:()=>{if(P.doge<30)return 'NOT ENOUGH DOGE.';if(!addToBag('cooked_fish',3))return 'BAG FULL.';P.doge-=30;return 'BOUGHT 3 COOKED FISH. MUCH PREP.';}},
+  {label:'MOON BISCUIT: +10 MAX MP (40 DOGE)',act:P.mpUps>=2?()=>'MAX BISCUITS ALREADY.':()=>{if(P.doge<40)return 'NOT ENOUGH DOGE.';P.doge-=40;P.mpUps++;P.maxMp+=10;return 'MOON BISCUIT! +10 MAX MP.';}},
+  {label:'BACK',act:()=>{elderMenu(n);return '';}}]);}
 // partner NPCs: first talk = story, then a menu with the story + link (texts sourced in D-024)
 const PARTNERS={ // stories are factual (sources in docs/DECISIONS.md D-024); no claim of official DogeOS partnership unless sourced
   lotto:{title:'CLOVERHEART: RELOTTO',story:['Need a map or a lucky charm, traveler? I am Cloverheart, the clover guide of the Dogeon.',
@@ -1153,6 +1162,7 @@ function update(dt){
   netTick(dt); // opt-in multiplayer (no-op without ?mp); before the UI early-return so you stay visible while in menus
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
   if(winT>0)winT-=dt;
+  if(state.shopT>0)state.shopT-=dt; // D-065 post-boss Victor's Market countdown
   shakeT=Math.max(0,shakeT-dt);
   if(ui){updateParts(dt);updateUI(dt);return;} // particles keep living while the world pauses (I-2)
   updateParts(dt);

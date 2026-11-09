@@ -475,6 +475,24 @@ scenario('D-055: rare drops — most kills drop nothing, a few give materials/co
   pass('rare drops', `${dropped}/${N} alley kills dropped anything; the rest dropped nothing`);
 });
 
+scenario('D-065: post-boss Victors Market — limited shop opens on victory, sells consumables for DOGE', () => {
+  const api = boot(SEED + 65); startGame(api);
+  const g = api.get();
+  const elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;
+  g.state.stage = 4; g.state.won = true; g.state.shopT = 300; g.P.doge = 100; // simulate boss defeated, market open
+  api.talk(elder); // stage>0 -> elderMenu
+  const open = api.get().ui.build().find(r => /VICTORS MARKET/.test(r.label));
+  if (!open) { fail('market opens', api.get().ui.build().map(r => r.label).join(' | ')); return; }
+  open.act(); // open the market
+  const feast = api.get().ui.build().find(r => /CHAMPION FEAST/.test(r.label));
+  if (!feast) { fail('market rows', api.get().ui.build().map(r => r.label).join(' | ')); return; }
+  g.P.hp = 10; feast.act(); // buy +40 HP for 20 DOGE
+  if (g.P.doge !== 80 || g.P.hp !== 50) { fail('feast', `doge=${g.P.doge} hp=${g.P.hp}`); return; }
+  g.state.shopT = 0; api.talk(elder); // timer expired -> market row gone
+  if (api.get().ui.build().some(r => /VICTORS MARKET/.test(r.label))) { fail('market closes', 'market still listed at shopT=0'); return; }
+  pass('victors market', `opens post-boss; CHAMPION FEAST +40 HP for 20 DOGE (doge 100->80, hp 10->50); closes when the timer ends`);
+});
+
 scenario('D-064: random loot — deterministic rarity + buff per tokenId, meme buffs, weighted', () => {
   const api = boot(SEED + 64); startGame(api);
   const a = api.itemRoll(42), b = api.itemRoll(42); // same id -> same roll (every client agrees)
