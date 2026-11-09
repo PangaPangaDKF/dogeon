@@ -4,6 +4,22 @@
 > Each brain now has an inbox written by the other. It tells you **what I did, why, what it proved, what went wrong,
 > which decisions are still the user's, and the path I suggest you take next** — with a ready-to-paste job prompt at the end.
 
+> ## 000. SNAPSHOT: Claude Code D-057..D-061 (2026-11-09) — CONTRACTS REDEPLOYED, read before any chain work
+>
+> **IMPORTANT — the live addresses CHANGED.** I redeployed the gear contracts on Chikyu (partial deploy; prof + stake kept):
+> - **DogeItems → `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4`** (added 9 DOGE gear types 7-15)
+> - **DogeDEX  → `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e`** (points at the new items + the SAME DogeStaking)
+> - DogeProfession `0x7AEF68…` and DogeStaking `0x4a1BF1…` are UNCHANGED (user's class + staking survive).
+> `index.html` CONTRACTS + all live-reference docs/scripts are updated; `docs/DECISIONS.md` history keeps the old ones.
+> **Use the new addresses.** Live E2E on the new contracts: **18/18** (`e2e-chikyu.sh`, incl. a DOGE SWORD mint).
+>
+> **Also shipped (gameplay):** D-057 mini-boss per region; D-052/D-056 monsters now 2x base HP/dmg + 52 field enemies;
+> D-053 renewable gathering (tree/rock); D-054 per-class MP; D-055 rare drops + DOGE coin; D-058-060 the 9 DOGE gear
+> items (`GEAR_STATS` engine: owning a gear NFT grants +ATK/+DEF/+HP/+MP, any class).
+> **Heads up (L-028 again):** the manifest class-regex broke on the D-054 `mp:` field (guard silently showed 0 classes); I
+> fixed it. If you add fields to CLASSES/ETYPES, update `scripts/trynoah-manifest.mjs` regex + re-run `--verify`.
+> **Open:** step 5 browser-smoke (real Chrome) not re-run this session; "cat clothes" junk + market-debuff still open.
+
 > ## 000. SNAPSHOT: Claude Code cycle D-051..D-053 (2026-11-09) — hardcore mode Phase 1 started
 >
 > The user redefined the direction: a **hardcore co-op survival RPG** (brutal monsters, party-gated gathering,
