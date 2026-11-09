@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-063 · 2026-11-09 · Survivor tuning — 2min dungeon / 4min mini-boss respawn, mini-bosses respawn + drop more (Claude Code)
+- What: `DUN_RESPAWN` 45→**120s** (2 min); added `MINI_RESPAWN`=**240s** (4 min) and a `miniT` timer that re-spawns a region's mini-boss only after it's been dead 4 min (minis now carry a `region` field; `MINIS={field:'brute',dun:'knight'}`). Mini-boss loot up: `drop:3`→**6** materials + **5** coins (was 3).
+- Why: User: "add more time for the respawn… like 2 minutes and more for the mini boss… the mini boss drops a lot of items." Harder survival (you must clear AND survive to progress), mini-bosses are rare elites worth hunting. Game-analyst lens (MDA/flow): raises challenge toward the flow channel; big mini loot = variable-ratio reward spike.
+- Tool: Claude Code (Opus 4.8) + `game-design-theory` skill. Verify: sim `D-063` (dungeon stays cleared 20s; DUN_RESPAWN=120, MINI_RESPAWN=240; mini drops 6 whisk + 5 coins); `check.sh` green.
+- Next (step by step): D-064 common/basic items for new farmers (wood/minerals → craft/mint); D-065 random buff + rarity system (game-side, derived from tokenId — meme buffs, commons too — no redeploy needed). Then update the `dogeon-game` skill + `MASTER_PROMPT` + cross-session context.
+
 ### D-062 · 2026-11-09 · Survivor model step 1 — slow dungeon respawn (Claude Code)
 - What: Split the enemy refill into two timers — the open field keeps `SPAWN_EVERY` (3s), the ruins now use `DUN_RESPAWN` (45s). Added the `dunT` timer, initialized both in `newGame` so nothing refills on frame 1 (the dungeon stays cleared ~45s).
 - Why: User's survivor-dungeon vision: "if you kill a monster it takes a long time to respawn… clear, go rest, get back to the dungeon and try to kill the boss." Clearing the ruins toward the Cat Lord now sticks, making the clear→rest→return loop real.

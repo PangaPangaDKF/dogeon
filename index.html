@@ -389,7 +389,7 @@ const SKILL_THRESH={combat:[0,10,25,50,100],fishing:[0,5,15,30,60],bark:[0,8,20,
 function skillLv(xp,kind){const t=SKILL_THRESH[kind||'combat'];for(let i=t.length-1;i>=0;i--)if(xp>=t[i])return i;return 0;}
 function skillMul(xp,kind){return 1+skillLv(xp,kind)*SKILL_BONUS;}
 // fishing (D-015): bar length in seconds (divided by the fishing skill multiplier); enemy pressure
-const FISH_MIN=3,FISH_MAX=5,FIELD_POP=52,DUN_POP=6,SPAWN_EVERY=3,DUN_RESPAWN=45,NINJA_WATER={r:4,p:0.25}; // D-062 survivor: dungeon cats respawn slowly (45s) so clearing toward the boss sticks — clear, rest in camp, return
+const FISH_MIN=3,FISH_MAX=5,FIELD_POP=52,DUN_POP=6,SPAWN_EVERY=3,DUN_RESPAWN=120,MINI_RESPAWN=240,NINJA_WATER={r:4,p:0.25}; // D-063 survivor: dungeon cats respawn in 2 min, mini-bosses in 4 min — you must clear AND survive; clear, rest in camp, return
 function nearWaterT(tx,ty,r){for(let y=ty-r;y<=ty+r;y++)for(let x=tx-r;x<=tx+r;x++)if(get(x,y)===T.WATER)return true;return false;}
 // casting up throws the float 16 px further so it lands above the hero's head, not on it (D-017)
 function waterAt(d){const v=DIRV[d],x=P.x+v[0]*(P.hw+6),y=P.y+v[1]*(P.hh+6),o=d==='up'?16:6;return get(Math.floor(x/16),Math.floor(y/16))===T.WATER?{x:x+v[0]*o,y:y+v[1]*o}:null;}
@@ -448,7 +448,7 @@ const ETYPES={
   brute:{hp:96,spd:28,dmg:24,drop:3,dropP:0.6,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
   boss:{hp:320,spd:38,dmg:12,drop:0,hw:10,hh:7,chase:999,spr:'boss',boss:true}
 };
-let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,dunT=0,scene='title',winT=0;
+let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,dunT=0,miniT=0,scene='title',winT=0;
 // ---- Phase 5 classes / professions (D-028). id matches DogeProfession: 1 warrior, 2 archer, 3 healer ----
 // spd/dmg/armor are multipliers/adds applied at use sites (classSpd/classDmg/classArmor); skill routing lands in a later part.
 const CLASSES={
@@ -494,22 +494,23 @@ function newGame(){
   for(const n of NPCS)n.met=false;
   for(let i=0;i<FIELD_POP;i++)spawnEnemy('field');
   for(let i=0;i<DUN_POP;i++)spawnEnemy('dun');
-  spawnMini('field','brute');spawnMini('dun','knight'); // D-057: one mini-boss per region (field elite + ruins elite)
+  for(const r in MINIS)spawnMini(r,MINIS[r]); // D-057/D-063: one mini-boss per region
   enemies.push(makeEnemy('boss',CX*16+8,5*16+8,'boss'));
-  spawnT=SPAWN_EVERY;dunT=DUN_RESPAWN; // D-062: don't refill until a full interval passes (dungeon stays cleared ~45s)
+  spawnT=SPAWN_EVERY;dunT=DUN_RESPAWN;miniT=MINI_RESPAWN; // D-062/D-063: don't refill until a full interval passes (dungeon stays cleared ~45s)
   cam.x=P.x-W/2;cam.y=P.y-H/2;
 }
 function makeEnemy(type,x,y,zone){const d=ETYPES[type];return {type,def:d,x,y,hw:d.hw,hh:d.hh,hp:d.hp,maxHp:d.hp,dir:'down',anim:0,state:'wander',t:0,wx:0,wy:0,flash:0,kbx:0,kby:0,cool:1+Math.random()*2,enemy:true,boss:!!d.boss,zone,summonT:4,dead:false};}
 // D-057 mini-boss per region: a scaled-up elite of a region type. zone:'mini' keeps it OUT of the FIELD_POP/DUN_POP refill
 // (it stays unique and never respawns). Bigger, tankier, hits harder (3.5x HP, 1.6x dmg), with guaranteed drops.
-function makeMini(type,x,y){const d=ETYPES[type],md={...d,hp:Math.round(d.hp*3.5),dmg:Math.round(d.dmg*1.6),spd:d.spd*1.12,drop:3,dropP:1,hw:d.hw+2,hh:d.hh+2,chase:d.chase+80};
-  return {type,def:md,x,y,hw:md.hw,hh:md.hh,hp:md.hp,maxHp:md.hp,dir:'down',anim:0,state:'wander',t:0,wx:0,wy:0,flash:0,kbx:0,kby:0,cool:1+Math.random()*2,enemy:true,boss:false,mini:true,zone:'mini',summonT:4,dead:false};}
+const MINIS={field:'brute',dun:'knight'}; // one mini-boss type per region
+function makeMini(type,x,y,region){const d=ETYPES[type],md={...d,hp:Math.round(d.hp*3.5),dmg:Math.round(d.dmg*1.6),spd:d.spd*1.12,drop:6,dropP:1,hw:d.hw+2,hh:d.hh+2,chase:d.chase+80}; // drop:6 = lots of loot
+  return {type,def:md,x,y,hw:md.hw,hh:md.hh,hp:md.hp,maxHp:md.hp,dir:'down',anim:0,state:'wander',t:0,wx:0,wy:0,flash:0,kbx:0,kby:0,cool:1+Math.random()*2,enemy:true,boss:false,mini:true,region,zone:'mini',summonT:4,dead:false};}
 function spawnMini(region,type){ // region 'field'|'dun' sets placement; the enemy is tagged zone:'mini'
   for(let tries=0;tries<150;tries++){let tx,ty;
     if(region==='dun'){tx=DUN.x0+1+Math.floor(Math.random()*(DUN.x1-DUN.x0-1));ty=GATE_ROW+1+Math.floor(Math.random()*7);}
     else{tx=3+Math.floor(Math.random()*(MW-6));ty=3+Math.floor(Math.random()*(MH-6));if(inDunT(tx,ty))continue;if(tx>=CAMP.x0-4&&tx<=CAMP.x1+4&&ty>=CAMP.y0-4&&ty<=CAMP.y1+4)continue;}
     const x=tx*16+8,y=ty*16+8;if(P&&dist(x,y,P.x,P.y)<220)continue;if(blocked({hw:9,hh:8,enemy:true},x,y))continue;
-    enemies.push(makeMini(type,x,y));return;}
+    enemies.push(makeMini(type,x,y,region));return;}
 }
 function spawnEnemy(zone){
   for(let tries=0;tries<80;tries++){
@@ -627,7 +628,7 @@ function killEnemy(e){
   const mat=e.def.mat||'whisk';
   if(Math.random()<(e.def.dropP??1))for(let i=0;i<e.def.drop;i++)items.push({x:e.x+R(-7,7),y:e.y+R(-4,4),kind:mat,life:18,t:Math.random()*3}); // D-055: drops are rare now
   if(!e.boss&&!e.mini&&Math.random()<COIN_DROP_P)items.push({x:e.x+R(-5,5),y:e.y+R(-4,4),kind:'coin',life:18,t:Math.random()*3}); // rare single DOGE coin
-  if(e.mini){for(let i=0;i<3;i++)items.push({x:e.x+R(-9,9),y:e.y+R(-5,5),kind:'coin',life:18,t:Math.random()*3});toast('MINI-BOSS SLAIN! SUCH LOOT.',2.5);} // D-057: elite drops guaranteed material (dropP 1) + 3 coins
+  if(e.mini){for(let i=0;i<5;i++)items.push({x:e.x+R(-10,10),y:e.y+R(-6,6),kind:'coin',life:18,t:Math.random()*3});toast('MINI-BOSS SLAIN! SUCH LOOT.',2.5);} // D-063: elite drops 6 materials (dropP 1) + 5 coins
   if(state.stage===1){P.kills++;if(P.kills===8)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(state.stage===2&&e.type==='brute'){P.bruteKills++;if(P.bruteKills===3)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});state.won=true;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
@@ -1197,6 +1198,7 @@ function update(dt){
   // respawn
   spawnT-=dt;if(spawnT<=0){spawnT=SPAWN_EVERY;let f=0;for(const e of enemies)if(e.zone==='field')f++;if(f<FIELD_POP)spawnEnemy('field');}
   dunT-=dt;if(dunT<=0){dunT=DUN_RESPAWN;let dn=0;for(const e of enemies)if(e.zone==='dun')dn++;if(dn<DUN_POP)spawnEnemy('dun');} // D-062 survivor: dungeon refills slowly
+  miniT-=dt;if(miniT<=0){miniT=MINI_RESPAWN;for(const r in MINIS)if(!enemies.some(e=>e.mini&&e.region===r))spawnMini(r,MINIS[r]);} // D-063: mini-bosses return slowly (dead ones filtered out already)
   updateCam(dt);
 }
 function updateParts(dt){
