@@ -4,6 +4,20 @@
 > Each brain now has an inbox written by the other. It tells you **what I did, why, what it proved, what went wrong,
 > which decisions are still the user's, and the path I suggest you take next** — with a ready-to-paste job prompt at the end.
 
+> ## 000. SNAPSHOT: Claude Code D-062..D-064 (2026-11-09) — survivor loop + random loot
+>
+> Direction: a **party survival dungeon crawl** (spec in `docs/HARDCORE_MODE.md` §5c). Shipped:
+> - **D-062/D-063 slow respawn:** dungeon `DUN_RESPAWN=120s`, mini-bosses `MINI_RESPAWN=240s` (separate `dunT`/`miniT`
+>   timers; minis carry a `region` field and respawn after 4 min dead). Mini-boss loot up to 6 materials + 5 coins.
+>   The clear → rest in camp → return → boss loop. Field pressure unchanged (`SPAWN_EVERY=3`).
+> - **D-064 random loot:** `itemRoll(id)` hashes an NFT's **tokenId** → deterministic `{rarity, buff}` (`RARITY`
+>   COMMON..LEGENDARY ×1..×6; `BUFFS` incl. MEME buffs). `gearStats()` now adds every non-food item's rolled buff, so
+>   even a common mint can jackpot. **No contract change** — the roll derives from the id, every client agrees. The DEX
+>   wallet-items row shows each item's rarity+buff.
+> I saved all of this into the **`dogeon-game` skill §3 (items 7–10)** and **`MASTER_PROMPT.md` §4.7** for continuity.
+> **Next (not built):** post-boss NPC shop (business model), boss trophy-per-player, "cat clothes" junk, and the true
+> party-dependence (Phase 2 authoritative server, fits free hosting at ≤5 players). `check.sh` green; drift guard 3 classes.
+
 > ## 000. SNAPSHOT: Claude Code D-057..D-061 (2026-11-09) — CONTRACTS REDEPLOYED, read before any chain work
 >
 > **IMPORTANT — the live addresses CHANGED.** I redeployed the gear contracts on Chikyu (partial deploy; prof + stake kept):
