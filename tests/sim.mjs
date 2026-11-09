@@ -63,7 +63,7 @@ globalThis.__api = {
   ARMOR_RED, SWORD_DMG, CAMP, CX, CY,
   REST_CAP, SKILL_THRESH, skillLv, skillMul, BAG_SIZE, FOODS,
   addToBag, bagCount, bagRemove, invMenu,
-  tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
+  tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, DUN_RESPAWN, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
   chainData, chainReady, refreshChain, mintNft, useNft, listNft, buyListing, delistNft, addLp, buyPool, sellPool, removeLp, withdrawProceeds,
   swordLv, armorLv, gearStats, syncMaxHp, syncMaxMp, GEAR_STATS, MINTABLE, ITEM_TYPES, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
@@ -473,6 +473,19 @@ scenario('D-055: rare drops — most kills drop nothing, a few give materials/co
   if (dropped >= N) { fail('rare drops', `every kill dropped something (${dropped}/${N}) — drops are not rare`); return; }
   if (dropped === 0) { fail('rare drops', `no kill in ${N} dropped anything — dropP/coin broken`); return; }
   pass('rare drops', `${dropped}/${N} alley kills dropped anything; the rest dropped nothing`);
+});
+
+scenario('D-062: survivor — the dungeon respawns slowly (DUN_RESPAWN), the field stays fast', () => {
+  const api = boot(SEED + 62); startGame(api);
+  const g = api.get(); g.P.x = api.CX * 16 + 8; g.P.y = (api.CY + 3) * 16 + 8; g.P.iT = 99; // sit safe in camp
+  for (let i = g.enemies.length - 1; i >= 0; i--) if (g.enemies[i].zone === 'dun') { g.enemies.splice(i, 1); break; } // clear one dungeon cat
+  const dun = () => api.get().enemies.filter(e => e.zone === 'dun').length;
+  const d0 = dun();
+  for (let f = 0; f < 60 * (api.SPAWN_EVERY * 3); f++) api.step(DT); // ~9s << 45s: dungeon must NOT refill yet
+  if (dun() !== d0) { fail('dun slow', `dungeon refilled too fast: ${d0} -> ${dun()} in ~${api.SPAWN_EVERY * 3}s`); return; }
+  for (let f = 0; f < 60 * (api.DUN_RESPAWN + 2); f++) api.step(DT); // past DUN_RESPAWN: one cat returns
+  if (dun() !== api.DUN_POP) { fail('dun refill', `dungeon did not refill after ${api.DUN_RESPAWN}s: ${dun()}/${api.DUN_POP}`); return; }
+  pass('survivor respawn', `dungeon stayed cleared (${d0}/${api.DUN_POP}) for ${api.SPAWN_EVERY * 3}s, refilled after ${api.DUN_RESPAWN}s`);
 });
 
 scenario('D-060: DOGE gear stats — owning gear NFTs grants +ATK/+DEF/+HP/+MP (any class)', () => {

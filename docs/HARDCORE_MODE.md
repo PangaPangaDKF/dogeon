@@ -138,6 +138,25 @@ being built on the existing items first. When ready: redeploy → update `CONTRA
 rare DOGE coin. Still open in Phase 1: market as a heavier debuff on the exact RedStone price, "cat clothes" junk drop,
 bigger/clearer gear stat bonuses, the 9 `DOGE `-named items (contract redeploy IN PROGRESS), "cat clothes" junk.
 
+## 5c. Survivor party-dungeon loop (user vision, 2026-11-09)
+
+The direction sharpened into a **party survival dungeon crawl**:
+> gather resources as a party → get stronger → clear the dungeon (cleared cats stay down) → rest in camp → return → kill the
+> boss → the boss drops a reward item **for each party member** → mint it into a **random item with a random buff + rarity**
+> (higher rarity = bigger buffs) → repeat, pushing deeper.
+
+| Piece | Status / where it lands |
+|---|---|
+| **Slow dungeon respawn** (clear → rest → return) | ✅ D-062 (`DUN_RESPAWN` 45s for the ruins; field stays fast) |
+| **Boss drops a trophy per player** | Buildable now (boss already drops Golden Yarn; add a mintable "trophy") |
+| **Mint trophy → RANDOM item, random buff + rarity** | **New contract step** — `DogeItems` needs a `rarity`/`buff` field + on-chain pseudo-random (block-based) at mint; game applies the rarity buff. A redeploy like D-058/059. |
+| **Rarity tiers → bigger buffs** | Game-side `RARITY` table feeding `gearStats` once the contract stores rarity |
+| **Business model: NPC sells items for DOGE (limited-time / post-boss)** | Buildable now — a shop NPC menu gated on `state.won`, priced in DOGE; "limited time" via a timer |
+| **Need a party; boss gifts EACH member; shared dungeon** | **Phase 2** (authoritative server) — at ≤5 players this fits the free host; the blocker is building the server, not cost |
+
+Next recommended step toward this: the **rarity-loot contract** (trophy → random rarity item) — it's the dungeon-crawler hook
+and the business model. Then the post-boss **NPC shop**. True party-dependence stays Phase 2.
+
 ## 6. First recommended slice
 **Start with the 9-item gear system (§3.2).** It's architecture-independent, it's mission priority #1 (the real use-case for
 minting and the DEX), and brutal monsters (§3.3) have far more meaning once gear matters. Everything else builds on it.

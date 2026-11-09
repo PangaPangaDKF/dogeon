@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-062 · 2026-11-09 · Survivor model step 1 — slow dungeon respawn (Claude Code)
+- What: Split the enemy refill into two timers — the open field keeps `SPAWN_EVERY` (3s), the ruins now use `DUN_RESPAWN` (45s). Added the `dunT` timer, initialized both in `newGame` so nothing refills on frame 1 (the dungeon stays cleared ~45s).
+- Why: User's survivor-dungeon vision: "if you kill a monster it takes a long time to respawn… clear, go rest, get back to the dungeon and try to kill the boss." Clearing the ruins toward the Cat Lord now sticks, making the clear→rest→return loop real.
+- Tool: Claude Code (Opus 4.8). Verify: sim `D-062` (dungeon stays 5/6 for 9s, refills to 6 after 45s; field refill still 47→52 in 16s); `check.sh` green.
+- Next (survivor model): boss drops a mintable trophy per player → mints into a RANDOM item with random rarity + buff (a rarity system = a new contract step); an NPC that sells items for DOGE post-boss (business model); true party-dependence = the Phase-2 authoritative server. Tracked in `docs/HARDCORE_MODE.md` §7.
+
 ### D-061 · 2026-11-09 · Gear redeploy step 4/5 — live E2E on the new contracts, 18/18 (Claude Code)
 - What: Added a DOGE SWORD (type 7) mint to `scripts/e2e-chikyu.sh` and made the `staked()` check awk-based (bash int overflows past 2^63 when the shared vault holds >9.2 DOGE — the reused vault had 11). Ran it live on Chikyū against the new `DogeItems`/`DogeDEX`: **18/18 PASS** — stake → mint 3 RAW FISH + 1 DOGE SWORD → approve → create pool → swap both ways → 0.8% staker fee → flush → claim → withdraw → remove LP → unstake. Proves the redeployed gear contract works end-to-end on-chain.
 - Why: "verified or it didn't happen" (R6); the gear contract is mission priority #1. Step 4 of 5; step 5 (browser-smoke real Chrome) is a general game gate unaffected by these changes — optional for this push.
