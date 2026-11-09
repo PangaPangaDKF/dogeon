@@ -448,6 +448,19 @@ scenario('D-053: renewable gathering — chop a tree for WOOD, then the node is 
   else pass('gather wood', `chopped a tree: WOOD ${wood0} -> ${wood1}, node then on cooldown`);
 });
 
+scenario('D-054: per-class Max MP (no-class 30 / warrior 20 / archer 30 / healer 50)', () => {
+  const api = boot(SEED + 54); startGame(api);
+  if (api.get().P.maxMp !== 30) { fail('class mp', `no-class maxMp=${api.get().P.maxMp} (expected 30)`); return; }
+  const want = { warrior: 20, archer: 30, healer: 50 }, seen = [];
+  for (const cls of ['warrior', 'archer', 'healer']) {
+    api.applyClass(cls, false);
+    const mm = api.get().P.maxMp;
+    if (mm !== want[cls]) { fail('class mp', `${cls} maxMp=${mm} (expected ${want[cls]})`); return; }
+    seen.push(`${cls} ${mm}`);
+  }
+  pass('class mp', `no-class 30, ${seen.join(', ')}`);
+});
+
 scenario('enemy pressure: field population and spawn timer', () => {
   const api = boot(SEED + 16);
   startGame(api);

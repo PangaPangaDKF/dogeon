@@ -450,16 +450,16 @@ let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=
 // spd/dmg/armor are multipliers/adds applied at use sites (classSpd/classDmg/classArmor); skill routing lands in a later part.
 const CLASSES={
   warrior:{id:1,name:'WARRIOR',faction:'demo',factionName:'DEMOLITION DOGS',spr:'tWarrior',trainer:'SERGEANT IRONPAW',
-    spd:0.95,dmg:1.35,armor:0.15,hp:25,skill:'GROUND POUND',
-    mech:['A frontline tank. Heavy hammer cleave, thick armor, +25 max HP.','SPACE = heavy wide hammer smash (+35% dmg). +15% armor reduction.'],
+    spd:0.95,dmg:1.35,armor:0.15,hp:25,mp:-10,skill:'GROUND POUND',
+    mech:['A frontline tank. Heavy hammer cleave, thick armor, +25 max HP, -10 MP.','SPACE = heavy wide hammer smash (+35% dmg). +15% armor reduction.'],
     skillDesc:'K/Q = GROUND POUND (12 MP): shockwave that damages and knocks back every cat around you.'},
   archer:{id:2,name:'ARCHER',faction:'kernel',factionName:'KERNEL CREW',spr:'tArcher',trainer:'SCOUT FLEETWHISKER',
-    spd:1.25,dmg:1.0,armor:0,hp:0,skill:'ARROW VOLLEY',
+    spd:1.25,dmg:1.0,armor:0,hp:0,mp:0,skill:'ARROW VOLLEY',
     mech:['A fast ranged kiter. Choosing Archer replaces your hammer with a bow!','SPACE = shoot arrows at range (0 MP)! +25% move speed to kite brutes.'],
     skillDesc:'K/Q = ARROW VOLLEY (6 MP): fires a 3-arrow spread fan for crowd control.'},
   healer:{id:3,name:'HEALER',faction:'bark',factionName:'BARKITECTS',spr:'tHealer',trainer:'MENDER BRIGHTTAIL',
-    spd:1.25,dmg:0.65,armor:0.05,hp:-15,skill:'MEND',
-    mech:['Fleet-footed mystic. Less max HP (-15 HP) and weak melee hit (-35% dmg), but +25% move speed!','SPACE = light staff strike (+2 MP on hit). Keep moving and heal through fights.'],
+    spd:1.25,dmg:0.65,armor:0.05,hp:-15,mp:20,skill:'MEND',
+    mech:['Fleet-footed mystic. -15 max HP and weak melee (-35% dmg), but +25% speed and +20 MP for healing!','SPACE = light staff strike (+2 MP on hit). Keep moving and heal through fights.'],
     skillDesc:'K/Q = MEND (10 MP): spend MP to heal +20 HP anytime. Staff hits restore +2 MP!'},
 };
 const CLASS_IDS={1:'warrior',2:'archer',3:'healer'};
@@ -469,7 +469,9 @@ const classDmg=()=>{const c=classOf();return c?c.dmg:1;};
 const classArmor=()=>{const c=classOf();return c?c.armor:0;};
 const CLASS_COL={warrior:'#ff8060',archer:'#80e080',healer:'#80d0ff'};
 function syncMaxHp(){const c=classOf(),base=60+(c?c.hp:0)+P.hpUps*15,d=base-P.maxHp;P.maxHp=base;if(d>0)P.hp+=d;else P.hp=Math.min(P.hp,P.maxHp);}
-function applyClass(cls,onchain){if(!CLASSES[cls])return;P.prof=cls;syncMaxHp();const c=CLASSES[cls];puff(P.x,P.y-8,CLASS_COL[cls],14);
+// D-054: per-class Max MP (user: "each hp and mp is different per profession"). Warrior 20, Archer 30, Healer 50. Mirrors syncMaxHp (absolute from class + mpUps).
+function syncMaxMp(){const c=classOf(),base=30+(c?c.mp||0:0)+P.mpUps*10,d=base-P.maxMp;P.maxMp=base;if(d>0)P.mp+=d;else P.mp=Math.min(P.mp,P.maxMp);}
+function applyClass(cls,onchain){if(!CLASSES[cls])return;P.prof=cls;syncMaxHp();syncMaxMp();const c=CLASSES[cls];puff(P.x,P.y-8,CLASS_COL[cls],14);
   toast(`${c.name} (${onchain?'ON-CHAIN':'ACTIVE'}): ${cls==='archer'?'SPACE SHOOTS ARROWS! K=VOLLEY':cls==='healer'?'FAST + K TO HEAL, WEAK MELEE':'+25 HP, +15% ARMOR, HEAVY HIT!'}`,3.5);}
 const NPCS=[
   {id:'merchant',name:'WRENCHPAW THE MECHANIC',spr:'merchant',x:PADS[2][0]*16+8,y:PADS[2][1]*16+8,hw:6,hh:4,dir:'down',met:false},
