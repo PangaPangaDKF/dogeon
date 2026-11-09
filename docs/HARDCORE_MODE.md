@@ -160,3 +160,16 @@ and the business model. Then the post-boss **NPC shop**. True party-dependence s
 ## 6. First recommended slice
 **Start with the 9-item gear system (§3.2).** It's architecture-independent, it's mission priority #1 (the real use-case for
 minting and the DEX), and brutal monsters (§3.3) have far more meaning once gear matters. Everything else builds on it.
+
+## 5d. Step 3 — true shared-world party (the remaining Phase-2 piece)
+Steps 1–2 shipped (D-065 boss reward + limited Victor's Market). The last piece — **everyone fights the SAME monsters so a
+party is required** — is the authoritative-server architecture, and it has two real prerequisites:
+1. **Line budget:** `index.html` is ~1407/1500. A host-authoritative netcode layer (enemy serialization at 10 Hz, host/guest
+   role, guests suppressing local spawns, hit→host reconciliation, relay forwarding of `enemies`/`hit`) will not fit under
+   1500. Per `CLAUDE.md` §2, splitting `index.html` into `src/*.js` ES modules is a **separate explicit task** — and it also
+   touches `tests/sim.mjs` (which extracts the inline script), so the test harness must be updated with it.
+2. **Testing:** it needs real multi-client verification (relay + ≥2 browsers), like `scripts/browser-smoke.sh`.
+**Recommended path (user to confirm):** (3a) split `index.html` into modules + update the sim harness; (3b) build
+host-authoritative shared enemies (start with a **shared boss** — one entity, the "party dungeon quest to kill the boss
+together" — then shared field enemies). At ≤5 players this still runs on free hosting. This is deliberately NOT crammed into
+the remaining ~90 lines; it's the one piece that changes the architecture.
