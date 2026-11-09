@@ -65,7 +65,7 @@ globalThis.__api = {
   addToBag, bagCount, bagRemove, invMenu,
   tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
   chainData, chainReady, refreshChain, mintNft, useNft, listNft, buyListing, delistNft, addLp, buyPool, sellPool, removeLp, withdrawProceeds,
-  swordLv, armorLv, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
+  swordLv, armorLv, gearStats, syncMaxHp, syncMaxMp, GEAR_STATS, MINTABLE, ITEM_TYPES, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
   CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy,
@@ -473,6 +473,26 @@ scenario('D-055: rare drops — most kills drop nothing, a few give materials/co
   if (dropped >= N) { fail('rare drops', `every kill dropped something (${dropped}/${N}) — drops are not rare`); return; }
   if (dropped === 0) { fail('rare drops', `no kill in ${N} dropped anything — dropP/coin broken`); return; }
   pass('rare drops', `${dropped}/${N} alley kills dropped anything; the rest dropped nothing`);
+});
+
+scenario('D-060: DOGE gear stats — owning gear NFTs grants +ATK/+DEF/+HP/+MP (any class)', () => {
+  const api = boot(SEED + 60); startGame(api);
+  // the 9 DOGE gear items (7-15) are mintable and named
+  if (api.MINTABLE.filter(m => m.type >= 7 && m.type <= 15).length !== 9) { fail('gear mintable', `${api.MINTABLE.length} mintables`); return; }
+  if (api.ITEM_TYPES[7] !== 'DOGE SWORD' || api.ITEM_TYPES[15] !== 'DOGE QUIVER') { fail('gear names', `7=${api.ITEM_TYPES[7]} 15=${api.ITEM_TYPES[15]}`); return; }
+  // owning = wearing: force a connected state so chainReady() is true
+  api.wallet.connected = true; api.wallet.chainOk = true;
+  const P = api.get().P;
+  if (api.gearStats().atk !== 0) { fail('gear empty', 'stats non-zero with no gear'); return; }
+  api.chainData.inv = [{ type: 8, level: 1, id: 1 }, { type: 10, level: 1, id: 2 }, { type: 7, level: 1, id: 3 }, { type: 9, level: 1, id: 4 }];
+  const g = api.gearStats(); // SWORD +4atk, LEATHER +0.08def+15hp, STAFF +15mp, SHIELD +0.12def
+  if (g.atk !== 4 || g.hp !== 15 || g.mp !== 15 || !(g.def > 0.19 && g.def < 0.21)) { fail('gear sum', JSON.stringify(g)); return; }
+  const hp0 = P.maxHp, mp0 = P.maxMp;
+  api.syncMaxHp(); api.syncMaxMp();
+  if (P.maxHp !== hp0 + 15 || P.maxMp !== mp0 + 15) { fail('gear hp/mp', `maxHp ${hp0}->${P.maxHp}, maxMp ${mp0}->${P.maxMp}`); return; }
+  api.wallet.connected = false; // offline = no gear stats (you must own the NFT on chain)
+  if (api.gearStats().atk !== 0) { fail('gear offline', 'gear stats applied while disconnected'); return; }
+  pass('gear stats', `atk+${g.atk} def+${g.def.toFixed(2)} hp+${g.hp} mp+${g.mp}; maxHP ${hp0}->${hp0 + 15}, maxMP ${mp0}->${mp0 + 15}; none offline`);
 });
 
 scenario('D-057: mini-boss per region — two elites spawn, drop guaranteed loot, excluded from refill', () => {

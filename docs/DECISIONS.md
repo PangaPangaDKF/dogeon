@@ -35,6 +35,11 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-060 · 2026-11-09 · Gear redeploy step 3/5 — wire the 9 DOGE items + gearStats engine (Claude Code)
+- What: Added the 9 gear items to `MINTABLE` (mintable at the Sphinx DEX for the mint fee) and to `ITEM_TYPES` (DOGE-prefixed display names). New `GEAR_STATS` table + `gearStats()` sums +ATK/+DEF/+HP/+MP over owned gear NFTs (types 7–15) — only when connected (owning = wearing, D-019); any class may wield any. Applied: ATK in the 4 weapon-damage formulas (`attack`/`bark`/`groundPound`/`quickShot` via `gatk()`), DEF in `hurtPlayer`, HP in `syncMaxHp`, MP in `syncMaxMp`; `refreshChain` now resyncs max HP/MP so gear HP/MP apply when the inventory loads.
+- Why: User: "the mint items can give more pm or hp or attack or defence." Makes minting the gear the real DeFi use-case. Stat table (adjustable): SWORD/BOW +4atk, WHIP +3atk+5mp, LEATHER +0.08def+15hp, SHIELD +0.12def, ROBE +0.05def+10mp, STAFF +15mp, QUIVER +12mp, HEMP SHIRT +0.06def+10hp.
+- Tool: Claude Code (Opus 4.8). Verify: sim `D-060` (gear sums atk+4/def+0.20/hp+15/mp+15; maxHP 60→75, maxMP 30→45; zero offline); `check.sh` green. Next (steps 4–5): `e2e-chikyu.sh` against the new contracts + `browser-smoke.sh`, then push.
+
 ### D-059 · 2026-11-09 · Gear redeploy step 2/5 — deployed new DogeItems + DogeDEX to Chikyū (Claude Code)
 - What: Deployed the updated `DogeItems` → **`0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4`** and a fresh `DogeDEX` → **`0xD381e28AC54399EfeA53DCE17D0b627883c00B6e`** on DogeOS Chikyū. **Partial** deploy (via `forge create`) that KEEPS the existing `DogeProfession` (`0x7AEF68…`) and `DogeStaking` (`0x4a1BF1…`), so the user's on-chain class + any staking survive (`DogeStaking.receive()` accepts fees from any sender, so the new DEX wires to the old vault). Updated `CONTRACTS` in `index.html` + all live-reference docs (`TRYNOAH.md`, `MASTER_PROMPT.md`, both `dogeon-game` skills, `CLAUDE_CODE_HANDOFF.md`, `CONTEXT.md`, `e2e-chikyu.sh`, `deployments/6281971.json`). History (`DECISIONS.md`) and broadcast artifacts keep the old addresses.
 - On-chain verify: `maxLevel(7)=1`, `maxLevel(15)=1`, `maxLevel(16)=0`, `typeName(7)="DOGE SWORD"`, `typeName(13)="DOGE BOW"`; `dex.items()` = new items; `dex.stakingPool()` = existing stake.

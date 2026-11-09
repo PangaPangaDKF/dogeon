@@ -471,9 +471,9 @@ const classSpd=()=>{const c=classOf();return c?c.spd:1;};
 const classDmg=()=>{const c=classOf();return c?c.dmg:1;};
 const classArmor=()=>{const c=classOf();return c?c.armor:0;};
 const CLASS_COL={warrior:'#ff8060',archer:'#80e080',healer:'#80d0ff'};
-function syncMaxHp(){const c=classOf(),base=60+(c?c.hp:0)+P.hpUps*15,d=base-P.maxHp;P.maxHp=base;if(d>0)P.hp+=d;else P.hp=Math.min(P.hp,P.maxHp);}
+function syncMaxHp(){const c=classOf(),base=60+(c?c.hp:0)+P.hpUps*15+gearStats().hp,d=base-P.maxHp;P.maxHp=base;if(d>0)P.hp+=d;else P.hp=Math.min(P.hp,P.maxHp);}
 // D-054: per-class Max MP (user: "each hp and mp is different per profession"). Warrior 20, Archer 30, Healer 50. Mirrors syncMaxHp (absolute from class + mpUps).
-function syncMaxMp(){const c=classOf(),base=30+(c?c.mp||0:0)+P.mpUps*10,d=base-P.maxMp;P.maxMp=base;if(d>0)P.mp+=d;else P.mp=Math.min(P.mp,P.maxMp);}
+function syncMaxMp(){const c=classOf(),base=30+(c?c.mp||0:0)+P.mpUps*10+gearStats().mp,d=base-P.maxMp;P.maxMp=base;if(d>0)P.mp+=d;else P.mp=Math.min(P.mp,P.maxMp);}
 function applyClass(cls,onchain){if(!CLASSES[cls])return;P.prof=cls;syncMaxHp();syncMaxMp();const c=CLASSES[cls];puff(P.x,P.y-8,CLASS_COL[cls],14);
   toast(`${c.name} (${onchain?'ON-CHAIN':'ACTIVE'}): ${cls==='archer'?'SPACE SHOOTS ARROWS! K=VOLLEY':cls==='healer'?'FAST + K TO HEAL, WEAK MELEE':'+25 HP, +15% ARMOR, HEAVY HIT!'}`,3.5);}
 const NPCS=[
@@ -558,7 +558,7 @@ function shake(t){shakeT=Math.max(shakeT,t);}
 // ================= COMBAT =================
 function hurtPlayer(d,src){
   if(P.iT>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
-  const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-Math.min(0.8,ARMOR_RED[armorLv()]+classArmor()))));
+  const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-Math.min(0.8,ARMOR_RED[armorLv()]+classArmor()+gearStats().def))));
   P.hp-=dmg;P.iT=0.9;P.resting=false;stopFish('LINE SNAPPED!'); // getting hit ruins the catch (D-015)
   const dx=P.x-src.x,dy=P.y-src.y,l=Math.hypot(dx,dy)||1;P.kbx=dx/l*190;P.kby=dy/l*190;
   floater(P.x,P.y-22,'-'+dmg,'#ff5050');shake(0.2);sfx(140,0.15,'sawtooth',0.07,-80);
@@ -574,7 +574,7 @@ function respawn(){
 }
 function attack(){
   stopFish('REELED IN');P.atkT=0.18;P.atkCd=P.prof==='archer'?0.24:P.prof==='warrior'?0.34:0.28;
-  const v=DIRV[P.dir],sdmg=Math.round(SWORD_DMG[swordLv()]*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat')*classDmg());
+  const v=DIRV[P.dir],sdmg=Math.round((SWORD_DMG[swordLv()]+gatk())*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.combat,'combat')*classDmg());
   if(P.prof==='archer'){
     projs.push({x:P.x+v[0]*9,y:P.y-6+v[1]*9,vx:v[0]*280,vy:v[1]*280,life:0.8,kind:'arrow',basic:true,dir:P.dir,dmg:sdmg,hits:new Set()});
     sfx(780,0.1,'triangle',0.045,-220);return;
@@ -587,7 +587,7 @@ function attack(){
 }
 function bark(){
   if(P.mp<10){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return;}
-  stopFish('REELED IN');P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+swordLv()*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg()),hits:new Set()});
+  stopFish('REELED IN');P.mp-=10;P.skills.bark++;const v=DIRV[P.dir];projs.push({x:P.x+v[0]*8,y:P.y-6+v[1]*8,vx:v[0]*150,vy:v[1]*150,life:0.7,kind:'wow',dmg:Math.round((8+swordLv()*3+gatk())*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg()),hits:new Set()});
   sfx(500,0.25,'sawtooth',0.05,500);
 }
 // ---- Phase 5 (D-029): K/Q runs your class skill (replaces WOW), else the default bark ----
@@ -596,13 +596,13 @@ function useSkill(){const c=classOf();if(!c)return bark();if(P.prof==='warrior')
 const noMp=n=>{if(P.mp<n){toast('NOT ENOUGH MP! REST AT THE CAMP.',1.5);sfx(110,0.1,'square',0.04);return true;}return false;};
 // WARRIOR: GROUND POUND — a shockwave that damages + knocks back every cat around you
 function groundPound(){if(noMp(SKILL_MP.warrior))return;stopFish('REELED IN');P.mp-=SKILL_MP.warrior;P.skills.bark++;
-  const R=46,dmg=Math.round((10+swordLv()*4)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg());
+  const R=46,dmg=Math.round((10+swordLv()*4+gatk())*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg());
   for(const e of enemies){if(e.dead)continue;const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d<R+(e.hw||6)){const l=d||1;damageEnemy(e,dmg,dx/l*1.5,dy/l*1.5);}} // radial knockback via damageEnemy
   enemies=enemies.filter(e=>!e.dead);
   for(let i=0;i<16;i++){const a=i/16*6.28;parts.push({x:P.x+Math.cos(a)*10,y:P.y+Math.sin(a)*10,vx:Math.cos(a)*130,vy:Math.sin(a)*130-10,life:0.4,col:i%2?'#e0a040':'#fff0c0'});}
   shake(0.22);sfx(90,0.3,'sawtooth',0.06,-40);sfx(170,0.18,'square',0.04);}
 // ARCHER: ARROW VOLLEY (QUICK SHOT) — fires a 3-arrow fan (center + angled spread)
-function quickShot(){if(noMp(SKILL_MP.archer))return;stopFish('REELED IN');P.mp-=SKILL_MP.archer;P.skills.bark++;const v=DIRV[P.dir],base=ANG[P.dir],dmg=Math.round((6+swordLv()*3)*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg());
+function quickShot(){if(noMp(SKILL_MP.archer))return;stopFish('REELED IN');P.mp-=SKILL_MP.archer;P.skills.bark++;const v=DIRV[P.dir],base=ANG[P.dir],dmg=Math.round((6+swordLv()*3+gatk())*(1+MARKET.bullDmg*bullF())*skillMul(P.skills.bark,'bark')*classDmg());
   for(const da of [0,-0.22,0.22]){const a=base+da;projs.push({x:P.x+v[0]*9,y:P.y-6+v[1]*9,vx:Math.round(Math.cos(a)*300),vy:Math.round(Math.sin(a)*300),life:0.85,kind:'arrow',dir:P.dir,dmg,hits:new Set()});}
   sfx(760,0.12,'triangle',0.045,-200);}
 // HEALER: MEND — spend MP to heal HP (MP only refills by resting in camp or staff hits, D-028)
@@ -717,7 +717,7 @@ const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catc
 if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
 const CONTRACTS={'0x5fdaf3':{items:'0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4',dex:'0xD381e28AC54399EfeA53DCE17D0b627883c00B6e',prof:'0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055',stake:'0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d'},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',prof:'',stake:''}};
 const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',flushFees:'6811406e',stakerFeesView:'67f7cf97'};
-const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
+const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT',7:'DOGE SWORD',8:'DOGE LEATHER ARMOR',9:'DOGE SHIELD',10:'DOGE STAFF',11:'DOGE ROBE',12:'DOGE WHIP',13:'DOGE BOW',14:'DOGE HEMP SHIRT',15:'DOGE QUIVER'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
 const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50],LIST_PAGE=100,LIST_MAX=500; // sell / LP presets in DOGE, picked with A/D in the market menu
 const W32=n=>BigInt(n).toString(16).padStart(64,'0'),A32=a=>String(a).toLowerCase().replace(/^0x/,'').padStart(64,'0');
 const words=h=>{h=String(h||'0x').replace(/^0x/,'');const o=[];for(let i=0;i+64<=h.length;i+=64)o.push(BigInt('0x'+h.slice(i,i+64)));return o;};
@@ -758,7 +758,7 @@ async function refreshChain(){
   if(c.stake){try{const [sk,rw,df]=await Promise.all([ecall(c.stake,SEL.stakedOf+A32(me)),ecall(c.stake,SEL.pendingRewards+A32(me)),ecall(c.dex,SEL.stakerFeesView)]); // D-030 staking (optional until deployed)
     chainData.staked=words(sk)[0]||0n;chainData.rewards=words(rw)[0]||0n;chainData.dexFees=words(df)[0]||0n;}catch(e){}}
   if(!chainReady()||wallet.addr!==me)return;
-  chainData.loaded=true;
+  chainData.loaded=true;syncMaxHp();syncMaxMp();
   await refreshBal();
 }
 // Phase 5 (D-028): claim your class on-chain. One per wallet forever; pays profFee DOGE + gas. Local pick stays free when offline.
@@ -786,6 +786,10 @@ const myFree=()=>chainData.inv; // inventoryOf only returns NFTs in the wallet (
 // owning a gear NFT = wearing it (D-019). Sold or listed NFTs stop counting at the next refresh.
 function nftBest(type){if(!chainReady())return 0;let b=0;for(const it of chainData.inv)if(it.type===type&&it.level>b)b=it.level;return b;}
 const swordLv=()=>Math.max(P.sword,Math.min(4,nftBest(1))),armorLv=()=>Math.max(P.armor,Math.min(2,nftBest(2)));
+// D-060 gear stats: owning a DOGE gear NFT (types 7-15) = wearing it. Any class may wield any; bonuses sum. Only when connected.
+const GEAR_STATS={7:{atk:4},8:{def:0.08,hp:15},9:{def:0.12},10:{mp:15},11:{def:0.05,mp:10},12:{atk:3,mp:5},13:{atk:4},14:{def:0.06,hp:10},15:{mp:12}};
+function gearStats(){const s={atk:0,def:0,hp:0,mp:0};if(!chainReady())return s;for(const it of chainData.inv){const g=GEAR_STATS[it.type];if(g){s.atk+=g.atk||0;s.def+=g.def||0;s.hp+=g.hp||0;s.mp+=g.mp||0;}}return s;}
+const gatk=()=>gearStats().atk;
 function addCredit(t,l){const k=t+':'+l;P.credits[k]=(P.credits[k]||0)+1;}
 // minting moves a crafted item onto the chain, so its off-chain effect goes away (one craft = one item, D-021)
 function creditOk(t,l){if(!(P.credits[t+':'+l]>0))return false;if(t===1)return P.sword===l;if(t===2)return P.armor===l;if(t===5)return P.hpUps>0;if(t===6)return P.mpUps>0;return true;}
@@ -820,7 +824,7 @@ function buyPool(p){return chainAct(`SWAPPED ${fromWei(p.buy)} DOGE FOR 1 ${item
 function sellPool(it,p){return chainAct(`SOLD #${it.id} FOR ${fromWei(p.sell)} DOGE (IN PROCEEDS).`,async()=>{await ensureApproved();await etx(dex(),SEL.sellToPool+W32(it.id)+W32(p.sell),0);});}
 function withdrawProceeds(){return chainAct('PROCEEDS SENT TO YOUR WALLET.',()=>etx(dex(),SEL.withdraw,0));}
 function chainBlockRow(){if(!eth())return 'NO WALLET: ON-CHAIN ITEMS NEED METAMASK.';if(!wallet.connected)return 'CONNECT YOUR WALLET AT THE SPHINX FIRST.';if(!wallet.chainOk)return 'WRONG NETWORK. SWITCH AT THE SPHINX.';if(!addrs().items)return 'NFT CONTRACTS NOT DEPLOYED ON CHIKYU YET.';return null;}
-const MINTABLE=[{type:1,level:2},{type:1,level:3},{type:1,level:4},{type:2,level:1},{type:2,level:2},{type:3,level:1},{type:4,level:1},{type:5,level:1},{type:6,level:1}];
+const MINTABLE=[{type:1,level:2},{type:1,level:3},{type:1,level:4},{type:2,level:1},{type:2,level:2},{type:3,level:1},{type:4,level:1},{type:5,level:1},{type:6,level:1},{type:7,level:1},{type:8,level:1},{type:9,level:1},{type:10,level:1},{type:11,level:1},{type:12,level:1},{type:13,level:1},{type:14,level:1},{type:15,level:1}];
 const mktUI={price:{},lp:{},mint:0}; // per-row preset index for the market menu (NOT mkt = price sim)
 const stakeUI={amt:3}; // preset index (PRICES) for the on-chain staking amount (D-030)
 // Phase 5 (D-030): on-chain DOGE staking menu — stake real DOGE, earn the holders' 0.8% share of DEX fees
