@@ -479,7 +479,7 @@ scenario('enemy pressure: field population and spawn timer', () => {
   const api = boot(SEED + 16);
   startGame(api);
   const n = api.get().enemies.filter(e => e.zone === 'field').length;
-  if (api.FIELD_POP !== 22 || api.SPAWN_EVERY !== 3) fail('pressure consts', `FIELD_POP=${api.FIELD_POP} SPAWN_EVERY=${api.SPAWN_EVERY}, brief says 22 / 3 s`);
+  if (api.FIELD_POP !== 52 || api.SPAWN_EVERY !== 3) fail('pressure consts', `FIELD_POP=${api.FIELD_POP} SPAWN_EVERY=${api.SPAWN_EVERY}, hardcore says 52 / 3 s`);
   else if (n !== api.FIELD_POP) fail('field pop', `${n} field enemies at start, expected ${api.FIELD_POP}`);
   else pass('field pop', `${n} field enemies, refill every ${api.SPAWN_EVERY}s`);
   // refill: remove 5 field cats, they come back one per SPAWN_EVERY and never above FIELD_POP (D-017)

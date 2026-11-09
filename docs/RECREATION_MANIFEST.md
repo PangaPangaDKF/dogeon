@@ -92,7 +92,7 @@ const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966
 ## 7. World, NPCs, enemies, balance constants
 - **NPCs (9):** merchant · bank · quest · lotto · noah · bitget · warrior · archer · healer
 - **Enemy types (8):** alley · archer · frog · ninja · bull · knight · brute · boss
-- **Constants:** `W=320` · `H=224` · `HUD_H=18` · `MW=80` · `MH=60` · `REST_CAP=0.6` · `REST_DELAY=3` · `RESPAWN_FRAC=0.35` · `FIELD_POP=22` · `DUN_POP=6` · `SPAWN_EVERY=3` · `BAG_SIZE=12` · `ORACLE_MAX_AGE=86400` · `NET_HZ=10` · `NET_TTL=5` · `NET_MAX=8`
+- **Constants:** `W=320` · `H=224` · `HUD_H=18` · `MW=80` · `MH=60` · `REST_CAP=0.6` · `REST_DELAY=3` · `RESPAWN_FRAC=0.35` · `FIELD_POP=52` · `DUN_POP=6` · `SPAWN_EVERY=3` · `BAG_SIZE=12` · `ORACLE_MAX_AGE=86400` · `NET_HZ=10` · `NET_TTL=5` · `NET_MAX=8`
 
 ## 8. Required functions
 - **On-chain actions (21):** `refreshBal()` · `ecall()` · `etx()` · `refreshChain()` · `chooseProfession()` · `stakeDoge()` · `unstakeStake()` · `claimStakeRewards()` · `syncDexFees()` · `ensureApproved()` · `mintNft()` · `useNft()` · `listNft()` · `delistNft()` · `buyListing()` · `addLp()` · `removeLp()` · `buyPool()` · `sellPool()` · `withdrawProceeds()` · `refreshOracle()`

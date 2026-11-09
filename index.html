@@ -389,7 +389,7 @@ const SKILL_THRESH={combat:[0,10,25,50,100],fishing:[0,5,15,30,60],bark:[0,8,20,
 function skillLv(xp,kind){const t=SKILL_THRESH[kind||'combat'];for(let i=t.length-1;i>=0;i--)if(xp>=t[i])return i;return 0;}
 function skillMul(xp,kind){return 1+skillLv(xp,kind)*SKILL_BONUS;}
 // fishing (D-015): bar length in seconds (divided by the fishing skill multiplier); enemy pressure
-const FISH_MIN=3,FISH_MAX=5,FIELD_POP=22,DUN_POP=6,SPAWN_EVERY=3,NINJA_WATER={r:4,p:0.25}; // spawn within r tiles of water: +p chance of ninja
+const FISH_MIN=3,FISH_MAX=5,FIELD_POP=52,DUN_POP=6,SPAWN_EVERY=3,NINJA_WATER={r:4,p:0.25}; // spawn within r tiles of water: +p chance of ninja
 function nearWaterT(tx,ty,r){for(let y=ty-r;y<=ty+r;y++)for(let x=tx-r;x<=tx+r;x++)if(get(x,y)===T.WATER)return true;return false;}
 // casting up throws the float 16 px further so it lands above the hero's head, not on it (D-017)
 function waterAt(d){const v=DIRV[d],x=P.x+v[0]*(P.hw+6),y=P.y+v[1]*(P.hh+6),o=d==='up'?16:6;return get(Math.floor(x/16),Math.floor(y/16))===T.WATER?{x:x+v[0]*o,y:y+v[1]*o}:null;}
@@ -433,19 +433,19 @@ function updMarket(dt){
   mkt.sent=Math.max(-1,Math.min(1,Math.log(mkt.p/avg)/MARKET.sentScale));
 }
 const bearF=()=>Math.max(0,-mkt.sent),bullF=()=>Math.max(0,mkt.sent);
-// D-052 HARDCORE: normal monsters are +50% HP and +50% damage vs the old tuning (user: "every normal monster hard to beat
-// even for 3 people"). Boss keeps its tuned stats (it is not a "normal" monster; mini-bosses come later). Keep in the table.
+// D-056 HARDCORE: normal monsters are +100% HP and +100% damage vs the ORIGINAL tuning (2x base; supersedes D-052's +50%).
+// User: "i want the enemies 100% more hard." Boss keeps its tuned stats (not a "normal" monster; mini-bosses come later).
 // D-055 rare drops: dropP = chance to drop the material at all (user: "not every monster drops something; hard as fuck to
 // get resources"). A rare DOGE coin (COIN_DROP_P) can also fall — the "hard as fuck to get a single coin".
 const COIN_DROP_P=0.08;
 const ETYPES={
-  alley:{hp:23,spd:48,dmg:9,drop:1,dropP:0.25,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
-  archer:{hp:18,spd:34,dmg:8,drop:1,dropP:0.25,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
-  frog:{hp:21,spd:32,dmg:9,drop:1,dropP:0.3,hw:5,hh:4,chase:150,spr:'frog',mat:'orb',ai:'archer'},
-  ninja:{hp:27,spd:62,dmg:12,drop:1,dropP:0.3,hw:5,hh:4,chase:130,spr:'ninja',mat:'scrap'},
-  bull:{hp:83,spd:26,dmg:21,drop:1,dropP:0.45,hw:6,hh:5,chase:130,spr:'bull',mat:'horn',ai:'brute'},
-  knight:{hp:53,spd:38,dmg:15,drop:1,dropP:0.4,hw:5,hh:4,chase:120,spr:'knight',mat:'steel'},
-  brute:{hp:72,spd:28,dmg:18,drop:3,dropP:0.6,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
+  alley:{hp:30,spd:48,dmg:12,drop:1,dropP:0.25,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
+  archer:{hp:24,spd:34,dmg:10,drop:1,dropP:0.25,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
+  frog:{hp:28,spd:32,dmg:12,drop:1,dropP:0.3,hw:5,hh:4,chase:150,spr:'frog',mat:'orb',ai:'archer'},
+  ninja:{hp:36,spd:62,dmg:16,drop:1,dropP:0.3,hw:5,hh:4,chase:130,spr:'ninja',mat:'scrap'},
+  bull:{hp:110,spd:26,dmg:28,drop:1,dropP:0.45,hw:6,hh:5,chase:130,spr:'bull',mat:'horn',ai:'brute'},
+  knight:{hp:70,spd:38,dmg:20,drop:1,dropP:0.4,hw:5,hh:4,chase:120,spr:'knight',mat:'steel'},
+  brute:{hp:96,spd:28,dmg:24,drop:3,dropP:0.6,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
   boss:{hp:320,spd:38,dmg:12,drop:0,hw:10,hh:7,chase:999,spr:'boss',boss:true}
 };
 let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,scene='title',winT=0;

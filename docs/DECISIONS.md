@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-056 · 2026-11-09 · Harder + more enemies: 2× base HP/damage and field pop 22 → 52 (Claude Code)
+- What: Set the 7 normal `ETYPES` to **+100% HP and +100% damage vs the original baseline** (2×; supersedes D-052's +50%), and raised `FIELD_POP` 22 → 52 (+30 field enemies).
+- Why: User: "i want the enemies 100% more hard and 30 more enemies." Pushes the hardcore survival feel (too many, too strong to solo).
+- Tool: Claude Code (Opus 4.8). Verify: sim TTK reads `ETYPES.knight.hp` live (70), classes still beat basic doge, boss still beatable; `enemy pressure` updated to 52 and `refill` never exceeds it; `check.sh` green; manifest regenerated.
+- Note: boss unchanged (mini-bosses are a later Phase-1 item). Performance fine at 58 total enemies (simple AI).
+
 ### D-055 · 2026-11-09 · Rare drops — most kills drop nothing; rare DOGE coin (Claude Code)
 - What: Added `dropP` per `ETYPES` (alley/archer 0.25, frog/ninja 0.3, knight 0.4, bull 0.45, brute 0.6) gating the material drop in `killEnemy`, plus `COIN_DROP_P=0.08` for a rare direct +1 DOGE coin (new `coin` ground item + pickup + icon reuses the `COIN` sprite). Also locked the `DOGE `-prefixed 9-item names into `docs/HARDCORE_MODE.md` §3.2 (user: "the names of the items will be doge before the item name").
 - Why: User: "not every monster drops something… hard as fuck to get a single coin or clothes." Makes resources scarce so items have value. Quests count kills (not drops), so they're unaffected.
