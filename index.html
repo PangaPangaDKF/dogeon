@@ -467,7 +467,7 @@ const CLASSES={
 };
 const CLASS_IDS={1:'warrior',2:'archer',3:'healer'};
 const classOf=()=>P.prof?CLASSES[P.prof]:null;
-const classSpd=()=>{const c=classOf();return c?c.spd:1;};
+const classSpd=()=>{const c=classOf();return (c?c.spd:1)*(P.lazy?0.85:1);};
 const classDmg=()=>{const c=classOf();return c?c.dmg:1;};
 const classArmor=()=>{const c=classOf();return c?c.armor:0;};
 const CLASS_COL={warrior:'#ff8060',archer:'#80e080',healer:'#80d0ff'};
@@ -559,7 +559,7 @@ function shake(t){shakeT=Math.max(shakeT,t);}
 
 // ================= COMBAT =================
 function hurtPlayer(d,src){
-  if(P.iT>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
+  if(P.god||P.iT>0||P.dead||playerInCamp())return; // camp is a sanctuary: nothing hurts you inside (I-1)
   const dmg=Math.max(1,Math.round(d*(1+MARKET.bearDmg*bearF())*(1-Math.min(0.8,ARMOR_RED[armorLv()]+classArmor()+gearStats().def))));
   P.hp-=dmg;P.iT=0.9;P.resting=false;stopFish('LINE SNAPPED!'); // getting hit ruins the catch (D-015)
   const dx=P.x-src.x,dy=P.y-src.y,l=Math.hypot(dx,dy)||1;P.kbx=dx/l*190;P.kby=dy/l*190;
@@ -618,6 +618,7 @@ function mend(){if(noMp(SKILL_MP.healer))return;
   for(let i=0;i<10;i++)parts.push({x:P.x+(Math.random()*12-6),y:P.y+4+(Math.random()*8-4),vx:0,vy:-34,life:0.6,col:i%2?'#70f0b0':'#d8fff0'});
   floater(P.x,P.y-12,'+'+heal,'#80ffb0');sfx(620,0.14,'sine',0.05,220);sfx(880,0.2,'sine',0.04,180);}
 function damageEnemy(e,dmg,kx,ky){
+  if(P.lazy){P.lazy=false;P.idleT=0;toast('WARMED UP! BACK IN SHAPE.',2);}
   e.hp-=dmg;e.flash=0.12;const ai=e.def.ai||e.type;const m=e.boss?0.15:ai==='brute'?(e.state==='dash'?0:0.45):1;e.kbx=kx*210*m;e.kby=ky*210*m;
   if(e.state==='wind'&&ai==='brute'&&dmg>=10){e.state='chase';e.cool=1.2;}
   floater(e.x,e.y-(e.boss?42:22),dmg,'#ffffff');sfx(240,0.06,'square',0.05,-120);
@@ -716,6 +717,7 @@ function walletRows(){
 // ---- on-chain items (D-019): DogeItems + DogeDEX via precomputed selectors (`cast sig`), raw ABI, no library ----
 // dev: open with ?chain=local to use a local anvil chain (contracts/README.md); Chikyu addresses go in CONTRACTS after deploy
 const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catch(e){return false;}})();
+const IS_MOD=(()=>{try{return /[?&](mod|master)=1\b/.test(location.search);}catch(e){return false;}})();
 if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
 const CONTRACTS={'0x5fdaf3':{items:'0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4',dex:'0xD381e28AC54399EfeA53DCE17D0b627883c00B6e',prof:'0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055',stake:'0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d'},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',prof:'',stake:''}};
 const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',flushFees:'6811406e',stakerFeesView:'67f7cf97'};
@@ -766,7 +768,7 @@ async function refreshChain(){
 // Phase 5 (D-028): claim your class on-chain. One per wallet forever; pays profFee DOGE + gas. Local pick stays free when offline.
 function chooseProfession(cls){const c=CLASSES[cls];if(!c)return;
   if(!chainReady()||!addrs().prof){applyClass(cls,false);setWalletMsg(`YOU TRAIN AS A ${c.name} (LOCAL). SPACE=${cls==='archer'?'ARROWS':cls==='healer'?'STAFF':'CLEAVE'}!`);return;} // offline / registry not here: free local pick (game stays playable with no wallet)
-  if(chainData.profession){setWalletMsg(`THIS WALLET IS LOCKED IN AS A ${CLASSES[CLASS_IDS[chainData.profession]].name}. ONE CLASS PER WALLET.`);return;}
+  if(chainData.profession&&!IS_MOD){setWalletMsg(`THIS WALLET IS LOCKED IN AS A ${CLASSES[CLASS_IDS[chainData.profession]].name}. ONE CLASS PER WALLET.`);return;}
   return chainAct(`YOU ARE NOW A ${c.name}, SWORN ON-CHAIN. SUCH OATH.`,async()=>{await etx(addrs().prof,SEL.chooseProf+W32(c.id),chainData.profFee);applyClass(cls,true);});}
 // Phase 5 (D-030): on-chain DOGE staking — stake real testnet DOGE, earn the holders' 0.8% share of every DEX trade
 function stakeDoge(doge){if(!addrs().stake)return setWalletMsg('STAKING NOT DEPLOYED ON THIS CHAIN YET.');return chainAct(`STAKED ${doge} DOGE. NOW EARNING DEX FEES.`,()=>etx(addrs().stake,SEL.stakeDoge,toWei(doge)));}
@@ -794,7 +796,9 @@ const GEAR_STATS={7:{atk:4},8:{def:0.08,hp:15},9:{def:0.12},10:{mp:15},11:{def:0
 // redeploy — every client computes the same roll). Rarity scales the buff; even a COMMON can roll a huge MEME buff → mint bait.
 const RARITY=[{n:'COMMON',w:60,mult:1,col:'#c8c8d0'},{n:'UNCOMMON',w:25,mult:1.5,col:'#60e060'},{n:'RARE',w:10,mult:2.3,col:'#60a0ff'},{n:'EPIC',w:4,mult:3.6,col:'#c080ff'},{n:'LEGENDARY',w:1,mult:6,col:'#ffc040'}];
 const BUFFS=[{n:'SHARP',s:'atk',v:3},{n:'TOUGH',s:'def',v:0.06},{n:'HEARTY',s:'hp',v:12},{n:'WISE',s:'mp',v:10},
-  {n:'MUCH DMG WOW',s:'atk',v:14,meme:1},{n:'SUCH HEAL',s:'hp',v:45,meme:1},{n:'BIG BRAIN',s:'mp',v:40,meme:1},{n:'DIAMOND PAWS',s:'def',v:0.22,meme:1},{n:'STONKS',s:'atk',v:9,meme:1}];
+  {n:'MUCH DMG WOW',s:'atk',v:14,meme:1},{n:'SUCH HEAL',s:'hp',v:45,meme:1},{n:'BIG BRAIN',s:'mp',v:40,meme:1},{n:'DIAMOND PAWS',s:'def',v:0.22,meme:1},{n:'STONKS',s:'atk',v:9,meme:1},
+  {n:'BLAZE 420',s:'hp',v:420,meme:1},{n:'NICE 69',s:'atk',v:69,meme:1},{n:'LUCKY 777',s:'hp',v:77,meme:1},{n:'MUCH 4.2',s:'def',v:0.42,meme:1},{n:'SPEED 6.9',s:'atk',v:6.9,meme:1},
+  {n:'CURSED 69',s:'atk',v:-6.9,meme:1,curse:1},{n:'PAPER 4.2',s:'def',v:-0.42,meme:1,curse:1},{n:'HANGOVER 420',s:'hp',v:-42,meme:1,curse:1}];
 function itemRoll(id){id=Number(id)||0;let h=(id*2654435761)>>>0,acc=0,rar=RARITY[RARITY.length-1];for(const t of RARITY){acc+=t.w;if(h%100<acc){rar=t;break;}}const buff=BUFFS[Math.floor(h/97)%BUFFS.length];return {rar,buff,amount:buff.v*rar.mult,label:`${rar.n}: ${buff.n}`};}
 function gearStats(){const s={atk:0,def:0,hp:0,mp:0};if(!chainReady())return s;for(const it of chainData.inv){const g=GEAR_STATS[it.type];if(g){s.atk+=g.atk||0;s.def+=g.def||0;s.hp+=g.hp||0;s.mp+=g.mp||0;}if(it.type!==3&&it.type!==4){const r=itemRoll(it.id);s[r.buff.s]+=r.amount;}}return s;} // non-food items also add their random rolled buff
 const gatk=()=>gearStats().atk;
@@ -818,6 +822,7 @@ function useNft(it){ // eat food / drink charm: burns the NFT, then applies the 
   if(it.type===5&&P.hpUps>=3||it.type===6&&P.mpUps>=2){setWalletMsg('MAXED ALREADY. SELL IT AT THE SPHINX.');return;}
   chainAct(`USED ${itemName(it)} #${it.id}. SUCH NOM.`,async()=>{await etx(addrs().items,SEL.burn+W32(it.id),0);
     if(food)P.hp=Math.min(P.maxHp,P.hp+FOODS[food].heal);else if(it.type===5){if(P.hpUps<3){P.hpUps++;P.maxHp+=15;}}else if(it.type===6){if(P.mpUps<2){P.mpUps++;P.maxMp+=10;}}});}
+function burnAndReroll(it){return chainAct(`BURNED #${it.id} & RE-ROLLED ${itemName(it)}!`,async()=>{await etx(addrs().items,SEL.burn+W32(it.id),0);await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(it.type)+W32(it.level),chainData.fee||10n**17n);});}
 const dex=()=>addrs().dex;
 function listNft(it,priceDoge){return chainAct(`LISTED #${it.id} FOR ${priceDoge} DOGE.`,async()=>{await ensureApproved();await etx(dex(),SEL.list+W32(it.id)+W32(toWei(priceDoge)),0);});}
 function delistNft(l){return chainAct(`DELISTED #${l.id}.`,()=>etx(dex(),SEL.delist+W32(l.id),0));}
@@ -1015,7 +1020,24 @@ function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>{const o
   linkRow('JOIN THE HEIST: HEIST.DOGEOS.COM',LINKS.heist),
   {label:'DOGE MARKET REPORT',act:()=>{const pc=Math.round(mkt.sent*MARKET.sentScale*100);return `DOGE $${mkt.p.toFixed(3)} (${pc>=0?'+':''}${pc}%) ${pc>2?'BULL: FIGHTERS HIT HARDER':pc<-2?'BEAR: CATS HIT HARDER':'FLAT'}`;}}];
   if(state.won&&state.shopT>0)o.splice(1,0,{label:`VICTORS MARKET (LIMITED: ${Math.ceil(state.shopT)}S)`,act:()=>{victorMarket(n);return '';}}); // D-065: post-boss limited shop
+  if(state.won)o.splice(1,0,{label:'DOGEMASTER: MEME FORGE & RE-ROLL',act:()=>{dogeMasterMenu(n);return '';}}); // D-066: endgame DogeMaster
   o.push({label:'LEAVE',act:null});return o;});}
+function dogeMasterMenu(n){openMenu(n,'DOGEMASTER: MEME FORGE & RE-ROLL',()=>{const o=[],inv=myFree();
+  o.push({label:'DOGEMASTER: 420, 69 & 777 STATS! SACRIFICE CURSES.',act:()=>'ROLL THE ULTIMATE SHIBE GEAR. IF CURSED WITH NEGATIVE STATS, BURN IT HERE TO RE-ROLL!'});
+  o.push({label:`MINT RANDOM GEAR NFT (${fromWei(chainData.fee||10n**17n)} DOGE)`,act:()=>{const t=7+Math.floor(Math.random()*9);mintNft(t,1);return wallet.msg;}});
+  if(inv.length){for(const it of inv){const r=itemRoll(it.id);o.push({label:`SACRIFICE #${it.id} ${itemName(it)} [${r.label}] -> RE-ROLL`,act:()=>{burnAndReroll(it);return wallet.msg;}});}}
+  else{o.push({label:'NO GEAR NFTS IN WALLET TO RE-ROLL.',act:()=>'MINT OR CRAFT AN NFT FIRST TO RE-ROLL ITS MEME STATS.'});}
+  o.push({label:'BACK',act:()=>{elderMenu(n);return '';}});return o;});}
+function modMenu(){openMenu(null,'MASTER MOD MENU (TEST SUITE)',()=>[
+  {label:P.god?'GOD MODE: [ON] (INVINCIBLE)':'GOD MODE: [OFF]',act:()=>{P.god=!P.god;return `GOD MODE ${P.god?'ENABLED':'DISABLED'}.`;}},
+  {label:'GIVE 420 DOGE + 99 ALL MATERIALS',act:()=>{P.doge+=420;P.wood=99;P.stone=99;P.orb=99;P.scrap=99;P.horn=99;P.steel=99;return '420 DOGE + 99 OF ALL MATS ADDED.';}},
+  {label:'SWITCH CLASS: WARRIOR',act:()=>{P.prof='warrior';syncMaxHp();syncMaxMp();return 'CLASS SET TO WARRIOR.';}},
+  {label:'SWITCH CLASS: ARCHER',act:()=>{P.prof='archer';syncMaxHp();syncMaxMp();return 'CLASS SET TO ARCHER.';}},
+  {label:'SWITCH CLASS: HEALER',act:()=>{P.prof='healer';syncMaxHp();syncMaxMp();return 'CLASS SET TO HEALER.';}},
+  {label:'SWITCH CLASS: NONE (LONE DOGE)',act:()=>{P.prof=null;syncMaxHp();syncMaxMp();return 'CLASS CLEARED.';}},
+  {label:'INSTA-KILL BOSS & SUMMON DOGEMASTER',act:()=>{state.won=true;state.stage=4;state.shopT=9999;return 'CAT LORD SLAIN! DOGEMASTER AWAKENED.';}},
+  {label:'GIVE MAX GEAR STATS',act:()=>{P.hpUps=3;P.mpUps=2;P.sword=4;P.armor=2;syncMaxHp();syncMaxMp();P.hp=P.maxHp;P.mp=P.maxMp;return 'MAX COMBAT GEAR GRANTED.';}},
+  {label:'CLOSE',act:null}]);}
 // D-065 post-boss business model: a LIMITED-TIME market (opens when the Cat Lord falls, closes after state.shopT) that
 // sells premium consumables for DOGE. Consumables only — gear still comes from the forge/mint (D-039), not a DOGE shop.
 function victorMarket(n){openMenu(n,'VICTORS MARKET (LIMITED)',()=>[
@@ -1191,6 +1213,9 @@ function update(dt){
   updFish(dt);
   if(kp('e')){let best=null,bd=28;for(const n of NPCS){const d=dist(n.x,n.y,P.x,P.y);if(d<bd){bd=d;best=n;}}if(best)talk(best);}
   if(kp('i','tab'))invMenu();
+  if(IS_MOD&&kp('m'))modMenu();
+  if(P.moving||kp(' ','j','k','q','f')){P.idleT=0;}
+  else{P.idleT=(P.idleT||0)+dt;if(P.idleT>180&&!P.lazy){P.lazy=true;toast('LAZY DOGE: MUCH SLOTH (-15% SPD). WARM UP!',2.5);}}
   // enemies
   for(const e of enemies)if(!e.dead)updEnemy(e,dt);
   enemies=enemies.filter(e=>!e.dead);
@@ -1322,6 +1347,8 @@ function drawHUD(){
   if(wBal){const u=((wallet.bal||0)+P.doge)*curP;text('≈$'+(u>=100?u.toFixed(1):u.toFixed(2))+(oracle.loaded?' RS':''),168,10,'#60e060');}
   else{const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');}
   text('QUEST',222,3,'#ffe040');text(questText(),222,10,'#fff');
+  if(IS_MOD)text('MOD[M]',285,3,'#ffc040');
+  if(P.lazy)text('LAZY',285,10,'#ff5050');
   if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?`CHAIN ${shortAddr(wallet.addr)} (${wallet.bal==null?'?':fmtD(wallet.bal)}D ≈$${(((wallet.bal||0)+P.doge)*curP).toFixed(2)})  R=REST  I=BAG`:'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
   if(!ui&&!P.dead){const c=classOf();text(hudTag(),3,playerInCamp()?H-17:H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class + skill MP tag (D-028, D-038)
 }

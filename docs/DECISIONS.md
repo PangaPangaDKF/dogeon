@@ -35,6 +35,15 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-066 · 2026-11-09 · DogeMaster meme buffs/debuffs, burn-to-reroll loop, master mod mode & lazy debuff (Antigravity)
+- What: 
+  1. Expanded `BUFFS` with user's exact meme numbers: `420`, `69`, `777`, `4.2`, `6.9` (e.g. `BLAZE 420` +420 HP, `NICE 69` +69 ATK, `LUCKY 777` +77 HP, `MUCH 4.2` +0.42 DEF, `SPEED 6.9` +6.9 ATK) AND negative cursed debuffs (`CURSED 69` -6.9 ATK, `PAPER 4.2` -0.42 DEF, `HANGOVER 420` -42 HP) creating high-variance rolls.
+  2. Implemented the post-boss **DogeMaster** NPC menu (`dogeMasterMenu`) at the Elder when `state.won`, allowing random meme gear mints and the **NFT Burn & Re-roll** mechanic (`burnAndReroll(it)`) which calls `burn(it.id)` on-chain via `SEL.burn` and immediately re-mints a fresh token with a new id to re-roll stats.
+  3. Master / Mod account test suite (`?mod=1` / `?master=1` or key `M`): toggles God Mode (invincibility), gives 420 DOGE + 99 of all materials, switches professions freely without 1-class lock, instantly defeats boss/summons DogeMaster, maxes stats.
+  4. "Lazy Doge" debuff system (`P.lazy`): idling >180s applies a -15% speed debuff with toast `LAZY DOGE: MUCH SLOTH (-15% SPD). WARM UP!`, which clears immediately when attacking/hitting an enemy.
+- Why: User requested endgame DogeMaster post-boss, crazy meme buffs/debuffs with exact numbers (420, 69, 777, 4.2, 6.9) where negative rolls motivate burning, burn-to-reroll loop, testing mod account, and lazy debuff analysis & implementation.
+- Tool: Antigravity CLI. Verify: `tests/sim.mjs` scenario `D-066` PASS, all 6 stages of `tests/check.sh` ALL CHECKS PASSED; `index.html` at 1434/1500 lines.
+
 ### D-065 · 2026-11-09 · Post-boss reward + limited Victor's Market (business model) (Claude Code)
 - What: Defeating the Cat Lord now also drops **10 bonus DOGE coins** and opens a **limited-time Victor's Market** at the Elder (`state.shopT=300s`, counted down in `update`). The market (`victorMarket`) sells premium **consumables** for game DOGE — Champion Feast (+40 HP), War Rations (3 cooked fish), Moon Biscuit (+10 Max MP). Elder menu shows the row only while `state.won && state.shopT>0`.
 - Why: User: "the boss gives you an item… business model could be to sell items for DOGE for a limited time or an NPC after killing the boss." Consumables only — gear still comes from the forge/mint (D-039 holds). Game-analyst lens: a DOGE sink + urgency (limited time) that rewards the victory and gives spent DOGE a purpose.

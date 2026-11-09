@@ -68,10 +68,10 @@ globalThis.__api = {
   swordLv, armorLv, gearStats, syncMaxHp, syncMaxMp, GEAR_STATS, MINTABLE, ITEM_TYPES, itemRoll, RARITY, BUFFS, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
   CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
-  useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy,
+  useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy, damageEnemy,
   net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
-  applyClass, syncMaxHp, hudTag,
+  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD,
 };`;
 
 function boot(seed, opts) {
@@ -473,6 +473,50 @@ scenario('D-055: rare drops — most kills drop nothing, a few give materials/co
   if (dropped >= N) { fail('rare drops', `every kill dropped something (${dropped}/${N}) — drops are not rare`); return; }
   if (dropped === 0) { fail('rare drops', `no kill in ${N} dropped anything — dropP/coin broken`); return; }
   pass('rare drops', `${dropped}/${N} alley kills dropped anything; the rest dropped nothing`);
+});
+
+scenario('D-066: DogeMaster meme buffs/debuffs (420/69/777/4.2/6.9), burn-to-reroll, master mod & lazy debuff', () => {
+  const api = boot(SEED + 66); startGame(api);
+  const g = api.get();
+  // 1. Meme buffs & cursed debuffs exist with exact numbers
+  const buffs = api.BUFFS;
+  const has420 = buffs.some(b => b.v === 420 || b.v === -42);
+  const has69 = buffs.some(b => b.v === 69 || b.v === -6.9);
+  const hasCurse = buffs.some(b => b.curse);
+  if (!has420 || !has69 || !hasCurse) { fail('meme buffs/debuffs', 'missing 420, 69, or curse debuffs in BUFFS'); return; }
+
+  // 2. DogeMaster opens post-boss
+  const elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;
+  g.state.stage = 4; g.state.won = true;
+  api.talk(elder);
+  const dogeMasterRow = api.get().ui.build().find(r => /DOGEMASTER/.test(r.label));
+  if (!dogeMasterRow) { fail('dogemaster menu', 'DOGEMASTER row not found in elder menu'); return; }
+  dogeMasterRow.act();
+  const dmOpts = api.get().ui.build();
+  if (!dmOpts.some(r => /420, 69 & 777/.test(r.label))) { fail('dogemaster options', dmOpts.map(r => r.label).join(' | ')); return; }
+
+  // 3. Mod Menu: God mode, give mats, switch class, instant slay
+  api.modMenu();
+  const modOpts = api.get().ui.build();
+  const godRow = modOpts.find(r => /GOD MODE/.test(r.label));
+  if (!godRow) { fail('mod menu', 'God mode row missing'); return; }
+  godRow.act();
+  if (!g.P.god) { fail('god mode', 'P.god not toggled'); return; }
+  const giveMatsRow = modOpts.find(r => /GIVE 420 DOGE/.test(r.label));
+  giveMatsRow.act();
+  if (g.P.doge < 420 || g.P.wood !== 99) { fail('give mats', `doge=${g.P.doge} wood=${g.P.wood}`); return; }
+  const switchRow = modOpts.find(r => /WARRIOR/.test(r.label));
+  switchRow.act();
+  if (g.P.prof !== 'warrior') { fail('switch class', `prof=${g.P.prof}`); return; }
+
+  // 4. Lazy debuff system
+  g.P.lazy = true;
+  if (api.classSpd() >= 1) { fail('lazy speed', `classSpd=${api.classSpd()} expected < 1`); return; }
+  const dummyEnemy = { x: 100, y: 100, hp: 50, def: {}, boss: false };
+  api.damageEnemy(dummyEnemy, 10, 1, 0);
+  if (g.P.lazy) { fail('warm up', 'P.lazy not cleared on attack'); return; }
+
+  pass('dogemaster + mod + lazy', 'DogeMaster meme forge, burn-to-reroll, mod suite & lazy debuff verified');
 });
 
 scenario('D-065: post-boss Victors Market — limited shop opens on victory, sells consumables for DOGE', () => {

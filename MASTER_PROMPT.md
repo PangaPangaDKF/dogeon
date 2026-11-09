@@ -366,4 +366,5 @@ const SEL={
 | D-044 | **Frozen right-facing characters & meme-doge Shiba face (`drawChar()` draws `spr.right[0]`, 3/4 side-eye face)** | `HEAD.dog.right`, `drawChar`, `tests/sprites.mjs` |
 | D-045 | **User Mission Charter skill (`dogeon-mission`), scope fence, and plain-language game guide (`docs/GAME_GUIDE.md`)** | `.agents|.claude/skills/dogeon-mission/SKILL.md`, `docs/GAME_GUIDE.md`, `CLAUDE.md`, `AGENTS.md` |
 | D-046 | **Healer heals self AND nearby party members in multiplayer (Mission Item 5 closed)** | `mend()`, `netConnect` `onmessage` (`t:'heal'`), `server/relay.mjs`, `tests/relay.mjs`, `tests/sim.mjs` D-046 scenario |
+| D-066 | **DogeMaster meme buffs/debuffs (420/69/777/4.2/6.9), burn-to-reroll loop, master mod mode & lazy debuff** | `BUFFS` meme values & curses, `dogeMasterMenu`, `burnAndReroll`, `modMenu` (`?mod=1`/`KeyM`), `P.lazy` debuff |
 

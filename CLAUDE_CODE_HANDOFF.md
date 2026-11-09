@@ -1,5 +1,17 @@
 # DOGEON — Dual-Brain Handoff & Context Sync (`Antigravity ↔ Claude Code ↔ TryNoah AI`)
 
+> ## 000. SNAPSHOT — Antigravity cycle D-066 (2026-11-09): DogeMaster meme forge, burn-to-reroll, master mod & lazy debuff
+>
+> **Status:** All 6 stages of `tests/check.sh` pass (static rules, syntax, 46 forge tests, drift guard, multiplayer relay, and sim with new D-066 scenario 0 failed/0 warnings). `index.html` is at 1,434 lines (under 1,500 limit).
+>
+> ### What Antigravity Shipped in `D-066`:
+> 1. **Meme Buffs & Cursed Debuffs:** Added user's meme numbers `420`, `69`, `777`, `4.2`, `6.9` to `BUFFS` (`BLAZE 420` +420 HP, `NICE 69` +69 ATK, `LUCKY 777` +77 HP, `MUCH 4.2` +0.42 DEF, `SPEED 6.9` +6.9 ATK) and negative debuffs (`CURSED 69` -6.9 ATK, `PAPER 4.2` -0.42 DEF, `HANGOVER 420` -42 HP) creating high-variance rolls that motivate the burn mechanic.
+> 2. **DogeMaster NPC & Burn-to-Re-roll Loop:** Defeating the boss opens the **DogeMaster** at the Elder (`state.won`), allowing players to burn cursed or unwanted NFTs via `burn(it.id)` (`SEL.burn` on-chain) and re-mint a fresh item with a new tokenId/roll (`burnAndReroll`).
+> 3. **Master / Mod Mode (`?mod=1` / `?master=1` or Key `M`):** Full testing admin suite: toggle God Mode (invincibility), grant 420 DOGE + 99 of all materials, freely switch professions without 1-class lock, instantly defeat boss/summon DogeMaster, max stats.
+> 4. **Lazy Doge Debuff:** Inactivity >180s triggers `P.lazy` (-15% speed); hitting an enemy or gathering warms up the player and immediately clears the debuff.
+> 5. **Launch Guide Artifact:** Full hosting, free domain, and WebSocket relay deployment guide written to brain artifact.
+>
+
 > ## 000. SNAPSHOT — Antigravity cycle D-047 (2026-11-08)
 >
 > **Status:** All 6 stages of `tests/check.sh` pass, and `scripts/browser-smoke.sh` passes 11/11 in real Chrome! `index.html` is at 1,352 lines (safely under 1,500 limit).

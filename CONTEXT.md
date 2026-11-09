@@ -16,21 +16,15 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-09, after commit 17fff74 / D-065: boss reward + Victor's Market; step 3 (shared world) scoped)
+## 00. RESUME HERE (latest, 2026-11-09, D-066: DogeMaster meme buffs/debuffs, burn-to-reroll, master mod & lazy debuff)
 
-- **HARDCORE co-op survival direction** (user vision 2026-11-09): spec in `docs/HARDCORE_MODE.md` (D-051). Key honest
-  constraint: the party-gather / shared-enemy / PvP core needs an **authoritative server** (the relay is non-authoritative;
-  enemies are per-client) — split into Phase 1 (buildable now) vs Phase 2 (needs server). PvP looting = **non-NFT only**
-  (no 5th contract; you can't move someone's NFT without their signature).
-- **Phase 1 progress:** D-052 normal monsters **+50% HP and +50% damage** (ETYPES; boss unchanged). D-053 **renewable
-  gathering** (tree→WOOD, rock→STONE, hold F, per-tile 8s cooldown);
-  closes the gather→mint loop. D-054 **per-class Max MP** (warrior 20 / archer 30 / healer 50). All green + sim-covered.
-- **BLOCKED on a user decision — the 9-item gear system:** the deployed `DogeItems` validates item types (`maxLevel()` only
-  knows types 1–6), so **minting new named items (sword/shield/staff/whip/bow/hemp shirt/quiver + leather armor) reverts**.
-  Needs either a **redeploy of DogeItems (+ DogeDEX cascade)** with the 9 gear types, or map the 9 onto existing HAMMER/ARMOR
-  slots (names won't match on-chain). Awaiting the user's call before building the gear/stat engine.
-- Items confirmed by user: WARRIOR sword/leather-armor/shield · HEALER staff/robe/whip · ARCHER bow/hemp-shirt/quiver; any
-  class can wield any weapon; per-class HP/MP; items grant +HP/MP/ATK/DEF.
+- **D-066 Shipped:**
+  - **Meme Buffs & Cursed Debuffs:** Added user's meme numbers `420`, `69`, `777`, `4.2`, `6.9` to `BUFFS` (`BLAZE 420` +420 HP, `NICE 69` +69 ATK, `LUCKY 777` +77 HP, `MUCH 4.2` +0.42 DEF, `SPEED 6.9` +6.9 ATK) and negative debuffs (`CURSED 69` -6.9 ATK, `PAPER 4.2` -0.42 DEF, `HANGOVER 420` -42 HP) creating high-variance rolls that motivate the burn mechanic.
+  - **DogeMaster NPC & Burn-to-Re-roll Loop:** Defeating the boss opens the **DogeMaster** at the Elder (`state.won`), allowing players to burn cursed or unwanted NFTs via `burn(it.id)` (`SEL.burn` on-chain) and re-mint a fresh item with a new tokenId/roll (`burnAndReroll`).
+  - **Master / Mod Mode (`?mod=1` / `?master=1` or Key `M`):** Full testing admin suite: toggle God Mode (invincible), grant 420 DOGE + 99 of all materials, freely switch professions without 1-class lock, instantly defeat boss/summon DogeMaster, max stats.
+  - **Lazy Doge Debuff:** Inactivity >180s triggers `P.lazy` (-15% speed); hitting an enemy or gathering warms up the player and immediately clears the debuff.
+- **Previous Shipped (D-065):** boss reward + Victor's Market at Elder; step 3 (shared world) scoped.
+- **Status:** `tests/check.sh` ALL CHECKS PASSED (6 stages, 46 forge tests, sim 0 failed/0 warnings). `index.html` at 1434/1500 lines.
 
 ## 00b. RESUME (2026-11-08, after commit 1b225fa / D-050)
 
