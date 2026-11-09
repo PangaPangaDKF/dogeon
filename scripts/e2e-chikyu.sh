@@ -32,7 +32,8 @@ echo "== DOGEON live E2E on chain $("$CAST" chain-id --rpc-url "$R") as ${ME:0:6
 
 # 1. stake first, so this wallet is a staker when fees arrive
 [[ "$(send "$STAKE" 'stake()' --value 0.01ether)" == *0x1* ]] && ok "stake 0.01 DOGE" || bad "stake"
-[[ "$(num "$(call "$STAKE" 'staked(address)(uint256)' "$ME")")" -ge 10000000000000000 ]] && ok "staked() reflects deposit" || bad "staked()"
+S=$(num "$(call "$STAKE" 'staked(address)(uint256)' "$ME")")
+awk "BEGIN{exit !(${S:-0}+0 >= 10000000000000000)}" && ok "staked() reflects deposit ($S wei)" || bad "staked()" # awk: bash int overflows past 2^63 when the shared vault holds a lot
 
 # 2. mint three RAW FISH item NFTs (exact 0.1 DOGE fee each)
 FEE=$(num "$(call "$ITEMS" 'mintFee()(uint256)')")
@@ -40,6 +41,8 @@ n0=$(num "$(call "$ITEMS" 'balanceOf(address)(uint256)' "$ME")")
 for i in 1 2 3; do [[ "$(send "$ITEMS" 'mint(address,uint8,uint8)' "$ME" 3 1 --value "$FEE")" == *0x1* ]] || bad "mint #$i"; done
 n1=$(num "$(call "$ITEMS" 'balanceOf(address)(uint256)' "$ME")")
 [[ $((n1-n0)) -eq 3 ]] && ok "minted 3 RAW FISH NFTs (fee $FEE wei each)" || bad "mint count $n0 -> $n1"
+# 2b. mint one DOGE SWORD (type 7) — proves the new gear types mint on the redeployed contract (D-058/D-060)
+[[ "$(send "$ITEMS" 'mint(address,uint8,uint8)' "$ME" 7 1 --value "$FEE")" == *0x1* ]] && ok "minted a DOGE SWORD NFT (gear type 7)" || bad "DOGE SWORD mint"
 ID1=$(num "$(call "$ITEMS" 'tokenOfOwnerByIndex(address,uint256)(uint256)' "$ME" $((n1-3)))")
 ID2=$(num "$(call "$ITEMS" 'tokenOfOwnerByIndex(address,uint256)(uint256)' "$ME" $((n1-2)))")
 ID3=$(num "$(call "$ITEMS" 'tokenOfOwnerByIndex(address,uint256)(uint256)' "$ME" $((n1-1)))")

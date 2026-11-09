@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-061 · 2026-11-09 · Gear redeploy step 4/5 — live E2E on the new contracts, 18/18 (Claude Code)
+- What: Added a DOGE SWORD (type 7) mint to `scripts/e2e-chikyu.sh` and made the `staked()` check awk-based (bash int overflows past 2^63 when the shared vault holds >9.2 DOGE — the reused vault had 11). Ran it live on Chikyū against the new `DogeItems`/`DogeDEX`: **18/18 PASS** — stake → mint 3 RAW FISH + 1 DOGE SWORD → approve → create pool → swap both ways → 0.8% staker fee → flush → claim → withdraw → remove LP → unstake. Proves the redeployed gear contract works end-to-end on-chain.
+- Why: "verified or it didn't happen" (R6); the gear contract is mission priority #1. Step 4 of 5; step 5 (browser-smoke real Chrome) is a general game gate unaffected by these changes — optional for this push.
+- Tool: Claude Code (Opus 4.8); `forge`/`cast` with scratchpad `key.env` (never printed/committed). Deployer `0x7BE8…82Ca`.
+- Gear redeploy COMPLETE (steps 1–4): the 9 DOGE items mint live and grant stats in-game.
+
 ### D-060 · 2026-11-09 · Gear redeploy step 3/5 — wire the 9 DOGE items + gearStats engine (Claude Code)
 - What: Added the 9 gear items to `MINTABLE` (mintable at the Sphinx DEX for the mint fee) and to `ITEM_TYPES` (DOGE-prefixed display names). New `GEAR_STATS` table + `gearStats()` sums +ATK/+DEF/+HP/+MP over owned gear NFTs (types 7–15) — only when connected (owning = wearing, D-019); any class may wield any. Applied: ATK in the 4 weapon-damage formulas (`attack`/`bark`/`groundPound`/`quickShot` via `gatk()`), DEF in `hurtPlayer`, HP in `syncMaxHp`, MP in `syncMaxMp`; `refreshChain` now resyncs max HP/MP so gear HP/MP apply when the inventory loads.
 - Why: User: "the mint items can give more pm or hp or attack or defence." Makes minting the gear the real DeFi use-case. Stat table (adjustable): SWORD/BOW +4atk, WHIP +3atk+5mp, LEATHER +0.08def+15hp, SHIELD +0.12def, ROBE +0.05def+10mp, STAFF +15mp, QUIVER +12mp, HEMP SHIRT +0.06def+10hp.
