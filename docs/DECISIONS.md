@@ -35,6 +35,27 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-054 · 2026-11-09 · Per-class Max MP (warrior 20 / archer 30 / healer 50) (Claude Code)
+- What: Added a `mp` field to `CLASSES` and `syncMaxMp()` (absolute from class + `mpUps*10`), applied in `applyClass`.
+- Why: User: "each hp and mp is different per profession." HP already differed; MP was a flat 30. Healer now has +20 MP to sustain MEND; warrior -10 (tanky, low mana). First "build stats now" slice of the gear system.
+- Tool: Claude Code (Opus 4.8). Verify: sim `D-054` (no-class 30, warrior 20, archer 30, healer 50); healer sustain/stats still pass; `check.sh` green.
+- Next step: the 9 named-item gear NFTs need a `DogeItems` (+ `DogeDEX`) redeploy — **deferred by the user as a next step** (see `docs/HARDCORE_MODE.md` §3.2/§4).
+
+### D-053 · 2026-11-09 · Renewable gathering — trees → WOOD, rocks → STONE (Claude Code)
+- What: `nodeAt()` + `GATHER_DUR/GATHER_CD/gatherCD`; `startFish/updFish/stopFish` harvest a faced tree/rock via the fishing pipeline; per-tile 8s cooldown. F hint + `P.gNode`.
+- Why: Wood/stone were starter-bag only, so once spent you could never mint again. This closes the gather→mint loop (hardcore spec). Reusing fishing means hit/move/attack already cancel it.
+- Tool: Claude Code (Opus 4.8). Verify: sim `D-053` (chop → +1 WOOD, node then on cooldown); `check.sh` green.
+
+### D-052 · 2026-11-09 · Hardcore: normal monsters +50% HP and +50% damage (Claude Code)
+- What: Bumped the 7 normal `ETYPES` by ~1.5× HP and damage in the table (boss unchanged — mini-bosses later).
+- Why: User: "every single normal monster will be hard to defeat even if you are 3 people." First slice of `docs/HARDCORE_MODE.md` Phase 1.
+- Tool: Claude Code (Opus 4.8). Verify: sim TTK label reads `ETYPES.knight.hp` live (53), classes still beat basic doge, boss still beatable; manifest regenerated; `check.sh` green.
+- Alternatives rejected: a global difficulty multiplier applied in logic — rejected to keep damage read-sites untouched and the numbers in the table (CLAUDE.md rule).
+
+### D-051 · 2026-11-09 · Hardcore co-op survival design captured as a phased spec (Claude Code)
+- What: `docs/HARDCORE_MODE.md` — the user's vision organized into systems, with the authoritative-server constraint and the NFT-theft constraint flagged, split Phase 1 (now) vs Phase 2 (needs server). PvP looting = non-NFT only.
+- Why: The vision spans many sessions and has hard technical blockers; a written spec prevents building the wrong architecture. Tool: Claude Code (Opus 4.8).
+
 ### D-050 · 2026-11-08 · Fix fabricated addresses/selectors in `TRYNOAH.md` + close the drift-guard hole (Claude Code)
 - What: Rewrote `TRYNOAH.md` (the single Noah entry point) and added it to the `scripts/trynoah-manifest.mjs --verify` target list.
 - Why: Antigravity's `TRYNOAH.md` (D-048) carried **fabricated** facts — all 4 contract addresses wrong (`0x0fC7..`, `0x6A5B..`, `0xc903..`, `0x6D43..`), ~15 invented selectors/signatures (`mintItem`, `swapDogeForNft`, `stakeDoge()`), Solidity `^0.8.20` (real `^0.8.24`), and `?mp=1&nick=` (real `?mp=ws(s)://host&room=&name=`). Handing that to TryNoah guarantees every mint/DEX/stake call hits a non-existent contract → mission priority #1 (Web3 that WORKS) silently fails. The `--verify` drift guard (check.sh stage 5) only scanned `MASTER_PROMPT.md` + the generated manifest, so a brand-new blueprint file bypassed it entirely.

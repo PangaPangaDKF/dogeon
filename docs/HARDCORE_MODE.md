@@ -123,6 +123,16 @@ Owning = wearing (D-019). Any class may equip any of them. **Draft (confirm/adju
 
 ---
 
+## 5b. NEXT STEP (deferred by the user) — the DogeItems redeploy
+The 9 named gear NFTs (sword, leather armor, shield, staff, robe, whip, bow, light hemp shirt, quiver) need a **redeploy of
+`DogeItems` (+ `DogeDEX`, which depends on it)** with the new gear types, because the live `DogeItems.maxLevel()` only accepts
+types 1–6 and reverts on anything else. The user chose **"build stats now, redeploy later"** (D-054), so the stat engine is
+being built on the existing items first. When ready: redeploy → update `CONTRACTS` in `index.html` + `TRYNOAH.md`/manifest/docs
+→ re-run `scripts/e2e-chikyu.sh` (17/17) + `scripts/browser-smoke.sh` → coordinate the shared contract lane with Antigravity.
+
+**Progress so far (Phase 1):** D-052 monsters +50% · D-053 renewable gathering · D-054 per-class Max MP. Still open in Phase 1:
+rare drop tables + market debuff, bigger/clearer gear stat bonuses, the 9 named items (after the redeploy), mini-boss per region.
+
 ## 6. First recommended slice
 **Start with the 9-item gear system (§3.2).** It's architecture-independent, it's mission priority #1 (the real use-case for
 minting and the DEX), and brutal monsters (§3.3) have far more meaning once gear matters. Everything else builds on it.

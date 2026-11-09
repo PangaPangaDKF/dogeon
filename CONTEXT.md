@@ -16,15 +16,15 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-09, after commit 247b11c / D-053)
+## 00. RESUME HERE (latest, 2026-11-09, after commit 9380df2 / D-054)
 
 - **HARDCORE co-op survival direction** (user vision 2026-11-09): spec in `docs/HARDCORE_MODE.md` (D-051). Key honest
   constraint: the party-gather / shared-enemy / PvP core needs an **authoritative server** (the relay is non-authoritative;
   enemies are per-client) — split into Phase 1 (buildable now) vs Phase 2 (needs server). PvP looting = **non-NFT only**
   (no 5th contract; you can't move someone's NFT without their signature).
 - **Phase 1 progress:** D-052 normal monsters **+50% HP and +50% damage** (ETYPES; boss unchanged). D-053 **renewable
-  gathering** — face a tree→WOOD / rock→STONE, hold F (reuses fishing pipeline, cancels on hit), per-tile 8s cooldown;
-  closes the gather→mint loop. Both green + sim-covered.
+  gathering** (tree→WOOD, rock→STONE, hold F, per-tile 8s cooldown);
+  closes the gather→mint loop. D-054 **per-class Max MP** (warrior 20 / archer 30 / healer 50). All green + sim-covered.
 - **BLOCKED on a user decision — the 9-item gear system:** the deployed `DogeItems` validates item types (`maxLevel()` only
   knows types 1–6), so **minting new named items (sword/shield/staff/whip/bow/hemp shirt/quiver + leather armor) reverts**.
   Needs either a **redeploy of DogeItems (+ DogeDEX cascade)** with the 9 gear types, or map the 9 onto existing HAMMER/ARMOR
