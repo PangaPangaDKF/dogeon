@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-055 · 2026-11-09 · Rare drops — most kills drop nothing; rare DOGE coin (Claude Code)
+- What: Added `dropP` per `ETYPES` (alley/archer 0.25, frog/ninja 0.3, knight 0.4, bull 0.45, brute 0.6) gating the material drop in `killEnemy`, plus `COIN_DROP_P=0.08` for a rare direct +1 DOGE coin (new `coin` ground item + pickup + icon reuses the `COIN` sprite). Also locked the `DOGE `-prefixed 9-item names into `docs/HARDCORE_MODE.md` §3.2 (user: "the names of the items will be doge before the item name").
+- Why: User: "not every monster drops something… hard as fuck to get a single coin or clothes." Makes resources scarce so items have value. Quests count kills (not drops), so they're unaffected.
+- Tool: Claude Code (Opus 4.8). Verify: sim `D-055` (7/40 alley kills dropped anything; drops are rare, deterministic under the seeded Math.random); `check.sh` green. `killEnemy` exported to the sim.
+- Alternatives rejected: adding "cat clothes" junk as a bag item now — deferred (needs a new icon + bag/sell plumbing); noted as a follow-up.
+
 ### D-054 · 2026-11-09 · Per-class Max MP (warrior 20 / archer 30 / healer 50) (Claude Code)
 - What: Added a `mp` field to `CLASSES` and `syncMaxMp()` (absolute from class + `mpUps*10`), applied in `applyClass`.
 - Why: User: "each hp and mp is different per profession." HP already differed; MP was a flat 30. Healer now has +20 MP to sustain MEND; warrior -10 (tanky, low mana). First "build stats now" slice of the gear system.

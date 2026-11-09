@@ -51,13 +51,17 @@ big server investment behind a game that's already good solo.
 
 ### 3.2 The 9-item gear system  *(Phase 1 — core, mission priority #1)*
 Exactly **3 themed items per class = 9**, all mintable NFTs on `DogeItems`, each granting a mix of **+HP / +MP / +ATK / +DEF**.
-Owning = wearing (D-019). Any class may equip any of them. **Draft (confirm/adjust the numbers):**
+Owning = wearing (D-019). Any class may equip any of them. **Every item name is prefixed `DOGE ` (user, 2026-11-09).**
 
-| Class theme | Item | Grants |
+| Class theme | Items (names as minted) | Grants |
 |---|---|---|
-| Warrior | Iron Warhammer · Bulwark Plate · Demolition Charm | +ATK · +DEF +HP · +ATK on skill |
-| Archer | Kernel Longbow · Scout Cloak · Quiver Charm | +ATK(ranged) · +SPD +DEF · +MP / extra arrow |
-| Healer | Mender Staff · Barkitect Robe · Renewal Charm | +MP +heal · +MP +DEF · +MP regen / mend range |
+| Warrior | **DOGE SWORD** · **DOGE LEATHER ARMOR** · **DOGE SHIELD** | +ATK · +DEF +HP · +DEF (block) |
+| Archer | **DOGE BOW** · **DOGE HEMP SHIRT** · **DOGE QUIVER** | +ATK(ranged) · +SPD +DEF · +MP / extra arrow |
+| Healer | **DOGE STAFF** · **DOGE ROBE** · **DOGE WHIP** | +MP +heal · +MP +DEF · +ATK +MP-on-hit |
+
+> Naming rule: on the redeploy, `DogeItems.typeName()` returns these `DOGE `-prefixed names, so the on-chain metadata and the
+> in-game menus match exactly. (The current placeholder items HAMMER/ARMOR/CHARM stay un-prefixed until that redeploy, to avoid
+> an on-chain/off-chain name mismatch and to keep the sim's name assertions stable.)
 
 - **May need contract work:** the item system adds gear types beyond today's 6. Check whether `DogeItems` accepts new
   `itemType` bytes without a redeploy; if not, that's a contract change (mission priority #1 — do it carefully, re-run
@@ -130,8 +134,9 @@ types 1–6 and reverts on anything else. The user chose **"build stats now, red
 being built on the existing items first. When ready: redeploy → update `CONTRACTS` in `index.html` + `TRYNOAH.md`/manifest/docs
 → re-run `scripts/e2e-chikyu.sh` (17/17) + `scripts/browser-smoke.sh` → coordinate the shared contract lane with Antigravity.
 
-**Progress so far (Phase 1):** D-052 monsters +50% · D-053 renewable gathering · D-054 per-class Max MP. Still open in Phase 1:
-rare drop tables + market debuff, bigger/clearer gear stat bonuses, the 9 named items (after the redeploy), mini-boss per region.
+**Progress so far (Phase 1):** D-052 monsters +50% · D-053 renewable gathering · D-054 per-class Max MP · D-055 rare drops +
+rare DOGE coin. Still open in Phase 1: market as a heavier debuff on the exact RedStone price, "cat clothes" junk drop,
+bigger/clearer gear stat bonuses, the 9 `DOGE `-named items (after the redeploy), mini-boss per region.
 
 ## 6. First recommended slice
 **Start with the 9-item gear system (§3.2).** It's architecture-independent, it's mission priority #1 (the real use-case for

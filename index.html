@@ -435,14 +435,17 @@ function updMarket(dt){
 const bearF=()=>Math.max(0,-mkt.sent),bullF=()=>Math.max(0,mkt.sent);
 // D-052 HARDCORE: normal monsters are +50% HP and +50% damage vs the old tuning (user: "every normal monster hard to beat
 // even for 3 people"). Boss keeps its tuned stats (it is not a "normal" monster; mini-bosses come later). Keep in the table.
+// D-055 rare drops: dropP = chance to drop the material at all (user: "not every monster drops something; hard as fuck to
+// get resources"). A rare DOGE coin (COIN_DROP_P) can also fall — the "hard as fuck to get a single coin".
+const COIN_DROP_P=0.08;
 const ETYPES={
-  alley:{hp:23,spd:48,dmg:9,drop:1,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
-  archer:{hp:18,spd:34,dmg:8,drop:1,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
-  frog:{hp:21,spd:32,dmg:9,drop:1,hw:5,hh:4,chase:150,spr:'frog',mat:'orb',ai:'archer'},
-  ninja:{hp:27,spd:62,dmg:12,drop:1,hw:5,hh:4,chase:130,spr:'ninja',mat:'scrap'},
-  bull:{hp:83,spd:26,dmg:21,drop:1,hw:6,hh:5,chase:130,spr:'bull',mat:'horn',ai:'brute'},
-  knight:{hp:53,spd:38,dmg:15,drop:1,hw:5,hh:4,chase:120,spr:'knight',mat:'steel'},
-  brute:{hp:72,spd:28,dmg:18,drop:3,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
+  alley:{hp:23,spd:48,dmg:9,drop:1,dropP:0.25,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
+  archer:{hp:18,spd:34,dmg:8,drop:1,dropP:0.25,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
+  frog:{hp:21,spd:32,dmg:9,drop:1,dropP:0.3,hw:5,hh:4,chase:150,spr:'frog',mat:'orb',ai:'archer'},
+  ninja:{hp:27,spd:62,dmg:12,drop:1,dropP:0.3,hw:5,hh:4,chase:130,spr:'ninja',mat:'scrap'},
+  bull:{hp:83,spd:26,dmg:21,drop:1,dropP:0.45,hw:6,hh:5,chase:130,spr:'bull',mat:'horn',ai:'brute'},
+  knight:{hp:53,spd:38,dmg:15,drop:1,dropP:0.4,hw:5,hh:4,chase:120,spr:'knight',mat:'steel'},
+  brute:{hp:72,spd:28,dmg:18,drop:3,dropP:0.6,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
   boss:{hp:320,spd:38,dmg:12,drop:0,hw:10,hh:7,chase:999,spr:'boss',boss:true}
 };
 let time=0,state={gateOpen:false,stage:0,won:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,scene='title',winT=0;
@@ -609,7 +612,8 @@ function damageEnemy(e,dmg,kx,ky){
 function killEnemy(e){
   e.dead=true;puff(e.x,e.y-6,'#d8d8e8',14);sfx(180,0.25,'square',0.05,-150);
   const mat=e.def.mat||'whisk';
-  for(let i=0;i<e.def.drop;i++)items.push({x:e.x+R(-7,7),y:e.y+R(-4,4),kind:mat,life:18,t:Math.random()*3});
+  if(Math.random()<(e.def.dropP??1))for(let i=0;i<e.def.drop;i++)items.push({x:e.x+R(-7,7),y:e.y+R(-4,4),kind:mat,life:18,t:Math.random()*3}); // D-055: drops are rare now
+  if(!e.boss&&Math.random()<COIN_DROP_P)items.push({x:e.x+R(-5,5),y:e.y+R(-4,4),kind:'coin',life:18,t:Math.random()*3}); // rare single DOGE coin
   if(state.stage===1){P.kills++;if(P.kills===8)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(state.stage===2&&e.type==='brute'){P.bruteKills++;if(P.bruteKills===3)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});state.won=true;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
@@ -1169,6 +1173,7 @@ function update(dt){
     if(d<24){const s=130*dt/(d||1);it.x+=(P.x-it.x)*Math.min(1,s);it.y+=(P.y-it.y)*Math.min(1,s);}
     if(d<8){it.life=0;if(it.kind==='whisk'){P.whisk++;floater(P.x,P.y-24,'+1 WHISKER','#e0e0ff');sfx(1200,0.05,'square',0.03,400);}
       else if(it.kind==='yarn'){P.doge+=150;floater(P.x,P.y-24,'+150 DOGE','#f0c030');toast('GOLDEN YARN! +150 DOGE',3);sfx(880,0.4,'triangle',0.06,600);}
+      else if(it.kind==='coin'){P.doge+=1;floater(P.x,P.y-24,'+1 DOGE','#f0c030');sfx(1200,0.05,'square',0.03,400);} // D-055 rare coin
       else{const names={orb:'ORB',scrap:'SCRAP',horn:'HORN',steel:'STEEL'},cols={orb:'#d080ff',scrap:'#c0c8d0',horn:'#60e060',steel:'#a0a8b0'};P[it.kind]++;floater(P.x,P.y-24,'+1 '+names[it.kind],cols[it.kind]);sfx(1100,0.05,'square',0.03,300);}}}
   items=items.filter(i=>i.life>0);
   // respawn
@@ -1212,7 +1217,7 @@ function drawWorld(){
   const ox=cam.x+sx,oy=cam.y+sy;
   drawTiles(ox,oy);
   drawFire(ox,oy);
-  for(const it of items){if(it.life<4&&Math.floor(it.life*8)%2)continue;const bob=Math.round(Math.sin(it.t*5)*1.5);const img=it.kind==='whisk'?WHISK:it.kind==='yarn'?YARN:(MAT_ICONS[it.kind]||WHISK);ctx.drawImage(SHADOW,Math.round(it.x-6-ox),Math.round(it.y+1-oy));ctx.drawImage(img,Math.round(it.x-img.width/2-ox),Math.round(it.y-6+bob-oy));}
+  for(const it of items){if(it.life<4&&Math.floor(it.life*8)%2)continue;const bob=Math.round(Math.sin(it.t*5)*1.5);const img=it.kind==='whisk'?WHISK:it.kind==='yarn'?YARN:it.kind==='coin'?COIN:(MAT_ICONS[it.kind]||WHISK);ctx.drawImage(SHADOW,Math.round(it.x-6-ox),Math.round(it.y+1-oy));ctx.drawImage(img,Math.round(it.x-img.width/2-ox),Math.round(it.y-6+bob-oy));}
   const list=[];
   for(const n of NPCS)list.push({y:n.y,f:()=>{const near=dist(n.x,n.y,P.x,P.y)<40;const d=near?dirOf(P.x-n.x,P.y-n.y):'down';drawChar(SPR[n.spr],d,0,n.x,n.y+n.hh+Math.round(Math.sin(time*2+n.x)*0.6),1,ox,oy);if(near&&!ui){const b=Math.round(Math.sin(time*6));text('E',n.x-1-ox,n.y-30+b-oy,'#ffe040');}}});
   for(const e of enemies)list.push({y:e.y,f:()=>{

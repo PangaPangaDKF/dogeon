@@ -68,7 +68,7 @@ globalThis.__api = {
   swordLv, armorLv, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
   LINKS, oracle, refreshOracle, elderMenu, partnerTalk, FACTIONS, SCHOOL, REDSTONE, opened: () => window.__opened, eth, wallet_: () => wallet,
   CLASSES, CLASS_IDS, classOf, classSpd, classDmg, classArmor, professorTalk, professorMenu, chooseProfession,
-  useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy,
+  useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy,
   net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
   applyClass, syncMaxHp, hudTag,
@@ -459,6 +459,20 @@ scenario('D-054: per-class Max MP (no-class 30 / warrior 20 / archer 30 / healer
     seen.push(`${cls} ${mm}`);
   }
   pass('class mp', `no-class 30, ${seen.join(', ')}`);
+});
+
+scenario('D-055: rare drops — most kills drop nothing, a few give materials/coins', () => {
+  const api = boot(SEED + 55); startGame(api);
+  const g = api.get(); g.enemies.splice(0);
+  const N = 40; let dropped = 0; // alley dropP 0.25 + coin 0.08 -> P(any) ~0.31, so far fewer than N
+  for (let i = 0; i < N; i++) {
+    const e = api.makeEnemy('alley', 100 + i, 100, 'field');
+    g.items.length = 0; api.killEnemy(e);
+    if (g.items.length) dropped++;
+  }
+  if (dropped >= N) { fail('rare drops', `every kill dropped something (${dropped}/${N}) — drops are not rare`); return; }
+  if (dropped === 0) { fail('rare drops', `no kill in ${N} dropped anything — dropP/coin broken`); return; }
+  pass('rare drops', `${dropped}/${N} alley kills dropped anything; the rest dropped nothing`);
 });
 
 scenario('enemy pressure: field population and spawn timer', () => {
