@@ -1512,6 +1512,12 @@ scenario('D-068: on-chain currency purity, raid timer, timed lazy debuff & fee s
   dmRow.act();
   const mintGear = api.get().ui.build().find(r => /MINT RANDOM GEAR NFT/.test(r.label));
   if (!mintGear || !mintGear.isNft) { fail('dogemaster mint row', 'missing MINT RANDOM GEAR NFT or isNft flag'); return; }
+  g.ui = null;
+
+  // 6. Raid timer expiration -> raidFailed = true, raidOpen = false, sealed
+  g.state.raidOpen = true; g.state.raidT = 0.05;
+  api.step(0.1);
+  if (g.state.raidOpen || !g.state.raidFailed || g.state.raidT <= 1000) { fail('raid expiration', `open=${g.state.raidOpen} failed=${g.state.raidFailed} raidT=${g.state.raidT}`); return; }
 
   pass('d-068 systems', '1 DOGE fee, raid cycle gate, timed lazy debuff, pvp material drop, DogeMaster meme store');
 });

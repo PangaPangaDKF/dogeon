@@ -450,7 +450,7 @@ const ETYPES={
   boss:{hp:320,spd:38,dmg:12,drop:0,hw:10,hh:7,chase:999,spr:'boss',boss:true}
 };
 const RAID_OPEN=1800,RAID_SEAL=5*3600;
-let time=0,state={gateOpen:false,stage:0,won:false,raidT:1800,raidOpen:true},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,dunT=0,miniT=0,scene='title',winT=0;
+let time=0,state={gateOpen:false,stage:0,won:false,raidT:1800,raidOpen:true,raidFailed:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,dunT=0,miniT=0,scene='title',winT=0;
 // ---- Phase 5 classes / professions (D-028). id matches DogeProfession: 1 warrior, 2 archer, 3 healer ----
 // spd/dmg/armor are multipliers/adds applied at use sites (classSpd/classDmg/classArmor); skill routing lands in a later part.
 const CLASSES={
@@ -490,7 +490,7 @@ const NPCS=[
   {id:'healer',cls:'healer',name:'MENDER BRIGHTTAIL (BARKITECTS)',spr:'tHealer',x:PADS3[2][0]*16+8,y:PADS3[2][1]*16+8,hw:6,hh:4,dir:'down',met:false}
 ];
 function newGame(){
-  state={gateOpen:false,stage:0,won:false,shopT:0,raidT:RAID_OPEN,raidOpen:true};
+  state={gateOpen:false,stage:0,won:false,shopT:0,raidT:RAID_OPEN,raidOpen:true,raidFailed:false};
   P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,wood:3,stone:3,steel:2,orb:0,scrap:0,horn:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,gNode:null,credits:{},faction:null,prof:null,lazy:false,lazyT:0,idleT:0};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
@@ -1100,7 +1100,8 @@ function questTalk(n){
   else if(s===1&&P.kills<8)openDialog(n,[mktLine,lore,`${P.kills}/8 cats. Keep fighting. When hurt, rest by the fire.`]);
   else if(s===1)openDialog(n,[mktLine,'Very fight. Much brave. Take these 40 DOGE.','Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{P.doge+=40;state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
   else if(s===2&&P.bruteKills<3)openDialog(n,[mktLine,lore,`Brutes slain: ${P.bruteKills}/3. They lurk far from camp and in the ruins.`]);
-  else if(s===2)openDialog(n,[mktLine,'You crushed the brutes! 80 DOGE is yours.','I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD.','Forge your hammer at Wrenchpaw first. The Lord throws storms of fishbones.'],()=>{P.doge+=80;state.stage=3;state.gateOpen=true;toast('THE RUINS GATE IS OPEN!');sfx(80,0.6,'sawtooth',0.06,40);});
+  else if(s===2)openDialog(n,[mktLine,'You crushed the brutes! 80 DOGE is yours.','I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD in a 30M RAID.','If the timer runs out, the raid FAILS and gates seal for 5 hours. You can still farm and train, but the boss escapes. Move fast!'],()=>{P.doge+=80;state.stage=3;state.gateOpen=true;toast('RUINS GATE OPEN! 30M RAID RUNNING.');sfx(80,0.6,'sawtooth',0.06,40);});
+  else if(s===3&&!state.raidOpen)openDialog(n,[mktLine,lore,'The raid timer ran out! The Cat Lord sealed the gate for 5 hours.','You can still gather, fish, level skills, and trade at the Sphinx. Prepare for the next raid cycle!']);
   else if(s===3)openDialog(n,[mktLine,lore,'The Cat Lord waits beyond the iron gate, north of camp. Do not go in hurt.']);
   else openDialog(n,[mktLine,lore,'You did it. Such hero. Much legend. The camp is safe... for now.','Many cats still roam out there. Hunt them if you wish.']);
 }
@@ -1159,6 +1160,7 @@ function netConnect(){
   try{const ws=new WebSocket(NET_URL);net.ws=ws;
     ws.onopen=()=>{net.on=true;ws.send(JSON.stringify({t:'join',room:NET_ROOM,id:net.id}));toast('MULTIPLAYER: ROOM '+NET_ROOM.toUpperCase()+' AS '+net.name,2);};
     ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
+      if(m&&m.t==='full'){toast('SERVER FULL (MAX 8 PLAYERS)',4);return;}
       if(!m||typeof m.id!=='string'||!/^[a-z0-9]{1,12}$/.test(m.id)||m.id===net.id)return;
       if(m.t==='bye'){delete net.peers[m.id];return;}
       if(m.t==='heal'&&Number.isFinite(m.x)&&Number.isFinite(m.y)){
@@ -1196,6 +1198,17 @@ function update(dt){
   if(winT>0)winT-=dt;
   if(state.shopT>0)state.shopT-=dt; // D-065 post-boss Victor's Market countdown
   shakeT=Math.max(0,shakeT-dt);
+  state.raidT=(state.raidT||RAID_OPEN)-dt;
+  if(state.raidT<=0){
+    if(state.raidOpen){
+      state.raidOpen=false;state.raidFailed=true;state.raidT=RAID_SEAL;
+      toast('RAID FAILED! 30M TIME EXPIRED. GATES SEALED FOR 5 HOURS.',4);
+      if(zoneOf(P.x,P.y)==='boss'){P.y=(GATE_ROW+3)*16+8;P.x=CX*16+8;puff(P.x,P.y,'#ff4040',24);shake(0.6);toast('CAT LORD SEALED THE CHAMBER! EJECTED BACK TO RUINS.',4);}
+    }else{
+      state.raidOpen=true;state.raidFailed=false;state.raidT=RAID_OPEN;
+      toast('DUNGEON RAID OPEN! 30M TO SLAY THE BOSS.',3.5);
+    }
+  }
   if(ui){updateParts(dt);updateUI(dt);return;} // particles keep living while the world pauses (I-2)
   updateParts(dt);
   if(P.dead){P.deathT-=dt;if(P.deathT<=0)respawn();updateCam(dt);return;}
@@ -1224,8 +1237,6 @@ function update(dt){
   if(kp('e')){let best=null,bd=28;for(const n of NPCS){const d=dist(n.x,n.y,P.x,P.y);if(d<bd){bd=d;best=n;}}if(best)talk(best);}
   if(kp('i','tab'))invMenu();
   if(isMod()&&kp('m'))modMenu();
-  state.raidT=(state.raidT||RAID_OPEN)-dt;
-  if(state.raidT<=0){state.raidOpen=!state.raidOpen;state.raidT=state.raidOpen?RAID_OPEN:RAID_SEAL;toast(state.raidOpen?'DUNGEON RAID OPEN! 30M TO SLAY BOSS.':'DUNGEON SEALED! LOCKED FOR 5 HOURS.');}
   if(P.moving||kp(' ','j','k','q','f')){P.idleT=0;if(P.lazyT>0)P.lazyT=Math.max(0,P.lazyT-dt*1.5);}
   else{P.idleT=(P.idleT||0)+dt;if(P.idleT>180&&!(P.lazyT>0)){P.lazyT=60;toast('LAZY DEBUFF: 60S SLOTH (-15% SPD)! MOVE & FIGHT!',2.5);}}
   if(P.lazyT>0){P.lazyT=Math.max(0,P.lazyT-dt);P.lazy=P.lazyT>0;}else{P.lazy=false;}
@@ -1359,8 +1370,10 @@ function drawHUD(){
   text('DOGE $'+curP.toFixed(curP<1?3:2),168,3,oracle.loaded?'#80f8c0':'#f8d050');
   if(wBal){const u=((wallet.bal||0)+P.doge)*curP;text('≈$'+(u>=100?u.toFixed(1):u.toFixed(2))+(oracle.loaded?' RS':''),168,10,'#60e060');}
   else{const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');}
-  const rDisp=state.raidOpen?`RAID ${Math.ceil(state.raidT/60)}M`:`SEAL ${Math.ceil(state.raidT/60)}M`;
-  text(rDisp,222,3,state.raidOpen?'#80ff80':'#ff5050');text(questText(),222,10,'#fff');
+  const rDisp=state.raidOpen?`RAID ${Math.ceil(state.raidT/60)}M`:state.raidFailed?`FAILED (${Math.ceil(state.raidT/3600)}H)`:`SEAL ${Math.ceil(state.raidT/60)}M`;
+  text(rDisp,214,3,state.raidOpen?'#80ff80':'#ff5050');
+  if(!state.raidOpen)text(`${Math.ceil(state.raidT/3600)}H SEALED`,214,10,'#ffa0a0');
+  else text(questText(),222,10,'#fff');
   if(P.lazy||P.lazyT>0)text(P.lazyT>0?`LAZY ${Math.ceil(P.lazyT)}S`:'LAZY',276,10,'#ff5050');
   else if(isMod())text('MOD[M]',285,10,'#ffc040');
   if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?`CHAIN ${shortAddr(wallet.addr)} (${wallet.bal==null?'?':fmtD(wallet.bal)}D ≈$${(((wallet.bal||0)+P.doge)*curP).toFixed(2)})  R=REST  I=BAG`:'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
@@ -1370,13 +1383,14 @@ function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fil
 function drawUI(){
   if(!ui)return;
   if(ui.type==='dialog'){
-    const n=ui.npc;box(8,156,304,62);
+    const n=ui.npc;box(8,148,304,70);
     let tx=16;
-    if(n){box(13,161,36,52);ctx.drawImage(SPR[n.spr].down[0],15,166,32,40);tx=56;box(8,146,n.name.length*4+8,12);text(n.name,12,149,'#ffe040');}
+    if(n){box(12,152,38,58);const bob=Math.round(Math.sin(time*4)*1.5);ctx.drawImage(SPR[n.spr].down[0],15,161+bob,32,40);tx=58;box(8,137,n.name.length*4+8,12);text(n.name,12,140,'#ffe040');}
     const page=ui.pages[ui.idx],shown=page.slice(0,Math.floor(ui.chars));
-    const lines=wrap(page,n?62:72);let used=0;
-    lines.forEach((ln,i)=>{const take=Math.max(0,Math.min(ln.length,shown.length-used));text(ln.slice(0,take),tx,164+i*9,'#fff');used+=ln.length+1;});
-    if(ui.chars>=page.length&&Math.floor(time*3)%2)text(ui.idx<ui.pages.length-1?'>>':'E',W-22,208,'#ffe040');
+    const lines=wrap(page,n?60:72);let used=0;
+    lines.forEach((ln,i)=>{const take=Math.max(0,Math.min(ln.length,shown.length-used));text(ln.slice(0,take),tx,156+i*9,'#fff');used+=ln.length+1;});
+    text(`PAGE ${ui.idx+1}/${ui.pages.length}`,W-60,210,'#80d0ff');
+    if(ui.chars>=page.length&&Math.floor(time*3)%2)text('>>',W-14,210,'#ffe040');
   }else{
     const all=ui.build(),top=Math.max(0,Math.min(ui.sel-Math.floor(MENU_ROWS/2),all.length-MENU_ROWS)),opts=all.slice(top,top+MENU_ROWS),h=44+opts.length*11;const y=Math.round((H-h)/2)+6;
     box(30,y,260,h);

@@ -53,8 +53,9 @@ function onMessage(c, text) {
   if (!c.room) { // the first message must be a join
     if (m.t !== 'join' || typeof m.id !== 'string' || !/^[a-z0-9]{1,12}$/.test(m.id)) return drop(c);
     const room = typeof m.room === 'string' && /^[\w-]{1,24}$/.test(m.room) ? m.room : 'heist';
+    let total = 0; for (const s of rooms.values()) total += s.size;
     const r = rooms.get(room) || new Set();
-    if (r.size >= MAX_ROOM) { send(c, JSON.stringify({ t: 'full' })); return drop(c); }
+    if (total >= MAX_ROOM || r.size >= MAX_ROOM) { send(c, JSON.stringify({ t: 'full', msg: 'SERVER FULL (8/8 PLAYERS)' })); return drop(c); }
     c.room = room; c.id = m.id; r.add(c); rooms.set(room, r);
     return;
   }

@@ -35,6 +35,16 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-069 · 2026-11-09 · 8-Player Server Cap, Raid Failure Ejection & Gate Lock, Dialogue Screen Polish, Landing Page Repo (Antigravity)
+- What:
+  1. **Single 8-Player Server Cap:** `server/relay.mjs` computes `total` connections across all rooms and rejects new clients when `total >= 8` with `{ t: 'full', msg: 'SERVER FULL (8/8 PLAYERS)' }`. Client toasts `"SERVER FULL (MAX 8 PLAYERS)"`.
+  2. **Raid Failure & Chamber Ejection:** If the 30-minute raid timer expires without defeating the boss, the raid fails (`state.raidFailed = true`), gates seal for 5 hours (`state.raidT = RAID_SEAL`), and any player inside the boss chamber is instantly teleported back to the ruins outside the gate with puff particles and toast `"CAT LORD SEALED THE CHAMBER! EJECTED BACK TO RUINS."`. Players can continue exploring, gathering, fishing, and trading during the 5-hour seal.
+  3. **Continuous Raid Timer:** `state.raidT` updates unconditionally during active play regardless of pause/dialogue windows, matching server-authoritative raid deadlines.
+  4. **NPC Dialogue Screen & Lore Polish:** Enhanced NPC dialogue UI with larger portrait box (38x58), animated sprite breathing bobbing, styled title badge, 60-character line wrap with comfortable 9px line height, and page indicator (`PAGE X/Y >>`).
+  5. **Separate Landing Page Repository:** Initialized `/mnt/c/Users/dulbi/dogeon-landing` with responsive 16-bit cyber-aesthetic landing page (`index.html`), interactive canvas starfield, Web3 feature showcase, DogeOS network parameters, and free deployment guide (`README.md` for GitHub Pages, Cloudflare Pages, Vercel).
+- Why: User requested alpha test cap of 8 players per server, raid failure on timer expiration with 5-hour gate lockout while allowing continued world play, dialogue screen visual polish, and a dedicated landing page in a separate repository.
+- Tool: Antigravity CLI. Verify: `tests/check.sh` all 6 stages PASS; line count 1466/1500; relay test 10/10 checks PASS.
+
 ### D-068 · 2026-11-09 · Currency Purity (1 Testnet DOGE), 80/20 Stake Split, Dungeon Raid Cycle & Gate Sealing, PvP Material Theft, Timed Lazy Debuff (Antigravity)
 - What:
   1. **Single On-Chain Currency Purity:** Doge coin is strictly **Testnet DOGE** in the player's wallet (`wallet.bal`), completely eliminating fake infinite arcade coin drops. Only on-chain minting actions spend DOGE.
