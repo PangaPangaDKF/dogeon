@@ -71,7 +71,7 @@ globalThis.__api = {
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy, damageEnemy,
   net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
-  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT,
+  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT, solidFor, GATE_ROW, RAID_OPEN, RAID_SEAL,
 };`;
 
 function boot(seed, opts) {
@@ -297,13 +297,13 @@ scenario('forge: craft with materials, reject on insufficient', () => {
   const api = boot(SEED + 9);
   startGame(api);
   const g = api.get();
-  g.P.steel = 2; g.P.scrap = 1; g.P.sword = 1; // enough for HAMMER LV2
+  g.P.steel = 2; g.P.wood = 1; g.P.sword = 1; // enough for HAMMER LV2
   const mech = g.NPCS.find(n => n.id === 'merchant');
   mech.met = true; api.talk(mech);
   api.press('e'); api.step(DT); // craft HAMMER LV2
   if (g.P.sword !== 2) fail('forge craft', `expected sword lv2, got ${g.P.sword}`);
-  else pass('forge craft', 'HAMMER LV2 crafted from 2 STEEL + 1 SCRAP');
-  if (g.P.steel !== 0 || g.P.scrap !== 0) fail('forge burn', `materials not burned: steel=${g.P.steel} scrap=${g.P.scrap}`);
+  else pass('forge craft', 'HAMMER LV2 crafted from 2 STEEL + 1 WOOD');
+  if (g.P.steel !== 0 || g.P.wood !== 0) fail('forge burn', `materials not burned: steel=${g.P.steel} wood=${g.P.wood}`);
   else pass('forge burn', 'materials consumed');
   api.press('escape'); api.step(DT);
 });
@@ -338,7 +338,7 @@ scenario('new enemies spawn and drop materials', () => {
   else pass('new enemy spawn', `${newTypes.length} new types present: ${newTypes.join(',')}`);
   // check ETYPEs have mat fields
   const matTypes = Object.entries(api.ETYPES).filter(([,d]) => d.mat && d.mat !== 'whisk');
-  if (matTypes.length < 4) fail('material types', `expected 4+ material enemy types, got ${matTypes.length}`);
+  if (matTypes.length < 3) fail('material types', `expected 3+ material enemy types, got ${matTypes.length}`);
   else pass('material types', `${matTypes.length} types drop non-whisker materials`);
 });
 
@@ -898,7 +898,7 @@ scenario('inventory: I/Tab open it, 12 slots, food stacks of 5, materials shown'
   let ui = api.get().ui;
   if (!ui || ui.title !== 'INVENTORY') throw new Error('I did not open the inventory');
   const rows = ui.build().map(r => r.label);
-  if (!rows.some(l => /BAG 2\/12 SLOTS/.test(l)) || !rows.some(l => /WOOD x3/.test(l)) || !rows.some(l => /STONE x3/.test(l)) || !rows.some(l => /MATERIALS: ORB/.test(l))) fail('bag rows', rows.join(' | '));
+  if (!rows.some(l => /BAG 2\/12 SLOTS/.test(l)) || !rows.some(l => /WOOD x3/.test(l)) || !rows.some(l => /STONE x3/.test(l)) || !rows.some(l => /MATERIALS:/.test(l))) fail('bag rows', rows.join(' | '));
   else pass('bag rows', 'starter bag (WOOD x3, STONE x3) + materials row visible');
   api.press('escape'); api.step(DT); api.press('tab'); api.step(DT);
   ui = api.get().ui;
@@ -975,7 +975,7 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   cd.loaded = true; cd.fee = 0n; // pretend the reads worked; txs go to the mock
 
   // craft BONE CHARM -> +15 max HP + credit; minting it moves the charm on chain (stat removed) => one craft = one charm
-  P.orb = 2; P.scrap = 1;
+  P.whisk = 3; P.stone = 2;
   api.shopMenu(api.get().NPCS.find(n => n.id === 'merchant'));
   const craft = api.get().ui.build().find(r => /^BONE CHARM/.test(r.label)); craft.act();
   if (P.hpUps !== 1 || P.maxHp !== 75 || !api.creditOk(5, 1)) throw new Error(`craft: hpUps ${P.hpUps} maxHp ${P.maxHp}`);
@@ -986,7 +986,7 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   else pass('charm dupe', 'mint moved the charm on chain: +15 max HP removed off-chain, credit spent');
 
   // hammer: crafted LV2 then minted -> off-chain hammer drops to LV1 (the NFT now carries LV2)
-  P.sword = 1; P.steel = 2; P.scrap = 1; api.get().ui = null;
+  P.sword = 1; P.steel = 2; P.wood = 1; api.get().ui = null;
   api.shopMenu(api.get().NPCS.find(n => n.id === 'merchant'));
   api.get().ui.build().find(r => /^HAMMER LV2/.test(r.label)).act();
   api.get().ui.build().find(r => /^MINT HAMMER LV2 NFT/.test(r.label)).act(); await idle(api);
@@ -1470,6 +1470,50 @@ scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, pool DE
     || maxLen > 50) fail('pool dex feedback', `maxLen=${maxLen} rows=${dexRows.join(' | ')}`);
   else pass('pool dex feedback', `pool DEX rows show LP 50% + (+106%)/(-35%) price impact (max label ${maxLen} <= 50 chars)`);
   api.press('escape'); api.step(DT);
+});
+
+scenario('D-068: on-chain currency purity, raid timer, timed lazy debuff & fee split', () => {
+  const api = boot(SEED + 68); startGame(api);
+  const g = api.get();
+
+  // 1. Currency purity: default mint fee is 1 DOGE (10n**18n)
+  if (api.chainData.fee !== 10n ** 18n) { fail('default mint fee', `expected 1 DOGE (10^18), got ${api.chainData.fee}`); return; }
+
+  // 2. Dungeon raid timer and gate solid check
+  if (!g.state.raidOpen || g.state.raidT <= 0) { fail('raid init', `raidOpen=${g.state.raidOpen} raidT=${g.state.raidT}`); return; }
+  g.state.gateOpen = true; g.state.raidOpen = false;
+  if (!api.solidFor(api.CX, api.GATE_ROW, g.P)) { fail('raid sealed block', 'sealed raid allowed entry through gate'); return; }
+  g.state.raidOpen = true;
+  if (api.solidFor(api.CX, api.GATE_ROW, g.P)) { fail('raid open pass', 'open raid blocked entry through open gate'); return; }
+
+  // 3. Timed lazy debuff
+  g.P.lazyT = 60; g.P.lazy = true;
+  api.step(DT);
+  if (g.P.lazyT >= 60 || !g.P.lazy) { fail('lazy countdown', `lazyT=${g.P.lazyT}`); return; }
+  const dummy = api.makeEnemy('alley', 100, 100, 'field');
+  api.damageEnemy(dummy, 10, 1, 0);
+  if (g.P.lazyT !== 0 || g.P.lazy) { fail('lazy clear on hit', `lazyT=${g.P.lazyT} lazy=${g.P.lazy}`); return; }
+
+  // 4. PvP loot drop: death scatters materials (steel, whisk) as loot items
+  g.P.x = 20 * 16; g.P.y = 20 * 16; g.P.iT = 0; g.P.god = false;
+  g.P.steel = 4; g.P.whisk = 3; g.items.length = 0;
+  api.hurtPlayer(999, { x: g.P.x + 10, y: g.P.y });
+  for (let f = 0; f < 60 * 3; f++) api.step(DT);
+  const droppedSteel = api.get().items.filter(it => it.kind === 'steel').length;
+  const droppedWhisk = api.get().items.filter(it => it.kind === 'whisk').length;
+  if (droppedSteel === 0 || droppedWhisk === 0) { fail('pvp loot drop', `steel=${droppedSteel} whisk=${droppedWhisk}`); return; }
+
+  // 5. DogeMaster: meme NFT store offers 1 DOGE mint
+  const elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;
+  g.state.stage = 4; g.state.won = true;
+  api.talk(elder);
+  const dmRow = api.get().ui.build().find(r => /DOGEMASTER/.test(r.label));
+  if (!dmRow) { fail('dogemaster menu', 'DOGEMASTER row missing in elderMenu'); return; }
+  dmRow.act();
+  const mintGear = api.get().ui.build().find(r => /MINT RANDOM GEAR NFT/.test(r.label));
+  if (!mintGear || !mintGear.isNft) { fail('dogemaster mint row', 'missing MINT RANDOM GEAR NFT or isNft flag'); return; }
+
+  pass('d-068 systems', '1 DOGE fee, raid cycle gate, timed lazy debuff, pvp material drop, DogeMaster meme store');
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);

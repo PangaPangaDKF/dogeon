@@ -40,6 +40,7 @@ contract DogeItems is ERC721Enumerable, Ownable, ReentrancyGuard {
 
     uint256 public mintFee;
     address public treasury;
+    address public stakingPool;
     uint256 public nextId = 1; // token ids start at 1 (0 means "none" in the game)
     uint256 public accruedFees; // pull-based: anyone may push them to the treasury
     mapping(uint256 => Item) public items;
@@ -48,6 +49,7 @@ contract DogeItems is ERC721Enumerable, Ownable, ReentrancyGuard {
     event ItemBurned(uint256 indexed tokenId, address indexed by);
     event MintFeeChanged(uint256 oldFee, uint256 newFee);
     event TreasuryChanged(address oldTreasury, address newTreasury);
+    event StakingPoolChanged(address oldPool, address newPool);
     event FeesWithdrawn(address indexed to, uint256 amount);
 
     error BadItem(uint8 itemType, uint8 level);
@@ -90,14 +92,30 @@ contract DogeItems is ERC721Enumerable, Ownable, ReentrancyGuard {
         emit ItemBurned(tokenId, _msgSender());
     }
 
-    /// @notice Send all accrued mint fees to the treasury. Callable by anyone; funds can only go to `treasury`.
+    /// @notice Send all accrued mint fees split between stakers (80%) and game treasury (20%).
     function withdrawFees() external nonReentrant {
         uint256 amount = accruedFees;
         if (amount == 0) revert NothingToWithdraw();
         accruedFees = 0;
-        (bool ok,) = treasury.call{value: amount}("");
-        if (!ok) revert TransferFailed();
-        emit FeesWithdrawn(treasury, amount);
+        if (stakingPool != address(0)) {
+            uint256 stakeShare = (amount * 80) / 100;
+            uint256 treasuryShare = amount - stakeShare;
+            (bool ok1,) = stakingPool.call{value: stakeShare}("");
+            if (!ok1) revert TransferFailed();
+            (bool ok2,) = treasury.call{value: treasuryShare}("");
+            if (!ok2) revert TransferFailed();
+            emit FeesWithdrawn(stakingPool, stakeShare);
+            emit FeesWithdrawn(treasury, treasuryShare);
+        } else {
+            (bool ok,) = treasury.call{value: amount}("");
+            if (!ok) revert TransferFailed();
+            emit FeesWithdrawn(treasury, amount);
+        }
+    }
+
+    function setStakingPool(address s) external onlyOwner {
+        emit StakingPoolChanged(stakingPool, s);
+        stakingPool = s;
     }
 
     function setMintFee(uint256 fee) external onlyOwner {

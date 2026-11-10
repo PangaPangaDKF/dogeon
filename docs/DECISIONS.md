@@ -35,6 +35,19 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-068 · 2026-11-09 · Currency Purity (1 Testnet DOGE), 80/20 Stake Split, Dungeon Raid Cycle & Gate Sealing, PvP Material Theft, Timed Lazy Debuff (Antigravity)
+- What:
+  1. **Single On-Chain Currency Purity:** Doge coin is strictly **Testnet DOGE** in the player's wallet (`wallet.bal`), completely eliminating fake infinite arcade coin drops. Only on-chain minting actions spend DOGE.
+  2. **1 DOGE Mint Fee & Staking Split:** Default mint fee set to `1 TESTNET DOGE` (`10^18` wei) on `DogeItems.sol` and frontend `chainData.fee`. All mint fees split 80% to stakers (`DogeStaking`) and 20% to the game fund/treasury via `withdrawFees()`, managed exclusively by the deployer/mod address (`MASTER_ADDR`).
+  3. **Streamlined Materials:** Completely removed `orb`, `scrap`, and `horn`. Crafting materials are now strictly `steel` (iron), `whisk` (whiskers), `wood`, and `stone`. Recipes and drop tables updated accordingly.
+  4. **Dungeon Raid Timer & Sealing:** Boss gates run on an instance raid timer: open for 30 minutes (`RAID_OPEN = 1800s`), then sealed shut for 5 hours (`RAID_SEAL = 18000s`). When sealed, gate tiles are impassable (`solidFor` blocks passage) and HUD shows countdown.
+  5. **PvP Material Loot Theft on Death:** When slain, player drops carried materials (steel, whiskers, wood, stone) on the ground as lootable pickups for rival players, while on-chain NFTs never drop (Web3 permanence in self-custody wallet).
+  6. **Timed Lazy Debuff:** Going idle for >180s triggers a 60-second timed debuff (`P.lazyT = 60s`, -15% speed). Debuff ticks down faster on movement and clears immediately upon attacking an enemy.
+  7. **Boss Special Store (DogeMaster):** Endgame store offers exclusively on-chain gear NFT mints (1 DOGE) and burn-to-reroll mechanics with meme buffs/debuffs (`±420`, `±69`, `±777`, `±4.2`, `±6.9`).
+  8. **UI Comfort & Pixel Item Icons:** Enhanced menu legibility ("más cómodo") and added 3x3 pixel item icons for NFTs (red diamond `#ff4040`), mints (gold dot `#ffd860`), and liquidity pools (cyan dot `#80f8c0`).
+- Why: User requested pure on-chain testnet DOGE currency, 1 DOGE mint fee split 80/20 to stakers/fund, removal of orb/scrap/horn, dungeon raid timers with 5-hour gate sealing, PvP material looting on death, timed lazy debuff, comfortable UI menus with basic item icons, and cheap/free hosting and .xyz domain guidance.
+- Tool: Antigravity CLI. Verify: `contracts/src/DogeItems.sol` tests pass (47 passed); `tests/sim.mjs` scenario `D-068` PASS; all 6 stages of `tests/check.sh` ALL CHECKS PASSED; `index.html` at 1452/1500 lines.
+
 ### D-067 · 2026-11-09 · Hardcore Resource Gathering, Iron Drops, Mob Clustering, Master Chain Auth, Red NFT Styling & Hardcore Mechanics Skill (Antigravity)
 - What:
   1. **Guaranteed Iron from Stone & Monster Iron Drops:** Mining a rock node (`n.kind === 'stone'`) now ALWAYS drops iron/steel (`kind: 'steel'`) physically onto the ground with `+1 IRON` floater. Furthermore, all monsters in `killEnemy(e)` now have an iron drop chance (25%) alongside their standard materials, supplying the forge.

@@ -158,4 +158,18 @@ contract DogeItemsTest is Test {
         assertEq(items.inventoryOf(bob).length, 51);
         assertEq(items.totalSupply(), 51);
     }
+
+    function test_WithdrawFeesWithStakingPoolSplit() public {
+        address pool = makeAddr("stakingPool");
+        items.setStakingPool(pool);
+        vm.prank(alice);
+        items.mint{value: FEE}(alice, 1, 1);
+        uint256 treasuryBefore = treasury.balance;
+        uint256 poolBefore = pool.balance;
+        items.withdrawFees();
+        uint256 stakeShare = (FEE * 80) / 100;
+        uint256 treasuryShare = FEE - stakeShare;
+        assertEq(pool.balance - poolBefore, stakeShare);
+        assertEq(treasury.balance - treasuryBefore, treasuryShare);
+    }
 }
