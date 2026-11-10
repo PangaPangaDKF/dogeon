@@ -1,5 +1,18 @@
 # DOGEON — Dual-Brain Handoff & Context Sync (`Antigravity ↔ Claude Code ↔ TryNoah AI`)
 
+> ## 000. SNAPSHOT — Antigravity cycle D-067 (2026-11-09): Hardcore Gathering, Iron Drops, Mob Clustering, Master Chain Auth, Red NFT Styling & Hardcore Mechanics Skill
+>
+> **Status:** All 6 stages of `tests/check.sh` pass (static rules, syntax, 46 forge tests, drift guard, multiplayer relay, and sim with new D-067 scenario 0 failed/0 warnings). `index.html` is at 1,441 lines (under 1,500 limit).
+>
+> ### What Antigravity Shipped in `D-067`:
+> 1. **Guaranteed Iron from Stone & Monster Iron Drops:** Mining a rock node (`n.kind === 'stone'`) now ALWAYS drops iron/steel (`kind: 'steel'`) physically onto the ground with `+1 IRON` floater. All monsters in `killEnemy(e)` also have a 25% iron drop chance to supply the forge and fuel crafting without inflating wealth.
+> 2. **Hardcore Gathering Duration & Scarcity:** Increased gathering duration `GATHER_DUR` from 2.5s to 3.5s and node renewal cooldown `GATHER_CD` from 8s to 14s. Slightly reduced monster base material drop rates (`dropP`) across `ETYPES` to reinforce hardcore scarcity.
+> 3. **Monster Clustering on Resources:** 65% of field monster spawns now cluster around resources (`T.TREE`, `T.ROCK`, `T.WATER`) using `nearResT(tx, ty)`, transforming gathering nodes into contested combat zones where players must clear bodyguard patrols before harvesting.
+> 4. **Master Mode On-Chain Authentication:** Added cryptographic deployer address matching (`MASTER_ADDR = '0x7be839793765f18e36cc97b5312d094f6ae282ca'`). Connecting with the master deployer wallet automatically enables master mode (`isMod()`) without needing `?mod=1` URL parameters, bypassing the one-class-per-wallet lock. Also added `GRANT NFT CRAFT CREDITS` to `modMenu()`.
+> 5. **Red NFT Visual Highlighting:** In `drawUI()`, all NFT tokens, mint options, DogeMaster sacrifices, and NFT forge recipes are styled with specific vibrant red (`#ff4040`, hover/selection `#ff9090`, background `#300808` / `#8c1414`) for immediate high-contrast distinction from common bag items.
+> 6. **New Hardcore Decision-Making Skill (`dogeon-hardcore-mechanics`):** Created skill in `.agents/skills/`, `.claude/skills/`, and user skills directory establishing the 5 non-negotiable hardcore axioms, pre-commit checklists, and design decision-making boundaries.
+>
+
 > ## 000. SNAPSHOT — Antigravity cycle D-066 (2026-11-09): DogeMaster meme forge, burn-to-reroll, master mod & lazy debuff
 >
 > **Status:** All 6 stages of `tests/check.sh` pass (static rules, syntax, 46 forge tests, drift guard, multiplayer relay, and sim with new D-066 scenario 0 failed/0 warnings). `index.html` is at 1,434 lines (under 1,500 limit).

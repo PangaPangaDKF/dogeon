@@ -71,7 +71,7 @@ globalThis.__api = {
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy, damageEnemy,
   net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
-  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD,
+  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT,
 };`;
 
 function boot(seed, opts) {
@@ -517,6 +517,58 @@ scenario('D-066: DogeMaster meme buffs/debuffs (420/69/777/4.2/6.9), burn-to-rer
   if (g.P.lazy) { fail('warm up', 'P.lazy not cleared on attack'); return; }
 
   pass('dogemaster + mod + lazy', 'DogeMaster meme forge, burn-to-reroll, mod suite & lazy debuff verified');
+});
+
+scenario('D-067: hardcore gathering, iron drops, master chain permissions, red NFT styling', () => {
+  const api = boot(SEED + 67); startGame(api);
+  const g = api.get();
+
+  // 1. Gathering timing: GATHER_DUR increased, GATHER_CD increased
+  if (api.GATHER_DUR < 3.0 || api.GATHER_CD < 12) {
+    fail('gather timing', `dur=${api.GATHER_DUR} cd=${api.GATHER_CD}`); return;
+  }
+
+  // 2. Stone always drops iron (steel)
+  let stoneNode = null;
+  for (let ty = 3; ty < api.MH - 3 && !stoneNode; ty++) for (let tx = 3; tx < api.MW - 3; tx++) {
+    if (api.tile(tx, ty) === api.T.ROCK) {
+      const nx = tx - 1, ny = ty, nt = api.tile(nx, ny);
+      if (!api.SOLID.has(nt) && nt !== api.T.WATER && !api.inCampT(nx, ny)) { stoneNode = { tx, ty, nx, ny }; break; }
+    }
+  }
+  if (!stoneNode) throw new Error('no rock with walkable left neighbor');
+  api.P_ = { x: stoneNode.nx * 16 + 8, y: stoneNode.ny * 16 + 8, dir: 'right', iT: 99, moving: false };
+  g.items.length = 0;
+  const steel0 = g.P.steel || 0;
+  api.press('f'); api.step(DT);
+  for (let f = 0; f < 60 * (api.GATHER_DUR + 0.5); f++) api.step(DT);
+  const droppedSteel = (g.P.steel > steel0) || g.items.some(it => it.kind === 'steel');
+  if (!droppedSteel) { fail('stone iron drop', `rock node did not drop iron (steel0=${steel0}, steelNow=${g.P.steel})`); return; }
+
+  // 3. Monsters drop iron (steel) too
+  api.get().items.length = 0;
+  let mobSteel = 0;
+  for (let i = 0; i < 40; i++) {
+    const e = api.makeEnemy('alley', 200 + i, 200, 'field');
+    api.killEnemy(e);
+    if (api.get().items.some(it => it.kind === 'steel')) { mobSteel++; api.get().items.length = 0; }
+  }
+  if (mobSteel === 0) { fail('mob steel drop', 'no monster dropped steel across 40 kills'); return; }
+
+  // 4. Master on-chain permissions
+  if (api.isMod()) { fail('mod default', 'isMod should be false when not connected as master and no ?mod=1'); return; }
+  api.wallet.connected = true; api.wallet.addr = api.MASTER_ADDR;
+  if (!api.isMod()) { fail('mod master addr', 'isMod should be true when connected as master deployer'); return; }
+
+  // 5. Red NFT styling in menus
+  const forge = g.NPCS.find(n => n.id === 'forge');
+  api.shopMenu(forge);
+  const forgeOpts = api.get().ui.build();
+  const nftCraft = forgeOpts.filter(o => o.nft || o.isNft);
+  if (!nftCraft.length) { fail('forge nft tag', 'no craft recipes marked with nft/isNft'); return; }
+  api.press('escape'); api.step(DT);
+
+  pass('hardcore systems', 'stone always drops iron, monsters drop iron, master wallet authenticated, red NFT styling active');
 });
 
 scenario('D-065: post-boss Victors Market — limited shop opens on victory, sells consumables for DOGE', () => {

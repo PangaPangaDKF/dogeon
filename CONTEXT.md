@@ -16,15 +16,17 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-09, D-066: DogeMaster meme buffs/debuffs, burn-to-reroll, master mod & lazy debuff)
+## 00. RESUME HERE (latest, 2026-11-09, D-067: Hardcore Gathering, Iron Drops, Mob Clustering, Master Chain Auth, Red NFT Styling & Hardcore Mechanics Skill)
 
-- **D-066 Shipped:**
-  - **Meme Buffs & Cursed Debuffs:** Added user's meme numbers `420`, `69`, `777`, `4.2`, `6.9` to `BUFFS` (`BLAZE 420` +420 HP, `NICE 69` +69 ATK, `LUCKY 777` +77 HP, `MUCH 4.2` +0.42 DEF, `SPEED 6.9` +6.9 ATK) and negative debuffs (`CURSED 69` -6.9 ATK, `PAPER 4.2` -0.42 DEF, `HANGOVER 420` -42 HP) creating high-variance rolls that motivate the burn mechanic.
-  - **DogeMaster NPC & Burn-to-Re-roll Loop:** Defeating the boss opens the **DogeMaster** at the Elder (`state.won`), allowing players to burn cursed or unwanted NFTs via `burn(it.id)` (`SEL.burn` on-chain) and re-mint a fresh item with a new tokenId/roll (`burnAndReroll`).
-  - **Master / Mod Mode (`?mod=1` / `?master=1` or Key `M`):** Full testing admin suite: toggle God Mode (invincible), grant 420 DOGE + 99 of all materials, freely switch professions without 1-class lock, instantly defeat boss/summon DogeMaster, max stats.
-  - **Lazy Doge Debuff:** Inactivity >180s triggers `P.lazy` (-15% speed); hitting an enemy or gathering warms up the player and immediately clears the debuff.
-- **Previous Shipped (D-065):** boss reward + Victor's Market at Elder; step 3 (shared world) scoped.
-- **Status:** `tests/check.sh` ALL CHECKS PASSED (6 stages, 46 forge tests, sim 0 failed/0 warnings). `index.html` at 1434/1500 lines.
+- **D-067 Shipped:**
+  - **Guaranteed Iron from Stone & Monster Iron Drops:** Mining a rock node (`n.kind === 'stone'`) now ALWAYS drops iron/steel (`kind: 'steel'`) physically onto the ground with `+1 IRON` floater. All monsters in `killEnemy(e)` also have a 25% iron drop chance to supply the forge and fuel crafting without inflating wealth.
+  - **Hardcore Gathering Duration & Scarcity:** Increased gathering duration `GATHER_DUR` from 2.5s to 3.5s and node renewal cooldown `GATHER_CD` from 8s to 14s. Slightly reduced monster base material drop rates (`dropP`) across `ETYPES` to reinforce hardcore scarcity.
+  - **Monster Clustering on Resources:** 65% of field monster spawns now cluster around resources (`T.TREE`, `T.ROCK`, `T.WATER`) using `nearResT(tx, ty)`, transforming gathering nodes into contested combat zones where players must clear bodyguard patrols before harvesting.
+  - **Master Mode On-Chain Authentication:** Added cryptographic deployer address matching (`MASTER_ADDR = '0x7be839793765f18e36cc97b5312d094f6ae282ca'`). Connecting with the master deployer wallet automatically enables master mode (`isMod()`) without needing `?mod=1` URL parameters, bypassing the one-class-per-wallet lock. Also added `GRANT NFT CRAFT CREDITS` to `modMenu()`.
+  - **Red NFT Visual Highlighting:** In `drawUI()`, all NFT tokens, mint options, DogeMaster sacrifices, and NFT forge recipes are styled with specific vibrant red (`#ff4040`, hover/selection `#ff9090`, background `#300808` / `#8c1414`) for immediate high-contrast distinction from common bag items.
+  - **New Hardcore Decision-Making Skill (`dogeon-hardcore-mechanics`):** Created skill in `.agents/skills/`, `.claude/skills/`, and user skills directory establishing the 5 non-negotiable hardcore axioms, pre-commit checklists, and design decision-making boundaries.
+- **Previous Shipped (D-066):** DogeMaster meme buffs/debuffs (420/69/777/4.2/6.9), burn-to-reroll loop, master mod mode & lazy debuff.
+- **Status:** `tests/check.sh` ALL CHECKS PASSED (6 stages, 46 forge tests, sim 0 failed/0 warnings). `index.html` at 1441/1500 lines.
 
 ## 00b. RESUME (2026-11-08, after commit 1b225fa / D-050)
 

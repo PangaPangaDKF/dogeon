@@ -35,6 +35,17 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-067 · 2026-11-09 · Hardcore Resource Gathering, Iron Drops, Mob Clustering, Master Chain Auth, Red NFT Styling & Hardcore Mechanics Skill (Antigravity)
+- What:
+  1. **Guaranteed Iron from Stone & Monster Iron Drops:** Mining a rock node (`n.kind === 'stone'`) now ALWAYS drops iron/steel (`kind: 'steel'`) physically onto the ground with `+1 IRON` floater. Furthermore, all monsters in `killEnemy(e)` now have an iron drop chance (25%) alongside their standard materials, supplying the forge.
+  2. **Scarcity & Hardcore Gathering Timing:** Increased gathering duration `GATHER_DUR` from 2.5s to 3.5s and node renewal cooldown `GATHER_CD` from 8s to 14s. Slightly reduced monster base material drop rates (`dropP`) across `ETYPES` to reinforce hardcore scarcity.
+  3. **Monster Clustering on Resources:** 65% of field monster spawns now bias around resources (`T.TREE`, `T.ROCK`, `T.WATER`) using `nearResT(tx, ty)`, transforming gathering nodes into contested combat zones where players must clear bodyguard patrols before harvesting.
+  4. **Master Mode On-Chain Authentication:** Added cryptographic deployer address matching (`MASTER_ADDR = '0x7be839793765f18e36cc97b5312d094f6ae282ca'`). Connecting with the master deployer wallet automatically enables master mode (`isMod()`) without needing `?mod=1` URL parameters, bypassing the one-class-per-wallet lock. Also added `GRANT NFT CRAFT CREDITS` to `modMenu()`.
+  5. **Red NFT Visual Highlighting:** In `drawUI()`, all NFT tokens, mint options, DogeMaster sacrifices, and NFT forge recipes are styled with specific vibrant red (`#ff4040`, hover/selection `#ff9090`, background `#300808` / `#8c1414`) for immediate high-contrast distinction from common bag items.
+  6. **New Decision-Making Skill (`dogeon-hardcore-mechanics`):** Created skill in `.agents/skills/`, `.claude/skills/`, and user skills directory establishing the 5 non-negotiable hardcore axioms, pre-commit checklists, and design decision-making boundaries.
+- Why: User requested: stone always drops iron and monsters too, master mode permissions clarification & on-chain wallet authentication, red color for NFT craft/names in mod wallet, more monsters surrounding resources to make it hardcore, increased gathering time, reduced resource drop rate, and a new skill for hardcore mechanics decision-making.
+- Tool: Antigravity CLI. Verify: `tests/sim.mjs` scenario `D-067` PASS; all 6 stages of `tests/check.sh` ALL CHECKS PASSED; `index.html` at 1441/1500 lines.
+
 ### D-066 · 2026-11-09 · DogeMaster meme buffs/debuffs, burn-to-reroll loop, master mod mode & lazy debuff (Antigravity)
 - What: 
   1. Expanded `BUFFS` with user's exact meme numbers: `420`, `69`, `777`, `4.2`, `6.9` (e.g. `BLAZE 420` +420 HP, `NICE 69` +69 ATK, `LUCKY 777` +77 HP, `MUCH 4.2` +0.42 DEF, `SPEED 6.9` +6.9 ATK) AND negative cursed debuffs (`CURSED 69` -6.9 ATK, `PAPER 4.2` -0.42 DEF, `HANGOVER 420` -42 HP) creating high-variance rolls.
