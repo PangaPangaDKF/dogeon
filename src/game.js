@@ -1149,7 +1149,7 @@ function updateUI(dt){
 const netParam=k=>{try{const m=location.search.match(new RegExp('[?&]'+k+'=([^&]+)'));return m?decodeURIComponent(m[1]):'';}catch(e){return '';}};
 const defaultMp=()=>{const p=netParam('mp');if(p==='off')return '';if(p)return p;try{if(typeof location!=='undefined'&&location.host&&(location.protocol==='http:'||location.protocol==='https:'))return (location.protocol==='https:'?'wss://':'ws://')+location.host;}catch(e){}return '';};
 const NET_URL=defaultMp(),NET_ROOM=(netParam('room').match(/^[\w-]{1,24}$/)||['heist'])[0];
-const NET_HZ=10,NET_TTL=5,NET_MAX=8,NET_PEERS=32; // send rate, seconds before a silent peer drops, ghosts drawn, peers tracked
+const NET_HZ=10,NET_TTL=12,NET_MAX=8,NET_PEERS=32; // send rate, seconds before a silent peer drops, ghosts drawn, peers tracked
 const net={ws:null,on:false,id:'',name:'',peers:Object.create(null),t:0,loot:Object.create(null),pend:Object.create(null)};
 const netClean=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9.\-]/g,'').slice(0,12);
 // D-076 shared world: the relay referees the Cat Lord's HP, PvP hits (same ?party= = no friendly fire) and death loot piles
