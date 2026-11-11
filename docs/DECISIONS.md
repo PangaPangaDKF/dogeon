@@ -35,6 +35,15 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-076 · 2026-11-10 · Authoritative Relay: Shared Cat Lord Boss Raid, Full-Loot PvP, Party Friendly-Fire Guard, and Contestable Loot Piles (Antigravity)
+- What: Upgraded `server/relay.mjs` from a passive ghost reflector into an authoritative referee for shared gameplay interactions:
+  1. Shared Boss Raid: Relay owns Cat Lord HP and scales max HP based on active raiders. Server verifies hits (`bhit`), clamps damage, broadcasts synchronized state (`boss`), and manages shared victory/kill.
+  2. Full-Loot Open PvP: Players outside Camp Refuge can damage rival players with melee and arrows (`pvp` / `hurt`). Relay verifies range, alive state, and sanctuary zone.
+  3. Party Co-op & Friendly-Fire Guard: Optional `?party=NAME` parameter. Relay checks party membership on PvP hits — friendly fire is completely disabled between party members. Crisp color-coded name tags distinguish allies (green) from rivals (red).
+  4. Server-Arbitrated Material Theft: Upon death, carried physical materials (steel, whisk, wood, stone) spawn as contestable shared loot piles (`loot`). Relay resolves first-claim race conditions (`take` -> `got` / `gone`), preventing item duplication. On-chain wallet NFTs remain untouched.
+- Why: User requested real multiplayer with boss raids, open PvP combat, and party support to avoid damaging allies. Moving beyond passive ghost avatars while strictly keeping network logic lightweight and client visuals compliant with Rule R2 (zero `ctx.arc`, crisp pixel rectangles only).
+- Tool: Antigravity. Verify: `bash tests/check.sh` passes all 6 stages (static rules, R2 light check, node syntax, sim tests, forge tests, recreation drift guard, and relay tests).
+
 ### D-075 · 2026-11-10 · Remove Antigravity's coin aura/sparkles; enforce R2 "no useless effects" (Claude Code)
 - What: Removed the pulsing golden `ctx.arc` aura + sparkle particles that D-ab1a4b2 (Antigravity) added around the camp Dogecoin — kept the coin art itself (R1). Strengthened charter rule **R2** ("Lighter + more basic ALWAYS wins") and made it **enforceable**: `tests/check.sh` now FAILS on `ctx.arc`/`ctx.ellipse`/`createRadialGradient`/`shadowBlur` in `src/game.js`.
 - Why: user — "quita las chispas, fue algo extra de Antigravity; crea una regla que impida efectos inútiles; mientras más ligero y básico, mejor el gameplay y el multijugador." Anti-aliased glows clash with the crisp 16-bit pixel art (CLAUDE.md pixel rule: no `ctx.arc` for sprites) and cost frames that matter in multiplayer.

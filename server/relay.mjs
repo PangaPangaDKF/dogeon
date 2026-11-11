@@ -18,12 +18,66 @@ import { fileURLToPath } from 'node:url';
 
 const PORT = +process.env.PORT || 8787;
 const MAX_ROOM = +process.env.MAX_ROOM || 8;
-const MAX_BYTES = 1024, MAX_RATE = 20, IDLE_MS = 30000;
+const MAX_BYTES = 1024, MAX_RATE = 30, IDLE_MS = 30000;
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'; // RFC 6455 §1.3
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PAGE = join(ROOT, 'index.html');
 const MIME = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml' };
 const rooms = new Map(); // room -> Set<client>
+
+// ---- D-076 shared world: the relay is the referee for the 3 things players fight over ----
+// 1) ONE Cat Lord per room (server owns its HP; clients send hits, server clamps + broadcasts),
+// 2) PvP (server checks range, camp sanctuary and party: same party = friendly fire OFF),
+// 3) death loot (server owns dropped piles; first valid "take" wins, so nothing is duplicated).
+// Tile maths mirror src/game.js: CAMP tiles 33..47 x 27..41, boss room = DUN x 26..54, y 2..8 (GATE_ROW 9).
+const BOSS_HP = 320, BOSS_RESET_MS = 30 * 60 * 1000, MAX_HIT = 60, MAX_PVP = 40, PVP_RANGE = 48, TAKE_RANGE = 28, LOOT_CAP = 48;
+const LOOT_KINDS = ['steel', 'whisk', 'wood', 'stone'];
+const tileIn = (p, x0, y0, x1, y1) => { const tx = Math.floor(p.x / 16), ty = Math.floor(p.y / 16); return tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1; };
+const inCamp = p => tileIn(p, 33, 27, 47, 41);
+const inBossRoom = p => tileIn(p, 26, 2, 54, 8);
+const near = (a, b, r) => Math.hypot(a.x - b.x, a.y - b.y) <= r;
+const world = new Map(); // room -> { boss: {hp,max,dead,t} | null, loot: Map<lid,{k,x,y}>, lid }
+const W = room => { let w = world.get(room); if (!w) { w = { boss: null, loot: new Map(), lid: 0 }; world.set(room, w); } return w; };
+const toRoom = (room, s) => { const r = rooms.get(room); if (r) for (const o of r) send(o, s); };
+const bossMsg = b => JSON.stringify({ t: 'boss', hp: b.hp, max: b.max, dead: b.dead ? 1 : 0 });
+const lootMsg = list => JSON.stringify({ t: 'loot', items: list });
+function onWorld(c, m) {
+  const w = W(c.room), me = c.p, now = Date.now();
+  if (m.t === 'bhit') { // shared boss: only a living player standing in the boss room can hurt it
+    if (!me || me.dead || !inBossRoom(me)) return;
+    if (w.boss && w.boss.dead && now - w.boss.t > BOSS_RESET_MS) w.boss = null; // the Cat Lord returns for the next raid
+    if (!w.boss) { const n = rooms.get(c.room)?.size || 1; const max = Math.round(BOSS_HP * (1 + 0.5 * (n - 1))); w.boss = { hp: max, max, dead: false, t: now }; } // more raiders = tougher boss
+    if (w.boss.dead) return send(c, bossMsg(w.boss));
+    w.boss.hp = Math.max(0, w.boss.hp - Math.min(MAX_HIT, Math.max(1, m.dmg | 0)));
+    if (!w.boss.hp) { w.boss.dead = true; w.boss.t = now; }
+    return toRoom(c.room, bossMsg(w.boss));
+  }
+  if (m.t === 'pvp') { // PvP: in range, both outside camp, both alive, NOT the same party
+    const o = [...(rooms.get(c.room) || [])].find(o => o.id === m.to && o !== c);
+    if (!o || !me || !o.p || me.dead || o.p.dead || inCamp(me) || inCamp(o.p)) return;
+    if (c.party && c.party === o.party) return; // friendly fire OFF inside a party
+    if (!near(me, o.p, PVP_RANGE)) return;
+    return send(o, JSON.stringify({ t: 'hurt', id: c.id, dmg: Math.min(MAX_PVP, Math.max(1, m.dmg | 0)), x: me.x, y: me.y }));
+  }
+  if (m.t === 'loot') { // a dying player's carried materials become shared piles (NFTs never drop: they live on chain)
+    if (!me || !Array.isArray(m.items)) return;
+    const out = [];
+    for (const it of m.items.slice(0, 12)) {
+      if (!it || !LOOT_KINDS.includes(it.k) || !Number.isFinite(it.x) || !Number.isFinite(it.y) || !near(me, it, 40) || w.loot.size >= LOOT_CAP) continue;
+      const lid = 'l' + (++w.lid), pile = { k: it.k, x: Math.round(it.x), y: Math.round(it.y) };
+      w.loot.set(lid, pile); out.push({ lid, ...pile });
+    }
+    if (out.length) toRoom(c.room, lootMsg(out));
+    return;
+  }
+  if (m.t === 'take') { // first valid claim wins; everyone else is told the pile is gone
+    const pile = w.loot.get(m.lid);
+    if (!pile || !me || me.dead || !near(me, pile, TAKE_RANGE)) return;
+    w.loot.delete(m.lid);
+    send(c, JSON.stringify({ t: 'got', lid: m.lid, k: pile.k }));
+    return toRoom(c.room, JSON.stringify({ t: 'gone', lid: m.lid }));
+  }
+}
 
 function frame(str, op = 0x1) { // server -> client frames are never masked
   const p = Buffer.from(str), n = p.length;
@@ -40,7 +94,7 @@ function drop(c) {
   if (r) {
     r.delete(c);
     if (c.id) for (const o of r) send(o, JSON.stringify({ t: 'bye', id: c.id }));
-    if (!r.size) rooms.delete(c.room);
+    if (!r.size) { rooms.delete(c.room); world.delete(c.room); }
   }
   try { c.sock.end(); } catch {} // end() flushes pending frames (e.g. {t:'full'}) before closing
 }
@@ -58,10 +112,14 @@ function onMessage(c, text) {
     let total = 0; for (const s of rooms.values()) total += s.size;
     const r = rooms.get(room) || new Set();
     if (total >= MAX_ROOM || r.size >= MAX_ROOM) { send(c, JSON.stringify({ t: 'full', msg: 'SERVER FULL (8/8 PLAYERS)' })); return drop(c); }
-    c.room = room; c.id = m.id; r.add(c); rooms.set(room, r);
+    c.room = room; c.id = m.id; c.party = typeof m.party === 'string' && /^[A-Z0-9.-]{1,12}$/.test(m.party) ? m.party : ''; r.add(c); rooms.set(room, r);
+    const w = W(room); if (w.boss) send(c, bossMsg(w.boss)); if (w.loot.size) send(c, lootMsg([...w.loot].map(([lid, p]) => ({ lid, ...p })))); // late joiners see the same world
     return;
   }
-  if ((m.t === 'st' || m.t === 'heal') && m.id === c.id) broadcast(c, text); // only your OWN state/events are relayed (no id spoofing); clients validate fields
+  if (m.id !== c.id) return; // only your OWN state/events (no id spoofing)
+  if (m.t === 'st' && Number.isFinite(m.x) && Number.isFinite(m.y)) c.p = { x: m.x, y: m.y, dead: !!m.dead }; // last known position = what PvP/boss/loot checks use
+  if (m.t === 'st' || m.t === 'heal') return broadcast(c, text); // clients validate fields
+  onWorld(c, m); // only your OWN state/events are relayed (no id spoofing); clients validate fields
 }
 
 function onData(c, chunk) {

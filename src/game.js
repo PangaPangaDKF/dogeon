@@ -562,12 +562,13 @@ function hurtPlayer(d,src){
 }
 function respawn(){
   const lost=Math.floor(P.doge/2),lw=P.whisk,lf=P.bag.length;
-  for(let i=0;i<Math.min(4,P.steel);i++)items.push({x:P.x+R(-12,12),y:P.y+R(-12,12),kind:'steel',life:30,t:0});
-  for(let i=0;i<Math.min(4,lw);i++)items.push({x:P.x+R(-12,12),y:P.y+R(-12,12),kind:'whisk',life:30,t:0});
+  if(netLive()){const drops=[];for(const k of NET_LOOT)for(let i=0;i<Math.min(3,P[k]||0);i++)drops.push({k,x:Math.round(P.x+R(-12,12)),y:Math.round(P.y+R(-12,12))});netSend({t:'loot',items:drops});} // D-076: everyone sees + can steal your pile
+  else{for(let i=0;i<Math.min(4,P.steel);i++)items.push({x:P.x+R(-12,12),y:P.y+R(-12,12),kind:'steel',life:30,t:0});
+  for(let i=0;i<Math.min(4,lw);i++)items.push({x:P.x+R(-12,12),y:P.y+R(-12,12),kind:'whisk',life:30,t:0});}
   P.doge-=lost;P.whisk=0;P.wood=0;P.stone=0;P.steel=0;P.orb=0;P.scrap=0;P.horn=0;P.bag=[]; // carried food is lost too; NFTs live on chain (D-020)
   P.dead=false;P.fishing=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.iT=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
-  for(const e of enemies){if(e.boss){e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}}
+  for(const e of enemies){if(e.boss){if(!netLive())e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}} // MP: the relay owns boss HP
   enemies=enemies.filter(e=>e.zone!=='boss'||e.boss);
   openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE, ${lw} whiskers, all materials${lf?' and your bag of food':''}. Pool DOGE at the Sphinx and preserve fish as NFTs to keep them safe!`]);
 }
@@ -582,6 +583,7 @@ function attack(){
   if(P.prof==='warrior')shake(0.08);
   const reach=P.prof==='warrior'?4:0,cx=P.x+v[0]*(13+reach),cy=P.y-5+v[1]*(12+reach),hw=(v[0]?10:12)+reach,hh=(v[0]?11:9)+reach;
   let hit=false;for(const e of enemies){if(e.dead)continue;const ew=e.boss?12:6,eh=e.boss?18:9,ey=e.y-(e.boss?14:6);if(Math.abs(e.x-cx)<hw+ew&&Math.abs(ey-cy)<hh+eh){damageEnemy(e,sdmg,v[0]*(P.prof==='warrior'?1.35:1),v[1]*(P.prof==='warrior'?1.35:1));hit=true;}}
+  if(netPvp(cx,cy,hw,hh,sdmg))hit=true; // D-076 PvP melee
   if(hit){P.skills.combat++;if(P.prof==='healer')P.mp=Math.min(P.maxMp,P.mp+2);}
 }
 function bark(){
@@ -616,6 +618,7 @@ function mend(){if(noMp(SKILL_MP.healer))return;
   floater(P.x,P.y-12,'+'+heal,'#80ffb0');sfx(620,0.14,'sine',0.05,220);sfx(880,0.2,'sine',0.04,180);}
 function damageEnemy(e,dmg,kx,ky){
   if(P.lazy||P.lazyT>0){P.lazy=false;P.lazyT=0;P.idleT=0;toast('WARMED UP! BACK IN SHAPE.',2);}
+  if(e.boss&&netLive()){netSend({t:'bhit',dmg:Math.round(dmg)});e.hp=Math.max(1,e.hp-dmg);e.flash=0.12;floater(e.x,e.y-42,dmg,'#ffffff');sfx(240,0.06,'square',0.05,-120);return;} // shared raid boss: relay owns HP + the kill
   e.hp-=dmg;e.flash=0.12;const ai=e.def.ai||e.type;const m=e.boss?0.15:ai==='brute'?(e.state==='dash'?0:0.45):1;e.kbx=kx*210*m;e.kby=ky*210*m;
   if(e.state==='wind'&&ai==='brute'&&dmg>=10){e.state='chase';e.cool=1.2;}
   floater(e.x,e.y-(e.boss?42:22),dmg,'#ffffff');sfx(240,0.06,'square',0.05,-120);
@@ -1144,16 +1147,32 @@ function updateUI(dt){
 const netParam=k=>{try{const m=location.search.match(new RegExp('[?&]'+k+'=([^&]+)'));return m?decodeURIComponent(m[1]):'';}catch(e){return '';}};
 const NET_URL=netParam('mp'),NET_ROOM=(netParam('room').match(/^[\w-]{1,24}$/)||['heist'])[0];
 const NET_HZ=10,NET_TTL=5,NET_MAX=8,NET_PEERS=32; // send rate, seconds before a silent peer drops, ghosts drawn, peers tracked
-const net={ws:null,on:false,id:'',name:'',peers:Object.create(null),t:0};
+const net={ws:null,on:false,id:'',name:'',peers:Object.create(null),t:0,loot:Object.create(null),pend:Object.create(null)};
 const netClean=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9.\-]/g,'').slice(0,12);
+// D-076 shared world: the relay referees the Cat Lord's HP, PvP hits (same ?party= = no friendly fire) and death loot piles
+const NET_PARTY=netClean(netParam('party')),NET_LOOT=['steel','whisk','wood','stone'],LOOT_COL={steel:'#a0a8b0',whisk:'#e0e0ff',wood:'#c08a4a',stone:'#c0c8d0'};
+const netLive=()=>!!(net.on&&net.ws&&net.ws.readyState===1);
+function netSend(o){if(netLive())net.ws.send(JSON.stringify(Object.assign({},o,{id:net.id})));}
+function netPvp(cx,cy,hw,hh,dmg,skip){ // client pre-check; the relay re-checks range, camp and party before anyone is hurt
+  if(!netLive()||playerInCamp())return false;let hit=false;
+  for(const k in net.peers){const g=net.peers[k];if(g.dead||(NET_PARTY&&g.pt===NET_PARTY)||(skip&&skip.has(k))||inCampT(Math.floor(g.x/16),Math.floor(g.y/16)))continue;
+    if(Math.abs(g.x-cx)<hw+6&&Math.abs(g.y-6-cy)<hh+9){netSend({t:'pvp',to:k,dmg:Math.round(dmg)});if(skip)skip.add(k);hit=true;}}
+  return hit;}
+function netBoss(m){const e=enemies.find(e=>e.boss);if(!e)return;e.maxHp=Math.max(1,m.max|0);e.hp=Math.max(0,m.hp|0);
+  if(m.dead&&!e.dead){if(zoneOf(P.x,P.y)==='boss')killEnemy(e);else{e.dead=true;toast('YOUR PARTY SLEW THE CAT LORD!',3);}enemies=enemies.filter(x=>!x.dead);}}
 function netConnect(){
   if(!NET_URL||typeof WebSocket==='undefined'||net.ws)return;
   net.id=net.id||Math.random().toString(36).slice(2,8); // lazy: normal play never draws this random number (seeded sims stay identical)
   net.name=net.name||netClean(netParam('name'))||'DOGE-'+net.id.slice(0,3).toUpperCase(); // never the wallet address (privacy)
   try{const ws=new WebSocket(NET_URL);net.ws=ws;
-    ws.onopen=()=>{net.on=true;ws.send(JSON.stringify({t:'join',room:NET_ROOM,id:net.id}));toast('MULTIPLAYER: ROOM '+NET_ROOM.toUpperCase()+' AS '+net.name,2);};
+    ws.onopen=()=>{net.on=true;ws.send(JSON.stringify({t:'join',room:NET_ROOM,id:net.id,party:NET_PARTY}));toast('MULTIPLAYER: ROOM '+NET_ROOM.toUpperCase()+' AS '+net.name+(NET_PARTY?' PARTY '+NET_PARTY:' (SOLO: PVP ON)'),2.5);};
     ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
       if(m&&m.t==='full'){toast('SERVER FULL (MAX 8 PLAYERS)',4);return;}
+      if(m&&m.t==='boss'&&Number.isFinite(m.hp)){netBoss(m);return;} // relay-owned boss HP
+      if(m&&m.t==='hurt'&&Number.isFinite(m.dmg)){hurtPlayer(Math.min(40,Math.max(1,m.dmg|0)),{x:Number.isFinite(m.x)?m.x:P.x,y:Number.isFinite(m.y)?m.y:P.y});return;} // PvP hit (camp/god/iframes still protect)
+      if(m&&m.t==='loot'&&Array.isArray(m.items)){for(const it of m.items.slice(0,12))if(it&&/^l\d{1,9}$/.test(it.lid)&&NET_LOOT.includes(it.k)&&Number.isFinite(it.x)&&Number.isFinite(it.y)&&Object.keys(net.loot).length<60)net.loot[it.lid]={k:it.k,x:it.x,y:it.y};return;}
+      if(m&&m.t==='gone'){delete net.loot[m.lid];return;}
+      if(m&&m.t==='got'&&NET_LOOT.includes(m.k)){delete net.loot[m.lid];P[m.k]=(P[m.k]||0)+1;floater(P.x,P.y-24,'+1 '+(m.k==='whisk'?'WHISKER':m.k.toUpperCase()),LOOT_COL[m.k]);sfx(1100,0.05,'square',0.03,300);return;}
       if(!m||typeof m.id!=='string'||!/^[a-z0-9]{1,12}$/.test(m.id)||m.id===net.id)return;
       if(m.t==='bye'){delete net.peers[m.id];return;}
       if(m.t==='heal'&&Number.isFinite(m.x)&&Number.isFinite(m.y)){
@@ -1166,19 +1185,21 @@ function netConnect(){
       if(m.t!=='st'||!Number.isFinite(m.x)||!Number.isFinite(m.y))return;
       if(!net.peers[m.id]&&Object.keys(net.peers).length>=NET_PEERS)return;
       net.peers[m.id]={x:m.x,y:m.y,d:['down','up','left','right'].includes(m.d)?m.d:'down',m:!!m.m,c:Object.prototype.hasOwnProperty.call(CLASSES,m.c)?m.c:'',
-        h:Math.max(0,Math.min(100,m.h|0)),n:netClean(m.n)||'DOGE',dead:!!m.dead,seen:time};};
-    ws.onclose=()=>{net.on=false;net.ws=null;net.peers=Object.create(null);};
+        h:Math.max(0,Math.min(100,m.h|0)),n:netClean(m.n)||'DOGE',pt:netClean(m.pt),dead:!!m.dead,seen:time};};
+    ws.onclose=()=>{net.on=false;net.ws=null;net.peers=Object.create(null);net.loot=Object.create(null);};
   }catch(e){net.ws=null;}}
 function netTick(dt){ // from update(): broadcast own state at NET_HZ, drop silent peers
   if(!NET_URL)return;
   if(!net.ws)netConnect();
   for(const k in net.peers)if(time-net.peers[k].seen>NET_TTL)delete net.peers[k];
+  if(!P.dead)for(const lid in net.loot){const l=net.loot[lid];if(dist(l.x,l.y,P.x,P.y)<12&&!(time-(net.pend[lid]||-9)<1)){net.pend[lid]=time;netSend({t:'take',lid});}} // claim; relay decides who gets it
   net.t-=dt;if(net.t>0||!net.on||!net.ws||net.ws.readyState!==1)return;net.t=1/NET_HZ;
-  net.ws.send(JSON.stringify({t:'st',id:net.id,x:Math.round(P.x),y:Math.round(P.y),d:P.dir,m:P.moving?1:0,c:P.prof||'',h:Math.round(100*P.hp/P.maxHp),n:net.name,dead:P.dead?1:0}));}
+  net.ws.send(JSON.stringify({t:'st',id:net.id,x:Math.round(P.x),y:Math.round(P.y),d:P.dir,m:P.moving?1:0,c:P.prof||'',h:Math.round(100*P.hp/P.maxHp),n:net.name,pt:NET_PARTY,dead:P.dead?1:0}));}
 function netDraw(list,ox,oy){ // from drawWorld(): ghosts join the y-sorted entity list
+  for(const lid in net.loot){const l=net.loot[lid];list.push({y:l.y-4,f:()=>{const x=Math.round(l.x-ox),y=Math.round(l.y-oy);ctx.fillStyle='#000';ctx.fillRect(x-3,y-3,6,6);ctx.fillStyle=LOOT_COL[l.k];ctx.fillRect(x-2,y-2,4,4);}});}
   let n=0;for(const k in net.peers){const g=net.peers[k];if(g.dead||++n>NET_MAX)continue;
     list.push({y:g.y,f:()=>{drawChar(SPR[g.c?CLASSES[g.c].spr:'hero'],g.d,frameOf({dir:g.d,anim:time},g.m),g.x,g.y+4,1,ox,oy);
-      textC(g.n,Math.round(g.x-ox),Math.round(g.y-30-oy),'#80f0ff');
+      textC(g.n,Math.round(g.x-ox),Math.round(g.y-30-oy),NET_PARTY&&g.pt===NET_PARTY?'#80ff80':'#ff8080'); // green = your party, red = can hit you
       const bx=Math.round(g.x-7-ox),by=Math.round(g.y-22-oy);ctx.fillStyle='#000';ctx.fillRect(bx-1,by-1,16,4);ctx.fillStyle='#063';ctx.fillRect(bx,by,14,2);ctx.fillStyle='#3f8';ctx.fillRect(bx,by,Math.round(14*g.h/100),2);}});}}
 
 // ================= UPDATE =================
@@ -1242,7 +1263,7 @@ function update(dt){
     const tx=Math.floor(p.x/16),ty=Math.floor((p.y+4)/16);
     if(solidFor(tx,ty,{enemy:p.kind==='bone'})){p.life=0;puff(p.x,p.y,p.kind==='bone'?'#e0e0e0':'#ffe040',4);continue;}
     if(p.kind==='bone'){if(!P.dead&&!playerInCamp()&&Math.abs(p.x-P.x)<P.hw+3&&Math.abs(p.y-(P.y-6))<10){hurtPlayer(p.dmg,{x:p.x-p.vx,y:p.y-p.vy+6});p.life=0;}}
-    else{for(const e of enemies){if(e.dead||p.hits.has(e))continue;const ew=e.boss?14:e.mini?11:8,eh=e.boss?20:e.mini?15:11;if(Math.abs(p.x-e.x)<ew&&Math.abs(p.y-(e.y-(e.boss?14:6)))<eh){p.hits.add(e);if(p.basic)P.skills.combat++;damageEnemy(e,p.dmg,Math.sign(p.vx),Math.sign(p.vy));if(p.kind==='arrow'){p.life=0;break;}}}enemies=enemies.filter(e=>!e.dead);}
+    else{for(const e of enemies){if(e.dead||p.hits.has(e))continue;const ew=e.boss?14:e.mini?11:8,eh=e.boss?20:e.mini?15:11;if(Math.abs(p.x-e.x)<ew&&Math.abs(p.y-(e.y-(e.boss?14:6)))<eh){p.hits.add(e);if(p.basic)P.skills.combat++;damageEnemy(e,p.dmg,Math.sign(p.vx),Math.sign(p.vy));if(p.kind==='arrow'){p.life=0;break;}}}enemies=enemies.filter(e=>!e.dead);if(p.life>0&&netPvp(p.x,p.y,4,4,p.dmg,p.hits)&&p.kind==='arrow')p.life=0;}
   }
   projs=projs.filter(p=>p.life>0);
   // items
