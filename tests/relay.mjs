@@ -67,8 +67,11 @@ try {
   const h = await (await fetch(`http://127.0.0.1:${PORT}/health`)).json();
   if (h.ok && h.rooms.some(r => r.room === 'r1')) pass('health', JSON.stringify(h.rooms)); else fail('health', JSON.stringify(h));
   const page = await (await fetch(`http://127.0.0.1:${PORT}/?mp=ws://127.0.0.1:${PORT}`)).text();
-  if (page.includes('MULTIPLAYER (opt-in, D-040)')) pass('game served', 'one process serves index.html and the relay');
-  else fail('game served', 'index.html not served at /');
+  const gameRes = await fetch(`http://127.0.0.1:${PORT}/src/game.js`); // D-074: game code is an external module
+  const game = await gameRes.text();
+  if (page.includes('src/game.js') && page.includes('<canvas') && gameRes.ok && game.includes('MULTIPLAYER (opt-in, D-040)'))
+    pass('game served', 'one process serves the index.html shell + src/game.js and the relay');
+  else fail('game served', `shell@/ ok=${page.includes('src/game.js')}, /src/game.js status=${gameRes.status}`);
   for (const cl of [a, c, x, d]) try { cl.ws.close(); } catch {}
 } catch (e) { fail('relay', e.message); }
 finally { srv.kill(); }

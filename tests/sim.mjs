@@ -17,10 +17,7 @@ const args = process.argv.slice(2);
 const SEED = Number(args[args.indexOf('--seed') + 1]) || 4242;
 const VERBOSE = args.includes('--verbose');
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const html = readFileSync(join(root, 'index.html'), 'utf8');
-const m = html.match(/<script>([\s\S]*?)<\/script>/);
-if (!m) { console.error('FAIL could not find <script> in index.html'); process.exit(1); }
-const GAME = m[1];
+const GAME = readFileSync(join(root, 'src/game.js'), 'utf8'); // game code lives in src/game.js (index.html is a thin shell since D-074)
 
 // ---------- fake browser ----------
 function fakeCtx() {

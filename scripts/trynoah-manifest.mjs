@@ -17,7 +17,7 @@ const rd = p => readFileSync(join(root, p), 'utf8');
 const args = process.argv.slice(2);
 const opt = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 
-const html = rd('index.html');
+const html = rd('src/game.js'); // game code moved out of index.html into src/game.js (D-074 module split)
 const sim = existsSync(join(root, 'tests/sim.mjs')) ? rd('tests/sim.mjs') : '';
 
 // ---------- extractors ----------

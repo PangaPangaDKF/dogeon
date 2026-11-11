@@ -31,9 +31,13 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 (field → brutes → ruins → Cat Lord boss).
 
 ## 2. Stack & constraints (do not change without asking)
-- **One file: `index.html`.** Plain HTML + vanilla JavaScript + Canvas 2D. No framework, no build step,
-  no npm, no external assets. Everything (sprites, tiles, font, sound) is generated in code.
-  (Dev-only test tooling under `tests/` may use Node/Playwright; the game itself never does.)
+- **Game code lives in `src/game.js`** (since D-074 — `index.html` hit the line cap); `index.html` is an 18-line shell
+  that loads it via `<script src="src/game.js"></script>` (a **classic script**, not an ES module, so it keeps global
+  scope, the test harness barely changed, and double-click `file://` still works). Plain HTML + vanilla JavaScript +
+  Canvas 2D. No framework, no build step, no npm, no external assets. Everything (sprites, tiles, font, sound) is generated
+  in code. (Dev-only test tooling under `tests/` may use Node/Playwright; the game itself never does.)
+  The harness reads `src/game.js` (`tests/sim.mjs`, `tests/check.sh`, `scripts/trynoah-manifest.mjs`); the relay and
+  `tests/serve.mjs` serve `/src/*.js`. `src/game.js` may be split further into `src/*.js` classic scripts (same global scope).
 - Internal resolution **320×224** (Genesis-like), scaled with CSS `image-rendering: pixelated`
   (integer scale when the window allows).
 - Tiles are **16×16**. Characters are **16×20** sprites. The boss draws at 2×.

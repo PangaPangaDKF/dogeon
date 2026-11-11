@@ -13,14 +13,16 @@
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const PORT = +process.env.PORT || 8787;
 const MAX_ROOM = +process.env.MAX_ROOM || 8;
 const MAX_BYTES = 1024, MAX_RATE = 20, IDLE_MS = 30000;
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'; // RFC 6455 §1.3
-const PAGE = join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const PAGE = join(ROOT, 'index.html');
+const MIME = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml' };
 const rooms = new Map(); // room -> Set<client>
 
 function frame(str, op = 0x1) { // server -> client frames are never masked
@@ -91,6 +93,15 @@ const server = createServer((req, res) => {
   if (url === '/health') {
     res.writeHead(200, { 'content-type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, rooms: [...rooms].map(([room, s]) => ({ room, players: s.size })) }));
+  }
+  // static game modules under src/ (e.g. /src/game.js) — path-traversal safe, served from ROOT
+  const p = normalize(decodeURIComponent(url.split('?')[0])).replace(/^(\.\.[/\\])+/, '');
+  if (/^[/\\]?src[/\\][\w.\-/\\]+\.(js|mjs|css|json|png|svg)$/.test(p)) {
+    const file = join(ROOT, p);
+    if (file.startsWith(join(ROOT, 'src')) && existsSync(file)) {
+      res.writeHead(200, { 'content-type': MIME[extname(file)] || 'text/plain' });
+      return res.end(readFileSync(file));
+    }
   }
   res.writeHead(404); res.end('not found');
 });

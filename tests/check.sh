@@ -11,14 +11,14 @@ note() { printf '  \033[33mINFO\033[0m %s\n' "$1"; }
 
 echo "== 1. static rules (CLAUDE.md §2) =="
 for pat in 'alert(' 'confirm(' 'prompt(' 'fetch(' 'XMLHttpRequest' 'import('; do
-  if grep -qF "$pat" index.html; then bad "forbidden call found: $pat"; else ok "no $pat"; fi
+  if grep -qF "$pat" src/game.js; then bad "forbidden call found: $pat"; else ok "no $pat"; fi
 done
 # WebSocket is allowed ONLY inside the opt-in MULTIPLAYER section (D-040), the way wallet calls live only in CHAIN (D-016)
-if awk '/\/\/ =+ MULTIPLAYER/{m=1;next} /\/\/ =+ /{m=0} !m' index.html | grep -qF 'WebSocket'; then
+if awk '/\/\/ =+ MULTIPLAYER/{m=1;next} /\/\/ =+ /{m=0} !m' src/game.js | grep -qF 'WebSocket'; then
   bad "WebSocket used outside the opt-in MULTIPLAYER section"; else ok "WebSocket only inside the opt-in MULTIPLAYER section"; fi
 # the DOGE coin = the user's Dogecoin-logo art as in-code pixels (D-043): must stay exactly 96x96 with <= 32 colours
 if node - <<'EOF'
-const s = require('fs').readFileSync('index.html', 'utf8');
+const s = require('fs').readFileSync('src/game.js', 'utf8');
 const pal = (s.match(/const MOSAIC_PAL='([^']+)'/) || [, ''])[1].split(',');
 const m = s.slice(s.indexOf('const MOSAIC_PX=')).match(/^const MOSAIC_PX=\n([\s\S]*?);\n/);
 const px = m ? m[1].replace(/[\s+']/g, '') : '';
@@ -26,16 +26,15 @@ process.exit(px.length === 9216 && /^[0-9a-v.]+$/.test(px) && pal.length >= 2 &&
 EOF
 then ok "DOGE coin art data intact (96x96 = 9216 px, <= 32 colours)"; else bad "DOGE coin art data corrupted (MOSAIC_PX / MOSAIC_PAL)"; fi
 if grep -Eq '(src|href)="https?://' index.html; then bad "external asset URL found"; else ok "no external assets"; fi
-lines=$(wc -l < index.html | tr -d ' ')
-if [ "$lines" -gt 1500 ]; then note "index.html is $lines lines (>1500): time to plan the ES-module split"; else ok "index.html size: $lines lines"; fi
+lines=$(wc -l < src/game.js | tr -d ' ')
+note "src/game.js is $lines lines of game code (index.html is a thin shell since the D-074 module split)"
 
 echo "== 2. JavaScript syntax =="
 if ! command -v node >/dev/null 2>&1; then
   bad "node not found (Ubuntu: sudo apt install nodejs)"; echo; exit 1
 fi
 tmp="$(mktemp -d)"
-awk '/<script>/{f=1;next} /<\/script>/{f=0} f' index.html > "$tmp/game.js"
-if node --check "$tmp/game.js" 2> "$tmp/err.txt"; then ok "node --check game script"; else bad "syntax error:"; cat "$tmp/err.txt"; fi
+if node --check src/game.js 2> "$tmp/err.txt"; then ok "node --check src/game.js"; else bad "syntax error:"; cat "$tmp/err.txt"; fi
 rm -rf "$tmp"
 
 echo "== 3. headless simulation =="

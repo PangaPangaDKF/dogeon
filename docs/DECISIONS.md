@@ -35,6 +35,13 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-074 · 2026-11-10 · Module split — game code moved to `src/game.js`; `index.html` is now a thin shell (Claude Code)
+- What: Moved the whole inline `<script>` (1460 lines) out of `index.html` into **`src/game.js`**, loaded via `<script src="src/game.js"></script>`. `index.html` is now an 18-line shell. **Classic external script (NOT ES modules)** — deliberate: this codebase is all global scope and the test harness runs it as globals, so `import/export` would be a huge risky rewrite; a classic external script keeps global scope, needs almost no harness change, AND still loads from `file://` (double-click works). Served hosting (relay/Fly/Docker) works too.
+- Why: `index.html` hit 1479/1500 lines, blocking further work (currency purity, authoritative server). The split unblocks the line budget and organizes the code without changing behavior.
+- Changes: `server/relay.mjs` now serves `/src/*.js` (path-traversal safe); `tests/sim.mjs`, `tests/check.sh`, `scripts/trynoah-manifest.mjs` read `src/game.js`; `Dockerfile` copies `src/`. `tests/serve.mjs` already served static files.
+- Tool: Claude Code (Opus 4.8). Verify: `node tests/sim.mjs` 0 failed; drift guard OK (3 classes); real Chrome via the relay → `/src/game.js` served (200, text/javascript), game runs (`scene=play`), zero page errors; `check.sh` green.
+- Next: optionally split `src/game.js` further into `src/core.js`/`src/sprites.js`/... (now trivial — same global scope). Then build the authoritative multiplayer server on this cleaner base.
+
 ### D-073 · 2026-11-10 · Trailer helper — ghost bots for recording a 3-player scene (Claude Code)
 - What: `scripts/trailer-bots.mjs` spawns 2 ghost "bots" (SHADOW warrior + PIXEL archer) that walk around the camp via the relay, so you can record a lively multiplayer scene without needing friends online. Zero deps (Node 22 WebSocket). Verified in real Chrome: the game sees 2 peers (3 players total) around the Dogecoin coin — screenshot `tests/out/landing/08-multiplayer-3p.png`.
 - Why: user wants to record the trailer "jugando con otros 2 jugadores." Caught a bug: the relay join rule requires id `/^[a-z0-9]{1,12}$/` (no hyphens) — fixed the bot ids.
