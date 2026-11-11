@@ -1046,7 +1046,7 @@ function dogeMasterMenu(n){openMenu(n,'DOGEMASTER: MEME FORGE & RE-ROLL',()=>{co
   o.push({label:'BACK',act:()=>{elderMenu(n);return '';}});return o;});}
 function modMenu(){openMenu(null,'MASTER MOD MENU (TEST SUITE)',()=>[
   {label:P.god?'GOD MODE: [ON] (INVINCIBLE)':'GOD MODE: [OFF]',act:()=>{P.god=!P.god;return `GOD MODE ${P.god?'ENABLED':'DISABLED'}.`;}},
-  {label:'GIVE 420 DOGE + 99 ALL MATERIALS (STEEL/WOOD/STONE/WHISK)',act:()=>{P.doge+=420;P.wood=99;P.stone=99;P.whisk=99;P.steel=99;return '420 DOGE + 99 OF ALL MATS ADDED.';}},
+  {label:'GIVE 99 ALL MATERIALS (STEEL/WOOD/STONE/WHISK)',act:()=>{P.wood=99;P.stone=99;P.whisk=99;P.steel=99;return '99 OF ALL MATS ADDED. (NO FAKE DOGE — MINTING USES REAL TESTNET DOGE.)';}},
   {label:'GRANT NFT CRAFT CREDITS (HAMMER LV4+ARMOR LV2)',isNft:true,act:()=>{addCredit(1,2);addCredit(1,3);addCredit(1,4);addCredit(2,1);addCredit(2,2);return 'ALL NFT CRAFT CREDITS GRANTED. VISIT FORGE TO MINT.';}},
   {label:'SWITCH CLASS: WARRIOR',act:()=>{P.prof='warrior';syncMaxHp();syncMaxMp();return 'CLASS SET TO WARRIOR.';}},
   {label:'SWITCH CLASS: ARCHER',act:()=>{P.prof='archer';syncMaxHp();syncMaxMp();return 'CLASS SET TO ARCHER.';}},
@@ -1331,7 +1331,7 @@ function drawWorld(){
     else drawChar(hSpr,P.dir,P.atkT>0?0:frameOf(P,P.moving),P.x,P.y+P.hh,1,ox,oy);
     if(P.atkT>0)drawSlash(ox,oy);
     if(P.fishing)drawFishing(ox,oy);
-    else if(!ui&&!P.resting&&(waterAt(P.dir)||nodeAt(P.dir))){const b=Math.round(Math.sin(time*6));text('F',P.x-1-ox,P.y-30+b-oy,'#80c0ff');}
+    else if(!ui&&!P.resting&&(waterAt(P.dir)||nodeAt(P.dir))){const b=Math.round(Math.sin(time*6));textC(waterAt(P.dir)?'F FISH':'F GATHER',Math.round(P.x-ox),P.y-30+b-oy,'#80c0ff');}
   }});
   netDraw(list,ox,oy); // other players (opt-in multiplayer, D-040)
   list.sort((a,b)=>a.y-b.y);for(const o of list)o.f();

@@ -502,9 +502,10 @@ scenario('D-066: DogeMaster meme buffs/debuffs (420/69/777/4.2/6.9), burn-to-rer
   if (!godRow) { fail('mod menu', 'God mode row missing'); return; }
   godRow.act();
   if (!g.P.god) { fail('god mode', 'P.god not toggled'); return; }
-  const giveMatsRow = modOpts.find(r => /GIVE 420 DOGE/.test(r.label));
+  const giveMatsRow = modOpts.find(r => /GIVE 99 ALL MATERIALS/.test(r.label));
+  const dogeBefore = g.P.doge;
   giveMatsRow.act();
-  if (g.P.doge < 420 || g.P.wood !== 99) { fail('give mats', `doge=${g.P.doge} wood=${g.P.wood}`); return; }
+  if (g.P.wood !== 99 || g.P.steel !== 99 || g.P.doge !== dogeBefore) { fail('give mats', `wood=${g.P.wood} steel=${g.P.steel} doge ${dogeBefore}->${g.P.doge} (must not add fake DOGE)`); return; }
   const switchRow = modOpts.find(r => /WARRIOR/.test(r.label));
   switchRow.act();
   if (g.P.prof !== 'warrior') { fail('switch class', `prof=${g.P.prof}`); return; }

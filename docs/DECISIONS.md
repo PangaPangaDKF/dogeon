@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-072 · 2026-11-10 · Mod no longer gives fake DOGE; clearer F FISH/GATHER prompt (Claude Code)
+- What: (1) The Master Mod "GIVE 420 DOGE + 99 MATERIALS" row now gives only 99 of each material — **no fake `P.doge`** (user: "el mod me da DOGE falso aún"; minting uses real testnet DOGE). (2) The on-world `F` prompt near water/nodes now reads **`F FISH`** (water) / **`F GATHER`** (tree/rock) instead of a bare `F`, so fishing/gathering are discoverable. Verified in real Chrome that fishing works (caught a RAW FISH) and cooking exists in the bag (`I`) near the camp fire — they were functional, just not obvious.
+- Why: user reported the mod giving fake DOGE and thought fishing/cooking were "missing" (really a discoverability issue). Game-analyst: clear affordances fix the "it's missing" perception without new systems.
+- Tool: Claude Code (Opus 4.8) + `agent-browser` (real Chrome). Verify: sim mod scenario updated (give-mats adds no DOGE); `check.sh` green; 1479/1500 lines (no growth).
+- Still open (bigger, coordinate w/ Antigravity): full "currency purity" — `P.doge`/orb/scrap/horn still exist in code despite D-068; removing `P.doge` entirely touches quests/swap/vault/Victor's Market and needs the index.html module split (1479/1500).
+
 ### D-071 · 2026-11-10 · Redeploy DogeItems+DogeDEX — 1 DOGE fee + REAL 80/20 staker split on-chain (Claude Code)
 - What: D-068 changed `DogeItems.sol` (1 DOGE fee, 80/20 mint-fee split to stakers, `stakingPool`) but it was never deployed — the live contract still charged 0.1 DOGE and had no `stakingPool` (`stakingPool()` reverted). Redeployed from the current source: **DogeItems `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4`** (1 DOGE fee) and **DogeDEX `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`**; kept DogeProfession + DogeStaking; called `setStakingPool(DogeStaking)` so `withdrawFees()` splits 80% stakers / 20% treasury. Updated `CONTRACTS` in `index.html` + all live-reference docs/skills/e2e; fee text 0.1→1 DOGE.
 - On-chain proof: minted 1 DOGE SWORD (1 DOGE) → `accruedFees=1e18`; `withdrawFees()` moved the staking vault **+0.8 DOGE exactly** (12.0001→12.8001), the other 0.2 to treasury. `mintFee=1e18`, `stakingPool`=DogeStaking, `dex.items()`=new items, gear 7-15 mint.
