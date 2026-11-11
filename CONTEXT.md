@@ -16,7 +16,19 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-10, D-071: contracts REDEPLOYED — DogeItems 0xbF85.. / DogeDEX 0x6E26.. with 1 DOGE fee + real 80/20 staker split; Antigravity shipped D-066..D-070)
+## 00. RESUME HERE (latest, 2026-11-10, after D-075)
+
+### ▶ CÓMO CONTINUAR (barato, entre sesiones) — leer esto primero
+1. **Sincroniza:** `cd C:\Users\dulbi\dogeon && git pull origin main`.
+2. **Reinicia el relay** (OBLIGATORIO tras el split D-074, sirve `/src/game.js`): `node server/relay.mjs` → http://localhost:8787/ (Ctrl+Shift+R). (Doble-click al index.html también funciona.)
+3. **Arquitectura ahora:** el código del juego está en **`src/game.js`** (1460 líneas); `index.html` es un shell. El harness (`tests/sim.mjs`, `tests/check.sh`, `scripts/trynoah-manifest.mjs`) lee `src/game.js`.
+4. **Verificar siempre:** `bash tests/check.sh` (6 etapas). Contratos: `scripts/e2e-chikyu.sh` (necesita la llave testnet del scratchpad).
+5. **Orden de carga de contexto (cualquier agente):** skill `dogeon-mission` (charter, manda) → `dogeon-game` → `docs/GAME_GUIDE.md` → `MASTER_PROMPT.md` → últimas entradas de `docs/DECISIONS.md`.
+6. **Contratos vivos (D-071):** DogeItems `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4` (fee 1 DOGE, split 80/20 real), DogeDEX `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`, DogeProfession `0x7AEF68…`, DogeStaking `0x4a1BF1…`.
+7. **Pendientes (prioridad):** (a) **servidor autoritativo** = la única vía para 3+ grindeable + PvP + party/friendly-fire (hoy NO existen; multijugador = solo fantasmas); (b) pureza de moneda (quitar `P.doge`/orb/scrap/horn); (c) seguir partiendo `src/game.js` (opcional).
+8. **Reglas duras:** R1 no tocar el arte de la moneda; **R2 nada de efectos inútiles** (check.sh falla con `ctx.arc`/`ctx.ellipse`/gradientes/`shadowBlur`); verificado-o-no-pasó.
+9. **Trailer:** `node scripts/trailer-bots.mjs` (2 bots) + abrir `?mp=ws://localhost:8787&room=trailer&name=YOU` + grabar con MediaRecorder. 7 screenshots en `tests/out/landing/`.
+10. **Dual-brain:** antes de editar, chequeo de colisión (`git log -1` + `git status`). Dejar nota en `ANTIGRAVITY_HANDOFF.md`.
 
 - **D-067 Shipped:**
   - **Guaranteed Iron from Stone & Monster Iron Drops:** Mining a rock node (`n.kind === 'stone'`) now ALWAYS drops iron/steel (`kind: 'steel'`) physically onto the ground with `+1 IRON` floater. All monsters in `killEnemy(e)` also have a 25% iron drop chance to supply the forge and fuel crafting without inflating wealth.
