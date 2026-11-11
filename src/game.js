@@ -1223,7 +1223,7 @@ function update(dt){
   if(kp('n')){heroNameIdx=(heroNameIdx+1)%HERO_NAMES.length;net.name=HERO_NAMES[heroNameIdx];sfx(440,0.06);}
   if(kp('c')){classOptIdx=(classOptIdx+1)%CLASS_OPTS.length;sfx(520,0.06);}
   if(kp('p')){partyOptIdx=(partyOptIdx+1)%PARTY_OPTS.length;NET_PARTY=PARTY_OPTS[partyOptIdx]==='SOLO'?'':PARTY_OPTS[partyOptIdx];sfx(600,0.06);}
-  if(kp('enter',' ')){newGame();net.name=netClean(netParam('name'))||net.name||HERO_NAMES[heroNameIdx];if(CLASS_OPTS[classOptIdx]!=='novice')applyClass(CLASS_OPTS[classOptIdx],false);scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
+  if(kp('enter',' ')){newGame();net.name=netClean(netParam('name'))||net.name||HERO_NAMES[heroNameIdx];if(CLASS_OPTS[classOptIdx]!=='novice'){P.wantClass=CLASS_OPTS[classOptIdx];toast('CLASS IS ONE-PER-WALLET, ON-CHAIN. YOU START A WEAK NOVICE — SWEAR YOUR CLASS AT A TRAINER.',3.5);}scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
   updMarket(dt);chainTick(dt);
   netTick(dt); // opt-in multiplayer (no-op without ?mp); before the UI early-return so you stay visible while in menus
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
