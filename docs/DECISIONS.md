@@ -35,6 +35,11 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-073 · 2026-11-10 · Trailer helper — ghost bots for recording a 3-player scene (Claude Code)
+- What: `scripts/trailer-bots.mjs` spawns 2 ghost "bots" (SHADOW warrior + PIXEL archer) that walk around the camp via the relay, so you can record a lively multiplayer scene without needing friends online. Zero deps (Node 22 WebSocket). Verified in real Chrome: the game sees 2 peers (3 players total) around the Dogecoin coin — screenshot `tests/out/landing/08-multiplayer-3p.png`.
+- Why: user wants to record the trailer "jugando con otros 2 jugadores." Caught a bug: the relay join rule requires id `/^[a-z0-9]{1,12}$/` (no hyphens) — fixed the bot ids.
+- Tool: Claude Code (Opus 4.8) + agent-browser. Not part of the game (dev/trailer tooling).
+
 ### D-072 · 2026-11-10 · Mod no longer gives fake DOGE; clearer F FISH/GATHER prompt (Claude Code)
 - What: (1) The Master Mod "GIVE 420 DOGE + 99 MATERIALS" row now gives only 99 of each material — **no fake `P.doge`** (user: "el mod me da DOGE falso aún"; minting uses real testnet DOGE). (2) The on-world `F` prompt near water/nodes now reads **`F FISH`** (water) / **`F GATHER`** (tree/rock) instead of a bare `F`, so fishing/gathering are discoverable. Verified in real Chrome that fishing works (caught a RAW FISH) and cooking exists in the bag (`I`) near the camp fire — they were functional, just not obvious.
 - Why: user reported the mod giving fake DOGE and thought fishing/cooking were "missing" (really a discoverability issue). Game-analyst: clear affordances fix the "it's missing" perception without new systems.
