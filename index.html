@@ -414,11 +414,18 @@ function updFish(dt){
     if(addToBag(n.kind,1)){P.skills.fishing++;floater(P.x,P.y-24,n.kind==='wood'?'+1 WOOD':'+1 STONE',n.kind==='wood'?'#c08a4a':'#c0c8d0');sfx(760,0.13,'square',0.05,200);}
     else toast('BAG FULL!',2);
     return;}
-  if(addToBag('raw_fish',1)){P.skills.fishing++;floater(P.x,P.y-24,'+1 RAW FISH','#80c0e0');sfx(900,0.15,'triangle',0.05,500);}
+  const fishKind=(P.skills.fishing>=1&&Math.random()<0.45)?'raw_salmon':'raw_fish';
+  const fishName=fishKind==='raw_salmon'?'RAW SALMON':'RAW FISH (SARDINE)';
+  if(addToBag(fishKind,1)){P.skills.fishing++;floater(P.x,P.y-24,'+1 '+fishName,fishKind==='raw_salmon'?'#ff7060':'#80c0e0');sfx(900,0.15,'triangle',0.05,500);}
   else toast('BAG FULL! THE FISH GOT AWAY.',2);
 }
 const BAG_SIZE=12,MENU_ROWS=13;
-const FOODS={raw_fish:{name:'RAW FISH',heal:15,col:'#80c0e0'},cooked_fish:{name:'COOKED FISH',heal:25,col:'#f0a040'}};
+const FOODS={
+  raw_fish:{name:'RAW FISH',heal:15,mp:0,col:'#80c0e0'},
+  cooked_fish:{name:'COOKED FISH',heal:25,mp:0,col:'#f0a040'},
+  raw_salmon:{name:'RAW SALMON',heal:25,mp:10,col:'#ff7060'},
+  cooked_salmon:{name:'COOKED SALMON',heal:50,mp:25,col:'#ff9050'}
+};
 function addToBag(kind,qty){qty=qty||1;for(const s of P.bag){if(s.kind===kind&&s.qty<(FOODS[kind]?5:20)){const add=Math.min(qty,((FOODS[kind]?5:20))-s.qty);s.qty+=add;qty-=add;if(!qty)return true;}}while(qty>0&&P.bag.length<BAG_SIZE){const add=Math.min(qty,FOODS[kind]?5:20);P.bag.push({kind,qty:add});qty-=add;}return qty===0;}
 function bagCount(kind){let n=0;for(const s of P.bag)if(s.kind===kind)n+=s.qty;return n;}
 function bagRemove(kind,qty){qty=qty||1;for(let i=P.bag.length-1;i>=0;i--){if(P.bag[i].kind===kind){const take=Math.min(qty,P.bag[i].qty);P.bag[i].qty-=take;qty-=take;if(P.bag[i].qty<=0)P.bag.splice(i,1);if(!qty)return true;}}return qty===0;}
@@ -938,7 +945,7 @@ function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
   for(const r of RECIPES){if(!r.req())continue;
     const parts=Object.entries(r.need).map(([k,v])=>`${v} ${k.toUpperCase()}`).join('+');
     const has=Object.entries(r.need).every(([k,v])=>P[k]>=v);
-    o.push({label:`${r.name} [${parts}]`,nft:r.nft,isNft:true,act:has?()=>{for(const [k,v] of Object.entries(r.need))P[k]-=v;if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act();}:()=>'NOT ENOUGH MATERIALS. HUNT MORE.'});}
+    o.push({label:`${r.name} [${parts}]`,nft:r.nft,act:has?()=>{for(const [k,v] of Object.entries(r.need))P[k]-=v;if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act();}:()=>'NOT ENOUGH MATERIALS. HUNT MORE.'});}
   // on-chain mint (D-019): crafted credits, starter wood+stone bag kit, or caught bag food can be minted
   const fee=chainData.loaded?fromWei(chainData.fee)+' DOGE':'FEE';
   if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT HAMMER NFT [1 WOOD+1 STONE] (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
@@ -1110,9 +1117,11 @@ function invMenu(){
     o.push({label:`BAG ${P.bag.length}/${BAG_SIZE} SLOTS  WHISKERS x${P.whisk}`,act:()=>'FOOD STACKS TO 5. DEATH EMPTIES THE BAG. NFTS ARE SAFE.'});
     o.push({label:`MATERIALS: STEEL ${P.steel} WHISKERS ${P.whisk} WOOD ${bagCount('wood')} STONE ${bagCount('stone')}`,act:()=>'CRAFT AT WRENCHPAW. LOST ON DEATH.'});
     for(let i=0;i<P.bag.length;i++){const s=P.bag[i];const fd=FOODS[s.kind];
-      if(fd){const nearFire=dist(P.x,P.y,CX*16+8,FY*16+8)<30;
-        o.push({label:`${fd.name} x${s.qty} [EAT +${fd.heal} HP]`,act:()=>{if(P.hp>=P.maxHp)return 'HP IS FULL ALREADY.';bagRemove(s.kind,1);P.hp=Math.min(P.maxHp,P.hp+fd.heal);sfx(660,0.1,'triangle',0.05,200);return `ATE ${fd.name}. +${fd.heal} HP. YUM.`;}});
-        if(s.kind==='raw_fish'&&nearFire)o.push({label:`COOK RAW FISH -> COOKED FISH`,act:()=>{if(!bagRemove('raw_fish',1))return 'NO RAW FISH.';if(!addToBag('cooked_fish',1)){addToBag('raw_fish',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED! MUCH DELICIOUS.';}});
+      if(fd){const nearFire=dist(P.x,P.y,CX*16+8,FY*16+8)<40;
+        const mpStr=fd.mp?` +${fd.mp} MP`:'';
+        o.push({label:`${fd.name} x${s.qty} [EAT +${fd.heal} HP${mpStr}]`,act:()=>{if(P.hp>=P.maxHp&&(!fd.mp||P.mp>=P.maxMp))return 'HP IS FULL ALREADY.';bagRemove(s.kind,1);P.hp=Math.min(P.maxHp,P.hp+fd.heal);if(fd.mp)P.mp=Math.min(P.maxMp,P.mp+fd.mp);sfx(660,0.1,'triangle',0.05,200);return `ATE ${fd.name}. +${fd.heal} HP${mpStr}. YUM.`;}});
+        if(s.kind==='raw_fish'&&nearFire)o.push({label:`COOK RAW FISH -> COOKED FISH`,act:()=>{if(!bagRemove('raw_fish',1))return 'NO RAW FISH.';if(!addToBag('cooked_fish',1)){addToBag('raw_fish',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED SARDINE (+25 HP)! MUCH DELICIOUS.';}});
+        if(s.kind==='raw_salmon'&&nearFire)o.push({label:`COOK RAW SALMON -> COOKED SALMON`,act:()=>{if(!bagRemove('raw_salmon',1))return 'NO SALMON.';if(!addToBag('cooked_salmon',1)){addToBag('raw_salmon',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED SALMON (+50 HP/+25 MP)! MUCH DELICIOUS.';}});
       }else{const names={wood:'WOOD',stone:'STONE',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'STARTER / CRAFTING MATERIAL. USE TO MINT AT FORGE OR BELOW.'});}}
     if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT STARTER HAMMER NFT [1 WOOD+1 STONE]`,isNft:true,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
     const sk=P.skills,lv=k=>skillLv(sk[k],k);o.push({label:`SKILLS: COMBAT LV${lv('combat')} (${sk.combat}XP) BARK LV${lv('bark')} (${sk.bark}XP) FISH LV${lv('fishing')} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(lv('combat')*SKILL_BONUS*100)}% DMG  BARK +${Math.round(lv('bark')*SKILL_BONUS*100)}% DMG  FISH +${Math.round(lv('fishing')*SKILL_BONUS*100)}% SPD`});
