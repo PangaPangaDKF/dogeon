@@ -6,16 +6,16 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+// D-074 module split: the game code now lives in src/game.js (a classic script); index.html is a thin shell.
 const html = readFileSync(join(root, 'index.html'), 'utf8');
+const js = readFileSync(join(root, 'src', 'game.js'), 'utf8');
 const sim = readFileSync(join(root, 'tests', 'sim.mjs'), 'utf8');
-const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
-const js = scriptMatch ? scriptMatch[1] : '';
 
 console.log('=== DOGEON ANALYZER-MASTER DIAGNOSTIC SCAN ===');
 
-// 1. Line budget & section sizes
-const lines = html.split('\n');
-console.log(`\n[1] Line Budget: ${lines.length} / 1500 lines (${1500 - lines.length} lines remaining before ES-module split)`);
+// 1. Line budget & section sizes (src/game.js is the game code since D-074)
+const lines = js.split('\n');
+console.log(`\n[1] Line Budget: ${lines.length} / 1500 lines in src/game.js (${1500 - lines.length} remaining)`);
 const sections = [];
 lines.forEach((line, idx) => {
   const m = line.match(/^\/\/\s*=+\s*(.+?)\s*=+/);
@@ -27,12 +27,12 @@ for (let i = 0; i < sections.length; i++) {
 }
 console.log('    Largest sections:', sections.sort((a, b) => b.span - a.span).slice(0, 5).map(s => `${s.name} (${s.span}L)`).join(', '));
 
-// 1b. Forbidden APIs & external assets (L-021; WebSocket allowed only inside MULTIPLAYER section)
-const htmlNoNet = html.replace(/\/\/ =+ MULTIPLAYER[\s\S]*?(?=\/\/ =+ )/, '');
+// 1b. Forbidden APIs & external assets (L-021; WebSocket allowed only inside the MULTIPLAYER section)
+const jsNoNet = js.replace(/\/\/ =+ MULTIPLAYER[\s\S]*?(?=\/\/ =+ )/, '');
 const forbidden = ['alert(', 'confirm(', 'prompt(', 'fetch(', 'XMLHttpRequest', 'WebSocket', 'import('].filter(p =>
-  (p === 'WebSocket' ? htmlNoNet : html).includes(p)
+  (p === 'WebSocket' ? jsNoNet : js).includes(p)
 );
-if (/(src|href)="https?:\/\//.test(html)) forbidden.push('external src/href URL');
+if (/(src|href)="https?:\/\//.test(html)) forbidden.push('external src/href URL in index.html');
 console.log(`[1b] Static Forbidden-API Gate: ${forbidden.length === 0 ? 'OK (0 forbidden calls; WebSocket scoped to MULTIPLAYER)' : 'FORBIDDEN: ' + forbidden.join(', ')}`);
 
 // 2. SEL selector usage check

@@ -16,14 +16,18 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-11, after D-080)
+## 00. RESUME HERE (latest, 2026-11-11, after D-081)
 
-> **D-080 (wallet fix):** `eth()` now prefers the MetaMask/EVM provider from `window.ethereum.providers[]` when several
-> wallets are injected — fixes CONNECT failing on the deployed site with a CAIP-25 `tron:728126428` scope (a multichain/Brave
-> wallet was hijacking `window.ethereum`). User must `fly deploy --app dogeon-game` from WSL to pick this up.
-> **Deploy/domain:** game is live at https://dogeon-game.fly.dev (Fly cloud, 24/7, not the user's PC). User is buying
-> **`dogeon.lat`** on Spaceship; plan: `dogeon.lat` → landing, `play.dogeon.lat` → game (CNAME to dogeon-game.fly.dev),
-> connect via `fly certs add` + DNS records. HTTPS is free; only the domain costs money.
+> **🎮 LIVE:** the game is public at **https://dogeon.lat** (Fly cloud, 24/7, HTTPS auto-renews) and `https://dogeon-game.fly.dev`.
+> Domain on Spaceship ($1.24/yr) → Fly via A `@`→`66.241.125.199` + AAAA `@`→`2a09:8280:1::1f7:c716:0`. To redeploy code:
+> `cd /mnt/c/Users/dulbi/dogeon && git pull && fly deploy --app dogeon-game` (from WSL; Claude has no `fly` CLI).
+> **D-080 (wallet fix):** `eth()` picks the MetaMask/EVM provider from `window.ethereum.providers[]` when several wallets are
+> injected — fixes CONNECT failing with a CAIP-25 `tron:728126428` scope. **Brave still blocks CONNECT** (native-wallet conflict,
+> browser config: `brave://settings/web3` → default wallet = Extensions/None); works in Chrome.
+> **D-081:** `audit-scan.mjs` re-pointed at `src/game.js` (was blind-scanning the shell); `game.js` is now at **1500/1500 lines —
+> the ceiling**, so the next feature needs a further `src/*.js` split. `GAME_GUIDE.md` + `SESSION_PROMPT.md` v2.4 refreshed.
+> **Next:** finish the landing (Antigravity, separate repo `C:\Users\dulbi\dogeon-landing`) → put it on `dogeon.lat` with the game
+> on `play.dogeon.lat`; record the gameplay trailer; prove real wallet → real mint on the live site.
 
 ### ▶ CÓMO CONTINUAR (barato, entre sesiones) — leer esto primero
 1. **Sincroniza:** `cd C:\Users\dulbi\dogeon && git pull origin main`.

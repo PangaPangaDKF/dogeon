@@ -14,6 +14,8 @@ them home, **craft and mint** gear, trade it, and push deeper until you beat the
 **NFT on the DogeOS Chikyū testnet**, and the whole DeFi layer (market, liquidity pools, staking) is real and on-chain.
 The game is **fully playable with no wallet** — the chain adds ownership on top.
 
+**Play it now:** the game is live at **https://dogeon.lat** (hosted on Fly, 24/7). Share the link and others can join.
+
 **The core loop, which is the whole game right now:**
 > **play → gather resources → mint stuff → defeat the monsters and the boss**
 
@@ -48,7 +50,7 @@ Characters are **frozen facing right** (a deliberate style choice) — but you s
 ### Who is in camp
 | NPC | What they do |
 |---|---|
-| **The Sphinx** (north) | The DeFi hub: connect wallet + add the DogeOS network, DOGEON Pool DEX pool DEX, staking, faucet, DOGE/USD oracle, an 8-lesson DeFi school |
+| **The Sphinx** (north) | The DeFi hub: connect wallet + add the DogeOS network, the DOGEON Pool DEX, staking, faucet, DOGE/USD oracle, an 8-lesson DeFi school |
 | **Elder Shibe** (west) | Quests, the Grand Heist story, the three factions |
 | **Wrenchpaw** (east) | The forge: turn monster materials into gear, then mint it |
 | **Sergeant Ironpaw / Scout Fleetwhisker / Mender Brighttail** | The three class trainers (see §5) |
@@ -84,7 +86,8 @@ can switch. Connect a wallet and you can **swear it on-chain** (`DogeProfession.
 | `K` / `Q` | **Ground Pound** (12 MP): shockwave, damages + knocks back everything around you | **Arrow Volley** (6 MP): 3-arrow spread | **Mend** (10 MP): heal HP anywhere |
 | Armor | +15% damage reduction | — | +5% |
 
-> **Planned (not built yet):** the Healer healing **other players** in multiplayer. Today Mend only heals yourself.
+> **Healer heals the party (D-046, built).** In multiplayer, Mend heals nearby **other players** too: the heal pulse is
+> relayed and each receiver applies it (capped, still paid in the caster's MP). Solo, it heals you.
 
 ---
 
@@ -95,7 +98,7 @@ knights → **steel**. Fishing gives **raw fish**. Every new player also starts 
 
 **Your bag** holds 12 slots (food stacks 5, materials 20). Bag contents are **lost on death** — wallet NFTs are not.
 
-**Three ways to mint an NFT** (each costs a 0.1 DOGE fee on `DogeItems`):
+**Three ways to mint an NFT** (each costs a 1 DOGE fee on `DogeItems`):
 1. **Starter mint** — 1 wood + 1 stone → a Hammer Lv2 NFT, straight from the bag (`I`), the forge, or the DEX.
 2. **Forge a recipe** at Wrenchpaw (burns materials), which gives a mint credit you can put on-chain.
 3. **Mint directly** at the Sphinx's DEX, row 0.
@@ -113,7 +116,7 @@ At the Sphinx:
 
 - **Connect wallet** — adds and switches to DogeOS Chikyū (chain `0x5fdaf3` / 6281971) for you. MetaMask, Bitget Wallet, any
   EIP-1193 wallet. Get free test DOGE from the faucet link.
-- **DOGEON Pool DEX pool DEX** — mint items, see your wallet's items, **create a pool** (items + DOGE), **swap** DOGE ↔ item against a
+- **DOGEON Pool DEX** — mint items, see your wallet's items, **create a pool** (items + DOGE), **swap** DOGE ↔ item against a
   constant-product curve, **add/remove liquidity**, list items for a fixed price, and withdraw proceeds. Each row shows price
   impact and your LP share. Nothing is for sale until a player creates it.
 - **Fees:** every trade pays **2% to liquidity providers** (kept in the pool) plus a **1% protocol fee** split
@@ -132,19 +135,23 @@ At the Sphinx:
 
 ---
 
-## 9. Playing with other people (optional)
+## 9. Playing with other people
 
-Multiplayer is **off** unless the URL asks for it. One person hosts:
+The game is **live at https://dogeon.lat** — share that link and others can join. Multiplayer is opt-in; the deployed site
+auto-connects players to its shared relay (D-077, single URL). To self-host:
 
 ```bash
 node server/relay.mjs      # serves the game AND the relay on port 8787, no install needed
 ```
 
-Everyone opens `http://<host>:8787/?mp=ws://<host>:8787&room=heist&name=YOURNAME`. Up to 8 players per room see each other's
-doge — class sprite, movement, HP bar and name. Over the internet use `wss://` (the relay behind HTTPS).
+Then open `http://<host>:8787/?mp=ws://<host>:8787&room=heist&name=YOURNAME` (use `wss://` over HTTPS). Up to 8 players per
+room see each other's doge — class sprite, movement, HP bar and name.
 
-**Not shared yet:** enemies and loot. Each player fights their own cats. A true shared world needs an authoritative server
-(the open-source path is Colyseus) and is deliberately out of scope for now.
+**Shared & server-authoritative (D-076):** the relay runs a real referee — a **shared Cat Lord raid** (one boss, HP scaled to
+the number of raiders), **open-world PvP** outside the camp, and **parties** (`?party=NAME`) with friendly-fire disabled between
+allies. The **Healer heals the party** (D-046).
+
+**Still per-player:** ordinary field cats and their loot — each player fights their own. A fully shared field is the next step.
 
 ---
 

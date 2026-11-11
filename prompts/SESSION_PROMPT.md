@@ -1,6 +1,6 @@
 # DOGEON — Session Prompt (living document)
 
-Version: 2.3 · 2026-11-08 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
+Version: 2.4 · 2026-11-11 · Changelog at the bottom. **Improve this file whenever a session teaches us something.**
 
 > ## RULE #0 — Pre-Decision Analyzer Gate (THE NUMBER ONE RULE — NEVER SKIP)
 > Before taking ANY decision or writing ANY code, run the **Analyzer Prompt Master** (`prompts/ANALYZER_PROMPT_MASTER.md`):
@@ -25,7 +25,7 @@ Paste block A at the start of a fresh Claude Code session, then add a task block
 
 ## A. Session opener (paste every time)
 ```
-Project: DOGEON (single-file 16-bit action RPG, index.html). You are the lead engineer.
+Project: DOGEON (16-bit action RPG; game code in src/game.js since D-074, index.html is a thin shell). You are the lead engineer.
 Before anything else:
 1. Load the `dogeon-game` skill and read @CLAUDE.md and the last 5 entries of @docs/DECISIONS.md.
 2. Restate my task in 2-3 lines with acceptance criteria. If something is ambiguous, ask (max 3 questions) BEFORE planning.
@@ -112,8 +112,11 @@ Find the root cause (2-3 sentences), write a failing scenario in tests/sim.mjs f
 31. **Pre-Decision Analyzer Gate (`prompts/ANALYZER_PROMPT_MASTER.md`)** — always run Explore → Verify Baseline → Plan & Invariant Gate before taking any decision, keep `AGENTS.md` at workspace root for CLI auto-discovery, and use `/fork` or `/rewind` to recover cleanly from speculative paths (D-034).
 32. **Single-Prompt Full-Stack Reproducibility (TryNoah AI Rule, `MASTER_PROMPT.md` §A–B)** — always keep `MASTER_PROMPT.md` and `dogeon-game/SKILL.md` updated with the exact technical stack, live DogeOS Chikyū contract/token addresses, 4-byte selectors (`SEL`), and deterministic gameplay/UI specs (while removing dead instructions) so the entire app can be recreated on TryNoah AI from a single prompt without wasting context (D-036).
 33. **Closing menus in `tests/sim.mjs` + Instant Wallet Popup in `chainAct()`** — `api.get().ui = null` only mutates the returned wrapper object in `sim.mjs`; always close menus with `api.press('escape'); api.step(DT);`. Never `await refreshChain()` before `await fn()` in `chainAct()`, or slow RPC reads will delay `eth_sendTransaction` and block the browser wallet popup (D-036).
+34. **Pick the EVM provider when several wallets are injected** — on a real player's machine `window.ethereum` can be a multichain/Brave aggregator that pushes a CAIP-25 `tron:…` scope MetaMask rejects (`Invalid approved permissions request`). `eth()` now walks `window.ethereum.providers[]` and returns the MetaMask/EVM one (skipping `isTron`/`isTronLink`) before falling back (D-080). Real-world wallet injection is adversarial; don't trust a bare `window.ethereum`.
+35. **After a file split, re-point EVERY tool that read the old path** — D-074 moved the game into `src/game.js`, but `analyzer-master/scripts/audit-scan.mjs` kept scanning `index.html` and silently reported "all clear" on the 19-line shell (false green). When you move code, grep for the old filename across `tests/`, `scripts/` and `.agents/`/`.claude/` skills and update each reader (D-081). A tool that audits the wrong file is worse than no tool.
 
 ## Changelog
+- 2.4 (2026-11-11) — Added practices 34–35: multi-wallet EVM provider selection in `eth()` (D-080), and re-point every tool after a file split (`audit-scan.mjs` was blind-scanning the empty `index.html` shell, D-081). Updated the opener to say the game lives in `src/game.js`.
 - 2.3 (2026-11-08) — Added practices 32–33: TryNoah AI single-prompt full-stack reproducibility blueprint (`MASTER_PROMPT.md` §A–B), `api.press('escape')` menu close in `sim.mjs`, and non-blocking `chainAct()` wallet popup (D-036).
 - 2.2 (2026-11-08) — Added RULE #0 (`prompts/ANALYZER_PROMPT_MASTER.md` pre-decision gate), practice 31, and CLI best practices (`AGENTS.md`, verification loops, Explore-Plan-Execute, parallel audit subagents) (D-034).
 - 2.1 (2026-11-07) — Practices 27-30 from Phase 4 (D-023, D-024). MASTER_PROMPT C9 partner NPC template.

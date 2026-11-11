@@ -64,7 +64,7 @@ Proof exists (test/E2E/screenshot) · mission item named in the commit · `docs/
 ## 7. Gap list vs this charter (update as you close items)
 | Mission item | Status | Next step |
 |---|---|---|
-| 1 Web3 works | Contracts proven live (`e2e-chikyu.sh` 17/17); game UI proven with a mock wallet | Prove **game UI → real wallet → real mint** end-to-end on Chikyū |
+| 1 Web3 works | Contracts proven live (`e2e-chikyu.sh` 17/17); game UI proven with a mock wallet; multi-wallet connect bug fixed (`eth()` picks the EVM provider, D-080) | Prove **game UI → real wallet → real mint** end-to-end on Chikyū (now that CONNECT works on the live site) |
 | 2 Basic RPG loop | Works (resources, forge/mint, monsters, boss) | Keep; trim anything outside the loop |
 | 3 Heist lore | In Elder/factions/NPCs | Keep |
 | 4 Play together | Opt-in ghosts, relay proven with 3 players | Healer heal over the relay (below) |

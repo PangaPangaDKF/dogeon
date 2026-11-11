@@ -35,6 +35,21 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-081 · 2026-11-11 · Public launch on dogeon.lat + tooling/docs audit closeout (Claude Code)
+- What:
+  1. **Launch:** the game is live at **https://dogeon.lat** — domain bought on Spaceship ($1.24/yr, WHOIS private), pointed at the Fly app `dogeon-game` (A `@`→`66.241.125.199`, AAAA `@`→`2a09:8280:1::1f7:c716:0`); Spaceship's bundled "Web Hosting Essential" trial was disconnected (it locked the DNS and can't run the Node relay). `fly certs` issued Let's Encrypt HTTPS (auto-renews). Game is on Fly (cloud, 24/7) — not the user's PC. `fly.toml` committed for reproducibility.
+  2. **Dead-tooling fix:** `.agents/skills/analyzer-master/scripts/audit-scan.mjs` still scanned `index.html` (the 19-line shell after the D-074 split) and reported a false "all clear". Re-pointed it at `src/game.js`. Real audit then found `game.js` at **1510/1500 lines** — the verbose D-080 `eth()` — so compacted `eth()` back to one line → **1500/1500**, audit exit 0.
+  3. **Docs:** refreshed `docs/GAME_GUIDE.md` (live URL; Healer heals the party is BUILT per D-046; shared Cat Lord raid + PvP + party per D-076; mint fee 0.1→1 DOGE; fixed "DOGEON Pool DEX pool DEX" typo). Enchanted `prompts/SESSION_PROMPT.md` → v2.4 (practices 34 multi-wallet provider selection, 35 re-point tools after a split). Updated the `dogeon-mission` gap list.
+- Why: user asked to launch publicly with a domain, audit dead/extra code + GitHub state, enchant skills/prompts, and update the base gameplay explanation. A free subdomain would have worked, but the user wanted a custom domain.
+- Tool: Claude Code (Opus 4.8); `analyzer-master` audit-scan; `fly certs`/DNS run by the user from WSL.
+- Alternatives rejected: host on Spaceship's free Web Hosting — can't run the multiplayer Node/WebSocket relay, and it's a 30-day trial; keep game+relay on Fly. Raise the 1500 line ceiling in the scanner — gamed the audit; compacted the code instead.
+- Verify: `bash tests/check.sh` → ALL CHECKS PASSED (sim 0 failed, 47 forge, drift guard, relay 10/10); audit-scan exit 0 (1500/1500); `https://dogeon.lat` loads with HTTPS in Chrome (user confirmed).
+- Open: Brave native-wallet conflict still blocks CONNECT in Brave (browser config, not code); prove real wallet → real mint on the live site; `game.js` is at the line ceiling → next feature needs a further `src/*.js` split.
+
+### D-079 · 2026-11-11 · Raise peer NET_TTL 5s→12s so lag/tab-switches don't drop a player's ghost (Claude Code)
+- What: `NET_TTL` 5→12 in the MULTIPLAYER section — a peer who goes briefly silent (backgrounded tab, lag spike) is no longer dropped from the room before their next state packet.
+- Why: user reported the other player's ghost disappearing intermittently; at 10 Hz a 5 s TTL is only ~50 missed packets, easily crossed on a tab switch. Verify: sim "net ttl" (silent peers drop after 12s).
+
 ### D-080 · 2026-11-11 · eth() prefers MetaMask/EVM when several wallets are injected (fix TRON CAIP-25 connect error) (Claude Code)
 - What: `eth()` now checks `window.ethereum.providers[]` and returns the MetaMask/EVM provider (skipping `isTron`/`isTronLink`) when multiple wallets are installed, falling back to `window.ethereum` / `window.bitkeep.ethereum` as before.
 - Why: on the deployed site CONNECT failed with `MetaMask RPC Error ... caip25 ... scopeString tron:728126428 ... not supported by the wallet` — a multichain/Brave wallet was intercepting `window.ethereum` and injecting a TRON scope MetaMask rejects. The game is EVM-only, so it should talk to the EVM provider directly. Mission item 1 (web3 works).
