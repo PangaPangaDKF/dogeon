@@ -35,6 +35,11 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-078 · 2026-11-11 · Title class picker starts you a weak NOVICE — class is one-per-wallet, on-chain (Claude Code)
+- What: D-077's title setup applied a real class FREE offline on Enter. Removed it: you always start a weak NOVICE; a picked class is remembered (`P.wantClass`) with a toast to swear it at a trainer (one per wallet). On-chain lock (`chainData.profession`/`chooseProfession`) was already intact.
+- Why: user rule — profession is a one-time, one-per-wallet on-chain choice; default is a basic weak doge. Verify: sim 0 failed.
+- Follow-up: the trainer flow still allows a free *offline local* pick (legacy D-028); gate it too if classes must be strictly on-chain-only.
+
 ### D-076 · 2026-11-10 · Authoritative Relay: Shared Cat Lord Boss Raid, Full-Loot PvP, Party Friendly-Fire Guard, and Contestable Loot Piles (Antigravity)
 - What: Upgraded `server/relay.mjs` from a passive ghost reflector into an authoritative referee for shared gameplay interactions:
   1. Shared Boss Raid: Relay owns Cat Lord HP and scales max HP based on active raiders. Server verifies hits (`bhit`), clamps damage, broadcasts synchronized state (`boss`), and manages shared victory/kill.
