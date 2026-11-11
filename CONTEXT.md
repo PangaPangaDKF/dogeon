@@ -16,7 +16,14 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-10, after D-075)
+## 00. RESUME HERE (latest, 2026-11-11, after D-080)
+
+> **D-080 (wallet fix):** `eth()` now prefers the MetaMask/EVM provider from `window.ethereum.providers[]` when several
+> wallets are injected — fixes CONNECT failing on the deployed site with a CAIP-25 `tron:728126428` scope (a multichain/Brave
+> wallet was hijacking `window.ethereum`). User must `fly deploy --app dogeon-game` from WSL to pick this up.
+> **Deploy/domain:** game is live at https://dogeon-game.fly.dev (Fly cloud, 24/7, not the user's PC). User is buying
+> **`dogeon.lat`** on Spaceship; plan: `dogeon.lat` → landing, `play.dogeon.lat` → game (CNAME to dogeon-game.fly.dev),
+> connect via `fly certs add` + DNS records. HTTPS is free; only the domain costs money.
 
 ### ▶ CÓMO CONTINUAR (barato, entre sesiones) — leer esto primero
 1. **Sincroniza:** `cd C:\Users\dulbi\dogeon && git pull origin main`.
