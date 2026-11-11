@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-080 · 2026-11-11 · eth() prefers MetaMask/EVM when several wallets are injected (fix TRON CAIP-25 connect error) (Claude Code)
+- What: `eth()` now checks `window.ethereum.providers[]` and returns the MetaMask/EVM provider (skipping `isTron`/`isTronLink`) when multiple wallets are installed, falling back to `window.ethereum` / `window.bitkeep.ethereum` as before.
+- Why: on the deployed site CONNECT failed with `MetaMask RPC Error ... caip25 ... scopeString tron:728126428 ... not supported by the wallet` — a multichain/Brave wallet was intercepting `window.ethereum` and injecting a TRON scope MetaMask rejects. The game is EVM-only, so it should talk to the EVM provider directly. Mission item 1 (web3 works).
+- Tool: Claude Code (Opus 4.8). Verify: `bash tests/check.sh` → ALL CHECKS PASSED (sim 0 failed, 47 forge tests, relay 10/10).
+- Alternatives rejected: user-side only (disable other wallets) — real but not robust for other players; keep as the belt-and-suspenders fix. Browser-side isolation still helps when a wallet overrides `window.ethereum` with a single non-array provider.
+
 ### D-078 · 2026-11-11 · Title class picker starts you a weak NOVICE — class is one-per-wallet, on-chain (Claude Code)
 - What: D-077's title setup applied a real class FREE offline on Enter. Removed it: you always start a weak NOVICE; a picked class is remembered (`P.wantClass`) with a toast to swear it at a trainer (one per wallet). On-chain lock (`chainData.profession`/`chooseProfession`) was already intact.
 - Why: user rule — profession is a one-time, one-per-wallet on-chain choice; default is a basic weak doge. Verify: sim 0 failed.

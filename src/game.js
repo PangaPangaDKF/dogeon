@@ -674,7 +674,17 @@ function updEnemy(e,dt){
 // itself: everything goes through the player's wallet (window.ethereum), and only after they press CONNECT.
 const CHAIN={id:'0x5fdaf3',name:'DogeOS Chikyu Testnet',rpc:'https://rpc.testnet.dogeos.com',explorer:'https://dogeos-testnet.l2scan.co',faucet:'FAUCET.TESTNET.DOGEOS.COM'};
 const wallet={connected:false,addr:null,bal:null,chainOk:false,busy:false,msg:'',hooked:false};
-function eth(){try{return (typeof window!=='undefined'&&(window.ethereum||(window.bitkeep&&window.bitkeep.ethereum)))||null;}catch(e){return null;}} // Bitget Wallet: window.bitkeep.ethereum
+function eth(){try{
+  if(typeof window==='undefined')return null;
+  const e=window.ethereum;
+  if(e&&Array.isArray(e.providers)&&e.providers.length){ // several wallets injected: pick MetaMask/EVM, skip TRON/multichain aggregators that inject a CAIP-25 tron scope MetaMask rejects (D-080)
+    const mm=e.providers.find(p=>p&&p.isMetaMask&&!p.isTron&&!p.isTronLink);
+    if(mm)return mm;
+    const evm=e.providers.find(p=>p&&!p.isTron&&!p.isTronLink);
+    if(evm)return evm;
+  }
+  return e||(window.bitkeep&&window.bitkeep.ethereum)||null; // Bitget Wallet: window.bitkeep.ethereum
+}catch(e){return null;}}
 const shortAddr=a=>a?a.slice(0,6)+'..'+a.slice(-4):'';
 const fmtD=n=>typeof n==='number'?(n>=1000?Math.floor(n):n%1===0?n:Number(n.toFixed(2))):n;
 function walletErr(err){const c=err&&err.code;if(c===4001)return 'YOU REJECTED IT IN THE WALLET.';if(c===-32002)return 'WALLET REQUEST PENDING. OPEN YOUR WALLET.';return 'WALLET ERROR: '+String((err&&err.message)||err).slice(0,40).toUpperCase();}
