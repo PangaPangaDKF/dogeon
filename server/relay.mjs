@@ -117,6 +117,8 @@ function onMessage(c, text) {
     return;
   }
   if (m.id !== c.id) return; // only your OWN state/events (no id spoofing)
+  if (m.t === 'party') { c.party = typeof m.party === 'string' && /^[A-Z0-9.-]{0,12}$/.test(m.party) ? m.party : ''; return; }
+  if (m.t === 'st' && typeof m.pt === 'string') c.party = /^[A-Z0-9.-]{0,12}$/.test(m.pt) ? m.pt : '';
   if (m.t === 'st' && Number.isFinite(m.x) && Number.isFinite(m.y)) c.p = { x: m.x, y: m.y, dead: !!m.dead }; // last known position = what PvP/boss/loot checks use
   if (m.t === 'st' || m.t === 'heal') return broadcast(c, text); // clients validate fields
   onWorld(c, m); // only your OWN state/events are relayed (no id spoofing); clients validate fields

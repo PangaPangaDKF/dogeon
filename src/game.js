@@ -1021,6 +1021,7 @@ function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>{const o
   {label:'THE GRAND HEIST (STORY)',act:()=>{lesson(n,HEIST_STORY,()=>elderMenu(n));return '';}},
   {label:`FACTIONS${factionOf()?' (YOU: '+factionOf().name+')':''}`,act:()=>{factionMenu(n);return '';}},
   linkRow('JOIN THE HEIST: HEIST.DOGEOS.COM',LINKS.heist),
+  {label:'PARTY & SQUAD ('+(NET_PARTY||'SOLO')+')',act:()=>{partyMenu(n);return '';}},
   {label:'DOGE MARKET REPORT',act:()=>{const pc=Math.round(mkt.sent*MARKET.sentScale*100);return `DOGE $${mkt.p.toFixed(3)} (${pc>=0?'+':''}${pc}%) ${pc>2?'BULL: FIGHTERS HIT HARDER':pc<-2?'BEAR: CATS HIT HARDER':'FLAT'}`;}}];
   if(state.won&&state.shopT>0)o.splice(1,0,{label:`VICTORS MARKET (LIMITED: ${Math.ceil(state.shopT)}S)`,act:()=>{victorMarket(n);return '';}}); // D-065: post-boss limited shop
   if(state.won)o.splice(1,0,{label:'DOGEMASTER: MEME FORGE & RE-ROLL',act:()=>{dogeMasterMenu(n);return '';}}); // D-066: endgame DogeMaster
@@ -1116,6 +1117,7 @@ function invMenu(){
     o.push({label:`ON-CHAIN ITEMS (${nfts.length}): ${nfts.length?'SAFE ON DEATH':'MINT AT SPHINX/FORGE'}`,act:()=>'WALLET NFTS SURVIVE DEATH. BAG ITEMS & MATERIALS DROP WHEN YOU FALL.'});
     for(const it of nfts){const f=TYPE_FOOD[it.type];
       o.push({label:`NFT #${it.id} ${itemName(it)} `+(f?`[EAT +${FOODS[f].heal} HP, BURNS]`:it.type<=2?'(OWNED = EQUIPPED)':'[USE, BURNS]'),isNft:true,act:it.type<=2?()=>`ON-CHAIN GEAR. EFFECTIVE HAMMER LV${swordLv()} ARMOR LV${armorLv()}.`:()=>{useNft(it);return wallet.msg;}});}
+    o.push({label:'PARTY: '+(NET_PARTY||'SOLO')+' [P TO CHANGE]',act:()=>{partyMenu(null);return '';}});
     if(!P.bag.length)o.push({label:'BAG IS EMPTY',act:()=>'HUNT MONSTERS OR CATCH FISH.'});
     o.push({label:'CLOSE',act:null});return o;});ui.chain=true;if(chainReady())refreshChain().catch(()=>{});}
 function updateUI(dt){
@@ -1145,12 +1147,22 @@ function updateUI(dt){
 // loot need an authoritative server (e.g. Colyseus) and are deliberately NOT built. Host the relay: `node server/relay.mjs`.
 // Peer data is untrusted: ids are whitelisted (no __proto__), coords must be finite, names sanitized + capped, peers capped.
 const netParam=k=>{try{const m=location.search.match(new RegExp('[?&]'+k+'=([^&]+)'));return m?decodeURIComponent(m[1]):'';}catch(e){return '';}};
-const NET_URL=netParam('mp'),NET_ROOM=(netParam('room').match(/^[\w-]{1,24}$/)||['heist'])[0];
+const defaultMp=()=>{const p=netParam('mp');if(p==='off')return '';if(p)return p;try{if(typeof location!=='undefined'&&location.host&&(location.protocol==='http:'||location.protocol==='https:'))return (location.protocol==='https:'?'wss://':'ws://')+location.host;}catch(e){}return '';};
+const NET_URL=defaultMp(),NET_ROOM=(netParam('room').match(/^[\w-]{1,24}$/)||['heist'])[0];
 const NET_HZ=10,NET_TTL=5,NET_MAX=8,NET_PEERS=32; // send rate, seconds before a silent peer drops, ghosts drawn, peers tracked
 const net={ws:null,on:false,id:'',name:'',peers:Object.create(null),t:0,loot:Object.create(null),pend:Object.create(null)};
 const netClean=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9.\-]/g,'').slice(0,12);
 // D-076 shared world: the relay referees the Cat Lord's HP, PvP hits (same ?party= = no friendly fire) and death loot piles
-const NET_PARTY=netClean(netParam('party')),NET_LOOT=['steel','whisk','wood','stone'],LOOT_COL={steel:'#a0a8b0',whisk:'#e0e0ff',wood:'#c08a4a',stone:'#c0c8d0'};
+let NET_PARTY=netClean(netParam('party'));
+const NET_LOOT=['steel','whisk','wood','stone'],LOOT_COL={steel:'#a0a8b0',whisk:'#e0e0ff',wood:'#c08a4a',stone:'#c0c8d0'};
+function setParty(name){NET_PARTY=name==='SOLO'?'':netClean(name);if(netLive())netSend({t:'party',party:NET_PARTY});toast(NET_PARTY?'JOINED PARTY '+NET_PARTY:'SOLO MODE (OPEN PVP)',2);}
+function partyMenu(n){openMenu(n,'PARTY & SQUAD MANAGEMENT',()=>{const o=[];
+  o.push({label:'CURRENT: '+(NET_PARTY?'PARTY ['+NET_PARTY+'] (FRIENDLY FIRE OFF)':'SOLO (OPEN PVP ENABLED)'),act:()=>NET_PARTY?'PARTY ALLIES SHOW IN GREEN AND CANNOT BE HURT.':'SOLO PLAYERS CAN ATTACK AND BE ATTACKED BY RIVALS OUTSIDE CAMP.'});
+  for(const p of ['ALPHA','BRAVO','GOLD'])o.push({label:NET_PARTY===p?'* IN PARTY '+p:'  JOIN PARTY '+p,act:()=>{setParty(p);return 'JOINED PARTY '+p+'. ALLIES CANNOT HURT YOU!';}});
+  o.push({label:!NET_PARTY?'* SOLO (OPEN PVP)':'  LEAVE PARTY (GO SOLO)',act:()=>{setParty('SOLO');return 'NOW SOLO. OPEN PVP OUTSIDE CAMP.';}});
+  if(wallet.connected)o.push({label:'WALLET: '+shortAddr(wallet.addr),act:()=>'WALLET CONNECTED: '+wallet.addr});
+  else o.push({label:'CONNECT DOGEOS WALLET',act:()=>{connectWallet();return wallet.msg||'CONNECTING WALLET...';}});
+  o.push({label:'BACK',act:()=>{if(n)elderMenu(n);return '';}});return o;});}
 const netLive=()=>!!(net.on&&net.ws&&net.ws.readyState===1);
 function netSend(o){if(netLive())net.ws.send(JSON.stringify(Object.assign({},o,{id:net.id})));}
 function netPvp(cx,cy,hw,hh,dmg,skip){ // client pre-check; the relay re-checks range, camp and party before anyone is hurt
@@ -1163,7 +1175,7 @@ function netBoss(m){const e=enemies.find(e=>e.boss);if(!e)return;e.maxHp=Math.ma
 function netConnect(){
   if(!NET_URL||typeof WebSocket==='undefined'||net.ws)return;
   net.id=net.id||Math.random().toString(36).slice(2,8); // lazy: normal play never draws this random number (seeded sims stay identical)
-  net.name=net.name||netClean(netParam('name'))||'DOGE-'+net.id.slice(0,3).toUpperCase(); // never the wallet address (privacy)
+  net.name=netClean(netParam('name'))||net.name||HERO_NAMES[heroNameIdx]||'DOGE-'+net.id.slice(0,3).toUpperCase(); // never the wallet address (privacy)
   try{const ws=new WebSocket(NET_URL);net.ws=ws;
     ws.onopen=()=>{net.on=true;ws.send(JSON.stringify({t:'join',room:NET_ROOM,id:net.id,party:NET_PARTY}));toast('MULTIPLAYER: ROOM '+NET_ROOM.toUpperCase()+' AS '+net.name+(NET_PARTY?' PARTY '+NET_PARTY:' (SOLO: PVP ON)'),2.5);};
     ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
@@ -1202,10 +1214,16 @@ function netDraw(list,ox,oy){ // from drawWorld(): ghosts join the y-sorted enti
       textC(g.n,Math.round(g.x-ox),Math.round(g.y-30-oy),NET_PARTY&&g.pt===NET_PARTY?'#80ff80':'#ff8080'); // green = your party, red = can hit you
       const bx=Math.round(g.x-7-ox),by=Math.round(g.y-22-oy);ctx.fillStyle='#000';ctx.fillRect(bx-1,by-1,16,4);ctx.fillStyle='#063';ctx.fillRect(bx,by,14,2);ctx.fillStyle='#3f8';ctx.fillRect(bx,by,Math.round(14*g.h/100),2);}});}}
 
+const HERO_NAMES=['DOGE','SHIBE','BARKUS','CHONK','FLOKI','KABOSU','AKITA','HERO'],PARTY_OPTS=['SOLO','ALPHA','BRAVO','GOLD'],CLASS_OPTS=['novice','warrior','archer','healer'];
+let heroNameIdx=0,partyOptIdx=0,classOptIdx=0;
 // ================= UPDATE =================
 function update(dt){
   time+=dt;
-  if(scene==='title'){updateParts(dt);if(kp('enter',' ')){newGame();scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
+  if(scene==='title'){updateParts(dt);
+  if(kp('n')){heroNameIdx=(heroNameIdx+1)%HERO_NAMES.length;net.name=HERO_NAMES[heroNameIdx];sfx(440,0.06);}
+  if(kp('c')){classOptIdx=(classOptIdx+1)%CLASS_OPTS.length;sfx(520,0.06);}
+  if(kp('p')){partyOptIdx=(partyOptIdx+1)%PARTY_OPTS.length;NET_PARTY=PARTY_OPTS[partyOptIdx]==='SOLO'?'':PARTY_OPTS[partyOptIdx];sfx(600,0.06);}
+  if(kp('enter',' ')){newGame();net.name=netClean(netParam('name'))||net.name||HERO_NAMES[heroNameIdx];if(CLASS_OPTS[classOptIdx]!=='novice')applyClass(CLASS_OPTS[classOptIdx],false);scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
   updMarket(dt);chainTick(dt);
   netTick(dt); // opt-in multiplayer (no-op without ?mp); before the UI early-return so you stay visible while in menus
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
@@ -1250,6 +1268,7 @@ function update(dt){
   updFish(dt);
   if(kp('e')){let best=null,bd=28;for(const n of NPCS){const d=dist(n.x,n.y,P.x,P.y);if(d<bd){bd=d;best=n;}}if(best)talk(best);}
   if(kp('i','tab'))invMenu();
+  if(kp('p'))partyMenu(null);
   if(isMod()&&kp('m'))modMenu();
   if(P.moving||kp(' ','j','k','q','f')){P.idleT=0;if(P.lazyT>0)P.lazyT=Math.max(0,P.lazyT-dt*1.5);}
   else{P.idleT=(P.idleT||0)+dt;if(P.idleT>180&&!(P.lazyT>0)){P.lazyT=60;toast('LAZY DEBUFF: 60S SLOTH (-15% SPD)! MOVE & FIGHT!',2.5);}}
@@ -1444,8 +1463,10 @@ function drawTitle(){
   ctx.drawImage(SPR.frog.right[Math.floor(time*3)%2],W/2-110,108,32,40);
   ctx.drawImage(SPR.knight.right[0],W/2-80,108,16,20);ctx.drawImage(SPR.alley.left[0],W/2+30,118,16,20);
   ctx.drawImage(SPR.merchant.down[0],10,180,16,20);ctx.drawImage(SPR.bank.down[0],28,180,16,20);ctx.drawImage(SPR.sage.down[0],46,180,16,20);
-  if(Math.floor(time*2.5)%2)textC('PRESS ENTER',W/2,162,'#ffffff',2);
-  textC('WASD MOVE  SPACE SLASH  K BARK  F FISH  I BAG',W/2,190,'#a0b0e0');
+  if(Math.floor(time*2.5)%2)textC('PRESS ENTER TO START',W/2,152,'#ffffff',2);
+  const curHero=net.name||HERO_NAMES[heroNameIdx],curCls=CLASS_OPTS[classOptIdx].toUpperCase(),curPt=NET_PARTY||'SOLO (PVP)';
+  textC(`[N] NAME: ${curHero}   [C] CLASS: ${curCls}   [P] PARTY: ${curPt}`,W/2,172,'#ffe040');
+  textC('WASD MOVE  SPACE SLASH  K BARK/SKILL  F FISH  I BAG  P PARTY',W/2,190,'#a0b0e0');
   textC('E TALK  R REST  REST CAPS AT 60% HP - EAT FOOD!',W/2,199,'#a0b0e0');
   textC('WALLET + DOGEOS TESTNET: TALK TO THE SPHINX. CLICK GAME IF KEYS FAIL',W/2,212,'#606890');
 }
