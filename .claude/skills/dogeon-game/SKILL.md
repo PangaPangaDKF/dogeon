@@ -29,8 +29,8 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
 ## 2. Live DogeOS Chikyū Testnet Registry (`0x5fdaf3` / `6281971`)
 - **RPC:** `https://rpc.testnet.dogeos.com` · **Explorer:** `https://dogeos-testnet.l2scan.co` · **Faucet:** `https://faucet.testnet.dogeos.com`
 - **Deployed Game Contracts (`CONTRACTS['0x5fdaf3']`):**
-  - `items` (`DogeItems.sol`, ERC721Enumerable, packed `id<<16|type<<8|level`, `0.1 DOGE` mint fee): `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4`
-  - `dex` (`DogeDEX.sol`, NFT listings + `x*y=k` NFT/DOGE AMM pools, 2% LP fee + 1% protocol fee split 0.2% treasury / 0.8% stakers, pull-payment `proceeds`): `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e`
+  - `items` (`DogeItems.sol`, ERC721Enumerable, packed `id<<16|type<<8|level`, `1 DOGE` mint fee): `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4`
+  - `dex` (`DogeDEX.sol`, NFT listings + `x*y=k` NFT/DOGE AMM pools, 2% LP fee + 1% protocol fee split 0.2% treasury / 0.8% stakers, pull-payment `proceeds`): `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`
   - `prof` (`DogeProfession.sol`, 1 class per wallet forever, `0.05 DOGE` fee): `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`
   - `stake` (`DogeStaking.sol`, MasterChef `1e18` precision DOGE staking vault): `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`
 - **RedStone DOGE/USD Oracle (`REDSTONE['0x5fdaf3']`):**
@@ -45,7 +45,7 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
 2. **Death & Greed vs. Safety:** Death loses 50% of carried `P.doge`, all whiskers, all materials, and `P.bag`, respawning at campfire at 35% HP/MP (`RESPAWN_FRAC`). Pooled `P.bank` DOGE and on-chain NFTs/staked DOGE are never lost on death.
 3. **Starter Bag & NFT Minting (`D-019`, `D-021`, `D-036`):**
    - `newGame()` starts every player with `wood:3, stone:3, orb:2, scrap:2, horn:2, steel:2` and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]`.
-   - Players can immediately mint a `HAMMER LV2 NFT` using `1 WOOD + 1 STONE` (`mintNft(1,2,'starter')` in `invMenu` or `shopMenu`), mint crafted items via `creditOk`/`takeOffChain`/`putBack` (1 craft = 1 item, no dupes), preserve fish, or mint any item directly at Row 0 of `marketMenu()` (`MINT < ITEM > NFT (0.1 DOGE)`).
+   - Players can immediately mint a `HAMMER LV2 NFT` using `1 WOOD + 1 STONE` (`mintNft(1,2,'starter')` in `invMenu` or `shopMenu`), mint crafted items via `creditOk`/`takeOffChain`/`putBack` (1 craft = 1 item, no dupes), preserve fish, or mint any item directly at Row 0 of `marketMenu()` (`MINT < ITEM > NFT (1 DOGE)`).
    - Owning a gear NFT = wearing it (`swordLv()`, `armorLv()`).
 4. **Distinct Profession Gameplay Mechanics (`D-027..D-029`, `D-036`):**
    - `applyClass(cls, onchain)` updates `P.prof`, recalculates `P.maxHp` via `syncMaxHp()`, and transforms the hero sprite (`SPR[classOf()?.spr || 'hero']`).
@@ -55,7 +55,7 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
 5. **DOGEON Pool DEX (`marketMenu`, `ui.pooldex`, `D-036`):**
    - Opened at the Sphinx NPC via `NFT MARKET: SWAP + LIQUIDITY POOLS`. Uses ONLY our game contracts (`DogeItems` + `DogeDEX`).
    - Header shows `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <staked>`.
-   - Row 0 (`MINT < ITEM > NFT (0.1 DOGE)`) mints item tokens directly (consuming `1 WOOD + 1 STONE` for starter Hammer Lv2 if in bag); Row 1 (`WALLET ITEMS (N): #id ITEM...`) shows the player's minted item tokens balance; below that are `CREATE POOL` / `POOL` / `SWAP` / `ADD LP` / `REMOVE LP` rows styled with an amber/slate/emerald card colors in `drawUI()`.
+   - Row 0 (`MINT < ITEM > NFT (1 DOGE)`) mints item tokens directly (consuming `1 WOOD + 1 STONE` for starter Hammer Lv2 if in bag); Row 1 (`WALLET ITEMS (N): #id ITEM...`) shows the player's minted item tokens balance; below that are `CREATE POOL` / `POOL` / `SWAP` / `ADD LP` / `REMOVE LP` rows styled with an amber/slate/emerald card colors in `drawUI()`.
 6. **Instant Wallet Popup & Mouse UX (`D-036`):**
    - `chainAct()` never awaits `refreshChain()` before `await fn()` (so MetaMask/Bitget opens immediately on click/keypress).
    - Full mouse hover/wheel/click support on canvas (`cvPos`). In `tests/sim.mjs`, always close menus with `api.press('escape'); api.step(DT);` (never `api.get().ui = null`, which only mutates the wrapper object).

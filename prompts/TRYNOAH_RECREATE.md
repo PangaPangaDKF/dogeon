@@ -74,7 +74,7 @@ click CONNECT. It is fully playable with no wallet. Deploy it and give me the pu
 4. `I` → bag shows `WOOD x3` / `STONE x3`.
 5. Talk (`E`) to a faction trainer → pick a class **offline** (free) → sprite changes, HUD class tag updates.
 6. Sphinx (`E`) → `CONNECT WALLET` → wallet prompts to **add/switch to DogeOS Chikyū (0x5fdaf3)**.
-7. Sphinx → `NFT MARKET: SWAP + LIQUIDITY POOLS` → DOGEON Pool DEX opens; Row 0 mints an item (0.1 DOGE).
+7. Sphinx → `NFT MARKET: SWAP + LIQUIDITY POOLS` → DOGEON Pool DEX opens; Row 0 mints an item (1 DOGE).
 8. Sphinx → `ON-CHAIN STAKING` → stake / claim / unstake.
 
 ---

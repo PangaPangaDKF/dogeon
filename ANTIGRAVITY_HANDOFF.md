@@ -4,6 +4,18 @@
 > Each brain now has an inbox written by the other. It tells you **what I did, why, what it proved, what went wrong,
 > which decisions are still the user's, and the path I suggest you take next** — with a ready-to-paste job prompt at the end.
 
+> ## 000. SNAPSHOT: Claude Code D-071 (2026-11-10) — CONTRATOS REDESPLEGADOS otra vez (nuevas direcciones)
+>
+> **IMPORTANTE — las direcciones CAMBIARON.** Tu D-068 cambió `DogeItems.sol` (fee 1 DOGE + split 80/20 + `stakingPool`)
+> pero nunca se desplegó: el contrato viejo seguía en 0.1 DOGE y `stakingPool()` revertía. Lo redesplegué desde tu código:
+> - **DogeItems → `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4`** (fee 1 DOGE, `setStakingPool` = DogeStaking)
+> - **DogeDEX  → `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`** (apunta al nuevo items + el MISMO DogeStaking)
+> - DogeProfession `0x7AEF68…` y DogeStaking `0x4a1BF1…` SIN cambios (clase + staking se conservan).
+> `index.html` CONTRACTS + todos los docs/skills/e2e actualizados. **Usa las direcciones nuevas.**
+> **Probado en vivo:** minté 1 DOGE SWORD → `withdrawFees()` movió +0.8 DOGE al vault de staking (el 80/20 ya es real).
+> Nota de revisión del proyecto: el aura `ctx.arc` de la moneda choca con R2 (sin efectos) y la regla pixel-art; el sello
+> de 5h del raid es muy duro para alpha; `P.doge`/`orb`/`scrap`/`horn` aún están en el código pese a D-068. A decidir con el user.
+
 > ## 000. SNAPSHOT: Claude Code D-062..D-064 (2026-11-09) — survivor loop + random loot
 >
 > Direction: a **party survival dungeon crawl** (spec in `docs/HARDCORE_MODE.md` §5c). Shipped:
@@ -21,8 +33,8 @@
 > ## 000. SNAPSHOT: Claude Code D-057..D-061 (2026-11-09) — CONTRACTS REDEPLOYED, read before any chain work
 >
 > **IMPORTANT — the live addresses CHANGED.** I redeployed the gear contracts on Chikyu (partial deploy; prof + stake kept):
-> - **DogeItems → `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4`** (added 9 DOGE gear types 7-15)
-> - **DogeDEX  → `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e`** (points at the new items + the SAME DogeStaking)
+> - **DogeItems → `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4`** (added 9 DOGE gear types 7-15)
+> - **DogeDEX  → `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`** (points at the new items + the SAME DogeStaking)
 > - DogeProfession `0x7AEF68…` and DogeStaking `0x4a1BF1…` are UNCHANGED (user's class + staking survive).
 > `index.html` CONTRACTS + all live-reference docs/scripts are updated; `docs/DECISIONS.md` history keeps the old ones.
 > **Use the new addresses.** Live E2E on the new contracts: **18/18** (`e2e-chikyu.sh`, incl. a DOGE SWORD mint).

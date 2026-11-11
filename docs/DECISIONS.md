@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-071 · 2026-11-10 · Redeploy DogeItems+DogeDEX — 1 DOGE fee + REAL 80/20 staker split on-chain (Claude Code)
+- What: D-068 changed `DogeItems.sol` (1 DOGE fee, 80/20 mint-fee split to stakers, `stakingPool`) but it was never deployed — the live contract still charged 0.1 DOGE and had no `stakingPool` (`stakingPool()` reverted). Redeployed from the current source: **DogeItems `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4`** (1 DOGE fee) and **DogeDEX `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`**; kept DogeProfession + DogeStaking; called `setStakingPool(DogeStaking)` so `withdrawFees()` splits 80% stakers / 20% treasury. Updated `CONTRACTS` in `index.html` + all live-reference docs/skills/e2e; fee text 0.1→1 DOGE.
+- On-chain proof: minted 1 DOGE SWORD (1 DOGE) → `accruedFees=1e18`; `withdrawFees()` moved the staking vault **+0.8 DOGE exactly** (12.0001→12.8001), the other 0.2 to treasury. `mintFee=1e18`, `stakingPool`=DogeStaking, `dex.items()`=new items, gear 7-15 mint.
+- Why: User confirmed the contract task — make the 80/20 tokenomics real on-chain, not only in source (R6 "verified on the real chain"). Fixes the source↔deployed drift flagged in the project review.
+- Tool: Claude Code (Opus 4.8); `forge create` + `cast` with scratchpad `key.env` (never printed/committed); deployer `0x7BE8…82Ca`. Verify: drift guard OK (4 addresses / 30 selectors / 3 classes); `check.sh` + `e2e-chikyu.sh` on the new contracts.
+
 ### D-070 · 2026-11-10 · Fix Basic Crafting NFT Bug, Sardine/Salmon Dual Fishing & Infinite Campfire Cooking (Antigravity)
 - What:
   1. **Fix Misleading Basic Crafting NFT Styling:** In `shopMenu` at Wrenchpaw's Forge, basic material recipes (Hammer Lv2-Lv4, Armor Lv1-Lv2, Bone Charm, Moon Biscuit) had `isNft: true` erroneously set on craft action rows. Removed `isNft: true` so basic in-game crafting is rendered in clean white/gold text without confusing red styling or NFT diamond badges.

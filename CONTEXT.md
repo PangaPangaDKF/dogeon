@@ -16,7 +16,7 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-09, D-067: Hardcore Gathering, Iron Drops, Mob Clustering, Master Chain Auth, Red NFT Styling & Hardcore Mechanics Skill)
+## 00. RESUME HERE (latest, 2026-11-10, D-071: contracts REDEPLOYED — DogeItems 0xbF85.. / DogeDEX 0x6E26.. with 1 DOGE fee + real 80/20 staker split; Antigravity shipped D-066..D-070)
 
 - **D-067 Shipped:**
   - **Guaranteed Iron from Stone & Monster Iron Drops:** Mining a rock node (`n.kind === 'stone'`) now ALWAYS drops iron/steel (`kind: 'steel'`) physically onto the ground with `+1 IRON` floater. All monsters in `killEnemy(e)` also have a 25% iron drop chance to supply the forge and fuel crafting without inflating wealth.
@@ -57,7 +57,7 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
   DogeDEX `dogeUsd()` (0x435a3613) never reverts. Local anvil now deploys MockPriceFeed: items 0x5FbDB2315678afecb367f032d93F642f64180aa3,
   feed 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512, **dex 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0** (written by `node contracts/apply-deployment.mjs 31337`).
 - **LIVE on Chikyū (D-032, 2026-11-08, full Phase 5 set — supersedes the D-025 items+dex deploy):**
-  items `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4`, dex `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e`,
+  items `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4`, dex `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`,
   prof `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`, stake `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`,
   DOGE/USD feed `0x434F8D17c0301cfEa143dba912972E24B827C968`. Deployer `0x7BE839793765F18E36cC97b5312d094F6AE282Ca`. All four in `index.html` `CONTRACTS['0x5fdaf3']`.
   Foundry 1.5.1 lives in the session scratchpad (`scratchpad/foundry/forge.exe` etc.); re-download the Windows zip if the scratchpad is gone.

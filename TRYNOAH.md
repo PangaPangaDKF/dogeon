@@ -65,8 +65,8 @@ Explorer `https://dogeos-testnet.l2scan.co` · Faucet `faucet.testnet.dogeos.com
 
 | Contract | Address |
 |---|---|
-| **DogeItems** (ERC-721 + Enumerable) | `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4` |
-| **DogeDEX** (listings + `x*y=k` pools + 1% protocol fee) | `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e` |
+| **DogeItems** (ERC-721 + Enumerable) | `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4` |
+| **DogeDEX** (listings + `x*y=k` pools + 1% protocol fee) | `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590` |
 | **DogeProfession** (one class per wallet) | `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055` |
 | **DogeStaking** (MasterChef DOGE vault) | `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d` |
 | **RedStone DOGE/USD feed** | `0x434F8D17c0301cfEa143dba912972E24B827C968` |
@@ -86,7 +86,7 @@ Staking:    stakeDoge 3a4b66f1 · unstakeDoge 2e17de78 · claimStake 4e71d92d ·
             pendingRewards 31d7a262 · stakedOf 98807d84 · flushFees 6811406e · stakerFeesView 67f7cf97
 ```
 
-Fees: `DogeItems` mint = **0.1 DOGE**; `DogeProfession` oath = **0.05 DOGE**. Item types:
+Fees: `DogeItems` mint = **1 DOGE**; `DogeProfession` oath = **0.05 DOGE**. Item types:
 `1 HAMMER · 2 ARMOR · 3 RAW FISH · 4 COOKED FISH · 5 BONE CHARM · 6 MOON BISCUIT`, packed `id<<16 | type<<8 | level`.
 There is **no ethers/viem** — calls are built from raw selectors + ABI word helpers (`W32 A32 words arrAt unpack`).
 
@@ -197,7 +197,7 @@ HARD RULES (never break):
 
 STEP 4 — ACCEPTANCE (on the deployed URL): zero console errors · Enter starts in camp · I shows
 WOOD x3 / STONE x3 · a trainer sets a class offline · Sphinx CONNECT WALLET adds/switches to
-DogeOS Chikyu · Sphinx NFT MARKET row 0 mints an item for 0.1 DOGE · ON-CHAIN STAKING stakes/claims.
+DogeOS Chikyu · Sphinx NFT MARKET row 0 mints an item for 1 DOGE · ON-CHAIN STAKING stakes/claims.
 
 STEP 5 — FOR ANY LATER CHANGE: smallest change that serves the mission → `bash tests/check.sh` green →
 add a scenario to tests/sim.mjs → log it in docs/DECISIONS.md → if you restated an address or

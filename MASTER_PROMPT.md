@@ -55,7 +55,7 @@ contracts/                         # Foundry project (Solidity ^0.8.24, OpenZepp
   script/Deploy.s.sol              # Deploys DogeItems -> DogeStaking -> DogeDEX -> DogeProfession in dependency order
   src/
     IPriceFeed.sol                 # Chainlink AggregatorV3-compatible interface for RedStone DOGE/USD feed (8 decimals)
-    DogeItems.sol                  # ERC721Enumerable items (1=HAMMER..6=MOON_BISCUIT), 0.1 DOGE mintFee, packed inventoryOf, SVG tokenURI
+    DogeItems.sol                  # ERC721Enumerable items (1=HAMMER..6=MOON_BISCUIT), 1 DOGE mintFee, packed inventoryOf, SVG tokenURI
     DogeStaking.sol                # MasterChef (PREC=1e12) native DOGE staking vault receiving 0.8% of DogeDEX trades
     DogeDEX.sol                    # Fixed-price NFT listings + constant-product (x*y=k) NFT/DOGE AMM pools + 1% protocol fee (0.2%/0.8%)
     DogeProfession.sol             # Immutable 1-class-per-wallet oath registry (1=WARRIOR, 2=ARCHER, 3=HEALER), 0.05 DOGE fee
@@ -124,7 +124,7 @@ Every section in [`index.html`](./index.html) is marked by `// =================
                         └──────┬───────────────────┬────────────────────┬──────┘
                                │                   │                    │
        1. Mint / Burn Items    │   2. Trade & LP   │  3. Choose Class   │ 4. Stake DOGE
-          (0.1 DOGE exact)     │  (NFTs + DOGE)    │  (0.05 DOGE exact) │ & Claim Rewards
+          (1 DOGE exact)     │  (NFTs + DOGE)    │  (0.05 DOGE exact) │ & Claim Rewards
                                ▼                   ▼                    ▼
                      ┌─────────────────┐ ┌──────────────────┐ ┌────────────────────┐
                      │  DogeItems.sol  │◄┤   DogeDEX.sol    │ │ DogeProfession.sol │
@@ -165,7 +165,7 @@ Every section in [`index.html`](./index.html) is marked by `// =================
   - `latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)`
 
 #### 2. [`contracts/src/DogeItems.sol`](./contracts/src/DogeItems.sol) (`155` lines — `ERC721Enumerable, Ownable, ReentrancyGuard`)
-- **Live Address (`0x5fdaf3`):** `0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4`
+- **Live Address (`0x5fdaf3`):** `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4`
 - **Constants & State:**
   - Item types: `HAMMER = 1` (levels `1..4`), `ARMOR = 2` (levels `1..2`), `RAW_FISH = 3` (`lv 1`), `COOKED_FISH = 4` (`lv 1`), `BONE_CHARM = 5` (`lv 1`), `MOON_BISCUIT = 6` (`lv 1`).
   - `uint256 public mintFee;` (initialized to `0.1 ether` in `constructor(uint256 fee, address treasury_)`), `address public treasury;`, `uint256 public nextId = 1;`, `uint256 public accruedFees;`, `mapping(uint256 => Item) public items;`.
@@ -192,7 +192,7 @@ Every section in [`index.html`](./index.html) is marked by `// =================
   - `pendingRewards(address user) external view returns (uint256)`: returns `claimable[user] + (staked[user] * accRewardPerShare) / PREC - rewardDebt[user]`.
 
 #### 4. [`contracts/src/DogeDEX.sol`](./contracts/src/DogeDEX.sol) (`373` lines — `ReentrancyGuard`)
-- **Live Address (`0x5fdaf3`):** `0xD381e28AC54399EfeA53DCE17D0b627883c00B6e`
+- **Live Address (`0x5fdaf3`):** `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`
 - **Immutables & Fee Constants:**
   - `DogeItems public immutable items;`, `IPriceFeed public immutable dogeUsdFeed;`, `address public immutable treasury;`, `address public immutable stakingPool;`.
   - `FEE_BPS = 200` (**2% LP fee** kept inside the pool reserve), `PROTO_FEE_BPS = 100` (**1% protocol fee** outside the pool curve, split into `PROJECT_BPS = 20` (**0.2% to `proceeds[treasury]`**) and `STAKER_BPS = 80` (**0.8% to `stakerFees`** — exact 1:4 ratio)), `BPS = 10_000`, `SHARES_PER_ITEM = 1e18`, `MIN_FIRST_DOGE = 0.001 ether`, `ORACLE_MAX_AGE = 1 days`.
@@ -245,8 +245,8 @@ const CHAIN={id:'0x5fdaf3',idDec:6281971,name:'DogeOS Chikyu Testnet',rpc:'https
 // Support ?chain=local for Foundry Anvil: {id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''}
 const CONTRACTS={
   '0x5fdaf3':{
-    items:'0xea63AF6aD560E4a84aA633E138f89F28c2D25ed4',
-    dex:'0xD381e28AC54399EfeA53DCE17D0b627883c00B6e',
+    items:'0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4',
+    dex:'0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590',
     prof:'0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055',
     stake:'0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d'
   },
