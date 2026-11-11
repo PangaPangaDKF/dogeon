@@ -1286,10 +1286,7 @@ function drawChar(spr,dir,fr,x,feetY,scale,ox,oy,tint){
 }
 function drawFire(ox,oy){
   const mx=CX*16+8-Math.round(ox),my=MOS_Y*16+8-Math.round(oy);
-  ctx.drawImage(MOSAIC,mx-48,my-48); // floor decoration, walkable
-  const pulse=0.12+Math.sin(time*2.5)*0.06;
-  ctx.fillStyle=`rgba(255,215,0,${pulse})`;ctx.beginPath();ctx.arc(mx,my,46,0,Math.PI*2);ctx.fill();
-  if(Math.random()<0.25)parts.push({x:CX*16+8+R(-40,40),y:MOS_Y*16+8+R(-40,40),vx:R(-3,3),vy:R(-16,-6),life:R(0.4,0.8),col:Math.random()<0.5?'#ffd700':'#fff5a0'});
+  ctx.drawImage(MOSAIC,mx-48,my-48); // the user's Dogecoin art (R1). No aura/sparkles — R2: light, no useless effects (D-075)
   const x=CX*16+8-Math.round(ox),y=FY*16+8-Math.round(oy);
   for(let i=0;i<14;i++){const h=5+Math.sin(time*14+i*1.7)*2+(i%3),w=i<7?i:13-i;const col=i<3||i>10?'#d83818':i<5||i>8?'#f88820':'#ffe060';ctx.fillStyle=col;ctx.fillRect(x-7+i,y+2-h-w*0.6,1,h+w*0.6);}
   ctx.fillStyle='#fff8c0';ctx.fillRect(x-1,y-3+Math.round(Math.sin(time*20)),2,3);

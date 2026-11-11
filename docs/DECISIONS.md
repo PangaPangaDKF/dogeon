@@ -35,6 +35,12 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-075 · 2026-11-10 · Remove Antigravity's coin aura/sparkles; enforce R2 "no useless effects" (Claude Code)
+- What: Removed the pulsing golden `ctx.arc` aura + sparkle particles that D-ab1a4b2 (Antigravity) added around the camp Dogecoin — kept the coin art itself (R1). Strengthened charter rule **R2** ("Lighter + more basic ALWAYS wins") and made it **enforceable**: `tests/check.sh` now FAILS on `ctx.arc`/`ctx.ellipse`/`createRadialGradient`/`shadowBlur` in `src/game.js`.
+- Why: user — "quita las chispas, fue algo extra de Antigravity; crea una regla que impida efectos inútiles; mientras más ligero y básico, mejor el gameplay y el multijugador." Anti-aliased glows clash with the crisp 16-bit pixel art (CLAUDE.md pixel rule: no `ctx.arc` for sprites) and cost frames that matter in multiplayer.
+- Tool: Claude Code (Opus 4.8). Verify: coin art (`MOSAIC_PX`) untouched; `check.sh` green incl. the new R2 gate. Charter R2 updated in both `.claude/` and `.agents/` dogeon-mission skills.
+- Also answered the user: **no PvP and no party/friendly-fire exist in the code** (D-068 claimed "PvP material theft" but it was never implemented — grep finds nothing). Both require the Phase-2 authoritative server; with it, friendly-fire-off / party is a one-flag design. Currency purity deferred per user.
+
 ### D-074 · 2026-11-10 · Module split — game code moved to `src/game.js`; `index.html` is now a thin shell (Claude Code)
 - What: Moved the whole inline `<script>` (1460 lines) out of `index.html` into **`src/game.js`**, loaded via `<script src="src/game.js"></script>`. `index.html` is now an 18-line shell. **Classic external script (NOT ES modules)** — deliberate: this codebase is all global scope and the test harness runs it as globals, so `import/export` would be a huge risky rewrite; a classic external script keeps global scope, needs almost no harness change, AND still loads from `file://` (double-click works). Served hosting (relay/Fly/Docker) works too.
 - Why: `index.html` hit 1479/1500 lines, blocking further work (currency purity, authoritative server). The split unblocks the line budget and organizes the code without changing behavior.

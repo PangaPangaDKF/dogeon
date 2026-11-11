@@ -13,6 +13,10 @@ echo "== 1. static rules (CLAUDE.md §2) =="
 for pat in 'alert(' 'confirm(' 'prompt(' 'fetch(' 'XMLHttpRequest' 'import('; do
   if grep -qF "$pat" src/game.js; then bad "forbidden call found: $pat"; else ok "no $pat"; fi
 done
+# R2 (mission charter): no useless effects. Anti-aliased blobs / glows break the crisp 16-bit look + cost frames in MP (D-075)
+for pat in 'ctx.arc(' 'ctx.ellipse(' 'createRadialGradient' 'shadowBlur'; do
+  if grep -qF "$pat" src/game.js; then bad "useless FX forbidden (R2 light): $pat"; else ok "no $pat (R2: light, no useless effects)"; fi
+done
 # WebSocket is allowed ONLY inside the opt-in MULTIPLAYER section (D-040), the way wallet calls live only in CHAIN (D-016)
 if awk '/\/\/ =+ MULTIPLAYER/{m=1;next} /\/\/ =+ /{m=0} !m' src/game.js | grep -qF 'WebSocket'; then
   bad "WebSocket used outside the opt-in MULTIPLAYER section"; else ok "WebSocket only inside the opt-in MULTIPLAYER section"; fi
