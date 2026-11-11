@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # 1. DOGEON: 16-Bit Multiplayer Action RPG & WebSocket Relay
+  dogeon:
+    build: .
+    container_name: dogeon-game
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MAX_ROOM=8
+
+  # 2. n8n Workflow Automation Engine (Optional / alongside existing container)
+  # n8n:
+  #   image: docker.n8n.io/n8nio/n8n:latest
+  #   container_name: n8n-automation
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5678:5678"
+  #   environment:
+  #     - N8N_HOST=0.0.0.0
+  #     - N8N_PORT=5678
+  #     - N8N_PROTOCOL=http
+  #     - WEBHOOK_URL=https://n8n.yourdomain.xyz/
+  #   volumes:
+  #     - n8n_data:/home/node/.n8n
+
+# volumes:
+#   n8n_data:

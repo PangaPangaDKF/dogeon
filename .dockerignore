@@ -1,0 +1,6 @@
+contracts/
+tests/out/
+docs/
+.git/
+.agents/
+.claude/

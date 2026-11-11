@@ -35,6 +35,19 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-070 · 2026-11-10 · Fix Basic Crafting NFT Bug, Sardine/Salmon Dual Fishing & Infinite Campfire Cooking (Antigravity)
+- What:
+  1. **Fix Misleading Basic Crafting NFT Styling:** In `shopMenu` at Wrenchpaw's Forge, basic material recipes (Hammer Lv2-Lv4, Armor Lv1-Lv2, Bone Charm, Moon Biscuit) had `isNft: true` erroneously set on craft action rows. Removed `isNft: true` so basic in-game crafting is rendered in clean white/gold text without confusing red styling or NFT diamond badges.
+  2. **Two Fish Species (Sardine & Salmon):** Expanded fishing drop mechanics to yield two distinct fish types:
+     - `raw_fish` (Raw Sardine): Common fish restoring 15 HP.
+     - `raw_salmon` (Raw Salmon): Prized fish restoring 25 HP and 10 MP.
+  3. **Free Infinite Campfire Cooking:** Standing near the Camp Refuge brazier allows free, unlimited cooking without fees:
+     - `COOK RAW FISH -> COOKED FISH` (Cooked Sardine): Restores 25 HP.
+     - `COOK RAW SALMON -> COOKED SALMON`: Restores 50 HP and 25 MP!
+  4. **Fly.io & Docker Compose Production Architecture:** Configured `Dockerfile` and `fly.toml` for `dogeon-game` (25MB Node:22-bookworm-slim micro-machine) providing WebSocket multiplayer relay and game serving.
+- Why: User requested fixing the bug where basic item crafts appeared as red NFTs, adding Sardine and Salmon as 2 kinds of fish with 2 cooked counterparts for infinite consumable HP/MP recovery, and guiding deployment alongside existing n8n Docker containers.
+- Tool: Antigravity CLI. Verify: `tests/sim.mjs` 0 failed; `tests/check.sh` all 6 stages PASS; line count 1479/1500.
+
 ### D-069 · 2026-11-09 · 8-Player Server Cap, Raid Failure Ejection & Gate Lock, Dialogue Screen Polish, Landing Page Repo (Antigravity)
 - What:
   1. **Single 8-Player Server Cap:** `server/relay.mjs` computes `total` connections across all rooms and rejects new clients when `total >= 8` with `{ t: 'full', msg: 'SERVER FULL (8/8 PLAYERS)' }`. Client toasts `"SERVER FULL (MAX 8 PLAYERS)"`.
