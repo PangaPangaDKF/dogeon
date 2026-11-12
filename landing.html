@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOGEON — The Grand Heist | 16-Bit Hardcore Web3 Action RPG on DogeOS</title>
+  <meta name="description" content="A hardcore 16-bit retro multiplayer Action RPG & Web3 dungeon extraction raid on DogeOS Chikyū. Slay the Cat Lord, loot rival players, mint on-chain meme gear, and stake DOGE.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Official DogeOS "The Grand Heist" Design Tokens (heist.dogeos.com) */
+      --bg: #020307;
+      --bg-darker: #000000;
+      --card-bg: #0a0c16;
+      --card-border: #181d36;
+      --card-hover: #22294c;
+      --gold: #ffd500;             /* DogeOS Yellow */
+      --gold-dark: #c8a700;
+      --cyan: #0bdafe;             /* Heist Cyber Cyan */
+      --red: #fb1313;              /* Heist Neon Red */
+      --green: #00c758;            /* Sanctuary Green */
+      --purple: #b829ff;           /* Syndicate Purple */
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --heist-border: rgba(255, 213, 0, 0.2);
+      --red-glow: 0 0 16px rgba(251, 19, 19, 0.45);
+      --yellow-glow: 0 0 20px rgba(255, 213, 0, 0.35);
+      --cyan-glow: 0 0 16px rgba(11, 218, 254, 0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(184, 41, 255, 0.14) 0%, transparent 40%),
+        radial-gradient(circle at 85% 45%, rgba(11, 218, 254, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 85%, rgba(255, 213, 0, 0.10) 0%, transparent 50%);
+    }
+
+    .pixel { font-family: 'Press Start 2P', monospace; }
+    .silk { font-family: 'Silkscreen', monospace; }
+
+    /* Canvas background effect */
+    #bg-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.3;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header & Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--heist-border);
+      padding: 14px 0;
+    }
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--gold);
+      font-size: 15px;
+      letter-spacing: -0.5px;
+    }
+    .logo-badge {
+      background: #201a08;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 4px 8px;
+      font-size: 10px;
+      border-radius: 4px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      list-style: none;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-cta {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+    }
+    .btn-gold {
+      background: var(--gold);
+      color: #000;
+      border-color: #ffe55c;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    }
+    .btn-gold:hover {
+      background: #ffe033;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.45);
+    }
+    .btn-cyan {
+      background: transparent;
+      color: var(--cyan);
+      border-color: var(--cyan);
+    }
+    .btn-cyan:hover {
+      background: rgba(0, 240, 255, 0.12);
+      transform: translateY(-2px);
+    }
+    .btn-purple {
+      background: var(--purple);
+      color: #fff;
+      border-color: #ba75ff;
+    }
+    .btn-purple:hover {
+      background: #a962f0;
+      transform: translateY(-2px);
+    }
+
+    /* Section styling */
+    section {
+      padding: 70px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .section-tag {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--cyan);
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .section-title {
+      font-size: 32px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 780px;
+      margin-bottom: 36px;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 90px 0 70px;
+      text-align: center;
+      position: relative;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 11px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 46px;
+      line-height: 1.25;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+    .hero h1 span.gold { color: var(--gold); text-shadow: 0 0 25px rgba(255, 215, 0, 0.4); }
+    .hero h1 span.cyan { color: var(--cyan); text-shadow: 0 0 25px rgba(0, 240, 255, 0.4); }
+    .hero-sub {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 820px;
+      margin: 0 auto 36px;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 50px;
+    }
+
+    /* Live Game Screen Mockup */
+    .game-screen {
+      max-width: 880px;
+      margin: 0 auto;
+      background: #030408;
+      border: 3px solid var(--gold);
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.2);
+      overflow: hidden;
+      position: relative;
+    }
+    .screen-header {
+      background: #14172a;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--card-border);
+      font-size: 11px;
+    }
+    .screen-status {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    .screen-viewport {
+      height: 380px;
+      position: relative;
+      background: #111425 radial-gradient(#1c223d 10%, transparent 11%);
+      background-size: 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .hud-overlay {
+      position: absolute;
+      top: 12px; left: 16px; right: 16px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      z-index: 2;
+    }
+    .hud-chip {
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid var(--card-border);
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    .doge-sprite {
+      width: 64px; height: 64px;
+      background: var(--gold);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+      animation: bob 1.8s ease-in-out infinite;
+    }
+    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* Card Grids */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 24px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 8px;
+      padding: 26px;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .card:hover {
+      border-color: var(--card-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    .card-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+    .card h3 {
+      font-size: 20px;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .card-badge {
+      position: absolute;
+      top: 14px; right: 14px;
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* Class Cards */
+    .class-card {
+      border-top: 4px solid var(--cyan);
+    }
+    .class-card.warrior { border-top-color: var(--red); }
+    .class-card.archer { border-top-color: var(--green); }
+    .class-card.healer { border-top-color: var(--cyan); }
+    .stat-bar {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .stat-fill-wrap {
+      width: 100%;
+      height: 6px;
+      background: #191d38;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .stat-fill {
+      height: 100%;
+      background: var(--cyan);
+    }
+    .stat-fill.red { background: var(--red); }
+    .stat-fill.green { background: var(--green); }
+
+    /* Lore / Heist Box */
+    .story-box {
+      background: linear-gradient(135deg, rgba(31, 37, 71, 0.6) 0%, rgba(15, 18, 36, 0.9) 100%);
+      border: 2px solid var(--purple);
+      border-radius: 8px;
+      padding: 36px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    .story-quote {
+      font-style: italic;
+      color: #ffd880;
+      border-left: 3px solid var(--gold);
+      padding-left: 16px;
+      margin: 16px 0;
+      font-size: 15px;
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 20px;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    th {
+      background: #14182e;
+      color: var(--gold);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+    }
+    tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Highlight badges */
+    .tag-meme { background: rgba(255, 215, 0, 0.15); color: var(--gold); border: 1px solid var(--gold); }
+    .tag-danger { background: rgba(255, 71, 87, 0.15); color: var(--red); border: 1px solid var(--red); }
+    .tag-safe { background: rgba(46, 213, 115, 0.15); color: var(--green); border: 1px solid var(--green); }
+
+    /* Footer */
+    footer {
+      background: var(--bg-darker);
+      border-top: 2px solid var(--card-border);
+      padding: 50px 0 30px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr);
+      gap: 36px;
+      margin-bottom: 40px;
+    }
+    .footer-col h4 {
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-bottom {
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 12px;
+    }
+
+    /* Gallery & Screenshots */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+    .ss-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .ss-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+    .ss-img-wrap {
+      width: 100%;
+      height: 220px;
+      background: #090c1a;
+      border-bottom: 2px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .ss-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+    .ss-card:hover .ss-img-wrap img {
+      transform: scale(1.04);
+    }
+    .ss-placeholder-icon {
+      font-size: 38px;
+      margin-bottom: 8px;
+      opacity: 0.8;
+    }
+    .ss-drop-slot {
+      font-size: 10px;
+      color: var(--text-muted);
+      border: 1px dashed rgba(255, 215, 0, 0.4);
+      padding: 6px 12px;
+      border-radius: 4px;
+      background: rgba(255, 215, 0, 0.05);
+    }
+    .ss-info {
+      padding: 18px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .ss-info h4 {
+      font-size: 15px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .ss-info p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Sanctuary Doge Coin Box */
+    .sanctuary-showcase {
+      background: linear-gradient(135deg, rgba(20, 24, 46, 0.9) 0%, rgba(10, 12, 24, 0.95) 100%);
+      border: 2px solid var(--gold);
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 40px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 32px;
+      align-items: center;
+      box-shadow: 0 0 35px rgba(255, 215, 0, 0.15);
+    }
+    .sanctuary-canvas-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #05070d;
+      border: 2px solid var(--card-border);
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+    }
+    #sanctuary-canvas {
+      image-rendering: pixelated;
+      width: 192px;
+      height: 192px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sanctuary-showcase { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 32px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Sticky Navigation Header -->
+  <header>
+    <div class="container nav-inner">
+      <a href="#" class="logo pixel">
+        <span class="logo-badge">16-BIT WEB3</span>
+        DOGEON
+      </a>
+      <ul class="nav-links">
+        <li><a href="#heist">The Heist</a></li>
+        <li><a href="#characters">Classes</a></li>
+        <li><a href="#economy">Economy</a></li>
+        <li><a href="#mint">NFT Mint</a></li>
+        <li><a href="#faucet">Faucet</a></li>
+        <li><a href="#resources">Gathering</a></li>
+        <li><a href="#pvp">PvP Loot</a></li>
+        <li><a href="#party">Raid Coop</a></li>
+        <li><a href="#staking">Staking</a></li>
+        <li><a href="#npcs">NPCs</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+      </ul>
+      <div class="nav-cta">
+        <button id="add-network-btn" class="btn btn-cyan silk" onclick="addDogeOSToMetaMask()">+ DogeOS RPC</button>
+        <a href="https://play.dogeon.lat/?mp" target="_blank" class="btn btn-gold pixel">Play Now</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-badge pixel">★ DOGEOS CHIKYŪ TESTNET — HARDCORE MULTIPLAYER ARPG ★</div>
+        <h1 class="pixel">
+          RECLAIM THE <span class="gold">STOLEN TREASURY</span>.<br>
+          SURVIVE THE <span class="cyan">EXTRACTION RAID</span>.
+        </h1>
+        <p class="hero-sub">
+          DOGEON ("The Grand Heist") is an unforgiving retro 16-bit multiplayer Action RPG. 
+          8-player dungeon instances, high-stakes PvP full-loot drops, pure Testnet DOGE economics, 
+          real-time RedStone oracles, and meme-forged gear with wild ±420 and ±69 stats.
+        </p>
+        <div class="hero-actions">
+          <a href="https://play.dogeon.lat/?mp" target="_blank" class="btn btn-gold pixel" style="padding: 14px 28px; font-size: 13px;">ENTER THE DUNGEON (?mp)</a>
+          <button class="btn btn-cyan silk" onclick="addDogeOSToMetaMask()" style="padding: 14px 24px;">ADD DOGEOS TO METAMASK</button>
+          <a href="#faucet" class="btn btn-purple silk" style="padding: 14px 24px;">CLAIM FAUCET DOGE</a>
+        </div>
+
+        <!-- Simulated In-Game Canvas / Viewport View -->
+        <div class="game-screen">
+          <div class="screen-header">
+            <div class="screen-status">
+              <span class="status-dot"></span>
+              <span class="pixel" style="color: var(--green);">SERVER ALIVE: 8/8 SLOTS</span>
+            </div>
+            <div class="pixel" style="color: var(--gold);">CHAIN ID: 6281971 (CHIKYŪ)</div>
+          </div>
+          <div class="screen-viewport">
+            <div class="hud-overlay">
+              <div class="hud-chip pixel" style="color: #ff5050;">HP 60/60 &nbsp; MP 30/30</div>
+              <div class="hud-chip pixel" style="color: var(--gold);">WALLET: 420.00 DOGE</div>
+              <div class="hud-chip pixel" style="color: #80ff80;">RAID: 28M LEFT</div>
+            </div>
+            <div class="doge-sprite">🐕</div>
+            <div class="pixel" style="color: #fff; font-size: 11px; margin-top: 14px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 4px;">
+              DEMOLITION DOGE [LV. 42]
+            </div>
+            <div class="silk" style="color: var(--cyan); font-size: 12px; margin-top: 6px;">
+              [SPC: CLEAVE &nbsp;|&nbsp; K: GROUND POUND 12MP &nbsp;|&nbsp; I: BAG &nbsp;|&nbsp; R: REST]
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. The Heist (Lore & Premise) -->
+    <section id="heist">
+      <div class="container">
+        <span class="section-tag pixel">01 // THE NARRATIVE</span>
+        <h2 class="section-title pixel">THE GRAND HEIST</h2>
+        <div class="story-box">
+          <h3 class="pixel" style="color: var(--gold); font-size: 18px; margin-bottom: 12px;">HOW THE CAT LORDS TOOK EVERYTHING</h3>
+          <p>
+            In the ancient golden age of DogeOS, prosperity flowed unchecked. But while the Shibes slept, the ruthless 
+            <strong>Fat Cat Syndicate</strong> led by the dread <em>Cat Lord</em> orchestrated the ultimate theft: they seized the planetary 
+            vaults, locked the Doge community treasury behind reinforced obsidian gates, and posted demonic legionnaires across the ruins.
+          </p>
+          <div class="story-quote pixel">
+            "They locked the vault. They thought we would roll over. Now we raid the dungeon, tear down the gate, and take back every last Doge."
+            <br>— Elder Shibe, Keeper of the Heist
+          </div>
+          <p>
+            You are an insurgent Shibe operating from the clandestine Camp Refuge. You must chop timber, mine raw iron, forge weaponry, 
+            swarm the dungeon gates in co-op strike teams, slay the Cat Lord, and extract with genuine on-chain treasures before the chamber collapses.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Characters & Sworn Professions -->
+    <section id="characters">
+      <div class="container">
+        <span class="section-tag pixel">02 // CLASSES & COMBAT</span>
+        <h2 class="section-title pixel">SWORN PROFESSIONS</h2>
+        <p class="section-desc">
+          Swear an irreversible on-chain oath at the guild pads. One profession per wallet. Each class boasts dedicated TTK mechanics, 
+          custom stat multipliers, exclusive special abilities, and distinct MP pools.
+        </p>
+
+        <div class="grid-3">
+          <!-- Warrior -->
+          <div class="card class-card warrior">
+            <span class="card-badge tag-danger pixel">FRONTLINE TANK</span>
+            <div class="card-icon">⚔️</div>
+            <h3 class="pixel" style="color: #ff6b81;">WARRIOR</h3>
+            <div class="silk" style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">FACTION: DEMOLITION DOGS</div>
+            <p>
+              Heavy armor juggernauts trained by Sergeant Ironpaw. High physical resistance and devastating close-range cleaves.
+            </p>
+            <div class="stat-bar">
+              <div class="stat-row"><span>DMG MULTIPLIER</span><span>135% (+35%)</span></div>
+              <div class="stat-fill-wrap"><div class="stat-fill red" style="width: 85%;"></div></div>
+              <div class="stat-row"><span>BONUS ARMOR</span><span>+15% DEF</span></div>
+              <div class="stat-fill-wrap"><div class="stat-fill red" style="width: 75%;"></div></div>
+              <div class="stat-row"><span>SPECIAL SKILL</span><span style="color:#fff;">[K] GROUND POUND (12 MP)</span></div>
+            </div>
+          </div>
+
+          <!-- Archer -->
+          <div class="card class-card archer">
+            <span class="card-badge tag-safe pixel">RANGED AGILITY</span>
+            <div class="card-icon">🏹</div>
+            <h3 class="pixel" style="color: #7bed9f;">ARCHER</h3>
+            <div class="silk" style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">FACTION: KERNEL CREW</div>
+            <p>
+              High-velocity marksmen trained by Scout Fleetwhisker. Kite enemies from safety, unleash piercing arrows, and barrage hordes with 3-arrow volleys.
+            </p>
+            <div class="stat-bar">
+              <div class="stat-row"><span>MOVE SPEED</span><span>115% (+15%)</span></div>
+              <div class="stat-fill-wrap"><div class="stat-fill green" style="width: 80%;"></div></div>
+              <div class="stat-row"><span>ATTACK SPEED</span><span>120% (+20%)</span></div>
+              <div class="stat-fill-wrap"><div class="stat-fill green" style="width: 85%;"></div></div>
+              <div class="stat-row"><span>SPECIAL SKILL</span><span style="color:#fff;">[K] 3-ARROW VOLLEY (6 MP)</span></div>
+            </div>
+          </div>
+
+          <!-- Healer -->
+          <div class="card class-card healer">
+            <span class="card-badge pixel" style="background: rgba(0,240,255,0.15); color: var(--cyan); border: 1px solid var(--cyan);">CO-OP SUPPORT</span>
+            <div class="card-icon">✨</div>
+            <h3 class="pixel" style="color: #70a1ff;">HEALER</h3>
+            <div class="silk" style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">FACTION: BARKITECTS</div>
+            <p>
+              Mystic spiritualists trained by Mender Brighttail. Siphon mana by striking foes with the staff, then broadcast co-op radiant healing pulses to nearby party members.
+            </p>
+            <div class="stat-bar">
+              <div class="stat-row"><span>MAX MP POOL</span><span>50 MP (HIGHEST)</span></div>
+              <div class="stat-fill-wrap"><div class="stat-fill" style="width: 95%;"></div></div>
+              <div class="stat-row"><span>MANA SIPHON</span><span>+2 MP PER HIT</span></div>
+              <div class="stat-fill-wrap"><div class="stat-fill" style="width: 70%;"></div></div>
+              <div class="stat-row"><span>CO-OP HEAL</span><span style="color:#fff;">[K] MEND PULSE (+20 HP AOE)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- The Lazy Debuff System -->
+        <div class="card" style="margin-top: 24px; border-left: 4px solid var(--purple);">
+          <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+            <div style="font-size: 28px;">⏳</div>
+            <div style="flex: 1;">
+              <h4 class="pixel" style="color: var(--purple); font-size: 14px; margin-bottom: 6px;">HARDCORE MECHANIC: THE TIMED LAZY DEBUFF</h4>
+              <p style="font-size: 13px;">
+                DOGEON has no place for idle bots or couch potatoes. If your character stands idle without movement or combat for more than <strong>180 seconds</strong>, 
+                you suffer the <strong>60-Second Sloth Debuff</strong> (-15% movement speed). Shake off the laziness by moving, sprinting, or cleaving monsters!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. The Economy & Currency Purity -->
+    <section id="economy">
+      <div class="container">
+        <span class="section-tag pixel">03 // TOKENOMICS</span>
+        <h2 class="section-title pixel">THE PURE ON-CHAIN ECONOMY</h2>
+        <p class="section-desc">
+          Zero fake arcade coins. Zero off-chain infinite currency. The only currency in DOGEON is genuine <strong>Testnet DOGE</strong> in your Web3 wallet.
+        </p>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-icon">🪙</div>
+            <h3 class="pixel">PURE TESTNET DOGE</h3>
+            <p>
+              Arcade coin drops have been purged. Your balance is read straight from the DogeOS Chikyū blockchain (`eth_getBalance`). 
+              Every transaction is an authentic cryptographic signature.
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon">⚖️</div>
+            <h3 class="pixel">80 / 20 FEE SPLIT</h3>
+            <p>
+              Every 1 DOGE mint fee and marketplace fee is programmatically split by smart contracts: 
+              <strong>80% is sent directly to the Staking Pool</strong> for players, and 20% fuels the game ecosystem treasury.
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🔮</div>
+            <h3 class="pixel">REDSTONE ORACLE</h3>
+            <p>
+              Live real-time DOGE/USD price feed via RedStone Oracle contract (`0x2194...7793`). 
+              In-game shop valuations, liquidity pool yields, and market sentiment adjust dynamically to live market trends.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. On-Chain Minting & Meme Buffs -->
+    <section id="mint">
+      <div class="container">
+        <span class="section-tag pixel">04 // WEB3 GEAR & NFTS</span>
+        <h2 class="section-title pixel">DOGEMASTER MEME FORGE & REROLL</h2>
+        <p class="section-desc">
+          Defeat the dungeon raid to unlock the legendary <strong>DogeMaster NPC</strong>. Mint verified ERC-721 gear NFTs for 1 Testnet DOGE, 
+          imbued with deterministic meme stats or burn them to reroll!
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-icon">🔥</div>
+            <h3 class="pixel">MEME STAT GENERATION</h3>
+            <p style="margin-bottom: 14px;">
+              Every minted gear NFT rolls on-chain meme numbers derived from block hash and token ID. Buffs and debuffs feature exact community meme numbers:
+            </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+420 ATK / HP</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+69 DEF / AGI</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+777 LUCK</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+4.2 SPD</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+6.9 MAGIC</span>
+            </div>
+            <p style="margin-top: 14px; font-size: 12px; color: var(--red);">
+              ⚠️ Beware: Cursed rolls can manifest negative variants (-420 HP, -69 DEF)!
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">♻️</div>
+            <h3 class="pixel">BURN-TO-REROLL ENGINE</h3>
+            <p>
+              Got an item cursed with -420 HP? Feed it to the DogeMaster's furnace! 
+              The <strong>Burn-to-Reroll</strong> mechanism burns your debuffed ERC-721 NFT on-chain and triggers a fresh random mint.
+            </p>
+            <p style="margin-top: 12px;">
+              <strong>Web3 Custody Permanence:</strong> Your gear NFTs live safely in your crypto wallet. Unlike raw materials, 
+              <strong>NFTs NEVER drop on PvP death</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Faucet & Getting Started -->
+    <section id="faucet">
+      <div class="container">
+        <span class="section-tag pixel">05 // WALLET ONBOARDING</span>
+        <h2 class="section-title pixel">THE FAUCET & QUICKSTART</h2>
+        <p class="section-desc">
+          Ready to play? Getting setup takes less than 60 seconds with MetaMask, Rabby, or Bitget Wallet.
+        </p>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="pixel" style="color: var(--cyan); font-size: 24px; margin-bottom: 10px;">01</div>
+            <h3 class="pixel">ADD DOGEOS RPC</h3>
+            <p>Click the button below to automatically register the DogeOS Chikyū testnet network in your browser wallet with one click.</p>
+            <button class="btn btn-cyan silk" onclick="addDogeOSToMetaMask()" style="margin-top: 14px; width: 100%;">ADD TO METAMASK</button>
+          </div>
+
+          <div class="card">
+            <div class="pixel" style="color: var(--gold); font-size: 24px; margin-bottom: 10px;">02</div>
+            <h3 class="pixel">CLAIM TESTNET DOGE</h3>
+            <p>Visit the official DogeOS faucet, enter your EVM address, and receive free Testnet DOGE to fund your crafting and minting.</p>
+            <a href="https://faucet.dogeos.xyz" target="_blank" class="btn btn-gold pixel" style="margin-top: 14px; width: 100%;">CLAIM FAUCET</a>
+          </div>
+
+          <div class="card">
+            <div class="pixel" style="color: var(--purple); font-size: 24px; margin-bottom: 10px;">03</div>
+            <h3 class="pixel">ENTER THE RAID</h3>
+            <p>Boot the game in your browser with multiplayer enabled (`?mp`), connect your wallet at the Sphinx Keeper, and begin the heist.</p>
+            <a href="https://play.dogeon.lat/?mp" target="_blank" class="btn btn-purple silk" style="margin-top: 14px; width: 100%;">LAUNCH GAME</a>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PARAMETER</th>
+                <th>VALUE</th>
+                <th>NOTES</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Network Name</strong></td>
+                <td>DogeOS Chikyū Testnet</td>
+                <td>Official EVM Rollup on Dogecoin</td>
+              </tr>
+              <tr>
+                <td><strong>Chain ID</strong></td>
+                <td><code class="pixel">6281971</code> (Hex: <code class="pixel">0x5fdaf3</code>)</td>
+                <td>Required for Web3 provider</td>
+              </tr>
+              <tr>
+                <td><strong>RPC URL</strong></td>
+                <td><code>https://chikyu-rpc.dogeos.xyz</code></td>
+                <td>High-speed JSON-RPC endpoint</td>
+              </tr>
+              <tr>
+                <td><strong>Currency Symbol</strong></td>
+                <td><code>DOGE</code> (18 Decimals)</td>
+                <td>Gas and in-game economy</td>
+              </tr>
+              <tr>
+                <td><strong>Block Explorer</strong></td>
+                <td><a href="https://chikyu.dogeos.xyz" target="_blank" style="color: var(--cyan);">https://chikyu.dogeos.xyz</a></td>
+                <td>Inspect transactions and NFTs</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Resources & Hardcore Gathering -->
+    <section id="resources">
+      <div class="container">
+        <span class="section-tag pixel">06 // RESOURCE ECONOMY</span>
+        <h2 class="section-title pixel">RAW GATHERING & FISHING</h2>
+        <p class="section-desc">
+          Gather raw resources in contested monster territories. Nodes are finite and renewable on strict cooldown timers.
+        </p>
+
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-icon">⛏️</div>
+            <h3 class="pixel">STEEL / IRON</h3>
+            <p>Quarried from dense rock formations and dropped by armored Cat Knights. Essential for crafting weapons and armor.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🪓</div>
+            <h3 class="pixel">WOOD</h3>
+            <p>Harvested by chopping trees with your axe. Trees enter a 15-second gathering cooldown once depleted.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🪨</div>
+            <h3 class="pixel">STONE</h3>
+            <p>Excavated from boulders scattered across the plains. Used to reinforce defensive gear and camp fortifications.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🎣</div>
+            <h3 class="pixel">RAW FISH</h3>
+            <p>Catch fish at 5 scenic ponds. Restores HP and supplies sustenance for prolonged dungeon expeditions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Hardcore PvP Full-Loot Mode -->
+    <section id="pvp">
+      <div class="container">
+        <span class="section-tag pixel">07 // BLOOD IN THE WATER</span>
+        <h2 class="section-title pixel">FULL-LOOT PVP RISK</h2>
+        <div class="story-box" style="border-color: var(--red);">
+          <h3 class="pixel" style="color: var(--red); font-size: 20px; margin-bottom: 12px;">DEATH MEANS LOSS: PROTECT YOUR LOOT</h3>
+          <p>
+            The Wilderness and Dungeon Ruins are non-consensual PvP combat zones. 
+            Rival players can ambuscade your squad while you battle bosses or mine iron.
+          </p>
+          <ul style="margin: 16px 0 16px 20px; color: var(--text);">
+            <li><strong>Loot Drops on Death:</strong> If you are slain by another player or monster, <em>all carried raw materials</em> (Steel, Wood, Stone, Whiskers) drop onto the ground as lootable pickups for anyone to plunder!</li>
+            <li><strong>Safe Camp Haven:</strong> The Camp Refuge behind the wooden spiked perimeter fence is 100% safe. Enemies and enemy projectiles cannot cross the barrier. Press <strong>[R]</strong> to rest and recover HP/MP.</li>
+            <li><strong>NFT Invulnerability:</strong> On-chain ERC-721 gear NFTs stay bound to your crypto wallet address and will NEVER drop on death.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. 8-Player Party & Open World Raid -->
+    <section id="party">
+      <div class="container">
+        <span class="section-tag pixel">08 // MULTIPLAYER RAID CYCLE</span>
+        <h2 class="section-title pixel">8-PLAYER SERVER RAID & LOCKOUT</h2>
+        <p class="section-desc">
+          To ensure peak game balance and low latency, each DOGEON server instance is strictly capped at <strong>8 simultaneous players</strong>.
+        </p>
+
+        <div class="grid-2">
+          <div class="card" style="border-left: 4px solid var(--green);">
+            <div class="card-icon">⏱️</div>
+            <h3 class="pixel">30-MINUTE EXTRACTION WINDOW</h3>
+            <p>
+              When the dungeon gates grind open, an active <strong>30-minute raid timer</strong> starts ticking. 
+              Players must assemble, coordinate professions, battle through Cat Minions, breach the inner sanctum, 
+              and slay the Cat Lord before time expires.
+            </p>
+          </div>
+
+          <div class="card" style="border-left: 4px solid var(--red);">
+            <div class="card-icon">🔒</div>
+            <h3 class="pixel">5-HOUR GATE SEAL LOCKOUT</h3>
+            <p>
+              If the 30-minute timer runs out before the Cat Lord falls, the raid <strong>FAILS</strong>! 
+              Any players inside the chamber are violently ejected back to the ruins, and the gates seal shut for <strong>5 hours</strong>. 
+              Players can still gather, fish, level skills, and trade in the overworld while waiting for the next raid window.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. The Staking Pool -->
+    <section id="staking">
+      <div class="container">
+        <span class="section-tag pixel">09 // PASSIVE YIELD</span>
+        <h2 class="section-title pixel">DOGESTAKING POOL</h2>
+        <p class="section-desc">
+          Deposit Testnet DOGE into the on-chain staking contract to earn continuous passive revenue from game economic volume.
+        </p>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-icon">🏦</div>
+            <h3 class="pixel">STAKE 1+ DOGE</h3>
+            <p>Stake any amount of Testnet DOGE directly via the Sphinx Keeper NPC dialogue window or the Web3 interface.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">📈</div>
+            <h3 class="pixel">80% PROTOCOL FEES</h3>
+            <p>Every time a player mints gear (1 DOGE), creates an LP pool, or trades in the marketplace, 80% of the fee flows directly into the staker reward pot.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">🎁</div>
+            <h3 class="pixel">INSTANT CLAIM & UNSTAKE</h3>
+            <p>No lockup lock-in traps. Claim accrued DOGE rewards or withdraw your staked principal on-chain at any time with a single transaction.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. NPC Roster & Lore -->
+    <section id="npcs">
+      <div class="container">
+        <span class="section-tag pixel">10 // CITIZENS OF DOGEON</span>
+        <h2 class="section-title pixel">THE NPC ROSTER</h2>
+        <p class="section-desc">
+          Interact with key characters in Camp Refuge and the deep ruins by pressing <strong>[E]</strong> when in proximity.
+        </p>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-icon">🧙‍♂️</div>
+            <h3 class="pixel">ELDER SHIBE</h3>
+            <div class="silk" style="color: var(--gold); font-size: 11px; margin-bottom: 8px;">KEEPER OF THE HEIST</div>
+            <p>Guardian of the lore. Guides new recruits, tracks raid status, and presents faction enrollment into the rebellion.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🔮</div>
+            <h3 class="pixel">SPHINX KEEPER</h3>
+            <div class="silk" style="color: var(--cyan); font-size: 11px; margin-bottom: 8px;">DEFI & STAKING HUB</div>
+            <p>Portal master connecting off-chain gameplay to on-chain contracts. Handles wallet authentication, staking pools, and RedStone oracle feeds.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🐕‍🦺</div>
+            <h3 class="pixel">DOGEMASTER</h3>
+            <div class="silk" style="color: var(--purple); font-size: 11px; margin-bottom: 8px;">MEME FORGE & REROLL</div>
+            <p>Enigmatic craftsman residing past the boss gate. Mints high-tier meme gear with wild ±420/69 modifiers and burns debuffed NFTs.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🛡️</div>
+            <h3 class="pixel">SGT. IRONPAW</h3>
+            <div class="silk" style="color: #ff6b81; font-size: 11px; margin-bottom: 8px;">DEMOLITION TRAINER</div>
+            <p>Grizzled veteran who administers the Warrior oath and trains recruits in the Ground Pound combat skill.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🎯</div>
+            <h3 class="pixel">SCOUT FLEETWHISKER</h3>
+            <div class="silk" style="color: #7bed9f; font-size: 11px; margin-bottom: 8px;">KERNEL CREW TRAINER</div>
+            <p>Swift reconnaissance scout who trains initiates in archery, quivercraft, and 3-arrow volley techniques.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🌿</div>
+            <h3 class="pixel">MENDER BRIGHTTAIL</h3>
+            <div class="silk" style="color: #70a1ff; font-size: 11px; margin-bottom: 8px;">BARKITECTS TRAINER</div>
+            <p>Sacred medicine doge who unlocks the Healer profession, staff mana siphoning, and party-wide radiant mend pulses.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. Smart Contract Registry -->
+    <section id="contracts">
+      <div class="container">
+        <span class="section-tag pixel">11 // ON-CHAIN REGISTRY</span>
+        <h2 class="section-title pixel">VERIFIED SMART CONTRACTS</h2>
+        <p class="section-desc">
+          Fully audited and deployed on DogeOS Chikyū Testnet. Transparent, immutable, and open-source.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>CONTRACT</th>
+                <th>ADDRESS</th>
+                <th>ROLE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>DogeItems (ERC-721)</strong></td>
+                <td><a href="https://chikyu.dogeos.xyz/address/0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4" target="_blank" style="color: var(--gold); text-decoration: none;"><code class="pixel">0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4</code></a></td>
+                <td>9 Gear NFT Types, Rarity/Meme Rolls & Burn-to-Reroll</td>
+              </tr>
+              <tr>
+                <td><strong>DogeDEX (AMM & Listings)</strong></td>
+                <td><a href="https://chikyu.dogeos.xyz/address/0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590" target="_blank" style="color: var(--cyan); text-decoration: none;"><code class="pixel">0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590</code></a></td>
+                <td>NFT Liquidity Pools, Fixed Listings & 1% Protocol Fee Split</td>
+              </tr>
+              <tr>
+                <td><strong>DogeProfession</strong></td>
+                <td><a href="https://chikyu.dogeos.xyz/address/0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055" target="_blank" style="color: var(--green); text-decoration: none;"><code class="pixel">0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055</code></a></td>
+                <td>Permanent 1-Class-Per-Wallet Oath Registry (0.05 DOGE)</td>
+              </tr>
+              <tr>
+                <td><strong>DogeStaking</strong></td>
+                <td><a href="https://chikyu.dogeos.xyz/address/0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d" target="_blank" style="color: var(--purple); text-decoration: none;"><code class="pixel">0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d</code></a></td>
+                <td>DOGE Staking Vault & 80% Protocol Fee Harvest Yield</td>
+              </tr>
+              <tr>
+                <td><strong>RedStone Price Feed</strong></td>
+                <td><a href="https://chikyu.dogeos.xyz/address/0x434F8D17c0301cfEa143dba912972E24B827C968" target="_blank" style="color: #80f8c0; text-decoration: none;"><code class="pixel">0x434F8D17c0301cfEa143dba912972E24B827C968</code></a></td>
+                <td>Live On-Chain DOGE/USD Price Feed Oracle</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. Screenshots & Visual Showcase -->
+    <section id="gallery">
+      <div class="container">
+        <span class="section-tag pixel">12 // VISUAL SHOWCASE</span>
+        <h2 class="section-title pixel">GAMEPLAY SCREENSHOTS & SANCTUARY</h2>
+        <p class="section-desc">
+          Visual tour of DOGEON. Discover the sacred Camp Refuge safe haven and explore live gameplay captures across combat, crafting, and raids.
+        </p>
+
+        <!-- Camp Refuge & Sacred Doge Coin Sanctuary -->
+        <div class="sanctuary-showcase">
+          <div class="sanctuary-canvas-wrap">
+            <canvas id="sanctuary-canvas" width="96" height="96"></canvas>
+            <div class="pixel" style="font-size: 9px; color: var(--gold); margin-top: 10px; text-align: center;">
+              SACRED MOSAIC (96x96)
+            </div>
+            <div class="silk" style="font-size: 10px; color: var(--cyan); margin-top: 4px;">
+              [SAFE HAVEN]
+            </div>
+          </div>
+          <div>
+            <span class="card-badge tag-safe pixel" style="position: static; display: inline-block; margin-bottom: 10px;">CAMP REFUGE SAFE ZONE</span>
+            <h3 class="pixel" style="color: var(--gold); font-size: 20px; margin-bottom: 12px;">THE SACRED DOGE SANCTUARY</h3>
+            <p style="margin-bottom: 14px;">
+              Carved directly into the flagstones of Camp Refuge lies the ancient <strong>DOGE Coin Floor Mosaic</strong>. 
+              Protected by a consecrated perimeter fence, this is the only true safe haven on the planet.
+            </p>
+            <ul style="color: var(--text-muted); font-size: 14px; margin-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+              <li><strong>Sanctuary Aura:</strong> Radiates a holy golden particle field that keeps demons, boss minions, and flying bone projectiles at bay.</li>
+              <li><strong>Rest & Meditate [R]:</strong> Rest peacefully on the coin mosaic to regenerate both HP and MP over time.</li>
+              <li><strong>Immunity to PvP Plunder:</strong> Rival players cannot engage in combat inside the fence — your materials are 100% secure while in camp.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 6 Screenshots Grid (Ready for user image drop-in) -->
+        <div class="gallery-grid">
+          <!-- Screenshot 1: Title Screen -->
+          <div class="ss-card">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/01-title.png')">
+              <img src="assets/screenshots/01-title.png" alt="DOGEON 16-Bit Genesis Title Screen" loading="lazy">
+            </div>
+            <div class="ss-info">
+              <div>
+                <h4 class="pixel">16-BIT GENESIS TITLE SCREEN</h4>
+                <p>Authentic Genesis aesthetic, 320×224 canvas, zero external runtime dependencies.</p>
+              </div>
+              <div class="silk" style="font-size: 11px; color: var(--gold); margin-top: 12px;">SYSTEM: AESTHETIC & LOOP</div>
+            </div>
+          </div>
+
+          <!-- Screenshot 2: Warrior Combat -->
+          <div class="ss-card">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/03-combat-warrior.png')">
+              <img src="assets/screenshots/03-combat-warrior.png" alt="Warrior Combat & Ground Pound" loading="lazy">
+            </div>
+            <div class="ss-info">
+              <div>
+                <h4 class="pixel">WARRIOR COMBAT & GROUND POUND</h4>
+                <p>Melee tank cleaving Cat Knights with screen-shaking Ground Pound AoE and +15% armor.</p>
+              </div>
+              <div class="silk" style="font-size: 11px; color: var(--red); margin-top: 12px;">SYSTEM: ACTION COMBAT</div>
+            </div>
+          </div>
+
+          <!-- Screenshot 3: Archer Ranged Volleys -->
+          <div class="ss-card">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/04-archer-bow.png')">
+              <img src="assets/screenshots/04-archer-bow.png" alt="Archer Rapid-Fire & Volleys" loading="lazy">
+            </div>
+            <div class="ss-info">
+              <div>
+                <h4 class="pixel">ARCHER RAPID-FIRE & VOLLEYS</h4>
+                <p>High-mobility ranged archery picking off feline patrols from safe distance with arrow spread volleys.</p>
+              </div>
+              <div class="silk" style="font-size: 11px; color: var(--green); margin-top: 12px;">SYSTEM: RANGED PRECISION</div>
+            </div>
+          </div>
+
+          <!-- Screenshot 4: Cat Lord Boss Raid -->
+          <div class="ss-card">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/05-boss.png')">
+              <img src="assets/screenshots/05-boss.png" alt="Cat Lord Boss Raid" loading="lazy">
+            </div>
+            <div class="ss-info">
+              <div>
+                <h4 class="pixel">CAT LORD BOSS RAID & GATE</h4>
+                <p>Breaching the obsidian gate before the 30-minute extraction timer expires to battle the syndicate boss.</p>
+              </div>
+              <div class="silk" style="font-size: 11px; color: var(--purple); margin-top: 12px;">SYSTEM: EXTRACTION RAID</div>
+            </div>
+          </div>
+
+          <!-- Screenshot 5: Sphinx DeFi & Staking Pool -->
+          <div class="ss-card">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/06-sphinx-defi.png')">
+              <img src="assets/screenshots/06-sphinx-defi.png" alt="Sphinx DeFi & Staking Pool" loading="lazy">
+            </div>
+            <div class="ss-info">
+              <div>
+                <h4 class="pixel">SPHINX DEFI & STAKING POOL</h4>
+                <p>Staking Testnet DOGE to harvest 80% protocol fees and swapping gear on DogeDEX AMM pools.</p>
+              </div>
+              <div class="silk" style="font-size: 11px; color: var(--gold); margin-top: 12px;">SYSTEM: ON-CHAIN DEFI</div>
+            </div>
+          </div>
+
+          <!-- Screenshot 6: Resource Gathering & Fishing -->
+          <div class="ss-card">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/07-fishing.png')">
+              <img src="assets/screenshots/07-fishing.png" alt="Resource Gathering & Fishing" loading="lazy">
+            </div>
+            <div class="ss-info">
+              <div>
+                <h4 class="pixel">RESOURCE GATHERING & FISHING</h4>
+                <p>Mining guaranteed iron from stone, chopping lumber, and fishing at camp ponds for rations.</p>
+              </div>
+              <div class="silk" style="font-size: 11px; color: var(--cyan); margin-top: 12px;">SYSTEM: HARDCORE GATHERING</div>
+            </div>
+          </div>
+
+          <!-- Screenshot 7: 3-Player Multiplayer Raid -->
+          <div class="ss-card">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/08-multiplayer-3p.png')">
+              <img src="assets/screenshots/08-multiplayer-3p.png" alt="3-Player Multiplayer Raid" loading="lazy">
+            </div>
+            <div class="ss-info">
+              <div>
+                <h4 class="pixel">3-PLAYER MULTIPLAYER RAID</h4>
+                <p>Real-time WebSocket multiplayer party staging coordinated assaults on the Cat Lord syndicate.</p>
+              </div>
+              <div class="silk" style="font-size: 11px; color: var(--cyan); margin-top: 12px;">SYSTEM: MULTIPLAYER CO-OP</div>
+            </div>
+          </div>
+
+          <!-- Screenshot 8: Camp Refuge & Doge Sanctuary -->
+          <div class="ss-card">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/02-camp-coin.png')">
+              <img src="assets/screenshots/02-camp-coin.png" alt="Camp Refuge & Doge Sanctuary" loading="lazy">
+            </div>
+            <div class="ss-info">
+              <div>
+                <h4 class="pixel">CAMP REFUGE & DOGE SANCTUARY</h4>
+                <p>Resting on the consecrated floor mosaic to regenerate HP and MP in 100% PvP immunity.</p>
+              </div>
+              <div class="silk" style="font-size: 11px; color: var(--gold); margin-top: 12px;">SYSTEM: SAFE HAVEN & LORE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="logo pixel" style="margin-bottom: 14px;">
+            <span class="logo-badge">16-BIT</span>
+            DOGEON
+          </div>
+          <p style="font-size: 13px; max-width: 320px;">
+            DOGEON: The Grand Heist is a hardcore retro Action RPG built on DogeOS. 
+            Native Canvas 2D, WebAudio oscillators, and pure Solidity smart contracts.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4 class="pixel">GAMEPLAY</h4>
+          <ul class="footer-links">
+            <li><a href="#heist">The Heist Lore</a></li>
+            <li><a href="#characters">Classes & Skills</a></li>
+            <li><a href="#resources">Gathering & Fishing</a></li>
+            <li><a href="#pvp">PvP Loot Rules</a></li>
+            <li><a href="#party">Raid Lockouts</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 class="pixel">WEB3 & DEFI</h4>
+          <ul class="footer-links">
+            <li><a href="#economy">Pure DOGE Tokenomics</a></li>
+            <li><a href="#mint">NFT Meme Forge</a></li>
+            <li><a href="#staking">Staking Pool</a></li>
+            <li><a href="#contracts">Smart Contracts</a></li>
+            <li><a href="https://chikyu.dogeos.xyz" target="_blank">Chikyū Explorer</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 class="pixel">COMMUNITY</h4>
+          <ul class="footer-links">
+            <li><a href="https://dogeos.com" target="_blank">DogeOS Portal</a></li>
+            <li><a href="https://heist.dogeos.com" target="_blank">The Grand Heist</a></li>
+            <li><a href="https://faucet.dogeos.xyz" target="_blank">Testnet Faucet</a></li>
+            <li><a href="https://docs.dogeos.com" target="_blank">Documentation</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom silk">
+        DOGEON &copy; 2026 — BUILT ON DOGEOS CHIKYŪ. NO ARCADE COINS. PURE WEB3 PERMANENCE.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Lightbox Modal Controls
+    function openLightbox(src) {
+      const modal = document.getElementById('lightbox-modal');
+      const img = document.getElementById('lightbox-img');
+      if (modal && img) {
+        img.src = src;
+        modal.style.display = 'flex';
+      }
+    }
+    function closeLightbox() {
+      const modal = document.getElementById('lightbox-modal');
+      if (modal) modal.style.display = 'none';
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // EVM Provider Discovery (Filters out TRON / multichain injectors per D-080)
+    function getEVMProvider() {
+      if (typeof window === 'undefined') return null;
+      if (Array.isArray(window.ethereum?.providers)) {
+        return window.ethereum.providers.find(p => p.isMetaMask && !p.isTron && !p.isTronLink) ||
+               window.ethereum.providers.find(p => !p.isTron && !p.isTronLink) ||
+               window.ethereum;
+      }
+      return window.ethereum || window.bitkeep?.ethereum || null;
+    }
+
+    // 1-Click Add DogeOS Chikyū Testnet to MetaMask / EVM Wallet
+    async function addDogeOSToMetaMask() {
+      const provider = getEVMProvider();
+      if (!provider) {
+        alert('MetaMask or an EVM compatible browser extension was not detected. Please install MetaMask to add DogeOS.');
+        return;
+      }
+      try {
+        await provider.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x5fdaf3', // 6281971 in hex
+            chainName: 'DogeOS Chikyū Testnet',
+            nativeCurrency: {
+              name: 'DOGE',
+              symbol: 'DOGE',
+              decimals: 18
+            },
+            rpcUrls: ['https://chikyu-rpc.dogeos.xyz'],
+            blockExplorerUrls: ['https://chikyu.dogeos.xyz']
+          }]
+        });
+      } catch (err) {
+        console.error('Failed to add DogeOS network:', err);
+      }
+    }
+
+    // Interactive Starfield / Particle Background
+    (function initCanvas() {
+      const cvs = document.getElementById('bg-canvas');
+      const ctx = cvs.getContext('2d');
+      let w = cvs.width = window.innerWidth;
+      let h = cvs.height = window.innerHeight;
+
+      const stars = Array.from({ length: 65 }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        size: Math.random() * 2 + 1,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        color: ['#ffd700', '#00f0ff', '#9b51e0', '#ffffff'][Math.floor(Math.random() * 4)]
+      }));
+
+      function render() {
+        ctx.clearRect(0, 0, w, h);
+        for (const s of stars) {
+          s.x += s.vx;
+          s.y += s.vy;
+          if (s.x < 0) s.x = w;
+          if (s.x > w) s.x = 0;
+          if (s.y < 0) s.y = h;
+          if (s.y > h) s.y = 0;
+
+          ctx.fillStyle = s.color;
+          ctx.fillRect(Math.round(s.x), Math.round(s.y), s.size, s.size);
+        }
+        requestAnimationFrame(render);
+      }
+      render();
+
+      window.addEventListener('resize', () => {
+        w = cvs.width = window.innerWidth;
+        h = cvs.height = window.innerHeight;
+      });
+    })();
+
+    // Sacred DOGE Coin Sanctuary Mosaic Renderer
+    (function initSanctuaryCoin() {
+      const cvs = document.getElementById('sanctuary-canvas');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+      const MOSAIC_PAL = '0c0b0a,3d352e,5c3407,623b0a,6a3e05,75470d,73582f,955311,b56616,8c6a2c,bb8629,a07f39,c09e4a,a39986,d57313,da961c,e4a623,daa437,e6b537,efc048,d8b661,d3c9a6,ef8f1c,f39f2e,f6b321,fbd513,f6de40,f6c768,f2d373,f7e090,f8eba6,faf3c0'.split(',');
+      const MOSAIC_PX = 
+        '......................................................................................................................................9999999999999999999b........................................................................b36bcckqqqqqqqqqqqqqkccc639d.................................................................669btqqqqqppppppppppqqpqqqqqtc963d............................................................99cqqqqpppppppppppppppppppppppqqqjcb66........................................................9csqqppppppppqqqqqqqqqqqqqqqpppqqqpoojic96....................................................2cstvtqpppppqqqqtttttttttttttqqqqqqpoooorsih63................................................9cqqquvvqpqqqqjccb5444444545545bccssqpoooruvsjja6b.......................'+
+        '......................bjqqppquqqqqkc96334333444333433233469bcijjjsuigffhb6..........................................9kqqpppppqqsc52333344444444444444444443225bjqjifffffgj9d.......................................9jqpppppqqkb3233344447777779797777775444444339cjggffffgi93.....................................cigopppqqk953333754798hfihihjhjhifghga79d94444339aggfffffgh9..................................6igfggopqh93344439fe79fffaffgahfhffafffaaftc775433325bgffffffh96...............................5igffgggic32344574hmee7hgifigofohjijhiijfogqjnf87542555bfgfffffh96.............................9hfffffga9324458ah4hieee7ahfgfgfgfihifihgfgfgggffh857hnf75aifffffg99...........................9ffffffgf534447afgg4hie8ee7igjgjgjhjijhjiogogoioggib9hmme723bgfffffgb9.............'+
+        '............6ggffffga56547aaffff4hje7em7ahihihhhihihhhihhhhhhffb7hnmee74229gfffgojb6........................gogggfg836d99hggoggh3hjm77me9hqrtjjjqrqijjqjjjjjjic9hnmmmm772329gggoqqjb.......................goooooh72347afghhffgh3hjm778m87rjsjjijjsijjsiikjiib9hnmmmmm8723337foqqqqj9.....................foooooi92347agoorjooij3hjm877me8cststjrsusqstjrsssc9fnmmmeeme7424427hqqqpqj9...................aoooooi83349ffgighhiiii3hnme778em8csrsrrrsjsssjsrrcbfm8eee78ee752b5437hqppqqi9..................oooooi84447fgfijjhhssjj2hmmm8778ef999b99999bctstscbhme8ee7777m872ib4437hqqqqtc.................gooooob3448fffhhhihiiiij3hmmmeeeeeme88888888899bb9bfnm8emee777me72hga4327iqqtutb...............aoooooa4345agggijiijjrrjb7fmemnnmmmmmmmmmmmmmme8888enm88me87557me72hof43329qtuuuk9.......'+
+        '.......poooof3249akrggiiijjjssk5fmmmnnnnmmmmmmmmmmmmmmmmemmm87em854447ee72hgfa9323cuuuuuc.............joooog7234agttijjisqjjqsbannnnnnnnmmmmmmmmmmmmmmmme8e878me874447ee72iofoa4335kuuvvt6............pooooa2249afhghhiijrjkbbannnnnnnnnmmemmmmmmmmmmmmmme877emme85447m872hgaff85449tvvvuk...........iooooh4235ffgggiijjstb9aannnnjrrinnmm8emmmmmmmmmmmmmme75emmm74458m752igfgff8444cuvvuub..........ojqop9247hifggiijsts5afnnnnnrsssrnne88emmmmmmmmmmmmmmme7emm74447em75kiifjigh8435svuuuk.........iooopc4457iifgiijrssbannnnnnisssssnne88mmmmmmmmmmmmmmmmm8em74447emm75rjihjioga533buuuqj9........ooooi6249ffgfgijijjaannnnnnnnrssssnme8emmnjjnmmmmmmmmmmmmm84247eeee75srskhhghh9325suqpoa.......pooopc2348gggfgjjij9annnnnnnnnnissrnmeemmnrrrrnmmmmmmmmmmmmme57eeee787tssjihgfia332bqoooj9...'+
+        '...ooooj9237fggifgijjj6annnnnnhh8eerrjnmemmnjrrrrjnmmmmmmmmmmmmmeeeeeeee86krissihifb335joooob......ooooh4347fggjhiijjb8fninnn61128erjnmmemnjrrrrrimmmmmmmmmmmmmmmeee8888ea9jjrsjgifa542apoooi.....jooopa237ffijshirss6ansuria310018jnmmmmmnrrrrrjmmmmmmmmmmmmmmmmmee878emn6srrjjgifga429jooop9....jqooq9337gfghjhirs9anjuvur2ld0d18jnmmmmmnrrrrhfffmmmmmmmmmmmmmmmmm8778mm7ssjijhifga445iooooc....sujjj4349ghshgijrs9aitvvur1l1011anmmmnimnirkb31117fmmmmmmmmmmmmmmme888mm89ijjjhgfoa544cjopoh....vvutc247afhshfhjrrbatvvvuk2l6001hmmnnjjmmnnb9ld0005mmmmmmmmmmmmmmmmm88mme7hjiihgfga743bqoooi...stvsr5248gofiijjss9atvvvvkna6611cnmnnrrjmmm91vldd0007mmmmmmmmmmmmmmmmmemme7kqrrijgjia434joooj9..ppqqj3349fifggjirs9auvvvvinnfhcknmnjrrrnm8401ld000005ammnnnsjnmmnnmmmmemme7kqjjiigjg8432kpoopb.'+
+        '.pppqc2348gjfgijijsbdvvvvvjnnnrrrnnjrrrjnme501ld00001bmmnsttvurhhrtimmmmmme7krjriigjg8432bqopqc..pppqb2478fkffhihjs9cvvvvvtihssrrrrrrrrjmmma61bd1001bmmfsvvvvvvvukuuhmmmmme7kjjjhgfgfe7329qptqc..pppp924bokurjjsjs6ctuvvvvvttrrrrrrrrrrjnjmmma6666bfmmnrvvvvvvvvvvvvuimmmmma5tstjjhjgga325jpppj..pppi5239gfhhiijjs9cutuvvvllkcccrrrrrrrrrrnmmmffffmmmnruvvvvvvvvvvvvurmmmmme5sjjiifgff8322ipppq..pppi4238ogoiqjqrt9dvvtuvl966661bcrrrrrrrrjnnnmmmmmnhsvvvvvvvvvvvvvvukmmmmme5ssrjqiogoa322hpppq..pppi5339ffghjirrsbkuuuul011166101bsssssrrrrsshnnnhrvvvvvvvvvvvvvvvvvufmmmmme5kjijhgfga442apppq..pppk3438gfogjjrrbktustt10000110000lvvutsrrsvvuuuuuvvvvvvvvvvvvvvvvvvtmmmmmmf5jqjtsggoa442bqppq..pppk3449fahfghjkbcssruu60000000000dvvvutsrsvvvvvvvvvvvvvvvvvvvvvvvvurmmmmmmm5cjjrkhffa442bqppq.'+
+        '.pppk344bjisfgiqjbkuutuvd0000000000dvvvvutrsvvvvvvvvvvvvvvvvvvvvvvvvukmmmmmmm89qqjhjijf442bqppq..pppk3448ihifgijjbctttvvd1100010019dvvvvttrsuvvvvvvvvvvvvvvvvvvvvvvvvufmmmmmme9jjjhigga442bqppq..pppk444bogjiqiijbkttslud100000116dllvtvtrrrtuvvvvvvvvvvvvvvvvvvvvvvvvfmmmmmmf9sqqijioa442bqppq..pppk5449faffhhjk9ctutkld61000006bdululvskkkstuvvvvvvvvvvvvvvuuuuuuuutmmmmmmmm9ckjhfff8442bqppq..pppk5448ogjfistc6lvutvld66100166ddlvuvusrrsuvtuuuvvvvvvvvvuutttttttsnmmmmmmmna6ssjogoa442cqppq..pppj6248ffgfhijk9lutuulb66611666bddvlvskrrstuvuuuvvvvvvuuttttttttttsnmmmmmmmna6kihgfga433kqppq..pppqb24bogjgjijrbkuuuttd111116969blluurrrrrsttuvuuuvvuuttttttttttttrnmmmmmmmna6rjijgoa436qpppi..pppqc247ffgfiijjbkvuttuu600001166dlcrsrrrkbcrstttttuutttttttsstttttnmmmmmmmmnh9ajhghf9339qpppi.'+
+        '.qppqc235agogjjsjbcuttuuub611100011dkrrkb6619rsttttttttttttssrrtttttnmmmmmmmnnrc5sijia732bqppph..qpppr3258fffhhiic9kttuuukb11111000166661016crrsttttttttttsrrrsttttjnmmmmmemmnic4ihgha533ktqqqa...pppq5248fjgjhijq6cuuuuutk961111110001136ccrrrsttttttttssrrrsttttsnmmmmmmeemmnkbchjib335qqqpq....pppqc247aihihiircbkuuuutrkb66b9b9636ccckrrrrrstttttttsrrrrstttttsnmmmmeeemnnnrk9hif743bqpogh....pppqr234bjgjijiqq9cuuuusrrkkkrkrkcckrrrrrrrrstttttttsrrrrstttttsimmmmme8mmnnnjk9hjf543cjgggh....ppppq6347gfghgijrcbltttrrrrrrrrrrrrrrrrrrrsttttttttrrrrrrtttttsimmmmmee8mmnmnjk6fga445igffgc.....pppqa347fijijirss9cssrrrrrrrrrrrrrrrrrrssttttttttrrrrrrstttttjnmmmmeeeemnmmnrk6hja439jgifi......ppopk5458higiijjjk9hrrrrrrrrrrrrrrrrsttttttttttsrrrrrrrstttttimmmme8eennnnnjrk6hf743ajsuii...'+
+        '...qggoi9348foijijjjs9cijrrrrrrrrrrrrrsstttttttttsrrrrrrrstttttjnnnme888ennnnnrrk6hb435jistia.......fggoc247aghghjsss9cffjrrrrrrrrrrrrtttttttttssrrrrrrrstttttrrrinee888ennnnjrrk5a532bjfgii........ggggj5347fhoiqsqt9cfeejrrrrrrrrrrrrsssttttsrrrrrrrrstsstttstineee88emnnnnrrrf58335jgggga.........gggoh234bsjhijjj6cjnefjrrrrrrrrrrrrrrssssrrrrrrrrrrrssttttjnmemee8mnnnnrrrnf3534aofggg..........ghjgi9246hjijjraakjnmeejrrrrrrrrrrrrrrrrrrrrrrrihjrrstttttinnmmeeemnnjjrrjnf4439igffgf...........uvjfi6348hhjjj9crrnnmeeajrrrrrrrrrrrrrrrrrrheefrststtttttsrnnmeemnnjrrrrjnf444fofffg............ksffgb245ahjjj9crrjnnmeeeerrrrrrrrrrrrrieeeeenjrssttttttttinneemnjrrrrrrnf7439jfffgb.............iffgi9345aijj9crrrnnnmeeeeeeaiiiiiieeeeeeeemirrsttttttttrnmeemijrrrrrrjf7449igffff.......'+
+        '.......gffggi6349hij9crrrrnnnnmeeeeeeeeeeeeeeeeennnirstsssstttsnmmeijrrrrrrrrja545hogfgg9...............ggggoh344bj93crrrrjnnnnneeeeeeeeeeeeeennnnjrrrrrrrrrrrrrrrrrrttttrrrra532ajgfggf.................ggggib235a95hrrrrrrnnnnmeeeeeeeeeeeemnnirrrrrrrrrrrrrrrrrrtttttttrrk5326iggggg..................gggfgg92355brrrrrrrrinnnmmeeeeeeeemmnnirrrrrrrrrrrrrrrrrrstttttttrh7436ioffggb...................igffoi9245crrrrrrrrrnnnnnmmeeeeennnnrrrrrrrrrrrrrrrrrrrttttttttrk7446ipoffga.....................gfgooj9445arrrrrrrrrjnnnnneeeennnirrrrrrrrrrrrrrrrrrrttttttttsk5446hqoooga.......................goooji9445ckrrrrrrrrnnnnnmeeennirrrrrrrrrrrrrrrrrrrttttttttka5446isujoof........................booojji93457crrrrrrrrinnnmeemnnjrrrrrrrrrrrrrrrrrstttttttts64436jqvvurh3............'+
+        '.............coojjjqb5443kkrrrrrrjnnnnennnirrrrrrrrrrrrrrrrrttttttttss44336joosvjf5...........................aijjjjjc52357crrrrrrnnnnnnnnrrrrrrrrrrrrrrsttttttttttk964459jooojsf5.............................cjjjojqk93345akrrrrnnnnnnnirrrrrrrrrrrrrstttttttttkc75446croooooh3...............................bjjoooprb34445ckrjnnnnnnirrrrrrrrrrrrstttttttttsk94444bsjooooof3..................................jjoooojk954444ccnnnnnnjrrrrrrrrssttttttttttkc544446csjoooooa.....................................ioooojtsk6333557aafnirrrrrrrrsttttttttkkcb755445kjqoooooib.......................................hooorvtqtc52244447hhkkrrrrrstttttslrr94555446bsqppogooi9..........................................iqtvuqpqsc9544445545acccckkkkkc5444444459csqpppppoic......................'+
+        '.......................aruqppppqqkcb423444455555555555443229aksqqppppppc6................................................hppppppppqqsk9643223333433323466ssqqppptqpppia....................................................hppppqpppppqqqjab9999999bakjqqppppppqpppib........................................................cqpppppppppppqqqqqqqqqqqpppppppppppph9............................................................aqpppppppppppppppppppppppppppppqh6.................................................................chijppppppppppppppppppppihca........................................................................bbchippppppppppicab9......................................................................................................................................';
+
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = 96; offCanvas.height = 96;
+      const offCtx = offCanvas.getContext('2d');
+      const CH = '0123456789abcdefghijklmnopqrstuv';
+      for (let i = 0; i < 9216; i++) {
+        const k = MOSAIC_PX[i];
+        if (k !== '.') {
+          offCtx.fillStyle = '#' + MOSAIC_PAL[CH.indexOf(k)];
+          offCtx.fillRect(i % 96, (i / 96) | 0, 1, 1);
+        }
+      }
+
+      const sparks = Array.from({ length: 18 }, () => ({
+        x: Math.random() * 96,
+        y: Math.random() * 96,
+        vy: -(Math.random() * 0.8 + 0.3),
+        life: Math.random()
+      }));
+
+      let t = 0;
+      function renderSanctuary() {
+        t += 0.03;
+        ctx.clearRect(0, 0, 96, 96);
+
+        // Pulsing golden sanctuary halo
+        const haloAlpha = 0.12 + Math.sin(t * 2) * 0.06;
+        ctx.fillStyle = `rgba(255, 215, 0, ${haloAlpha})`;
+        ctx.beginPath();
+        ctx.arc(48, 48, 46, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw pixel art coin
+        ctx.drawImage(offCanvas, 0, 0);
+
+        // Holy floating sparkles
+        for (const s of sparks) {
+          s.y += s.vy;
+          s.life -= 0.015;
+          if (s.y < 4 || s.life <= 0) {
+            s.y = 90;
+            s.x = 10 + Math.random() * 76;
+            s.life = 1;
+          }
+          ctx.fillStyle = s.life > 0.5 ? '#ffd700' : '#ffffff';
+          ctx.fillRect(Math.round(s.x), Math.round(s.y), 1.5, 1.5);
+        }
+
+        requestAnimationFrame(renderSanctuary);
+      }
+      renderSanctuary();
+    })();
+  </script>
+  <!-- Screenshot Lightbox Modal -->
+  <div id="lightbox-modal" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); backdrop-filter:blur(6px); align-items:center; justify-content:center; cursor:pointer;" onclick="closeLightbox()">
+    <img id="lightbox-img" style="max-width:92vw; max-height:88vh; border:2px solid var(--gold); border-radius:6px; box-shadow:0 0 35px rgba(255,215,0,0.35); image-rendering:pixelated; object-fit:contain;" src="" alt="Enlarged DOGEON Screenshot">
+    <div class="pixel" style="position:absolute; bottom:20px; color:var(--text-muted); font-size:12px;">CLICK ANYWHERE OR PRESS [ESC] TO CLOSE</div>
+  </div>
+</body>
+</html>

@@ -26,8 +26,11 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 > browser config: `brave://settings/web3` → default wallet = Extensions/None); works in Chrome.
 > **D-081:** `audit-scan.mjs` re-pointed at `src/game.js` (was blind-scanning the shell); `game.js` is now at **1500/1500 lines —
 > the ceiling**, so the next feature needs a further `src/*.js` split. `GAME_GUIDE.md` + `SESSION_PROMPT.md` v2.4 refreshed.
-> **Next:** finish the landing (Antigravity, separate repo `C:\Users\dulbi\dogeon-landing`) → put it on `dogeon.lat` with the game
-> on `play.dogeon.lat`; record the gameplay trailer; prove real wallet → real mint on the live site.
+> **D-082 (landing split, DONE in-repo):** `landing.html` + `assets/screenshots/` shipped; `server/relay.mjs` routes `dogeon.lat`→
+> landing and `play.dogeon.lat`/`/play`/`?mp`→game (path-traversal-safe, relay smoke + check.sh green). **TO GO LIVE:** add the
+> `play.dogeon.lat` DNS record → the Fly app, then `fly deploy --app dogeon-game` (from WSL).
+> **Next:** (1) DNS `play.dogeon.lat` + `fly deploy` to publish the split; (2) **prove real wallet → real mint on dogeon.lat**
+> (mission item 1, top priority — human w/ MetaMask + testnet DOGE on the live site; Claude preps + verifies on-chain); (3) record the gameplay trailer.
 
 ### ▶ CÓMO CONTINUAR (barato, entre sesiones) — leer esto primero
 1. **Sincroniza:** `cd C:\Users\dulbi\dogeon && git pull origin main`.

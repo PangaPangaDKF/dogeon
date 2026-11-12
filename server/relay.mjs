@@ -22,6 +22,7 @@ const MAX_BYTES = 1024, MAX_RATE = 30, IDLE_MS = 30000;
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'; // RFC 6455 §1.3
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PAGE = join(ROOT, 'index.html');
+const LANDING = join(ROOT, 'landing.html');
 const MIME = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml' };
 const rooms = new Map(); // room -> Set<client>
 
@@ -145,25 +146,49 @@ function onData(c, chunk) {
 }
 
 const server = createServer((req, res) => {
-  const url = req.url || '/';
-  if ((url === '/' || url.startsWith('/?') || url === '/index.html') && existsSync(PAGE)) {
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    return res.end(readFileSync(PAGE));
-  }
-  if (url === '/health') {
-    res.writeHead(200, { 'content-type': 'application/json' });
+  const host = (req.headers.host || "").toLowerCase();
+  const url = req.url || "/";
+  const pathname = url.split("?")[0];
+
+  if (pathname === "/health") {
+    res.writeHead(200, { "content-type": "application/json" });
     return res.end(JSON.stringify({ ok: true, rooms: [...rooms].map(([room, s]) => ({ room, players: s.size })) }));
   }
-  // static game modules under src/ (e.g. /src/game.js) — path-traversal safe, served from ROOT
-  const p = normalize(decodeURIComponent(url.split('?')[0])).replace(/^(\.\.[/\\])+/, '');
-  if (/^[/\\]?src[/\\][\w.\-/\\]+\.(js|mjs|css|json|png|svg)$/.test(p)) {
+
+  // Game request: play subdomain, /play route, or ?mp multiplayer parameter
+  const isGame = host.startsWith("play.") || pathname === "/play" || pathname === "/game" || url.startsWith("/play?") || url.includes("?mp") || !existsSync(LANDING);
+  if (isGame && (pathname === "/" || pathname === "/play" || pathname === "/game" || pathname === "/index.html" || url.startsWith("/?mp") || url.startsWith("/play?")) && existsSync(PAGE)) {
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    return res.end(readFileSync(PAGE));
+  }
+
+  // Landing page: root / and /index.html when not a direct game request
+  if ((pathname === "/" || pathname === "/index.html" || pathname === "/landing.html") && existsSync(LANDING)) {
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    return res.end(readFileSync(LANDING));
+  }
+
+  // Static landing assets under assets/
+  const p = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[\/\\])+/, "");
+  if (/^[\/\\]?assets[\/\\][\w.\-\/\\]+\.(png|jpg|jpeg|svg|css|js|json)$/.test(p)) {
     const file = join(ROOT, p);
-    if (file.startsWith(join(ROOT, 'src')) && existsSync(file)) {
-      res.writeHead(200, { 'content-type': MIME[extname(file)] || 'text/plain' });
+    if (file.startsWith(join(ROOT, "assets")) && existsSync(file)) {
+      res.writeHead(200, { "content-type": MIME[extname(file)] || "application/octet-stream" });
       return res.end(readFileSync(file));
     }
   }
-  res.writeHead(404); res.end('not found');
+
+  // Static game modules under src/ (e.g. /src/game.js or /play/src/game.js)
+  const srcMatch = p.match(/(?:^|[\/\\])src[\/\\]([\w.\-\/\\]+\.(js|mjs|css|json|png|svg))$/);
+  if (srcMatch) {
+    const file = join(ROOT, "src", srcMatch[1]);
+    if (file.startsWith(join(ROOT, "src")) && existsSync(file)) {
+      res.writeHead(200, { "content-type": MIME[extname(file)] || "text/plain" });
+      return res.end(readFileSync(file));
+    }
+  }
+
+  res.writeHead(404); res.end("not found");
 });
 
 server.on('upgrade', (req, sock, head) => {

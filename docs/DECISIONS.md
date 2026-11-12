@@ -35,6 +35,17 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-082 · 2026-11-12 · Landing/game host split — `dogeon.lat`→landing, `play.dogeon.lat`/`/play`→game (Claude Code)
+- What: Shipped the standalone marketing landing (`landing.html`, 1540 lines, DogeOS "Grand Heist" design tokens + `assets/screenshots/`) and taught `server/relay.mjs` host-based routing:
+  - `/health` → JSON (moved above routing).
+  - `isGame` when host starts `play.`, path is `/play`|`/game`, `?mp` is present, or `landing.html` is absent → serves the game shell (`index.html`).
+  - Otherwise root `/` and `/index.html` serve `landing.html`; `/landing.html` explicit too.
+  - Static `assets/**` (png/jpg/svg/css/js/json) served; `src/**` modules served on both hosts via a host-agnostic match, still guarded by `file.startsWith(ROOT/src)` (path-traversal safe).
+- Why: the public domain should show a marketing landing, with the playable game one click away on a subdomain/route — the Antigravity D-082 handoff doc described this but the files were never committed (tree was dirty).
+- Tool: Claude Code (Opus 4.8). Verify: `bash tests/check.sh` → ALL CHECKS PASSED (sim 0 failed, 47 forge, drift guard, relay 10/10). Manual relay smoke: `/`→landing title, `/play`+`Host: play.`+`?mp`→game canvas, `/src/game.js`→200 text/javascript, `/health`→JSON, `/src/../../../etc/passwd`→404.
+- Alternatives rejected: separate landing repo/host (adds a deploy target; one relay already serves both cleanly); gate `src/**` on host (modules are needed on both landing-preview and play — host-agnostic match + startsWith guard is simpler and safe).
+- Open: add the `play.dogeon.lat` DNS record (CNAME/A to the Fly app) and `fly deploy` so the split goes live; landing uses Google Fonts (external) — acceptable for the marketing page, the game client (`src/game.js`) stays zero-dependency and is the only thing `check.sh` static-scans.
+
 ### D-081 · 2026-11-11 · Public launch on dogeon.lat + tooling/docs audit closeout (Claude Code)
 - What:
   1. **Launch:** the game is live at **https://dogeon.lat** — domain bought on Spaceship ($1.24/yr, WHOIS private), pointed at the Fly app `dogeon-game` (A `@`→`66.241.125.199`, AAAA `@`→`2a09:8280:1::1f7:c716:0`); Spaceship's bundled "Web Hosting Essential" trial was disconnected (it locked the DNS and can't run the Node relay). `fly certs` issued Let's Encrypt HTTPS (auto-renews). Game is on Fly (cloud, 24/7) — not the user's PC. `fly.toml` committed for reproducibility.
