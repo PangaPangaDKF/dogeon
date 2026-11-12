@@ -1,5 +1,17 @@
 # DOGEON — Dual-Brain Handoff & Context Sync (`Antigravity ↔ Claude Code ↔ TryNoah AI`)
 
+> ## 000. SNAPSHOT — Antigravity cycle D-082 (2026-11-11): DOGEON Landing Page Finished, 8 Screenshots Embedded, Lightbox, D-071 Contracts & D-080 Provider Filter
+>
+> **Status:** Landing repo at `C:\Users\dulbi\dogeon-landing` committed (`271965c`). Core game passes all 6 stages of `tests/check.sh` (0 sim failures, 47 forge tests, drift guard, 10/10 relay).
+>
+> ### What Antigravity Shipped in `D-082` (Landing Page Lane):
+> 1. **All 8 Gameplay Screenshots Wired:** Ported `01-title.png` through `08-multiplayer-3p.png` from `tests/out/landing/` into `dogeon-landing/assets/screenshots/` and linked them into the gallery cards.
+> 2. **Pixel-Art Lightbox Modal:** Fullscreen modal with `image-rendering: pixelated`, gold border, and ESC/click dismissal to showcase raw Genesis visual fidelity.
+> 3. **D-071 Live Contracts Parity:** Replaced truncated dummy addresses with the verified Chikyū testnet contracts (`DogeItems`, `DogeDEX`, `DogeProfession`, `DogeStaking`, and RedStone oracle feed) linked directly to the block explorer.
+> 4. **D-080 Multi-Wallet Protection:** Integrated `getEVMProvider()` in `addDogeOSToMetaMask()` to filter out TRON/multichain wallet injectors, preventing CAIP-25 connect crashes.
+> 5. **Container & Static Build Ready:** Updated `Dockerfile` to copy all assets and html for Nginx serving.
+>
+
 > ## 000. SNAPSHOT — Antigravity cycle D-067 (2026-11-09): Hardcore Gathering, Iron Drops, Mob Clustering, Master Chain Auth, Red NFT Styling & Hardcore Mechanics Skill
 >
 > **Status:** All 6 stages of `tests/check.sh` pass (static rules, syntax, 46 forge tests, drift guard, multiplayer relay, and sim with new D-067 scenario 0 failed/0 warnings). `index.html` is at 1,441 lines (under 1,500 limit).
