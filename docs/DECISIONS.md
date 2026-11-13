@@ -35,6 +35,13 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-087 · 2026-11-12 · play.dogeon.lat live; landing CTAs switched to it (B6); www blocked by Fly cert limit (Claude Code)
+- What: The user added Spaceship CNAMEs `play` and `www` → `dogeon-game.fly.dev` and ran `fly certs add`. Verified from here: `play.dogeon.lat` resolves to Fly (66.241.125.199 / 2a09:8280:1::1f7:c716:0), HTTPS 200 with a valid certificate, serves the game shell and `/src/game.js`. Switched the landing's 4 play links (`/play`) → `https://play.dogeon.lat/`; the `/play` route stays. `www.dogeon.lat`: Fly refused the cert ("Organizations without a credit card can have 2 custom domain certificates"), so its CNAME leads to a TLS error; the user is told to delete it or add a card. Landing skill → v1.3 (§10 step 7: cert limit + DoH/`--resolve` checks).
+- Why: B6 / truth rule T6 — the public game URL is `play.dogeon.lat`, switched only after HTTPS was proven.
+- Tool: Claude Code (Opus 5.5); DNS-over-HTTPS (Cloudflare, Google), `curl --resolve`, `node scripts/landing-check.mjs`.
+- Alternatives rejected: keep `/play` (works, but the brand URL is play.dogeon.lat and it's what players share); add a card for a `www` cert (the user's call; nobody needs www and a broken one is worse than none).
+- Verify: landing-check "Landing matches the game" (2 play CTAs accepted); `bash tests/check.sh` ALL CHECKS PASSED. Goes live with the next `fly deploy`, together with the D-085 RPC security fix.
+
 ### D-085 · 2026-11-12 · Landing: game-rendered pixel icons, wallet-RPC security fix, truth gate, domain runbook (Claude Code)
 - What:
   - **B1:** `scripts/landing-icons.mjs` renders 23 icons from `src/game.js`'s own sprite code (class trainers, Elder, Sphinx, Cat Lord, items,

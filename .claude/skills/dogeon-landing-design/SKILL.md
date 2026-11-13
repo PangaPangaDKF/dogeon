@@ -5,7 +5,7 @@ description: Own design skill for DOGEON's public face — the landing page (lan
 
 # DOGEON Landing & Trailer Design Skill
 
-Version: 1.2 (2026-11-12) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
+Version: 1.3 (2026-11-12) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
 
 ## RULE L0 — this skill and its master prompt are living documents
 Every change to `landing.html`, `assets/**`, `docs/TRAILER_SCRIPT.md`, or any marketing image or video ends with:
@@ -106,7 +106,7 @@ kill <the PID of YOUR test relay>    # never pkill node/relay: the user's own se
 | ~~B3~~ | **Done D-086.** Nav is 6 links: Classes, Economy, NFT Mint, Raid, Staking, Get Started | It wrapped to two lines at 1280px |
 | B4 | Retake screenshots after D-075 (they still show coin sparkles) and add a 09 real-mint capture | T3: captures must match the current game |
 | ~~B5~~ | **Done D-086.** Over 20 claims corrected against code (see changelog 1.1) | T1 |
-| B6 | Switch CTAs to `https://play.dogeon.lat` once DNS and the certificate are live — steps in §10 | T6 |
+| ~~B6~~ | **Done D-087.** Play CTAs point at `https://play.dogeon.lat/` (HTTPS verified 200 before switching); `/play` stays as a route | T6 |
 | B7 | Embed the finished trailer (self-hosted MP4 `<video>` with a poster; no third-party iframe) | Hero motion with no heavy scripts |
 
 ## 10. Domains and deploy (dogeon.lat = landing, play.dogeon.lat = game)
@@ -127,8 +127,10 @@ The game opens its multiplayer WebSocket to whatever host served it, so both hos
 4. Deploy from the repo root in WSL: `git pull && fly deploy -a dogeon-game`. The `Dockerfile` must copy `landing.html` and `assets/` (it does since D-084; without them `/` silently falls back to the game).
 5. Verify: `curl -s https://play.dogeon.lat/ | grep -o '<title>[^<]*'` → `DOGEON`; `curl -s https://dogeon.lat/ | grep -o '<title>[^<]*'` → the landing title; `https://play.dogeon.lat/health` → `{"ok":true…}`.
 6. Only then do B6: point the play CTAs at `https://play.dogeon.lat` (landing-check accepts both forms). Keep `/play` working; old links depend on it.
+7. **Certificate limit:** a Fly org without a credit card gets only **2 custom-domain certificates** (`dogeon.lat` + `play.dogeon.lat`). Do **not** point `www` (or any other host) at Fly unless a card is added: the DNS resolves but HTTPS fails with a certificate error, which is worse than no page. Agent-side DNS checks: `dig` is not installed here, so query DNS over HTTPS (`https://cloudflare-dns.com/dns-query?name=<host>&type=A` with `accept: application/dns-json`), and pin the IP with `curl --resolve <host>:443:66.241.125.199` when the local resolver still caches an old NXDOMAIN.
 
 ## Changelog
+- 1.3 (2026-11-12, D-087): B6 done. `play.dogeon.lat` live (CNAME → `dogeon-game.fly.dev`, cert Issued, HTTPS 200 serving the game). `www` cert refused by Fly's 2-certificate free limit; §10 step 7 added. **Lesson:** write commands for the user as bare command lines, never "run `cmd`" in prose; the word "run" was typed into the shell.
 - 1.2 (2026-11-12, D-085): B1 done with game-rendered icons. **Security find:** the add-network button, network table, faucet and explorer links used `*.dogeos.xyz` (all one IP, parked-looking domain), not DogeOS's real `rpc.testnet.dogeos.com` / `dogeos-testnet.l2scan.co` / `faucet.testnet.dogeos.com`; fixed and guarded by new rule T7 + `scripts/landing-check.mjs`. Also fixed claims the D-086 pass missed ("fully audited, immutable", sanctuary particle aura, rest heals HP+MP fully, camp ponds, all materials drop, raid timer starts at the gate, Sphinx name, STAKE 1+, sprint, `?mp`). T5's explorer had a typo (`dogeon-` → `dogeos-`). Added §10 (domains + going live) and the anchor-screenshot trap. **Lessons:** (a) a truth audit must also cover URLs and wallet parameters, not only numbers; (b) two agents on one page: commit only your own paths (`git add <paths>`), wait for the other's commit before editing a file it has open, and check `git status` right before every write.
 - 1.1 (2026-11-12, D-086): Truth audit (B5) found over 20 false or unverifiable claims: meme rolls mislabeled (real `BUFFS`: BLAZE 420 = +420 HP, NICE 69 = +69 ATK, LUCKY 777 = +77 HP, MUCH 4.2 = +0.42 DEF, SPEED 6.9 = +6.9 ATK; curses −42 HP / −6.9 ATK / −0.42 DEF); rolls come from the token ID, not a block hash; a wrong oracle address (`0x2194…`); archer +25% speed (not +15%) and +17% attack rate; DEX trades pay stakers 0.8%, not 80%; tree regrow 14 s; F is a press, not a hold; "5 ponds" unverifiable; the DogeMaster unlocks at the Elder after the boss; and "NO ARCADE COINS" was false (in-game DOGE coins still exist, currency purity deferred), so the copy now says two separate currencies. **Lessons:** (a) truth-check numbers against the code's tables (`CLASSES`, `BUFFS`, `GATHER_*`, `kp('f')`), never against older docs or skills, which drift; (b) before writing into a shared folder like `assets/`, run `git status` and list the folder, because another agent may be filling it at the same moment (an icon export collided with D-085 and was rolled back). B2, B3 done.
 - 1.0 (2026-11-12, D-083): Created. Seeded from the `web3-game-landing-ui` user skill (palette, type) and `artifact-design` fundamentals. Lessons from the first review: fake hero stats and a broken `play.` CTA found and fixed. The grid `minmax(380px)` overflowed phones (fix: `min(N,100%)`). The headless 500px minimum produces false "broken phone" screenshots. Added og/twitter tags and reduced motion.
