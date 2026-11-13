@@ -73,12 +73,12 @@ ok "baseline green"
 cat <<'EOF'
 
 == 5. run it ==
-  Game + landing + multiplayer relay (one process, zero deps):
+  Game + multiplayer relay (one process, zero deps):
     node server/relay.mjs                      # PORT env, default 8787
-    http://localhost:8787/          -> landing page
     http://localhost:8787/play      -> the game
     http://localhost:8787/play?mp=ws://localhost:8787&room=heist&name=A   -> multiplayer (open 2 tabs, other name=)
     http://localhost:8787/health    -> JSON
+  (landing.html / assets/ = the separate landing-page project; the relay serves it at "/". Not part of the game clone.)
   Game only, static: any static server over the repo root (must serve index.html AND src/game.js).
   Container: docker build -t dogeon . && docker run -p 8080:8080 dogeon
   Wallets do NOT inject into file:// — use http(s) for CONNECT WALLET (DogeOS Chikyu, chainId 0x5fdaf3).

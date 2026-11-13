@@ -5,6 +5,9 @@
 > `tests/check.sh` fails if an address, selector or class name here stops matching `src/game.js`, or if a known-stale
 > phrase creeps back. Deeper docs (`TRYNOAH.md`, `prompts/TRYNOAH_RECREATE.md`, `MASTER_PROMPT.md`) are for
 > extending/rebuilding, not for cloning — loading them wastes tokens.
+>
+> **Scope: the GAME only.** The landing page (`landing.html`, `assets/`, `prompts/LANDING_MASTER_PROMPT.md`,
+> `dogeon-landing-design` skill) is a separate project with its own lane; the clone never creates, edits or verifies it.
 
 ```text
 ROLE: You host and maintain DOGEON, imported from https://github.com/PangaPangaDKF/dogeon.
@@ -14,8 +17,12 @@ GOAL: an EXACT clone running live. Do NOT rebuild, rewrite or improve it. Copy -
 - The game = TWO files: index.html (18-line shell) + src/game.js (~162 KB, 1500 lines, loaded with
   <script src="src/game.js">, a classic script, NOT an ES module). Plain JS + Canvas 2D, 320x224.
 - Zero runtime dependencies. No build, no npm install, no package.json, no bundler, no framework.
-- landing.html + assets/ = marketing page. server/relay.mjs = zero-dep Node server: landing at "/",
-  game at "/play" (or any "play.*" host or "?mp="), /health, plus the multiplayer WebSocket relay.
+- server/relay.mjs = zero-dep Node server: the game at "/play" (or any "play.*" host or "?mp="), /health,
+  plus the multiplayer WebSocket relay.
+- OUT OF SCOPE — the landing page is a SEPARATE project. landing.html, assets/, prompts/LANDING_MASTER_PROMPT.md,
+  docs/TRAILER_SCRIPT.md and the dogeon-landing-design skill belong to it. Do NOT create, rebuild, edit, read
+  or verify a landing page. Leave those files as they are (the relay may serve them at "/"; ignore that).
+  Your job is the GAME only.
 - Chain: DogeOS Chikyu testnet, chainId 0x5fdaf3 (6281971), RPC https://rpc.testnet.dogeos.com.
   Contracts are ALREADY DEPLOYED and hardcoded in src/game.js CONTRACTS. NEVER redeploy or edit them:
     DogeItems      0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4  (ERC-721 items, mint fee 1 DOGE)
@@ -42,7 +49,7 @@ GOAL: an EXACT clone running live. Do NOT rebuild, rewrite or improve it. Copy -
 2. docs/RECREATION_MANIFEST.md — generated from source; the completeness checklist.
 3. Only if you must change code: .agents/skills/dogeon-game/SKILL.md, then ONLY the
    `// ===== NAME =====` section of src/game.js you touch (grep the header, read that line range).
-DO NOT READ: contracts/lib, contracts/out, contracts/cache, contracts/broadcast, docs/DECISIONS.md (150 KB
+DO NOT READ: landing.html, assets/, prompts/LANDING_MASTER_PROMPT.md, contracts/lib, contracts/out, contracts/cache, contracts/broadcast, docs/DECISIONS.md (150 KB
 history), CONTEXT.md, docs/LESSONS.md, the ~50 other skill folders, tests/out. Never paste src/game.js into chat.
 
 == TASK ==
@@ -54,12 +61,12 @@ STEP 2 Serve (tell me which):
   B) RECOMMENDED, identical to production: `node server/relay.mjs` (PORT env, default 8787) behind HTTPS
      (and WSS for multiplayer), or `docker build -t dogeon . && docker run -p 8080:8080 dogeon`.
   A) Static only: publish the repo root over HTTPS (must serve index.html AND src/game.js). Game only,
-     no landing routing, no multiplayer.
+     no multiplayer.
 STEP 3 Acceptance on the live URL (game at /play for B, / for A). Report PASS/FAIL per line:
   1 zero console errors  2 Enter starts in camp  3 I/Tab shows WOOD x3 + STONE x3
   4 a trainer sets a class offline and the sprite changes  5 Sphinx CONNECT WALLET adds/switches to 0x5fdaf3
   6 Sphinx NFT MARKET row 0 mints an item (1 DOGE)  7 ON-CHAIN STAKING stake/claim
-  8 (B) two tabs on /play?mp=wss://<host>&room=t with different &name= see each other  9 (B) / shows the landing
+  8 (B) two tabs on /play?mp=wss://<host>&room=t with different &name= see each other
 STEP 4 Completeness: list each section heading of docs/RECREATION_MANIFEST.md as DONE / MISSING.
 
 == HARD RULES ==

@@ -57,6 +57,8 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 - Tool: Claude Code (Opus 5.5). Verify: `bash tests/check.sh` → ALL CHECKS PASSED (47 forge, 5 drift files); **fresh clone** (no
   `contracts/lib`) → `bash scripts/setup-clone.sh` → baseline green in 73 s with forge 47/47; Docker image from that clone → `/` landing,
   `/play` + `Host: play.` + `?mp` game, `/health`, `/src/game.js` 200, assets 200; drift guard negative test (planted `QUICK SHOT`) → FAIL.
+- Scope (user, same day): the clone is the **game only** — the landing page is a separate project. `TRYNOAH_CLONE.md` + `setup-clone.sh`
+  mark `landing.html`/`assets/`/landing prompt + skill out of scope (do not create, read, edit or verify); acceptance runs on `/play`.
 - Alternatives rejected: committing `contracts/lib` (13 MB vendored deps); git submodules (TryNoah imports may not recurse); a longer
   prompt that restates the whole blueprint (costs tokens and is what drifted before).
 
