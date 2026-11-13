@@ -57,6 +57,10 @@ const assets = [...new Set([...page.matchAll(/(?:src|href)="(assets\/[^"]+)"/g)]
 const gone = assets.filter(a => !existsSync(join(root, a)));
 gone.length ? bad('missing asset files', gone) : ok(`${assets.length} referenced assets exist`);
 
+// R1/R2: the coin comes only from assets/icons/dogecoin.png (exported from src/game.js MOSAIC); no inline copy, no FX around it (D-094)
+const coinCopy = /MOSAIC_PX|MOSAIC_PAL/.test(page), fx = [...page.matchAll(/\.arc\(|\.ellipse\(|createRadialGradient|shadowBlur/g)];
+coinCopy ? bad('inline copy of the coin pixel data; use assets/icons/dogecoin.png (node scripts/landing-icons.mjs)') : ok('coin art comes from the game export');
+fx.length ? bad('canvas FX (arc/ellipse/radial gradient/shadowBlur) on the landing; R2', fx.map(m => `line ${lineOf(m.index)}: ${m[0]}`)) : ok('no canvas FX');
 // B1/B2/B3/T6 design rules
 const emoji = [...page.matchAll(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{23E9}-\u{23FA}]️?/gu)];
 emoji.length ? bad(`${emoji.length} emoji (use pixel icons from assets/icons/, made by scripts/landing-icons.mjs)`, emoji.map(m => `line ${lineOf(m.index)}: ${m[0]}`)) : ok('no emoji icons');

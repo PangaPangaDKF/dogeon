@@ -40,7 +40,7 @@ const sb = { console: { log() {}, warn() {}, error: console.error }, setTimeout:
   document: { getElementById: canvas, createElement: canvas, addEventListener() {}, body: { appendChild() {} } },
   addEventListener() {}, removeEventListener() {}, requestAnimationFrame: () => 0, Math, Date, JSON };
 sb.globalThis = sb; sb.window = sb; vm.createContext(sb);
-vm.runInContext(code + '\n;globalThis.__X={SPR,COIN,WHISK,YARN,ORB_IC,SCRAP_IC,HORN_IC,STEEL_IC,FISH_IC,CFISH_IC,BONE,TL};', sb);
+vm.runInContext(code + '\n;globalThis.__X={SPR,COIN,WHISK,YARN,ORB_IC,SCRAP_IC,HORN_IC,STEEL_IC,FISH_IC,CFISH_IC,BONE,TL,MOSAIC};', sb);
 const X = sb.__X;
 
 // name -> canvas. Characters use right[0]: the game draws every character frozen facing right (D-044, mission R3).
@@ -50,6 +50,7 @@ const ICONS = {
   elder: ch('sage'), sphinx: ch('bank'), mechanic: ch('merchant'), cat: ch('alley'), boss: ch('boss'), brute: ch('brute'),
   coin: X.COIN, whisker: X.WHISK, yarn: X.YARN, orb: X.ORB_IC, scrap: X.SCRAP_IC, horn: X.HORN_IC, steel: X.STEEL_IC,
   fish: X.FISH_IC, cookedfish: X.CFISH_IC, bone: X.BONE[0], tree: X.TL.tree[0], rock: X.TL.rock[0], gate: X.TL.gate[0],
+  dogecoin: X.MOSAIC, // the camp coin (MOSAIC_PX, R1): exported as-is, never redrawn
 };
 
 const crcT = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; crcT[n] = c >>> 0; }

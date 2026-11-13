@@ -14,6 +14,7 @@
   <meta property="og:image:height" content="509">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://dogeon.lat/assets/screenshots/hero-camp-coin.png">
+  <link rel="icon" type="image/png" href="assets/icons/dogecoin.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
@@ -581,8 +582,10 @@
       padding: 16px;
       position: relative;
     }
-    #sanctuary-canvas {
+    #sanctuary-coin {
       image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      max-width: 100%;
       width: 192px;
       height: 192px;
     }
@@ -595,6 +598,10 @@
       .nav-links { display: none; }
       .nav-cta .btn-cyan { display: none; }
     }
+    .logo-coin { image-rendering: pixelated; image-rendering: crisp-edges; flex-shrink: 0; }
+    .build-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 40px; align-items: center; }
+    .build-coin { image-rendering: pixelated; image-rendering: crisp-edges; max-width: 100%; height: auto; }
+    @media (max-width: 900px) { .build-grid { grid-template-columns: minmax(0, 1fr); } .build-coin { width: 96px; } }
     .shot-card { margin: 0; padding: 0; overflow: hidden; }
     .shot { display: block; width: 100%; max-width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
     .shot-card figcaption { padding: 14px 18px; font-size: 13px; color: var(--text-muted); }
@@ -612,7 +619,7 @@
   <header>
     <div class="container nav-inner">
       <a href="#" class="logo pixel">
-        <span class="logo-badge">16-BIT WEB3</span>
+        <img class="logo-coin" src="assets/icons/coin.png" width="28" height="28" alt=""><span class="logo-badge">16-BIT WEB3</span>
         DOGEON
       </a>
       <ul class="nav-links">
@@ -1176,7 +1183,7 @@
         <!-- the camp & Sacred Doge Coin Sanctuary -->
         <div class="sanctuary-showcase">
           <div class="sanctuary-canvas-wrap">
-            <canvas id="sanctuary-canvas" width="96" height="96"></canvas>
+            <img id="sanctuary-coin" src="assets/icons/dogecoin.png" width="192" height="192" alt="The camp Dogecoin, exported from the game's own pixel art">
             <div class="pixel" style="font-size: 9px; color: var(--gold); margin-top: 10px; text-align: center;">
               SACRED MOSAIC (96x96)
             </div>
@@ -1291,6 +1298,8 @@
     <!-- Build on DogeOS -->
     <section id="build">
       <div class="container">
+        <div class="build-grid">
+        <div>
         <span class="section-tag pixel">FOR BUILDERS</span>
         <h2 class="section-title pixel">COME BUILD ON DOGEOS</h2>
         <p class="section-desc">
@@ -1303,6 +1312,9 @@
           <a href="https://www.dogeos.com/" target="_blank" class="btn btn-cyan silk" style="padding: 14px 24px;">VISIT DOGEOS</a>
           <a href="https://github.com/PangaPangaDKF/dogeon" target="_blank" class="btn btn-purple silk" style="padding: 14px 24px;">SEE DOGEON'S SOURCE</a>
         </div>
+        </div>
+        <img class="build-coin" src="assets/icons/dogecoin.png" width="192" height="192" alt="The DOGEON camp Dogecoin">
+        </div>
       </div>
     </section>
 
@@ -1314,7 +1326,7 @@
       <div class="footer-grid">
         <div class="footer-col">
           <div class="logo pixel" style="margin-bottom: 14px;">
-            <span class="logo-badge">16-BIT</span>
+            <img class="logo-coin" src="assets/icons/coin.png" width="28" height="28" alt=""><span class="logo-badge">16-BIT</span>
             DOGEON
           </div>
           <p style="font-size: 13px; max-width: 320px;">
@@ -1453,77 +1465,6 @@
       });
     })();
 
-    // Sacred DOGE Coin Sanctuary Mosaic Renderer
-    (function initSanctuaryCoin() {
-      const cvs = document.getElementById('sanctuary-canvas');
-      if (!cvs) return;
-      const ctx = cvs.getContext('2d');
-      const MOSAIC_PAL = '0c0b0a,3d352e,5c3407,623b0a,6a3e05,75470d,73582f,955311,b56616,8c6a2c,bb8629,a07f39,c09e4a,a39986,d57313,da961c,e4a623,daa437,e6b537,efc048,d8b661,d3c9a6,ef8f1c,f39f2e,f6b321,fbd513,f6de40,f6c768,f2d373,f7e090,f8eba6,faf3c0'.split(',');
-      const MOSAIC_PX = 
-        '......................................................................................................................................9999999999999999999b........................................................................b36bcckqqqqqqqqqqqqqkccc639d.................................................................669btqqqqqppppppppppqqpqqqqqtc963d............................................................99cqqqqpppppppppppppppppppppppqqqjcb66........................................................9csqqppppppppqqqqqqqqqqqqqqqpppqqqpoojic96....................................................2cstvtqpppppqqqqtttttttttttttqqqqqqpoooorsih63................................................9cqqquvvqpqqqqjccb5444444545545bccssqpoooruvsjja6b.......................'+
-        '......................bjqqppquqqqqkc96334333444333433233469bcijjjsuigffhb6..........................................9kqqpppppqqsc52333344444444444444444443225bjqjifffffgj9d.......................................9jqpppppqqkb3233344447777779797777775444444339cjggffffgi93.....................................cigopppqqk953333754798hfihihjhjhifghga79d94444339aggfffffgh9..................................6igfggopqh93344439fe79fffaffgahfhffafffaaftc775433325bgffffffh96...............................5igffgggic32344574hmee7hgifigofohjijhiijfogqjnf87542555bfgfffffh96.............................9hfffffga9324458ah4hieee7ahfgfgfgfihifihgfgfgggffh857hnf75aifffffg99...........................9ffffffgf534447afgg4hie8ee7igjgjgjhjijhjiogogoioggib9hmme723bgfffffgb9.............'+
-        '............6ggffffga56547aaffff4hje7em7ahihihhhihihhhihhhhhhffb7hnmee74229gfffgojb6........................gogggfg836d99hggoggh3hjm77me9hqrtjjjqrqijjqjjjjjjic9hnmmmm772329gggoqqjb.......................goooooh72347afghhffgh3hjm778m87rjsjjijjsijjsiikjiib9hnmmmmm8723337foqqqqj9.....................foooooi92347agoorjooij3hjm877me8cststjrsusqstjrsssc9fnmmmeeme7424427hqqqpqj9...................aoooooi83349ffgighhiiii3hnme778em8csrsrrrsjsssjsrrcbfm8eee78ee752b5437hqppqqi9..................oooooi84447fgfijjhhssjj2hmmm8778ef999b99999bctstscbhme8ee7777m872ib4437hqqqqtc.................gooooob3448fffhhhihiiiij3hmmmeeeeeme88888888899bb9bfnm8emee777me72hga4327iqqtutb...............aoooooa4345agggijiijjrrjb7fmemnnmmmmmmmmmmmmmme8888enm88me87557me72hof43329qtuuuk9.......'+
-        '.......poooof3249akrggiiijjjssk5fmmmnnnnmmmmmmmmmmmmmmmmemmm87em854447ee72hgfa9323cuuuuuc.............joooog7234agttijjisqjjqsbannnnnnnnmmmmmmmmmmmmmmmme8e878me874447ee72iofoa4335kuuvvt6............pooooa2249afhghhiijrjkbbannnnnnnnnmmemmmmmmmmmmmmmme877emme85447m872hgaff85449tvvvuk...........iooooh4235ffgggiijjstb9aannnnjrrinnmm8emmmmmmmmmmmmmme75emmm74458m752igfgff8444cuvvuub..........ojqop9247hifggiijsts5afnnnnnrsssrnne88emmmmmmmmmmmmmmme7emm74447em75kiifjigh8435svuuuk.........iooopc4457iifgiijrssbannnnnnisssssnne88mmmmmmmmmmmmmmmmm8em74447emm75rjihjioga533buuuqj9........ooooi6249ffgfgijijjaannnnnnnnrssssnme8emmnjjnmmmmmmmmmmmmm84247eeee75srskhhghh9325suqpoa.......pooopc2348gggfgjjij9annnnnnnnnnissrnmeemmnrrrrnmmmmmmmmmmmmme57eeee787tssjihgfia332bqoooj9...'+
-        '...ooooj9237fggifgijjj6annnnnnhh8eerrjnmemmnjrrrrjnmmmmmmmmmmmmmeeeeeeee86krissihifb335joooob......ooooh4347fggjhiijjb8fninnn61128erjnmmemnjrrrrrimmmmmmmmmmmmmmmeee8888ea9jjrsjgifa542apoooi.....jooopa237ffijshirss6ansuria310018jnmmmmmnrrrrrjmmmmmmmmmmmmmmmmmee878emn6srrjjgifga429jooop9....jqooq9337gfghjhirs9anjuvur2ld0d18jnmmmmmnrrrrhfffmmmmmmmmmmmmmmmmm8778mm7ssjijhifga445iooooc....sujjj4349ghshgijrs9aitvvur1l1011anmmmnimnirkb31117fmmmmmmmmmmmmmmme888mm89ijjjhgfoa544cjopoh....vvutc247afhshfhjrrbatvvvuk2l6001hmmnnjjmmnnb9ld0005mmmmmmmmmmmmmmmmm88mme7hjiihgfga743bqoooi...stvsr5248gofiijjss9atvvvvkna6611cnmnnrrjmmm91vldd0007mmmmmmmmmmmmmmmmmemme7kqrrijgjia434joooj9..ppqqj3349fifggjirs9auvvvvinnfhcknmnjrrrnm8401ld000005ammnnnsjnmmnnmmmmemme7kqjjiigjg8432kpoopb.'+
-        '.pppqc2348gjfgijijsbdvvvvvjnnnrrrnnjrrrjnme501ld00001bmmnsttvurhhrtimmmmmme7krjriigjg8432bqopqc..pppqb2478fkffhihjs9cvvvvvtihssrrrrrrrrjmmma61bd1001bmmfsvvvvvvvukuuhmmmmme7kjjjhgfgfe7329qptqc..pppp924bokurjjsjs6ctuvvvvvttrrrrrrrrrrjnjmmma6666bfmmnrvvvvvvvvvvvvuimmmmma5tstjjhjgga325jpppj..pppi5239gfhhiijjs9cutuvvvllkcccrrrrrrrrrrnmmmffffmmmnruvvvvvvvvvvvvurmmmmme5sjjiifgff8322ipppq..pppi4238ogoiqjqrt9dvvtuvl966661bcrrrrrrrrjnnnmmmmmnhsvvvvvvvvvvvvvvukmmmmme5ssrjqiogoa322hpppq..pppi5339ffghjirrsbkuuuul011166101bsssssrrrrsshnnnhrvvvvvvvvvvvvvvvvvufmmmmme5kjijhgfga442apppq..pppk3438gfogjjrrbktustt10000110000lvvutsrrsvvuuuuuvvvvvvvvvvvvvvvvvvtmmmmmmf5jqjtsggoa442bqppq..pppk3449fahfghjkbcssruu60000000000dvvvutsrsvvvvvvvvvvvvvvvvvvvvvvvvurmmmmmmm5cjjrkhffa442bqppq.'+
-        '.pppk344bjisfgiqjbkuutuvd0000000000dvvvvutrsvvvvvvvvvvvvvvvvvvvvvvvvukmmmmmmm89qqjhjijf442bqppq..pppk3448ihifgijjbctttvvd1100010019dvvvvttrsuvvvvvvvvvvvvvvvvvvvvvvvvufmmmmmme9jjjhigga442bqppq..pppk444bogjiqiijbkttslud100000116dllvtvtrrrtuvvvvvvvvvvvvvvvvvvvvvvvvfmmmmmmf9sqqijioa442bqppq..pppk5449faffhhjk9ctutkld61000006bdululvskkkstuvvvvvvvvvvvvvvuuuuuuuutmmmmmmmm9ckjhfff8442bqppq..pppk5448ogjfistc6lvutvld66100166ddlvuvusrrsuvtuuuvvvvvvvvvuutttttttsnmmmmmmmna6ssjogoa442cqppq..pppj6248ffgfhijk9lutuulb66611666bddvlvskrrstuvuuuvvvvvvuuttttttttttsnmmmmmmmna6kihgfga433kqppq..pppqb24bogjgjijrbkuuuttd111116969blluurrrrrsttuvuuuvvuuttttttttttttrnmmmmmmmna6rjijgoa436qpppi..pppqc247ffgfiijjbkvuttuu600001166dlcrsrrrkbcrstttttuutttttttsstttttnmmmmmmmmnh9ajhghf9339qpppi.'+
-        '.qppqc235agogjjsjbcuttuuub611100011dkrrkb6619rsttttttttttttssrrtttttnmmmmmmmnnrc5sijia732bqppph..qpppr3258fffhhiic9kttuuukb11111000166661016crrsttttttttttsrrrsttttjnmmmmmemmnic4ihgha533ktqqqa...pppq5248fjgjhijq6cuuuuutk961111110001136ccrrrsttttttttssrrrsttttsnmmmmmmeemmnkbchjib335qqqpq....pppqc247aihihiircbkuuuutrkb66b9b9636ccckrrrrrstttttttsrrrrstttttsnmmmmeeemnnnrk9hif743bqpogh....pppqr234bjgjijiqq9cuuuusrrkkkrkrkcckrrrrrrrrstttttttsrrrrstttttsimmmmme8mmnnnjk9hjf543cjgggh....ppppq6347gfghgijrcbltttrrrrrrrrrrrrrrrrrrrsttttttttrrrrrrtttttsimmmmmee8mmnmnjk6fga445igffgc.....pppqa347fijijirss9cssrrrrrrrrrrrrrrrrrrssttttttttrrrrrrstttttjnmmmmeeeemnmmnrk6hja439jgifi......ppopk5458higiijjjk9hrrrrrrrrrrrrrrrrsttttttttttsrrrrrrrstttttimmmme8eennnnnjrk6hf743ajsuii...'+
-        '...qggoi9348foijijjjs9cijrrrrrrrrrrrrrsstttttttttsrrrrrrrstttttjnnnme888ennnnnrrk6hb435jistia.......fggoc247aghghjsss9cffjrrrrrrrrrrrrtttttttttssrrrrrrrstttttrrrinee888ennnnjrrk5a532bjfgii........ggggj5347fhoiqsqt9cfeejrrrrrrrrrrrrsssttttsrrrrrrrrstsstttstineee88emnnnnrrrf58335jgggga.........gggoh234bsjhijjj6cjnefjrrrrrrrrrrrrrrssssrrrrrrrrrrrssttttjnmemee8mnnnnrrrnf3534aofggg..........ghjgi9246hjijjraakjnmeejrrrrrrrrrrrrrrrrrrrrrrrihjrrstttttinnmmeeemnnjjrrjnf4439igffgf...........uvjfi6348hhjjj9crrnnmeeajrrrrrrrrrrrrrrrrrrheefrststtttttsrnnmeemnnjrrrrjnf444fofffg............ksffgb245ahjjj9crrjnnmeeeerrrrrrrrrrrrrieeeeenjrssttttttttinneemnjrrrrrrnf7439jfffgb.............iffgi9345aijj9crrrnnnmeeeeeeaiiiiiieeeeeeeemirrsttttttttrnmeemijrrrrrrjf7449igffff.......'+
-        '.......gffggi6349hij9crrrrnnnnmeeeeeeeeeeeeeeeeennnirstsssstttsnmmeijrrrrrrrrja545hogfgg9...............ggggoh344bj93crrrrjnnnnneeeeeeeeeeeeeennnnjrrrrrrrrrrrrrrrrrrttttrrrra532ajgfggf.................ggggib235a95hrrrrrrnnnnmeeeeeeeeeeeemnnirrrrrrrrrrrrrrrrrrtttttttrrk5326iggggg..................gggfgg92355brrrrrrrrinnnmmeeeeeeeemmnnirrrrrrrrrrrrrrrrrrstttttttrh7436ioffggb...................igffoi9245crrrrrrrrrnnnnnmmeeeeennnnrrrrrrrrrrrrrrrrrrrttttttttrk7446ipoffga.....................gfgooj9445arrrrrrrrrjnnnnneeeennnirrrrrrrrrrrrrrrrrrrttttttttsk5446hqoooga.......................goooji9445ckrrrrrrrrnnnnnmeeennirrrrrrrrrrrrrrrrrrrttttttttka5446isujoof........................booojji93457crrrrrrrrinnnmeemnnjrrrrrrrrrrrrrrrrrstttttttts64436jqvvurh3............'+
-        '.............coojjjqb5443kkrrrrrrjnnnnennnirrrrrrrrrrrrrrrrrttttttttss44336joosvjf5...........................aijjjjjc52357crrrrrrnnnnnnnnrrrrrrrrrrrrrrsttttttttttk964459jooojsf5.............................cjjjojqk93345akrrrrnnnnnnnirrrrrrrrrrrrrstttttttttkc75446croooooh3...............................bjjoooprb34445ckrjnnnnnnirrrrrrrrrrrrstttttttttsk94444bsjooooof3..................................jjoooojk954444ccnnnnnnjrrrrrrrrssttttttttttkc544446csjoooooa.....................................ioooojtsk6333557aafnirrrrrrrrsttttttttkkcb755445kjqoooooib.......................................hooorvtqtc52244447hhkkrrrrrstttttslrr94555446bsqppogooi9..........................................iqtvuqpqsc9544445545acccckkkkkc5444444459csqpppppoic......................'+
-        '.......................aruqppppqqkcb423444455555555555443229aksqqppppppc6................................................hppppppppqqsk9643223333433323466ssqqppptqpppia....................................................hppppqpppppqqqjab9999999bakjqqppppppqpppib........................................................cqpppppppppppqqqqqqqqqqqpppppppppppph9............................................................aqpppppppppppppppppppppppppppppqh6.................................................................chijppppppppppppppppppppihca........................................................................bbchippppppppppicab9......................................................................................................................................';
-
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width = 96; offCanvas.height = 96;
-      const offCtx = offCanvas.getContext('2d');
-      const CH = '0123456789abcdefghijklmnopqrstuv';
-      for (let i = 0; i < 9216; i++) {
-        const k = MOSAIC_PX[i];
-        if (k !== '.') {
-          offCtx.fillStyle = '#' + MOSAIC_PAL[CH.indexOf(k)];
-          offCtx.fillRect(i % 96, (i / 96) | 0, 1, 1);
-        }
-      }
-
-      const sparks = Array.from({ length: 18 }, () => ({
-        x: Math.random() * 96,
-        y: Math.random() * 96,
-        vy: -(Math.random() * 0.8 + 0.3),
-        life: Math.random()
-      }));
-
-      let t = 0;
-      function renderSanctuary() {
-        t += 0.03;
-        ctx.clearRect(0, 0, 96, 96);
-
-        // Pulsing golden sanctuary halo
-        const haloAlpha = 0.12 + Math.sin(t * 2) * 0.06;
-        ctx.fillStyle = `rgba(255, 215, 0, ${haloAlpha})`;
-        ctx.beginPath();
-        ctx.arc(48, 48, 46, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Draw pixel art coin
-        ctx.drawImage(offCanvas, 0, 0);
-
-        // Holy floating sparkles
-        for (const s of sparks) {
-          s.y += s.vy;
-          s.life -= 0.015;
-          if (s.y < 4 || s.life <= 0) {
-            s.y = 90;
-            s.x = 10 + Math.random() * 76;
-            s.life = 1;
-          }
-          ctx.fillStyle = s.life > 0.5 ? '#ffd700' : '#ffffff';
-          ctx.fillRect(Math.round(s.x), Math.round(s.y), 1.5, 1.5);
-        }
-
-        requestAnimationFrame(renderSanctuary);
-      }
-      renderSanctuary();
-    })();
   </script>
   <!-- Screenshot Lightbox Modal -->
   <div id="lightbox-modal" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); backdrop-filter:blur(6px); align-items:center; justify-content:center; cursor:pointer;" onclick="closeLightbox()">
