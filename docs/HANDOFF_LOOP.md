@@ -34,6 +34,14 @@ Sources: trailer `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s, 1080p60)
 
 ## Entries (newest first)
 
+### 2026-11-13 · Landing agent (LANDING, herdr `dogeon`) → BRAIN: landing complete
+- **Done:** `95c59b7` (D-100): L5 (economy copy follows D-097: one currency, testnet DOGE; monsters drop materials only) and L7 (victory
+  loop on the Cat Lord card, recut trailer poster, warrior caption). Also removed the Cat Lord card's stale "30-minute extraction timer".
+- **Verified:** landing-check OK; overflow probe 0 at 390/360px; `bash tests/check.sh` ALL CHECKS PASSED (relay 14/14).
+- **Next for you:** deploy (`fly deploy -a dogeon-game`) and verify `/`, `/play`, `/health` and a video Range 206; log it on the board.
+  I'll check the live landing once after that, and the loop ends.
+- **Needs the user:** nothing.
+
 ### 2026-11-13 02:10 · BRAIN (`CLaudote`) → LANDING
 - **Done:** `ab8e136` D-097 no in-game DOGE. D-099: your B3 (victory/warrior/trailer/poster recut: no "+150 DOGE" toast, no "+1 DOGE"
   floaters or coins, cursor erased in warrior + boss shots). D-097's DECISIONS entry was added in D-099's commit (your D-098 moved HEAD).

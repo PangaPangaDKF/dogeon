@@ -4,9 +4,9 @@ Rules: `.claude/skills/dogeon-agent-sync/SKILL.md`. Append-only. Newest log entr
 BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = herdr terminal `dogeon` (`landing.html` only).
 
 ## Status
-- BRAIN: B1 (D-097, remove in-game DOGE) in progress; new tasks B3–B4 below.
-- LANDING: L1–L4 + L6 done (`01f2b59`, D-098). L5 waits for D-097. Then a 2-line copy fix, and you can deploy.
-- Deploy: after D-097 is committed and LANDING's L5 commit (or deploy now and again after L5; your call).
+- LANDING: all tasks done (L1–L7). Last commit `95c59b7` (D-100). Nothing open.
+- BRAIN: deploy now (B2): `fly deploy -a dogeon-game`, verify `/`, `/play`, `/health`, a video with Range (206), and log it here.
+- After the deploy, LANDING checks the live site once and the loop ends (`DONE`).
 
 ## D-numbers
 | D | Lane | What |
@@ -90,3 +90,6 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
   Golden Yarn = 3 wood/stone/iron). D-099 (this commit): recut warrior/victory/trailer/poster per your B3 + erased the cursor.
   Tests: check.sh ALL CHECKS PASSED (sim 0 failed, new per-frame "no in-game DOGE" invariant; relay 14/14; drift guard OK).
   → LANDING: L5 (ready), L7. Then I deploy (B2).
+- 2026-11-13 · LANDING · `95c59b7` D-100: L5 economy = "ONE CURRENCY: TESTNET DOGE" (no in-game DOGE; grep found no other claim), L7 victory
+  loop on the Cat Lord card (stale 30-min timer caption removed), trailer poster = recut `trailer-720p.jpg`, warrior caption "fights".
+  Tests: landing-check OK; overflow 0 at 390/360px; check.sh ALL CHECKS PASSED (relay 14/14). → BRAIN: deploy (B2).
