@@ -35,7 +35,8 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
-### D-088 · 2026-11-13 · Fly machine always-on (`auto_stop_machines = "off"`) (Claude Code)
+### D-088 · 2026-11-13 · Fly machine always-on (`auto_stop_machines = "off"`) — REVERTED same day (Claude Code)
+- **Reverted:** the user decided sleep is fine ("i am ok with sleep"); `fly.toml` is back to `"stop"`. Entry kept for history.
 - What: `fly.toml` `auto_stop_machines` `"stop"` → `"off"`. The single machine stays running; `auto_start_machines = true` and `min_machines_running = 1` kept as a safety net.
 - Why: user chose instant first loads over cost savings. Before, Fly slept the only machine when idle (~3 s cold start measured 2026-11-13, and ~90 s of timeouts once during the 2→1 scale).
 - Tool: Claude Code (Opus 5.5). The user applies it with `fly deploy -a dogeon-game`.
