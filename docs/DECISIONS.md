@@ -35,6 +35,13 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-088 · 2026-11-13 · Fly machine always-on (`auto_stop_machines = "off"`) (Claude Code)
+- What: `fly.toml` `auto_stop_machines` `"stop"` → `"off"`. The single machine stays running; `auto_start_machines = true` and `min_machines_running = 1` kept as a safety net.
+- Why: user chose instant first loads over cost savings. Before, Fly slept the only machine when idle (~3 s cold start measured 2026-11-13, and ~90 s of timeouts once during the 2→1 scale).
+- Tool: Claude Code (Opus 5.5). The user applies it with `fly deploy -a dogeon-game`.
+- Alternatives rejected: keeping auto-stop (cheaper, but the user asked); a second always-on machine (would split the in-memory multiplayer rooms).
+- Verify: after deploy, `fly status -a dogeon-game` shows one machine `started` and it stays started; `https://dogeon.lat` answers <1 s.
+
 ### D-087 · 2026-11-12 · play.dogeon.lat live; landing CTAs switched to it (B6); www blocked by Fly cert limit (Claude Code)
 - What: The user added Spaceship CNAMEs `play` and `www` → `dogeon-game.fly.dev` and ran `fly certs add`. Verified from here: `play.dogeon.lat` resolves to Fly (66.241.125.199 / 2a09:8280:1::1f7:c716:0), HTTPS 200 with a valid certificate, serves the game shell and `/src/game.js`. Switched the landing's 4 play links (`/play`) → `https://play.dogeon.lat/`; the `/play` route stays. `www.dogeon.lat`: Fly refused the cert ("Organizations without a credit card can have 2 custom domain certificates"), so its CNAME leads to a TLS error; the user is told to delete it or add a card. Landing skill → v1.3 (§10 step 7: cert limit + DoH/`--resolve` checks).
 - Why: B6 / truth rule T6 — the public game URL is `play.dogeon.lat`, switched only after HTTPS was proven.

@@ -16,7 +16,9 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-12, after D-087)
+## 00. RESUME HERE (latest, 2026-11-13, after D-088)
+
+> **D-088:** `fly.toml` → `auto_stop_machines = "off"` (always-on, user's choice). Needs `fly deploy -a dogeon-game` to apply.
 
 > **D-087:** `play.dogeon.lat` is LIVE (CNAME → `dogeon-game.fly.dev`, cert Issued, HTTPS 200). Landing play CTAs now point to it.
 > `www` record deleted at Spaceship (Fly free tier = 2 custom certs; a cert-less www would show a TLS error).
