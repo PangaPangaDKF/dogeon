@@ -1,4 +1,4 @@
-// Copies deployed contract addresses into the game's CONTRACTS config (index.html, CHAIN section).
+// Copies deployed contract addresses into the game's CONTRACTS config (src/game.js, CHAIN section — moved from index.html in D-074).
 //   node contracts/apply-deployment.mjs              -> uses deployments/6281971.json (DogeOS Chikyu)
 //   node contracts/apply-deployment.mjs 31337        -> local anvil
 //   node contracts/apply-deployment.mjs 6281971 --html other.html --dir some/deployments   (used by tests)
@@ -12,7 +12,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const chainId = Number(args.find(a => /^\d+$/.test(a)) || 6281971);
-const html = opt('--html', join(here, '..', 'index.html'));
+const html = opt('--html', join(here, '..', 'src', 'game.js'));
 const dir = opt('--dir', join(here, 'deployments'));
 const RPC = { 6281971: 'https://rpc.testnet.dogeos.com', 31337: 'http://127.0.0.1:8545' };
 const die = m => { console.error('ERROR: ' + m); process.exit(1); };
@@ -45,4 +45,4 @@ if (!re.test(src)) die(`CONTRACTS entry for ${hex} not found in ${html}`);
 src = src.replace(re, `'${hex}':{items:'${dep.items}',dex:'${dep.dex}',prof:'${prof}',stake:'${stake}'}`);
 writeFileSync(html, src);
 console.log(`CONTRACTS['${hex}'] = { items: ${dep.items}, dex: ${dep.dex}, prof: ${prof || '(none)'}, stake: ${stake || '(none)'} } written to ${html}`);
-console.log('Next: bash tests/check.sh, then commit index.html + contracts/deployments/' + chainId + '.json');
+console.log('Next: bash tests/check.sh, then commit src/game.js + contracts/deployments/' + chainId + '.json');

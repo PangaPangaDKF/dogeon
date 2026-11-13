@@ -1,5 +1,8 @@
 # DOGEON — TryNoah AI Recreation & Deployment Runbook (D-037)
 
+> **Just want an exact clone? Use [`TRYNOAH_CLONE.md`](./TRYNOAH_CLONE.md) (D-084)** — the lean, drift-guarded prompt +
+> `scripts/setup-clone.sh`. This runbook is the long-form background.
+
 > **Scope:** how to recreate DOGEON ("The Grand Heist") inside **TryNoah AI** (or any LLM app builder) and deploy it,
 > *without missing a single feature, contract, selector or gameplay rule* — and how to **prove** nothing was missed.
 >
@@ -16,10 +19,10 @@ with a lookalike that silently lost features.
 | | **Path A — EXACT REPLICA** | **Path B — BLUEPRINT REBUILD** |
 |---|---|---|
 | **Method** | Hand TryNoah the **real source files** and tell it to host them unchanged. | Paste `MASTER_PROMPT.md` §A and let the model **write** the app from the spec. |
-| **Result** | **Byte-identical.** Every pixel, balance number, selector and quirk preserved. | **Functionally similar, NOT identical.** An LLM re-derives 1,274 lines of hand-tuned code; sprites, timings and edge cases will differ. |
+| **Result** | **Byte-identical.** Every pixel, balance number, selector and quirk preserved. | **Functionally similar, NOT identical.** An LLM re-derives ~1,500 lines (162 KB) of hand-tuned code; sprites, timings and edge cases will differ. |
 | **Use when** | You want *this* game live (the normal case). | You want a fresh variant, or TryNoah must own/extend the codebase. |
 
-> ⚠️ **No prose prompt — however detailed — can reproduce 1,274 lines of hand-tuned canvas code byte-for-byte.**
+> ⚠️ **No prose prompt — however detailed — can reproduce ~1,500 lines of hand-tuned canvas code byte-for-byte.**
 > If the goal is "replicate exactly as developed", **use Path A.** Use §A only to *regenerate or extend*.
 > This runbook therefore leads with Path A and keeps Path B as the fallback.
 
@@ -27,37 +30,40 @@ with a lookalike that silently lost features.
 
 ## 1. Path A — EXACT replica (recommended)
 
-DOGEON is a **single static file with zero dependencies**, which makes exact deployment trivial: there is no build
-step, no npm install, no bundler, no server code. `index.html` *is* the whole app.
+DOGEON's game is **two static files with zero dependencies** — `index.html` (18-line shell) + `src/game.js` (all game
+code, D-074) — which makes exact deployment trivial: no build step, no npm install, no bundler. **Never hand over
+`index.html` alone: it is only a shell and renders a black screen without `src/game.js`.** Best: import the GitHub repo
+and run `bash scripts/setup-clone.sh`. Optional server: `server/relay.mjs` (landing at `/`, game at `/play`, multiplayer).
 
 ### A1. What to hand over
 | File | Size | Why it is required |
 |---|---|---|
-| `index.html` | ~123 KB | The entire game: engine, sprites, audio, UI, Web3/EIP-1193 layer. **Ship verbatim.** |
+| `index.html` | ~0.6 KB | The page shell that loads `src/game.js`. **Ship verbatim.** |
+| `src/game.js` | ~162 KB | The entire game: engine, sprites, audio, UI, Web3/EIP-1193 layer. **Ship verbatim, same path.** |
 | `contracts/src/DogeItems.sol` | ~7.5 KB | ERC-721 items. Already deployed — only needed to redeploy or audit. |
 | `contracts/src/DogeDEX.sol` | ~18 KB | Listings + `x*y=k` NFT/DOGE pools + 1% protocol fee. |
 | `contracts/src/DogeProfession.sol` | ~3 KB | One class per wallet. |
 | `contracts/src/DogeStaking.sol` | ~4.6 KB | MasterChef DOGE staking vault. |
 | `contracts/src/IPriceFeed.sol` | ~0.6 KB | RedStone feed interface. |
 
-Total ≈ **158 KB** (~40k tokens) — fits a large-context builder in one or two messages.
+Total ≈ **200 KB** (~50k tokens). Prefer a repo import over pasting: pasting costs the tokens and risks truncation.
 
 ### A2. Prompt to paste into TryNoah (Path A)
 ```text
-Host this exact application. It is a single, self-contained, zero-dependency static web app.
+Host this exact application. It is a zero-dependency static web app of TWO files: index.html + src/game.js.
 
 HARD RULES — do not "improve" it:
-1. Serve `index.html` byte-for-byte as given. Do NOT reformat, minify, split, re-indent, "modernize",
+1. Serve `index.html` and `src/game.js` (same relative path) byte-for-byte as given. Do NOT reformat, minify, split, re-indent, "modernize",
    add a framework/bundler/package.json, or inject analytics, CDNs, fonts or polyfills.
 2. It must be served over http(s) from a real origin (NOT file://) — browser wallets do not inject into file://.
 3. No build step. No server-side code. No environment variables. Static hosting only.
 4. The Solidity files are already deployed to DogeOS Chikyū testnet and are included for reference only.
-   Do NOT redeploy or change the addresses baked into index.html.
+   Do NOT redeploy or change the addresses baked into src/game.js.
 
 The app is a 16-bit canvas RPG + DeFi hub that talks to the user's own wallet (EIP-1193) only after they
 click CONNECT. It is fully playable with no wallet. Deploy it and give me the public URL.
 
-<paste the full contents of index.html here>
+<paste index.html, then src/game.js — or better, import the GitHub repo>
 ```
 
 ### A3. Deploy targets (any static host works)
@@ -101,7 +107,7 @@ node scripts/trynoah-manifest.mjs --verify                            # fail if 
 `--verify` is wired into `bash tests/check.sh`, so a stale recreation prompt now **breaks the build** instead of
 silently shipping wrong contract addresses.
 
-The manifest pins, straight from code: the 17 `index.html` sections · every `CONTRACTS` address (both chains) ·
+The manifest pins, straight from code: the 18 `src/game.js` sections · every `CONTRACTS` address (both chains) ·
 all 30 `SEL` selectors · the RedStone feed + adapter · every external/public Solidity function · exact per-class
 stats · item types, mintables and forge recipes · NPCs, enemy types and balance constants · every on-chain action
 and menu function · and the full list of headless sim scenarios that must pass.
@@ -117,7 +123,7 @@ DEPLOY_KEY=<testnet throwaway key> bash scripts/e2e-chikyu.sh   # never paste th
 Last run (D-039): **17/17 PASS** — stake → mint 3 item NFTs → approve → create pool → swap DOGE→item → swap item→DOGE →
 protocol fee accrues → `flushStakerFees()` → staker reward → `claim()` → `withdraw()` → remove LP → unstake. The 1% fee
 split was verified **to the wei** (project 0.2% : stakers 0.8% = exactly 1 : 4). So a Path-A deploy needs no contract work:
-the addresses baked into `index.html` are live and correct.
+the addresses baked into `src/game.js` are live and correct.
 
 **Checklist to call a recreation complete**
 - [ ] Every manifest §1–§8 row exists in the rebuild.
@@ -134,13 +140,13 @@ the addresses baked into `index.html` are live and correct.
 
 ## 4. Contract redeployment (only if you need a *fresh* chain)
 
-The live Chikyū addresses are already baked into `index.html`, so **skip this** for a normal deploy.
+The live Chikyū addresses are already baked into `src/game.js`, so **skip this** for a normal deploy.
 
 ```bash
 cd contracts
-forge test                                   # 45 tests must pass
+forge test                                   # 47 tests must pass (libs: bash scripts/setup-clone.sh)
 forge script script/Deploy.s.sol --rpc-url chikyu --broadcast --private-key <YOUR_TESTNET_KEY>
-node apply-deployment.mjs 6281971            # writes the new addresses into index.html
+node apply-deployment.mjs 6281971            # writes the new addresses into src/game.js
 cd .. && bash tests/check.sh                 # must stay green
 node scripts/trynoah-manifest.mjs --out docs/RECREATION_MANIFEST.md   # refresh the manifest
 ```

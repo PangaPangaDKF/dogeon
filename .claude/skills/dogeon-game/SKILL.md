@@ -1,11 +1,11 @@
 ---
 name: dogeon-game
-description: Full context, exact stack, live DogeOS Chikyū contract registry, ABI selectors, DOGEON Pool DEX card, and gameplay invariants for DOGEON ("The Grand Heist"), the single-file 16-bit Shiba-vs-cats Web3 Action RPG in index.html. Load before planning, designing, balancing, drawing sprites, writing Web3/Solidity integrations, or recreating the project on TryNoah AI.
+description: Full context, exact stack, live DogeOS Chikyū contract registry, ABI selectors, DOGEON Pool DEX card, and gameplay invariants for DOGEON ("The Grand Heist"), the 16-bit Shiba-vs-cats Web3 Action RPG (index.html shell + src/game.js). Load before planning, designing, balancing, drawing sprites, writing Web3/Solidity integrations, or recreating the project on TryNoah AI.
 ---
 
 # DOGEON — Master Game & Web3 Context Skill
 
-Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 2.5 (2026-11-12, D-084 fact sync). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #0 (Pre-Decision Analyzer Gate — THE NUMBER ONE RULE):** before taking ANY decision or editing ANY file, activate the **`analyzer-master`** skill (`.agents/skills/analyzer-master/SKILL.md` / `/analyzer-master`), run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs`, answer its 4 Strategic Thinking questions, and load `references/decision-gate.md` on demand.
 
@@ -14,14 +14,14 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
 ---
 
 ## 1. Exact Stack & Hard Constraints (Zero Context Waste)
-- **Frontend (`index.html`, < 1,500 lines):** Plain HTML + inline CSS + vanilla ES2022 JS + Canvas 2D (`320×224` internal resolution, `image-rendering: pixelated`, integer scaling).
-- **Zero External Dependencies:** No npm runtime packages, no ethers.js/viem/wagmi CDN, no external images/fonts/audio, no `fetch()`, `XMLHttpRequest`, `WebSocket`, `import()`, `alert()`, `confirm()`, or `prompt()`.
+- **Frontend (`index.html` 18-line shell + `src/game.js` game code, classic `<script src>`, D-074; `src/game.js` is AT its 1,500-line cap → new code goes in a new `src/*.js` classic script):** Plain HTML + inline CSS + vanilla ES2022 JS + Canvas 2D (`320×224` internal resolution, `image-rendering: pixelated`, integer scaling).
+- **Zero External Dependencies:** No npm runtime packages, no ethers.js/viem/wagmi CDN, no external images/fonts/audio, no `fetch()`, `XMLHttpRequest`, `import()`, `WebSocket` outside the opt-in `MULTIPLAYER` section (`?mp=`, D-040), `alert()`, `confirm()`, or `prompt()`.
 - **Procedural Assets:**
   - **Font:** 3×5 uppercase bitmap glyph table `FONT` (`text`, `textC`, `wrap`).
   - **Sprites:** 16×20 character sprites via `buildChar({head:HEAD.dog|cat, pal:{O,F,C,P,E,N,R,W,T,A,B,L,K}, acc(g,dir,frame)})` and `staticSpr()`. Boss draws at 2×.
   - **Tiles:** 16×16 procedural tile atlas `TL` (`MW=80, MH=60`, deterministic `mulberry(4242)` in `genMap()`).
   - **Audio:** WebAudio `sfx(freq,dur,type,vol,slide)` with `AudioContext` resumed on `click` and `keydown`.
-- **Smart Contracts (`contracts/`, Foundry):** Solidity `^0.8.24` (`evm_version = "cancun"`), OpenZeppelin v5.1 (`ERC721`, `ERC721Enumerable`, `ReentrancyGuard`), 45 Foundry unit + fuzz tests (`forge test`).
+- **Smart Contracts (`contracts/`, Foundry):** Solidity `^0.8.24` (`evm_version = "cancun"`), OpenZeppelin v5.1 (`ERC721`, `ERC721Enumerable`, `ReentrancyGuard`), 47 Foundry unit + fuzz tests (libs gitignored → `bash scripts/setup-clone.sh` fetches OZ v5.1.0 + forge-std v1.17.0) (`forge test`).
 - **Web3 Transport:** EIP-1193 (`window.ethereum || window.bitkeep?.ethereum`) ONLY after clicking `CONNECT WALLET`. Precomputed 4-byte selectors (`SEL`) + 32-byte hex ABI helpers (`W32`, `A32`, `words`, `arrAt`, `unpack`, `toWei`, `fromWei`).
 
 ---
@@ -32,7 +32,7 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
   - `items` (`DogeItems.sol`, ERC721Enumerable, packed `id<<16|type<<8|level`, `1 DOGE` mint fee): `0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4`
   - `dex` (`DogeDEX.sol`, NFT listings + `x*y=k` NFT/DOGE AMM pools, 2% LP fee + 1% protocol fee split 0.2% treasury / 0.8% stakers, pull-payment `proceeds`): `0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590`
   - `prof` (`DogeProfession.sol`, 1 class per wallet forever, `0.05 DOGE` fee): `0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055`
-  - `stake` (`DogeStaking.sol`, MasterChef `1e18` precision DOGE staking vault): `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`
+  - `stake` (`DogeStaking.sol`, MasterChef `PREC=1e12` DOGE staking vault): `0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d`
 - **RedStone DOGE/USD Oracle (`REDSTONE['0x5fdaf3']`):**
   - `feed`: `0x434F8D17c0301cfEa143dba912972E24B827C968` (`0xfeaf968c`) · `adapter`: `0xB08342D907D2df47B6F73e25F4fa033978B344B1` (`0x729bfda4` + `bytes32("DOGE")` stale fallback)
 - **4-Byte Selectors (`SEL`):**
@@ -61,7 +61,7 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
    - Full mouse hover/wheel/click support on canvas (`cvPos`). In `tests/sim.mjs`, always close menus with `api.press('escape'); api.step(DT);` (never `api.get().ui = null`, which only mutates the wrapper object).
 7. **Hardcore survival (`D-052..D-063`):** normal `ETYPES` are **2× base HP + damage**; field holds **52** (`FIELD_POP`). Drops are rare — `dropP` per type gates the material + `COIN_DROP_P` (8%) drops a single DOGE coin. **Mini-boss per region** (`makeMini`/`spawnMini`, `zone:'mini'`, `region` field, 3.5× HP, drawn 1.5×, drops 6 materials + 5 coins). **Slow respawn**: dungeon `DUN_RESPAWN=120s`, mini-bosses `MINI_RESPAWN=240s` (separate `dunT`/`miniT` timers) — clear, rest in camp, return to the Cat Lord.
 8. **Gear stats + random loot (`D-058..D-064`):** 9 DOGE gear NFTs = `DogeItems` types **7–15** (DOGE SWORD/LEATHER ARMOR/SHIELD/STAFF/ROBE/WHIP/BOW/HEMP SHIRT/QUIVER), in `MINTABLE`+`ITEM_TYPES`, any class may wield any. `GEAR_STATS` gives base +ATK/+DEF/+HP/+MP; **`itemRoll(id)`** hashes an NFT's on-chain tokenId → a deterministic `{rarity, buff}` (COMMON..LEGENDARY ×1..×6, incl. big MEME buffs). `gearStats()` sums base + every non-food item's rolled buff, applied via `gatk()` (the 4 weapon formulas), `hurtPlayer` (def), and `syncMaxHp`/`syncMaxMp` (resynced after `refreshChain`). Only while `chainReady()` (owning = wearing). No contract stores the roll — it derives from the id.
-9. **Renewable gathering (`D-053`):** face a tree→**WOOD** / rock→**STONE**, hold `F` (reuses the fishing pipeline, so hit/move/attack cancels it), per-tile `GATHER_CD=8s` cooldown (`nodeAt`/`gatherCD`).
+9. **Renewable gathering (`D-053`):** face a tree→**WOOD** / rock→**STONE**, hold `F` (reuses the fishing pipeline, so hit/move/attack cancels it), per-tile `GATHER_CD=14s` cooldown (`nodeAt`/`gatherCD`).
 10. **Per-class Max MP (`D-054`):** warrior **20** / archer **30** / healer **50** via `syncMaxMp()` (class `mp` field, mirrors `syncMaxHp`).
 
 ---
@@ -69,6 +69,6 @@ Version: 2.4 (2026-11-08). Bump the version and add a line to `docs/DECISIONS.md
 ## 4. Working Protocol (Every Session)
 1. Run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs` (`RULE #0`).
 2. Read `CLAUDE.md`, `MASTER_PROMPT.md` §A–B, and the last 5 entries of `docs/DECISIONS.md`.
-3. Make surgical diffs; keep `index.html` < 1,500 lines; put balance numbers in top-of-section tables.
+3. Make surgical diffs; keep `src/game.js` ≤ 1,500 lines (split into a new `src/*.js` when full); put balance numbers in top-of-section tables.
 4. Export any new Web3/gameplay functions in `tests/sim.mjs` `HARNESS`, add assertions, and run `bash tests/check.sh` (`ALL CHECKS PASSED`).
 5. Follow `RULE #1`: log in `docs/DECISIONS.md`, update `MASTER_PROMPT.md` + this skill + `CLAUDE.md`/`CONTEXT.md`, and commit with a Conventional Commit message.

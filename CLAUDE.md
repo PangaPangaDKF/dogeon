@@ -50,13 +50,13 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
   MetaMask does not inject into `file://` → run `node tests/serve.mjs` and open http://localhost:8080.
 - **Multiplayer exception (D-040):** the browser's native `WebSocket` may be used **only** inside the `MULTIPLAYER` section, and
   **only** when the URL has `?mp=ws(s)://host` (opt-in; off by default). Without `?mp` the game makes zero network calls.
-  Scope is "the option": other players appear as ghosts (class sprite, facing, walk, HP, name). Shared enemies/loot are NOT
-  built (would need an authoritative server, e.g. Colyseus). Self-host: `node server/relay.mjs` (zero deps, serves the game +
+  Scope is "the option": other players appear as ghosts (class sprite, facing, walk, HP, name). Field enemies stay local; the relay
+  referees only one Cat Lord per room, PvP and death-loot piles (D-076). Self-host: `node server/relay.mjs` (zero deps, serves the game +
   relay). Peer data is untrusted → validate ids/coords, sanitize names, cap peers. `tests/check.sh` enforces the confinement.
 - Phaser 3 was the original spec (see `docs/GDD.md` if present). The MVP deliberately uses vanilla
   Canvas for full pixel control and zero dependencies. Porting to Phaser is a separate, explicit task.
 
-## 3. Code map (`index.html`, sections are marked `// ===== NAME =====`)
+## 3. Code map (`src/game.js`, sections are marked `// ===== NAME =====`)
 | Section | What lives there |
 |---|---|
 | CORE | Constants `W,H,HUD_H` (tiles are a literal 16 px), canvas setup, `resize()`, seeded RNG `mulberry()`, helpers `mk() px() rect() flip() tinted()` |
@@ -66,7 +66,7 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 | CHARACTER SPRITES | String templates `HEAD.dog/cat`, `TOP`, `LEGS`. `buildChar({head, pal, acc})` → `{down,up,right,left}[frame]` canvases. `SPR.hero/merchant/bank/sage/alley/archer/brute/boss/frog/ninja/bull/knight`, faction trainers `SPR.tWarrior/tArcher/tHealer` (D-028). Icons `SHADOW COIN WHISK YARN BONE ORB_IC SCRAP_IC HORN_IC STEEL_IC FISH_IC CFISH_IC`. `MAT_ICONS` map (ground-item icons) |
 | TILES | Tile ids `T.*`, `SOLID` set, procedural tile painters, atlas `TL` |
 | MAP | `MW=80, MH=60` tiles. `CAMP` (33..47, 27..41), fire at `CX=40, CY=34`. `DUN` ruins (26..54, 2..17), `GATE_ROW=9`. 5 ponds (3 inline + `PONDS_EXTRA`). `genMap()` (seed 4242, deterministic). `tileCanvas()` picks the variant per tile |
-| GAME STATE | Balance tables `SWORD_DMG ARMOR_RED` (gear comes from forge `RECIPES`, not a DOGE shop — D-039), `MARKET` (price sim), `REST_DELAY REST_CAP(0.6) RESPAWN_FRAC`, `SKILL_THRESH{combat,fishing,bark}` `SKILL_BONUS skillLv(xp,kind) skillMul(xp,kind)`, fishing `FISH_MIN FISH_MAX waterAt() startFish() stopFish() updFish()`, pressure `FIELD_POP(22) DUN_POP(6) SPAWN_EVERY(3)`, `BAG_SIZE(12) FOODS`, bag helpers `addToBag/bagCount/bagRemove`, enemy stats `ETYPES` (with `ai` and `mat` fields), `RECIPES` (forge), classes `CLASSES{warrior,archer,healer}` + `CLASS_IDS CLASS_COL classOf classSpd classDmg classArmor` (D-028), globals, `NPCS` (+ trainers on `PADS3`), `newGame()` (`P.prof`), `makeEnemy()`, `spawnEnemy(zone)`, `summon()` |
+| GAME STATE | Balance tables `SWORD_DMG ARMOR_RED` (gear comes from forge `RECIPES`, not a DOGE shop — D-039), `MARKET` (price sim), `REST_DELAY REST_CAP(0.6) RESPAWN_FRAC`, `SKILL_THRESH{combat,fishing,bark}` `SKILL_BONUS skillLv(xp,kind) skillMul(xp,kind)`, fishing `FISH_MIN FISH_MAX waterAt() startFish() stopFish() updFish()`, pressure `FIELD_POP(52) DUN_POP(6) SPAWN_EVERY(3)`, `BAG_SIZE(12) FOODS`, bag helpers `addToBag/bagCount/bagRemove`, enemy stats `ETYPES` (with `ai` and `mat` fields), `RECIPES` (forge), classes `CLASSES{warrior,archer,healer}` + `CLASS_IDS CLASS_COL classOf classSpd classDmg classArmor` (D-028), globals, `NPCS` (+ trainers on `PADS3`), `newGame()` (`P.prof`), `makeEnemy()`, `spawnEnemy(zone)`, `summon()` |
 | COLLISION | `solidFor(tx,ty,ent)`, `blocked(ent,x,y)` (AABB vs tiles + NPCs for player), `move(ent,dx,dy)` (sub-stepped, corner sliding for the player), `overlap()`, `playerInCamp()`, `zoneOf()` → `'field' / 'dun' / 'boss'` |
 | FX | `puff()` particles, `floater()` damage text, `toast()`, `shake()` |
 | COMBAT | `hurtPlayer()` (armor, i-frames, knockback, death, bear-market dmg boost), `respawn()` (death penalty: 50% DOGE + all whiskers + all materials), `attack()` hammer swing, `bark()` "WOW" projectile, `damageEnemy()` (uses `ai` field for knockback), `killEnemy()` (drops material via `e.def.mat` + quest counters + boss victory), `shootBone()` |
@@ -82,7 +82,7 @@ whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp �
 ### Entity conventions
 - Position `(x, y)` = center of the collision box in pixels. Feet at `y + hh`.
 - Sprites draw so their bottom row sits at the feet: `drawChar(spr, dir, frame, x, y+hh, scale, ox, oy, tint)`.
-- `dir` is `'down' | 'up' | 'left' | 'right'`. Walk cycle: front/back `[0,1,0,2]`, side `[0,1,0,1]`.
+- `dir` is `'down' | 'up' | 'left' | 'right'` (aim/logic only). Rendering is frozen: `drawChar()` always draws `spr.right[0]` — no walk cycle, no flips (D-044, mission R3).
 - Enemies have `enemy:true` → camp tiles are solid for them (this is what makes the camp safe).
 - Remove dead entities with a `.filter()` **after** a loop, never `splice` inside it.
 
@@ -107,17 +107,17 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
   player lists or creates a pool. NFTs are not lost on death (they live on chain); carried DOGE/materials still are.
   On-chain features are additive; the core loop never needs a wallet.
 - **NPCs:** Sphinx (bank) = DogeOS DeFi hub (connect + RPC, NFT market LP/swap, faucet, stake, RedStone oracle, school, dogeos.com, docs), Elder (quest) = Keeper of the Heist (quest, story, factions, heist.dogeos.com), Mechanic (merchant) = forge. On pads N/W/E. Partners on `PADS2`: Cloverheart (Relotto), Noah (trynoah.ai), Bitget Wallet Card. Faction trainers on `PADS3` (D-028): Sergeant Ironpaw (warrior), Scout Fleetwhisker (archer), Mender Brighttail (healer) → `professorTalk/professorMenu`.
-- **Classes / professions (D-027/D-028/D-036):** one class per wallet — WARRIOR (Demolition Dogs), ARCHER (Kernel Crew), HEALER (Barkitects). Bound on-chain by `DogeProfession.choose(id)` (exact fee + gas, one per wallet forever) via `chooseProfession()`; offline it's a free LOCAL pick you can switch until sworn. `applyClass(cls,onchain)` transforms the hero sprite (`SPR[classOf().spr]`) and recalculates `P.maxHp` (`syncMaxHp()`): **WARRIOR** has `+25` Max HP (`85` base), `+15%` armor, `+35%` melee damage with a wider cleave, and `GROUND POUND` (`K`/`Q`); **ARCHER** has `+25%` speed, **shoots a basic arrow on `Space` (`0 MP` cost, bow drawn in `drawSlash`)**, and fires a 3-arrow spread volley on `K`/`Q` (`QUICK SHOT`, `6 MP`); **HEALER** has `-15` Max HP (`45` base), `+25%` speed, weak melee (`0.65x`, staff drawn in `drawSlash`, restores `+2 MP` on hit), and `MEND` (`K`/`Q`, `10 MP` → `+20 HP`). **HEALER MEND heals in the field but is paid in MP, and MP refills ONLY by resting in camp**, so the camp-sanctuary + greed-vs-safety invariants still hold.
+- **Classes / professions (D-027/D-028/D-036):** one class per wallet — WARRIOR (Demolition Dogs), ARCHER (Kernel Crew), HEALER (Barkitects). Bound on-chain by `DogeProfession.choose(id)` (exact fee + gas, one per wallet forever) via `chooseProfession()`; offline it's a free LOCAL pick you can switch until sworn. `applyClass(cls,onchain)` transforms the hero sprite (`SPR[classOf().spr]`) and recalculates `P.maxHp` (`syncMaxHp()`): **WARRIOR** has `+25` Max HP (`85` base), `+15%` armor, `+35%` melee damage with a wider cleave, and `GROUND POUND` (`K`/`Q`); **ARCHER** has `+25%` speed, **shoots a basic arrow on `Space` (`0 MP` cost, bow drawn in `drawSlash`)**, and fires a 3-arrow spread volley on `K`/`Q` (`ARROW VOLLEY`, `6 MP`); **HEALER** has `-15` Max HP (`45` base), `+25%` speed, weak melee (`0.65x`, staff drawn in `drawSlash`, restores `+2 MP` on hit), and `MEND` (`K`/`Q`, `10 MP` → `+20 HP`). **HEALER MEND heals in the field but is paid in MP, and MP refills ONLY by resting in camp**, so the camp-sanctuary + greed-vs-safety invariants still hold.
 - **Starter Bag & DOGEON Pool DEX (D-036):** New players start with `WOOD x3` and `STONE x3` in `P.bag` (plus starter `orb/scrap/horn/steel`) so they can immediately mint a `HAMMER LV2 NFT` from `invMenu` (`I`/`Tab`), `shopMenu`, or `marketMenu` Row 0. Choosing `NFT MARKET: SWAP + LIQUIDITY POOLS` at the Sphinx opens `marketMenu` (`DOGEON POOL DEX: MINT, SWAP & LP`, `ui.pooldex=true`), showing your wallet's DOGE balance, `WALLET ITEMS (N)` minted item balance, Row-0 item minting, and `CREATE POOL` / `SWAP` / `ADD LP` rows on `DogeDEX`.
 - **Links + partners (D-024):** links open only from a menu row via `openLink()`; partner stories must be factual and sourced; no "official partner" claims without a source.
 - **Oracle (D-024):** RedStone DOGE/USD is display/safety only (and anchors the simulated market when connected); swap prices always come from pool reserves.
 - **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+40 DOGE) → 2 slay 3 brutes (+80 DOGE,
   opens ruins gate) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 DOGE).
-- **Enemy populations:** field 22 (`FIELD_POP`), ruins lower hall 6 (`DUN_POP`), respawn one every 3 s (`SPAWN_EVERY`) out of view. Types: alley, archer, frog, ninja, bull, knight, brute.
-- **Controls:** WASD/arrows move, Space/J slash (hammer swing), K/Q class skill (`useSkill()` → WOW bark, or GROUND POUND/QUICK SHOT/MEND by class, D-029), E talk, hold R rest, I/Tab bag, F fish, Esc close.
+- **Enemy populations:** field 52 (`FIELD_POP`), ruins lower hall 6 (`DUN_POP`), respawn one every 3 s (`SPAWN_EVERY`) out of view. Types: alley, archer, frog, ninja, bull, knight, brute.
+- **Controls:** WASD/arrows move, Space/J slash (hammer swing), K/Q class skill (`useSkill()` → WOW bark, or GROUND POUND/ARROW VOLLEY/MEND by class, D-029), E talk, hold R rest, I/Tab bag, F fish, Esc close.
 
 ## 5. Coding rules for this project
-- Keep everything in `index.html` until we decide to split (then: `src/*.js` as ES modules, no bundler).
+- Game code lives in `src/game.js` (at its 1500-line cap). New code → a new `src/*.js` **classic** script loaded from `index.html` (same global scope, no modules, no bundler).
 - Small, surgical edits. Don't reformat or rename things you weren't asked to touch.
 - New balance numbers go in the tables at the top of GAME STATE, not as magic numbers in logic.
 - Pixel art: integer coordinates only (`Math.round`), no anti-aliased shapes, no `ctx.arc` for sprites.

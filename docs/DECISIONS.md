@@ -35,6 +35,31 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-084 · 2026-11-12 · TryNoah exact-clone environment + recreation-doc fact sync (Claude Code)
+- What:
+  - `scripts/setup-clone.sh` (new): one-command env for a fresh clone — checks git + Node 18+, Foundry (`--install-foundry` runs foundryup),
+    fetches the **gitignored** Solidity libs at pinned tags (OpenZeppelin v5.1.0, forge-std v1.17.0), runs `tests/check.sh` and fails unless
+    ALL CHECKS PASSED **and** the forge stage really ran. `--no-contracts` for a game-only clone.
+  - `prompts/TRYNOAH_CLONE.md` (new): lean ~1.5k-token exact-clone prompt (ground truth, read-only list + do-not-read list, 4 steps,
+    acceptance table, output format). Drift-guarded (addresses, 30 selectors, classes).
+  - `Dockerfile`: now copies `landing.html` + `assets/` — without them the relay's `existsSync(LANDING)` fallback served the game at `/`,
+    so D-082 could never go live on Fly.
+  - `contracts/apply-deployment.mjs`: wrote to `index.html`, where `CONTRACTS` no longer lives since D-074 → any redeploy failed with
+    "entry not found". Now targets `src/game.js` (dry run: no diff, addresses already match).
+  - Fact sync in the docs an AI reads to clone/extend: `TRYNOAH.md`, `prompts/TRYNOAH_RECREATE.md` (Path A told builders to paste only
+    `index.html` = black screen), `MASTER_PROMPT.md`, `CLAUDE.md`, `dogeon-game` skill v2.5 (+ `.agents` copy synced, and the stale
+    `.agents` `dogeon-mission` copy), `contracts/README.md` (live mint fee = 1 DOGE, read on-chain; 47 tests; 15 item types).
+    Corrected: two-file game, shared Cat Lord/PvP/loot (D-076), ARROW VOLLEY, FIELD_POP 52, GATHER_CD 14, PREC 1e12, cancun, frozen sprites.
+  - `scripts/trynoah-manifest.mjs --verify`: also checks `TRYNOAH_CLONE.md`, fails on a list of known-stale phrases across 8 docs, and
+    requires the clone prompts to name `src/game.js`. Manifest output relabelled from `index.html` to `src/game.js`.
+- Why: user asked for a token-cheap, hallucination-proof way to clone the game exactly on TryNoah. The audit found the old prompts would
+  produce a blank page (shell only), a fresh clone silently skipped all 47 contract tests, and the container dropped the landing page.
+- Tool: Claude Code (Opus 5.5). Verify: `bash tests/check.sh` → ALL CHECKS PASSED (47 forge, 5 drift files); **fresh clone** (no
+  `contracts/lib`) → `bash scripts/setup-clone.sh` → baseline green in 73 s with forge 47/47; Docker image from that clone → `/` landing,
+  `/play` + `Host: play.` + `?mp` game, `/health`, `/src/game.js` 200, assets 200; drift guard negative test (planted `QUICK SHOT`) → FAIL.
+- Alternatives rejected: committing `contracts/lib` (13 MB vendored deps); git submodules (TryNoah imports may not recurse); a longer
+  prompt that restates the whole blueprint (costs tokens and is what drifted before).
+
 ### D-083 · 2026-11-12 · Landing lane: own design skill + master prompt, landing truth/phone fixes, trailer v2 (Claude Code)
 - What:
   1. **New skill `dogeon-landing-design` v1.0** (`.claude/` + `.agents/` mirror): read-first list, the real token system, truth rules T1–T6 (every claim maps to code; no fake live stats; gameplay = real captures only; AI never redraws the coin), LLM design practices, review checklist, verification commands (incl. the headless-500px phone trap), backlog B1–B7. **RULE L0:** every landing/trailer/art change bumps the skill + master prompt in the same commit, in English. Registered in `CLAUDE.md` and `AGENTS.md`.
@@ -1237,6 +1262,7 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 - Note: `CLAUDE.md` got a §0 "session protocol" plus test commands on top of the delivered text. `MASTER_PROMPT.md` points to the living prompt. Both changes are in D-002's commit.
 
 ## Process (improvements to the prompt / skills themselves)
+- 2026-11-12 · dogeon-game skill v2.5 + drift guard (D-084): the guard only checked addresses/selectors/classes, so prose facts (file layout, skill names, constants) drifted for 9 decisions. It now fails on known-stale phrases; add a phrase to `STALE` in `scripts/trynoah-manifest.mjs` whenever a fact changes.
 - 2026-11-07 · SESSION_PROMPT v1.1: "prove bugs before reporting" (from D-005), WARN→FAIL promotion rule.
 - 2026-11-07 · dogeon-game skill v1.1: added skill routing table and the 8-step protocol.
 - 2026-11-07 · SESSION_PROMPT v1.2 + skill v1.2: user RULE #1 (feature closeout), practice 13 grep-before-naming (D-014), Phase 3 pointer.

@@ -19,7 +19,7 @@
   - Faucet: `https://faucet.testnet.dogeos.com`
 - **Smart Contract Stack:** **100% EVM Solidity `^0.8.24`** (Foundry `forge`, OpenZeppelin Contracts `v5.1`).
 - **CRITICAL NEGATIVE CONSTRAINT:** **NEVER generate Rust, Anchor, `Cargo.toml`, `@solana/web3.js`, or Solana programs.** DOGEON is strictly an **EVM Solidity + EIP-1193 (`window.ethereum`)** application on DogeOS.
-- **Single-File Zero-Dependency Frontend (`index.html` < 1,500 lines):**
+- **Zero-Dependency Frontend (`index.html` shell + `src/game.js` game code, D-074; `src/game.js` at its 1,500-line cap):**
   - Native resolution `<canvas id="c" width="320" height="224">` with `image-rendering: pixelated` and integer CSS scaling.
   - **FORBIDDEN in `index.html`:** `alert(`, `confirm(`, `prompt(`, `fetch(`, `XMLHttpRequest`, `import(`, external `<script src>`, `<link href>`, external images, fonts, or audio files (`WebSocket` is allowed ONLY inside §15 `MULTIPLAYER` when `?mp=` is present).
 - **Offline-First & Instant Wallet Popup (`chainAct`):**
@@ -48,8 +48,10 @@ When cloning, rebuilding, or extending this repository, execute strictly in this
 
 ### A. Repository File Map
 ```text
-index.html                         # Complete 16-bit RPG + DOGEON Pool DEX + DogeOS EIP-1193 client (~1,316 lines, 0 external deps)
-contracts/                         # Foundry project (Solidity ^0.8.24, OpenZeppelin v5.1, EVM Paris)
+index.html                         # 18-line page shell: <canvas> + <script src="src/game.js">
+src/game.js                        # Complete 16-bit RPG + DOGEON Pool DEX + DogeOS EIP-1193 client (1,500 lines, 0 external deps)
+landing.html, assets/              # Marketing landing (D-082), served at / by server/relay.mjs; game at /play
+contracts/                         # Foundry project (Solidity 0.8.24, OpenZeppelin v5.1.0, evm_version cancun; libs gitignored → scripts/setup-clone.sh)
   foundry.toml                     # RPC endpoints: chikyu = https://rpc.testnet.dogeos.com, local = http://127.0.0.1:8545
   apply-deployment.mjs             # Copies contracts/deployments/<chainId>.json addresses into index.html CONTRACTS
   script/Deploy.s.sol              # Deploys DogeItems -> DogeStaking -> DogeDEX -> DogeProfession in dependency order
@@ -339,7 +341,7 @@ const SEL={
 
 ### 4.7 Hardcore Survivor Loop, Gear Stats & Random Loot (`D-052..D-064`)
 - **Survival tuning:** normal `ETYPES` are **2× base HP + damage**; `FIELD_POP=52`; drops are rare (`dropP` per type + `COIN_DROP_P=0.08` for a single DOGE `coin` ground item). **Mini-boss per region** (`makeMini`/`spawnMini`, `zone:'mini'`, `region` field, 3.5× HP, drawn 1.5×, drops 6 materials + 5 coins). **Slow respawn**: `DUN_RESPAWN=120s`, `MINI_RESPAWN=240s` on separate `dunT`/`miniT` timers — the clear → rest in camp → return → boss loop.
-- **Renewable gathering:** face a tree→`wood` / rock→`stone`, hold `F` (reuses the fishing pipeline; hit/move/attack cancels), per-tile `GATHER_CD=8s` (`nodeAt`/`gatherCD`).
+- **Renewable gathering:** face a tree→`wood` / rock→`stone`, hold `F` (reuses the fishing pipeline; hit/move/attack cancels), per-tile `GATHER_CD=14s` (`nodeAt`/`gatherCD`).
 - **Per-class Max MP:** warrior 20 / archer 30 / healer 50 (`syncMaxMp()`, class `mp` field).
 - **9 DOGE gear NFTs:** `DogeItems` types **7–15** (DOGE SWORD/LEATHER ARMOR/SHIELD/STAFF/ROBE/WHIP/BOW/HEMP SHIRT/QUIVER), in `MINTABLE`+`ITEM_TYPES`; any class may wield any. `GEAR_STATS` gives base +ATK/+DEF/+HP/+MP.
 - **Random loot:** `itemRoll(id)` hashes an NFT's on-chain tokenId → deterministic `{rarity, buff}` (`RARITY` COMMON..LEGENDARY ×1..×6; `BUFFS` incl. big MEME buffs). `gearStats()` sums base + every non-food item's rolled buff, applied via `gatk()` (weapon formulas), `hurtPlayer` (def), `syncMaxHp`/`syncMaxMp` (resynced after `refreshChain`). Only while `chainReady()`. The roll is NOT on-chain (derives from the id), so every client agrees.

@@ -19,9 +19,12 @@
 git clone https://github.com/PangaPangaDKF/dogeon.git
 cd dogeon
 
-# 2. Prove the baseline is green BEFORE changing anything (zero npm install needed)
-bash tests/check.sh          # expect: ALL CHECKS PASSED — 6 stages, 0 fails
+# 2. Set up the environment + prove the baseline (Node 18+; fetches pinned Solidity libs; no npm install)
+bash scripts/setup-clone.sh --install-foundry   # expect: ALL CHECKS PASSED ... baseline green
 ```
+
+> **Just cloning/hosting it?** Use the lean prompt [`prompts/TRYNOAH_CLONE.md`](./prompts/TRYNOAH_CLONE.md) (D-084) and stop
+> reading here — this file is for extending the game.
 
 Then **load context in this order** (the skills ship inside the repo under `.claude/skills/` and `.agents/skills/`):
 
@@ -41,9 +44,10 @@ party members**. Do not add scope beyond this.
 
 ## 1. Core directives (the invariants you must never break)
 
-1. **Single-file engine.** The whole client is [`index.html`](./index.html): HTML5 Canvas 2D + Web Audio +
-   EIP-1193 Web3, **zero external runtime dependencies** (no CDN, npm, Tailwind, Phaser, React), **under 1,500
-   lines** (currently ~1,352). No `fetch` / `alert` / `confirm` / `prompt` / `XMLHttpRequest` / `import` in game
+1. **Two-file engine.** The client is [`index.html`](./index.html) (an 18-line shell) + [`src/game.js`](./src/game.js)
+   (all game code, a classic `<script src>`, D-074): HTML5 Canvas 2D + Web Audio + EIP-1193 Web3, **zero external
+   runtime dependencies** (no CDN, npm, Tailwind, Phaser, React). `src/game.js` is **at its 1,500-line cap** — new code
+   goes in a new `src/*.js` classic script. No `fetch` / `alert` / `confirm` / `prompt` / `XMLHttpRequest` / `import` in game
    code. `WebSocket` is allowed **only** inside the opt-in `MULTIPLAYER` section.
 2. **Offline-first.** The game is fully playable with **no wallet**. Never force a wallet popup on load — wallet
    interaction happens only after the player clicks CONNECT at the Sphinx NPC.
@@ -87,7 +91,8 @@ Staking:    stakeDoge 3a4b66f1 · unstakeDoge 2e17de78 · claimStake 4e71d92d ·
 ```
 
 Fees: `DogeItems` mint = **1 DOGE**; `DogeProfession` oath = **0.05 DOGE**. Item types:
-`1 HAMMER · 2 ARMOR · 3 RAW FISH · 4 COOKED FISH · 5 BONE CHARM · 6 MOON BISCUIT`, packed `id<<16 | type<<8 | level`.
+`1 HAMMER · 2 ARMOR · 3 RAW FISH · 4 COOKED FISH · 5 BONE CHARM · 6 MOON BISCUIT · 7–15 DOGE gear (SWORD, LEATHER
+ARMOR, SHIELD, STAFF, ROBE, WHIP, BOW, HEMP SHIRT, QUIVER)`, packed `id<<16 | type<<8 | level`.
 There is **no ethers/viem** — calls are built from raw selectors + ABI word helpers (`W32 A32 words arrAt unpack`).
 
 ---
@@ -99,14 +104,15 @@ There is **no ethers/viem** — calls are built from raw selectors + ABI word he
 node server/relay.mjs
 ```
 
-Open **`http://localhost:8787/`** in Chrome/Brave/Firefox. (For wallet testing you MUST use http(s), not
+Open **`http://localhost:8787/play`** for the game (`/` is the landing page, D-082) in Chrome/Firefox (Brave's built-in wallet blocks CONNECT unless `brave://settings/web3` → Extensions). (For wallet testing you MUST use http(s), not
 `file://` — browser wallets do not inject into `file://`.)
 
 - **Multiplayer is off by default.** Turn it on with the URL:
-  `http://localhost:8787/?mp=ws://localhost:8787&room=heist&name=NOAH`
+  `http://localhost:8787/play?mp=ws://localhost:8787&room=heist&name=NOAH`
 - Open a second window with a different `name=` to see peers as ghosts (class sprite, facing, HP bar, name).
   Up to 8 players per room (`MAX_ROOM`). Over the internet use `wss://` behind TLS.
-- Shared enemies/loot are **not** built (that needs an authoritative server — out of scope for now).
+- The relay also referees a small shared world (D-076): **one Cat Lord per room** (server-owned HP), **PvP** (range +
+  camp + party checks) and **death-loot piles** (first valid take wins). Field enemies stay local per client.
 
 ---
 
@@ -187,7 +193,7 @@ add a framework, bundler, package.json, CDN, analytics or fonts. The 4 contracts
 DogeOS Chikyu (0x5fdaf3) — do NOT redeploy them or change the addresses in index.html.
 
 HARD RULES (never break):
-- index.html stays one file, < 1,500 lines, zero external libraries, playable with no wallet.
+- index.html (shell) + src/game.js (game code, at its 1,500-line cap; new code -> new src/*.js), zero external libraries, playable with no wallet.
 - No fetch/alert/confirm/prompt/XMLHttpRequest/import; WebSocket only in the MULTIPLAYER section (?mp=).
 - The 96x96 Dogecoin coin art (MOSAIC_PAL + MOSAIC_PX, 9,216 px, <= 32 colors) is never changed.
 - Stay light: no new effects, particles, screen shake, music or sound.

@@ -16,7 +16,14 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-11, after D-081)
+## 00. RESUME HERE (latest, 2026-11-12, after D-084)
+
+> **D-084 (TryNoah clone kit):** fresh clone → `bash scripts/setup-clone.sh [--install-foundry]` (fetches the gitignored, pinned
+> Solidity libs and fails unless the forge stage really ran). TryNoah: import the repo + paste `prompts/TRYNOAH_CLONE.md` (lean,
+> drift-guarded). `Dockerfile` now ships `landing.html` + `assets/` (D-082 can go live); `contracts/apply-deployment.mjs` writes
+> `src/game.js`. The drift guard now also fails on known-stale prose. **Next:** `git push origin main` → TryNoah clone; then the D-082
+> DNS + `fly deploy` and the real-wallet mint proof below.
+
 
 > **🎮 LIVE:** the game is public at **https://dogeon.lat** (Fly cloud, 24/7, HTTPS auto-renews) and `https://dogeon-game.fly.dev`.
 > Domain on Spaceship ($1.24/yr) → Fly via A `@`→`66.241.125.199` + AAAA `@`→`2a09:8280:1::1f7:c716:0`. To redeploy code:
