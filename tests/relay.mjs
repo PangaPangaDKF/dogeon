@@ -16,7 +16,7 @@ const fail = (n, d) => { fails++; console.log(`  FAIL  ${n} — ${d}`); };
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 const srv = spawn(process.execPath, [join(root, 'server/relay.mjs')],
-  { env: { ...process.env, PORT: String(PORT), MAX_ROOM: '3' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  { env: { ...process.env, PORT: String(PORT), MAX_ROOM: '3', BOSS_RESPAWN_S: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
 await new Promise((res, rej) => {
   const t = setTimeout(() => rej(new Error('relay did not start')), 8000);
   srv.stdout.on('data', d => { if (String(d).includes('relay on')) { clearTimeout(t); res(); } });
@@ -63,6 +63,20 @@ try {
   b.ws.close(); await wait(350);
   if (a.got.some(m => m.t === 'bye' && m.id === 'bob')) pass('bye', 'the others are told when bob leaves');
   else fail('bye', 'no bye broadcast');
+
+  // D-095 raid cycle: only the relay can restart a room's heist, and only after the Cat Lord dies
+  a.ws.send(JSON.stringify({ t: 'cycle', id: a.id })); await wait(200); // a player tries to fake a cycle
+  if (!c.got.some(m => m.t === 'cycle')) pass('cycle anti-spoof', 'a client-sent {t:cycle} is never relayed');
+  else fail('cycle anti-spoof', 'client-sent cycle reached another player');
+  const y = await client('yuri', 'r3'); await wait(150); // bob left, so a 3rd slot is free; yuri is alone in r3
+  st(y, 40 * 16 + 8); await wait(150); // yuri stands in the boss chamber
+  for (let i = 0; i < 8; i++) { y.ws.send(JSON.stringify({ t: 'bhit', id: y.id, dmg: 60 })); await wait(40); }
+  await wait(200);
+  const dead = y.got.some(m => m.t === 'boss' && m.dead === 1);
+  await wait(1300); // BOSS_RESPAWN_S=1 for the test (60 s in production)
+  if (dead && y.got.some(m => m.t === 'cycle') && !a.got.some(m => m.t === 'cycle'))
+    pass('raid cycle', 'Cat Lord killed in r3 -> relay sends {t:cycle} to r3 after the respawn delay; r1 untouched');
+  else fail('raid cycle', JSON.stringify({ dead, y: y.got.filter(m => m.t !== 'st'), aCycle: a.got.some(m => m.t === 'cycle') }));
 
   const h = await (await fetch(`http://127.0.0.1:${PORT}/health`)).json();
   if (h.ok && h.rooms.some(r => r.room === 'r1')) pass('health', JSON.stringify(h.rooms)); else fail('health', JSON.stringify(h));

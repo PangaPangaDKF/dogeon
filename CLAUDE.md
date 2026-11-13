@@ -113,6 +113,9 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
 - **Oracle (D-024):** RedStone DOGE/USD is display/safety only (and anchors the simulated market when connected); swap prices always come from pool reserves.
 - **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+2 WOOD/STONE/IRON) → 2 slay 3 brutes (+4 WOOD/STONE/IRON,
   opens ruins gate; `QUEST_MATS`) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 DOGE).
+  **Raid cycle (D-095):** `BOSS_RESPAWN`=60 s after the kill the Cat Lord returns and every quest restarts at stage 1 (gate closes,
+  players in the chamber are moved out; DogeMaster stays unlocked). Online the relay sends `{t:'cycle'}` to the whole room
+  (`BOSS_RESPAWN_S` env, clients can't fake it). The old 30-min raid timer / 5-h seal is gone.
 - **Enemy populations:** field 52 (`FIELD_POP`), ruins lower hall 6 (`DUN_POP`), field refills one every 3 s (`SPAWN_EVERY`) out of view; the ruins and mini-bosses refill every **20 s** (`DUN_RESPAWN`, `MINI_RESPAWN`, D-089). Types: alley, archer, frog, ninja, bull, knight, brute.
 - **Controls:** WASD/arrows move, Space/J slash (hammer swing), K/Q class skill (`useSkill()` → WOW bark, or GROUND POUND/ARROW VOLLEY/MEND by class, D-029), E talk, hold R rest, I/Tab bag, F fish, Esc close.
 

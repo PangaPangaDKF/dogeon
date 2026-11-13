@@ -305,7 +305,7 @@ const CAMP={x0:33,y0:27,x1:47,y1:41};
 const FY=CY+4,MOS_Y=CY-1; // brazier row, coin mosaic centre row
 const PADS=[[CX,CAMP.y0+2],[CAMP.x0+3,CY],[CAMP.x1-3,CY]]; // N, W, E NPC pads
 const PADS2=[[CX-3,FY],[CX+3,FY],[CX+3,CY-3]]; // Phase 4 partner NPCs: beside the fire (W, E) and next to the Sphinx (D-024)
-const PADS3=[[CX-4,CAMP.y1-1],[CX+4,CAMP.y1-1],[CX,CAMP.y0+4]]; // Phase 5 faction trainers: warrior + archer flank the south gate, healer by the hearth (D-028)
+const PADS3=[[CX-4,CAMP.y1-1],[CX+4,CAMP.y1-1],[CAMP.x1-2,CAMP.y0+3]]; // D-095: Mender stands in front of the NE tent, off the coin (R1) // Phase 5 faction trainers: warrior + archer flank the south gate, healer by the hearth (D-028)
 const DUN={x0:26,y0:2,x1:54,y1:17};
 const GATE_ROW=9;
 const PONDS_EXTRA=[[54,25,3.5,2.5],[24,53,4,2.5]]; // [cx,cy,rx,ry] tiles: NE of the camp fence (outside it), south-west field
@@ -355,7 +355,7 @@ function tileCanvas(tx,ty,t){
     case T.TREE:return TL.tree[h%2];case T.ROCK:return TL.rock[0];case T.BUSH:return TL.bush[0];
     case T.FENCE:{const hz=get(tx-1,ty)===T.FENCE||get(tx+1,ty)===T.FENCE;return hz?TL.fenceH:TL.fenceV;}
     case T.WALL:return TL.wall[0];case T.DFLOOR:return TL.dfloor[h%2];
-    case T.GATE:return (state.gateOpen&&state.raidOpen)?TL.dfloor[0]:TL.gate[0];
+    case T.GATE:return state.gateOpen?TL.dfloor[0]:TL.gate[0];
     case T.TENT:return TL.tent[0];case T.FIRE:return TL.fire[0];
     case T.DOOR:return TL.door;case T.CRYSTAL:return TL.crystal;case T.PAD:return TL.pad;
   }
@@ -440,8 +440,8 @@ const ETYPES={
   brute:{hp:96,spd:28,dmg:24,drop:3,dropP:0.45,hw:6,hh:5,chase:130,spr:'brute',mat:'whisk'},
   boss:{hp:320,spd:38,dmg:12,drop:0,hw:10,hh:7,chase:999,spr:'boss',boss:true}
 };
-const RAID_OPEN=1800,RAID_SEAL=5*3600;
-let time=0,state={gateOpen:false,stage:0,won:false,raidT:1800,raidOpen:true,raidFailed:false},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,dunT=0,miniT=0,scene='title',winT=0;
+const BOSS_RESPAWN=60; // D-095 raid cycle: the Cat Lord returns 60 s after he falls and every heist restarts at quest 1 (relay-driven in MP)
+let time=0,state={gateOpen:false,stage:0,won:false,bossT:0},P,enemies=[],projs=[],items=[],parts=[],floats=[],cam={x:0,y:0},ui=null,toastMsg=null,shakeT=0,spawnT=0,dunT=0,miniT=0,scene='title',winT=0;
 // ---- Phase 5 classes / professions (D-028). id matches DogeProfession: 1 warrior, 2 archer, 3 healer ----
 // spd/dmg/armor are multipliers/adds applied at use sites (classSpd/classDmg/classArmor); skill routing lands in a later part.
 const CLASSES={
@@ -481,7 +481,7 @@ const NPCS=[
   {id:'healer',cls:'healer',name:'MENDER BRIGHTTAIL (BARKITECTS)',spr:'tHealer',x:PADS3[2][0]*16+8,y:PADS3[2][1]*16+8,hw:6,hh:4,dir:'down',met:false}
 ];
 function newGame(){
-  state={gateOpen:false,stage:0,won:false,shopT:0,raidT:RAID_OPEN,raidOpen:true,raidFailed:false};
+  state={gateOpen:false,stage:0,won:false,shopT:0,bossT:0};
   P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,wood:3,stone:3,steel:2,orb:0,scrap:0,horn:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,gNode:null,credits:{},faction:null,prof:null,lazy:false,lazyT:0,idleT:0};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
@@ -525,7 +525,7 @@ function spawnEnemy(zone){
 function summon(b){let n=0;for(const e of enemies)if(e.zone==='boss'&&!e.boss&&!e.dead)n++;if(n>=4)return;for(const ox of [-24,24]){const x=b.x+ox,y=b.y+10;if(!blocked({hw:5,hh:4,enemy:true},x,y)){const e=makeEnemy('alley',x,y,'boss');e.cool=0;enemies.push(e);puff(x,y,'#c0a0e0',8);}}sfx(300,0.3,'sawtooth',0.04,300);}
 
 // ================= COLLISION =================
-function solidFor(tx,ty,ent){if(ent.boss&&ty>=GATE_ROW)return true;const t=get(tx,ty);if(t===T.GATE)return !(state.gateOpen&&state.raidOpen);if(SOLID.has(t))return true;if(ent.enemy&&inCampT(tx,ty))return true;return false;}
+function solidFor(tx,ty,ent){if(ent.boss&&ty>=GATE_ROW)return true;const t=get(tx,ty);if(t===T.GATE)return !state.gateOpen;if(SOLID.has(t))return true;if(ent.enemy&&inCampT(tx,ty))return true;return false;}
 function blocked(ent,x,y){
   const x0=Math.floor((x-ent.hw)/16),x1=Math.floor((x+ent.hw-0.01)/16),y0=Math.floor((y-ent.hh)/16),y1=Math.floor((y+ent.hh-0.01)/16);
   for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++)if(solidFor(tx,ty,ent))return true;
@@ -633,7 +633,7 @@ function killEnemy(e){
   if(e.mini){for(let i=0;i<5;i++)items.push({x:e.x+R(-10,10),y:e.y+R(-6,6),kind:'coin',life:18,t:Math.random()*3});toast('MINI-BOSS SLAIN! SUCH LOOT.',2.5);} // D-063: elite drops 6 materials (dropP 1) + 5 coins
   if(state.stage===1){P.kills++;if(P.kills===8)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(state.stage===2&&e.type==='brute'){P.bruteKills++;if(P.bruteKills===3)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
-  if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});for(let i=0;i<10;i++)items.push({x:e.x+R(-16,16),y:e.y+R(-10,10),kind:'coin',life:30,t:Math.random()*3});state.won=true;state.shopT=300;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
+  if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});for(let i=0;i<10;i++)items.push({x:e.x+R(-16,16),y:e.y+R(-10,10),kind:'coin',life:30,t:Math.random()*3});state.won=true;state.shopT=300;state.bossT=BOSS_RESPAWN;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
 }
 function shootBone(e,ux,uy,s){projs.push({x:e.x,y:e.y-(e.boss?16:7),vx:ux*s,vy:uy*s,life:2.6,kind:'bone',dmg:e.boss?9:5});sfx(900,0.04,'triangle',0.025,-300);}
 
@@ -1093,8 +1093,7 @@ function questTalk(n){
   else if(s===1&&P.kills<8)openDialog(n,[mktLine,lore,`${P.kills}/8 cats. Keep fighting. When hurt, rest by the fire.`]);
   else if(s===1)openDialog(n,[mktLine,`Very fight. Much brave. Take ${qm(1)} for the forge.`,'Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{give(1);state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
   else if(s===2&&P.bruteKills<3)openDialog(n,[mktLine,lore,`Brutes slain: ${P.bruteKills}/3. They lurk far from camp and in the ruins.`]);
-  else if(s===2)openDialog(n,[mktLine,`You crushed the brutes! Take ${qm(2)}.`,'I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD in a 30M RAID.','If the timer runs out, the raid FAILS and gates seal for 5 hours. You can still farm and train, but the boss escapes. Move fast!'],()=>{give(2);state.stage=3;state.gateOpen=true;toast('RUINS GATE OPEN! 30M RAID RUNNING.');sfx(80,0.6,'sawtooth',0.06,40);});
-  else if(s===3&&!state.raidOpen)openDialog(n,[mktLine,lore,'The raid timer ran out! The Cat Lord sealed the gate for 5 hours.','You can still gather, fish, level skills, and trade at the Sphinx. Prepare for the next raid cycle!']);
+  else if(s===2)openDialog(n,[mktLine,`You crushed the brutes! Take ${qm(2)}.`,'I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD.','When he falls, he returns 60 seconds later and a new heist begins for everyone. Much loop.'],()=>{give(2);state.stage=3;state.gateOpen=true;toast('RUINS GATE OPEN! SLAY THE CAT LORD.');sfx(80,0.6,'sawtooth',0.06,40);});
   else if(s===3)openDialog(n,[mktLine,lore,'The Cat Lord waits beyond the iron gate, north of camp. Do not go in hurt.']);
   else openDialog(n,[mktLine,lore,'You did it. Such hero. Much legend. The camp is safe... for now.','Many cats still roam out there. Hunt them if you wish.']);
 }
@@ -1168,8 +1167,9 @@ function netPvp(cx,cy,hw,hh,dmg,skip){ // client pre-check; the relay re-checks 
   for(const k in net.peers){const g=net.peers[k];if(g.dead||(NET_PARTY&&g.pt===NET_PARTY)||(skip&&skip.has(k))||inCampT(Math.floor(g.x/16),Math.floor(g.y/16)))continue;
     if(Math.abs(g.x-cx)<hw+6&&Math.abs(g.y-6-cy)<hh+9){netSend({t:'pvp',to:k,dmg:Math.round(dmg)});if(skip)skip.add(k);hit=true;}}
   return hit;}
+function bossCycle(){state.bossT=0;if(!enemies.some(e=>e.boss))enemies.push(makeEnemy('boss',CX*16+8,5*16+8,'boss'));if(state.stage>=1){state.stage=1;P.kills=0;P.bruteKills=0;}state.gateOpen=false;if(zoneOf(P.x,P.y)==='boss'){P.x=CX*16+8;P.y=(GATE_ROW+3)*16+8;}toast('THE CAT LORD RETURNS! NEW HEIST: SLAY 8 CATS.',4);} // D-095 raid cycle
 function netBoss(m){const e=enemies.find(e=>e.boss);if(!e)return;e.maxHp=Math.max(1,m.max|0);e.hp=Math.max(0,m.hp|0);
-  if(m.dead&&!e.dead){if(zoneOf(P.x,P.y)==='boss')killEnemy(e);else{e.dead=true;toast('YOUR PARTY SLEW THE CAT LORD!',3);}enemies=enemies.filter(x=>!x.dead);}}
+  if(m.dead&&!e.dead){if(zoneOf(P.x,P.y)==='boss')killEnemy(e);else{e.dead=true;state.bossT=BOSS_RESPAWN;toast('YOUR PARTY SLEW THE CAT LORD! HE RETURNS IN 60S.',3);}enemies=enemies.filter(x=>!x.dead);}}
 function netConnect(){
   if(!NET_URL||typeof WebSocket==='undefined'||net.ws)return;
   net.id=net.id||Math.random().toString(36).slice(2,8); // lazy: normal play never draws this random number (seeded sims stay identical)
@@ -1179,6 +1179,7 @@ function netConnect(){
     ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
       if(m&&m.t==='full'){toast('SERVER FULL (MAX 8 PLAYERS)',4);return;}
       if(m&&m.t==='boss'&&Number.isFinite(m.hp)){netBoss(m);return;} // relay-owned boss HP
+      if(m&&m.t==='cycle'){bossCycle();return;} // D-095: the relay restarts the whole room's heist together (clients can't send this)
       if(m&&m.t==='hurt'&&Number.isFinite(m.dmg)){hurtPlayer(Math.min(40,Math.max(1,m.dmg|0)),{x:Number.isFinite(m.x)?m.x:P.x,y:Number.isFinite(m.y)?m.y:P.y});return;} // PvP hit (camp/god/iframes still protect)
       if(m&&m.t==='loot'&&Array.isArray(m.items)){for(const it of m.items.slice(0,12))if(it&&/^l\d{1,9}$/.test(it.lid)&&NET_LOOT.includes(it.k)&&Number.isFinite(it.x)&&Number.isFinite(it.y)&&Object.keys(net.loot).length<60)net.loot[it.lid]={k:it.k,x:it.x,y:it.y};return;}
       if(m&&m.t==='gone'){delete net.loot[m.lid];return;}
@@ -1228,17 +1229,7 @@ function update(dt){
   if(winT>0)winT-=dt;
   if(state.shopT>0)state.shopT-=dt; // D-065 post-boss Victor's Market countdown
   shakeT=Math.max(0,shakeT-dt);
-  state.raidT=(state.raidT||RAID_OPEN)-dt;
-  if(state.raidT<=0){
-    if(state.raidOpen){
-      state.raidOpen=false;state.raidFailed=true;state.raidT=RAID_SEAL;
-      toast('RAID FAILED! 30M TIME EXPIRED. GATES SEALED FOR 5 HOURS.',4);
-      if(zoneOf(P.x,P.y)==='boss'){P.y=(GATE_ROW+3)*16+8;P.x=CX*16+8;puff(P.x,P.y,'#ff4040',24);shake(0.6);toast('CAT LORD SEALED THE CHAMBER! EJECTED BACK TO RUINS.',4);}
-    }else{
-      state.raidOpen=true;state.raidFailed=false;state.raidT=RAID_OPEN;
-      toast('DUNGEON RAID OPEN! 30M TO SLAY THE BOSS.',3.5);
-    }
-  }
+  if(state.bossT){state.bossT-=dt;if(state.bossT<=(netLive()?-10:0))bossCycle();} // D-095: offline the client runs the cycle; online the relay's {t:'cycle'} does (10 s fallback)
   if(ui){updateParts(dt);updateUI(dt);return;} // particles keep living while the world pauses (I-2)
   updateParts(dt);
   if(P.dead){P.deathT-=dt;if(P.deathT<=0)respawn();updateCam(dt);return;}
@@ -1402,10 +1393,8 @@ function drawHUD(){
   text('DOGE $'+curP.toFixed(curP<1?3:2),168,3,oracle.loaded?'#80f8c0':'#f8d050');
   if(wBal){const u=((wallet.bal||0)+P.doge)*curP;text('≈$'+(u>=100?u.toFixed(1):u.toFixed(2))+(oracle.loaded?' RS':''),168,10,'#60e060');}
   else{const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');}
-  const rDisp=state.raidOpen?`RAID ${Math.ceil(state.raidT/60)}M`:state.raidFailed?`FAILED (${Math.ceil(state.raidT/3600)}H)`:`SEAL ${Math.ceil(state.raidT/60)}M`;
-  text(rDisp,214,3,state.raidOpen?'#80ff80':'#ff5050');
-  if(!state.raidOpen)text(`${Math.ceil(state.raidT/3600)}H SEALED`,214,10,'#ffa0a0');
-  else text(questText(),222,10,'#fff');
+  text(state.bossT>0?`BOSS IN ${Math.ceil(state.bossT)}S`:'RAID ON',214,3,state.bossT>0?'#ffa0a0':'#80ff80'); // D-095 raid cycle
+  text(questText(),222,10,'#fff');
   if(P.lazy||P.lazyT>0)text(P.lazyT>0?`LAZY ${Math.ceil(P.lazyT)}S`:'LAZY',276,10,'#ff5050');
   else if(isMod())text('MOD[M]',285,10,'#ffc040');
   if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?`CHAIN ${shortAddr(wallet.addr)} (${wallet.bal==null?'?':fmtD(wallet.bal)}D ≈$${(((wallet.bal||0)+P.doge)*curP).toFixed(2)})  R=REST  I=BAG`:'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}

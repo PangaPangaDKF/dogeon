@@ -135,6 +135,9 @@ NPCs never hand out DOGE: there is no game token, and every mint or trade uses r
 0 Talk to Elder Shibe → 1 slay 8 cats (+2 wood, stone and iron) → 2 slay 3 brutes (+4 wood, stone and iron, opens the ruins gate) → 3 defeat the Cat Lord →
 4 complete (Golden Yarn, +150 DOGE).
 
+**Raid cycle:** 60 seconds after the Cat Lord falls he comes back at full HP, and the heist restarts at quest 1 for everyone in the
+room: the gate closes and anyone in the chamber is moved out. The HUD shows `BOSS IN 45S`, then `RAID ON`. There is no raid timer.
+
 ---
 
 ## 9. Playing with other people

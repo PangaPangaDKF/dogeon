@@ -31,7 +31,7 @@ const rooms = new Map(); // room -> Set<client>
 // 2) PvP (server checks range, camp sanctuary and party: same party = friendly fire OFF),
 // 3) death loot (server owns dropped piles; first valid "take" wins, so nothing is duplicated).
 // Tile maths mirror src/game.js: CAMP tiles 33..47 x 27..41, boss room = DUN x 26..54, y 2..8 (GATE_ROW 9).
-const BOSS_HP = 320, BOSS_RESET_MS = 30 * 60 * 1000, MAX_HIT = 60, MAX_PVP = 40, PVP_RANGE = 48, TAKE_RANGE = 28, LOOT_CAP = 48;
+const BOSS_HP = 320, BOSS_RESET_MS = (+process.env.BOSS_RESPAWN_S || 60) * 1000, MAX_HIT = 60, MAX_PVP = 40, PVP_RANGE = 48, TAKE_RANGE = 28, LOOT_CAP = 48;
 const LOOT_KINDS = ['steel', 'whisk', 'wood', 'stone'];
 const tileIn = (p, x0, y0, x1, y1) => { const tx = Math.floor(p.x / 16), ty = Math.floor(p.y / 16); return tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1; };
 const inCamp = p => tileIn(p, 33, 27, 47, 41);
@@ -50,7 +50,10 @@ function onWorld(c, m) {
     if (!w.boss) { const n = rooms.get(c.room)?.size || 1; const max = Math.round(BOSS_HP * (1 + 0.5 * (n - 1))); w.boss = { hp: max, max, dead: false, t: now }; } // more raiders = tougher boss
     if (w.boss.dead) return send(c, bossMsg(w.boss));
     w.boss.hp = Math.max(0, w.boss.hp - Math.min(MAX_HIT, Math.max(1, m.dmg | 0)));
-    if (!w.boss.hp) { w.boss.dead = true; w.boss.t = now; }
+    if (!w.boss.hp) { // D-095 raid cycle: 60 s after the kill the Cat Lord returns and the WHOLE room restarts at quest 1
+      w.boss.dead = true; w.boss.t = now; const room = c.room;
+      clearTimeout(w.cycle); w.cycle = setTimeout(() => { w.boss = null; toRoom(room, JSON.stringify({ t: 'cycle' })); }, BOSS_RESET_MS);
+    }
     return toRoom(c.room, bossMsg(w.boss));
   }
   if (m.t === 'pvp') { // PvP: in range, both outside camp, both alive, NOT the same party

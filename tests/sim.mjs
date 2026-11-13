@@ -68,7 +68,7 @@ globalThis.__api = {
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy, damageEnemy,
   net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
-  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT, solidFor, GATE_ROW, RAID_OPEN, RAID_SEAL,
+  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT, solidFor, GATE_ROW, BOSS_RESPAWN, bossCycle,
 };`;
 
 function boot(seed, opts) {
@@ -617,6 +617,26 @@ scenario('D-089: fast respawn — dungeon + mini-bosses every 20 s, field every 
   for (let f = 0; f < 60 * 21; f++) api.step(DT); // one full 20 s interval: the dungeon must refill one cat
   if (dun() <= d0) { fail('dun fast', `dungeon did not refill within 21 s: ${d0} -> ${dun()}`); return; }
   pass('fast respawn', `dungeon refilled ${d0} -> ${dun()} within 21 s; DUN_RESPAWN=${api.DUN_RESPAWN}s, MINI_RESPAWN=${api.MINI_RESPAWN}s`);
+});
+
+scenario('D-095: raid cycle — Cat Lord returns 60 s after a kill, every heist restarts at quest 1', () => {
+  const api = boot(SEED + 90); startGame(api);
+  const g = api.get();
+  if (api.BOSS_RESPAWN !== 60) { fail('boss respawn const', `BOSS_RESPAWN=${api.BOSS_RESPAWN} (user D-095: 60 s)`); return; }
+  const mender = g.NPCS.find(n => n.id === 'healer'), mx = (mender.x - 8) / 16, my = (mender.y - 8) / 16;
+  if (Math.abs(mx + 0.5 - api.CX - 0.5) < 3 && Math.abs(my + 0.5 - api.CY - 0.5) < 3) { fail('mender off coin', `Mender at (${mx},${my}) is on the coin`); return; }
+  g.state.stage = 3; g.state.gateOpen = true; g.P.god = true;
+  g.P.x = api.CX * 16 + 8; g.P.y = 6 * 16 + 8; // inside the boss chamber
+  const boss = g.enemies.find(e => e.boss); if (!boss) { fail('boss present', 'no Cat Lord at start'); return; }
+  api.damageEnemy(boss, 99999, 0, 0); api.step(DT);
+  if (g.enemies.some(e => e.boss && !e.dead) || g.state.stage !== 4 || !(g.state.bossT > 0)) { fail('boss kill', `stage=${g.state.stage} bossT=${g.state.bossT}`); return; }
+  for (let f = 0; f < 60 * 59; f++) api.step(DT);
+  if (api.get().enemies.some(e => e.boss)) { fail('boss early', 'Cat Lord back before 60 s'); return; }
+  for (let f = 0; f < 60 * 2; f++) api.step(DT);
+  const st = api.get().state, b2 = api.get().enemies.find(e => e.boss), P = api.get().P;
+  if (!b2 || b2.hp !== b2.maxHp || st.stage !== 1 || st.gateOpen || P.kills !== 0 || api.zoneOf(P.x, P.y) === 'boss' || !st.won) {
+    fail('raid cycle', `boss=${!!b2} hp=${b2 && b2.hp}/${b2 && b2.maxHp} stage=${st.stage} gate=${st.gateOpen} kills=${P.kills} zone=${api.zoneOf(P.x, P.y)} won=${st.won}`); return; }
+  pass('raid cycle', `kill -> stage 4 -> 60 s -> Cat Lord back at full HP, quest 1 restarted, gate closed, player out of the chamber; DogeMaster stays unlocked; Mender at (${mx},${my}) off the coin`);
 });
 
 scenario('D-089: NPCs never give DOGE — Elder quests pay materials', () => {
@@ -1497,12 +1517,11 @@ scenario('D-068: on-chain currency purity, raid timer, timed lazy debuff & fee s
   // 1. Currency purity: default mint fee is 1 DOGE (10n**18n)
   if (api.chainData.fee !== 10n ** 18n) { fail('default mint fee', `expected 1 DOGE (10^18), got ${api.chainData.fee}`); return; }
 
-  // 2. Dungeon raid timer and gate solid check
-  if (!g.state.raidOpen || g.state.raidT <= 0) { fail('raid init', `raidOpen=${g.state.raidOpen} raidT=${g.state.raidT}`); return; }
-  g.state.gateOpen = true; g.state.raidOpen = false;
-  if (!api.solidFor(api.CX, api.GATE_ROW, g.P)) { fail('raid sealed block', 'sealed raid allowed entry through gate'); return; }
-  g.state.raidOpen = true;
-  if (api.solidFor(api.CX, api.GATE_ROW, g.P)) { fail('raid open pass', 'open raid blocked entry through open gate'); return; }
+  // 2. Gate: closed until quest 2 opens it (D-095 removed the 30m/5h raid seal)
+  g.state.gateOpen = false;
+  if (!api.solidFor(api.CX, api.GATE_ROW, g.P)) { fail('gate closed block', 'closed gate allowed entry'); return; }
+  g.state.gateOpen = true;
+  if (api.solidFor(api.CX, api.GATE_ROW, g.P)) { fail('gate open pass', 'open gate blocked entry'); return; }
 
   // 3. Timed lazy debuff
   g.P.lazyT = 60; g.P.lazy = true;
@@ -1532,12 +1551,7 @@ scenario('D-068: on-chain currency purity, raid timer, timed lazy debuff & fee s
   if (!mintGear || !mintGear.isNft) { fail('dogemaster mint row', 'missing MINT RANDOM GEAR NFT or isNft flag'); return; }
   g.ui = null;
 
-  // 6. Raid timer expiration -> raidFailed = true, raidOpen = false, sealed
-  g.state.raidOpen = true; g.state.raidT = 0.05;
-  api.step(0.1);
-  if (g.state.raidOpen || !g.state.raidFailed || g.state.raidT <= 1000) { fail('raid expiration', `open=${g.state.raidOpen} failed=${g.state.raidFailed} raidT=${g.state.raidT}`); return; }
-
-  pass('d-068 systems', '1 DOGE fee, raid cycle gate, timed lazy debuff, pvp material drop, DogeMaster meme store');
+  pass('d-068 systems', '1 DOGE fee, quest gate, timed lazy debuff, pvp material drop, DogeMaster meme store');
 });
 
 console.log(`\n${failures ? '✗' : '✓'} ${failures} failed, ${warnings} warnings (seed ${SEED})`);
