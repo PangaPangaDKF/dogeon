@@ -428,8 +428,9 @@ const bearF=()=>Math.max(0,-mkt.sent),bullF=()=>Math.max(0,mkt.sent);
 // D-056 HARDCORE: normal monsters are +100% HP and +100% damage vs the ORIGINAL tuning (2x base; supersedes D-052's +50%).
 // User: "i want the enemies 100% more hard." Boss keeps its tuned stats (not a "normal" monster; mini-bosses come later).
 // D-055 rare drops: dropP = chance to drop the material at all (user: "not every monster drops something; hard as fuck to
-// get resources"). A rare DOGE coin (COIN_DROP_P) can also fall — the "hard as fuck to get a single coin".
-const COIN_DROP_P=0.08;
+// get resources"). D-097 (user): no in-game DOGE at all — monsters never drop coins; testnet DOGE is only for web3 (mint/DEX/stake/class).
+const YARN_MATS={wood:3,stone:3,steel:3}; // the Cat Lord's Golden Yarn pays mint materials, not DOGE (D-097)
+function giveMats(o){for(const [m,v] of Object.entries(o))if(m==='steel')P.steel+=v;else addToBag(m,v);}
 const ETYPES={
   alley:{hp:30,spd:48,dmg:12,drop:1,dropP:0.2,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
   archer:{hp:24,spd:34,dmg:10,drop:1,dropP:0.2,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
@@ -481,8 +482,8 @@ const NPCS=[
   {id:'healer',cls:'healer',name:'MENDER BRIGHTTAIL (BARKITECTS)',spr:'tHealer',x:PADS3[2][0]*16+8,y:PADS3[2][1]*16+8,hw:6,hh:4,dir:'down',met:false}
 ];
 function newGame(){
-  state={gateOpen:false,stage:0,won:false,shopT:0,bossT:0};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,doge:0,bank:0,whisk:0,wood:3,stone:3,steel:2,orb:0,scrap:0,horn:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,gNode:null,credits:{},faction:null,prof:null,lazy:false,lazyT:0,idleT:0};
+  state={gateOpen:false,stage:0,won:false,bossT:0};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,whisk:0,wood:3,stone:3,steel:2,orb:0,scrap:0,horn:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,gNode:null,credits:{},faction:null,prof:null,lazy:false,lazyT:0,idleT:0};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<FIELD_POP;i++)spawnEnemy('field');
@@ -561,16 +562,16 @@ function hurtPlayer(d,src){
   if(P.hp<=0){P.hp=0;P.dead=true;P.deathT=2.2;sfx(300,0.8,'triangle',0.08,-260);puff(P.x,P.y-8,'#e8922c',16);}
 }
 function respawn(){
-  const lost=Math.floor(P.doge/2),lw=P.whisk,lf=P.bag.length;
+  const lw=P.whisk,lf=P.bag.length;
   if(netLive()){const drops=[];for(const k of NET_LOOT)for(let i=0;i<Math.min(3,P[k]||0);i++)drops.push({k,x:Math.round(P.x+R(-12,12)),y:Math.round(P.y+R(-12,12))});netSend({t:'loot',items:drops});} // D-076: everyone sees + can steal your pile
   else{for(let i=0;i<Math.min(4,P.steel);i++)items.push({x:P.x+R(-12,12),y:P.y+R(-12,12),kind:'steel',life:30,t:0});
   for(let i=0;i<Math.min(4,lw);i++)items.push({x:P.x+R(-12,12),y:P.y+R(-12,12),kind:'whisk',life:30,t:0});}
-  P.doge-=lost;P.whisk=0;P.wood=0;P.stone=0;P.steel=0;P.orb=0;P.scrap=0;P.horn=0;P.bag=[]; // carried food is lost too; NFTs live on chain (D-020)
+  P.whisk=0;P.wood=0;P.stone=0;P.steel=0;P.orb=0;P.scrap=0;P.horn=0;P.bag=[]; // carried food is lost too; NFTs live on chain (D-020)
   P.dead=false;P.fishing=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.iT=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
   for(const e of enemies){if(e.boss){if(!netLive())e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}} // MP: the relay owns boss HP
   enemies=enemies.filter(e=>e.zone!=='boss'||e.boss);
-  openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lost} DOGE, ${lw} whiskers, all materials${lf?' and your bag of food':''}. Pool DOGE at the Sphinx and preserve fish as NFTs to keep them safe!`]);
+  openDialog(null,['You wake up by the campfire, weak and hurt. Rest to recover.',`You lost ${lw} whiskers, all materials${lf?' and your bag of food':''}. Mint gear and preserve fish as NFTs: they live on chain and stay safe!`]);
 }
 function attack(){
   stopFish('REELED IN');P.atkT=0.18;P.atkCd=P.prof==='archer'?0.24:P.prof==='warrior'?0.34:0.28;
@@ -629,11 +630,10 @@ function killEnemy(e){
   const mat=e.def.mat||'whisk';
   if(Math.random()<(e.def.dropP??1))for(let i=0;i<e.def.drop;i++)items.push({x:e.x+R(-7,7),y:e.y+R(-4,4),kind:mat,life:18,t:Math.random()*3}); // D-055: drops are rare now
   if(Math.random()<0.25)items.push({x:e.x+R(-6,6),y:e.y+R(-4,4),kind:'steel',life:18,t:Math.random()*3}); // D-067: monsters drop iron (steel) too
-  if(!e.boss&&!e.mini&&Math.random()<COIN_DROP_P)items.push({x:e.x+R(-5,5),y:e.y+R(-4,4),kind:'coin',life:18,t:Math.random()*3}); // rare single DOGE coin
-  if(e.mini){for(let i=0;i<5;i++)items.push({x:e.x+R(-10,10),y:e.y+R(-6,6),kind:'coin',life:18,t:Math.random()*3});toast('MINI-BOSS SLAIN! SUCH LOOT.',2.5);} // D-063: elite drops 6 materials (dropP 1) + 5 coins
+  if(e.mini){toast('MINI-BOSS SLAIN! SUCH LOOT.',2.5);} // D-063: elite drops 6 materials (dropP 1) + 5 coins
   if(state.stage===1){P.kills++;if(P.kills===8)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(state.stage===2&&e.type==='brute'){P.bruteKills++;if(P.bruteKills===3)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
-  if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});for(let i=0;i<10;i++)items.push({x:e.x+R(-16,16),y:e.y+R(-10,10),kind:'coin',life:30,t:Math.random()*3});state.won=true;state.shopT=300;state.bossT=BOSS_RESPAWN;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
+  if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});state.won=true;state.bossT=BOSS_RESPAWN;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
 }
 function shootBone(e,ux,uy,s){projs.push({x:e.x,y:e.y-(e.boss?16:7),vx:ux*s,vy:uy*s,life:2.6,kind:'bone',dmg:e.boss?9:5});sfx(900,0.04,'triangle',0.025,-300);}
 
@@ -711,7 +711,7 @@ let chainT=0;
 function chainTick(dt){if(!wallet.connected||wallet.busy)return;chainT+=dt;if(chainT<15)return;chainT=0;refreshBal().catch(()=>{});if(oracleStale())refreshOracle().catch(()=>{});}
 async function checkAuthWallet(){const e=eth();if(!e||wallet.connected)return;try{const acc=await e.request({method:'eth_accounts'});if(acc&&acc.length){wallet.addr=acc[0];hookWallet(e);wallet.chainOk=String(await e.request({method:'eth_chainId'})).toLowerCase()===CHAIN.id;if(wallet.chainOk){wallet.connected=true;await refreshBal();refreshChain().catch(()=>{});refreshOracle();}}}catch(e){}}
 function walletRows(){
-  if(!eth())return [{label:'WALLET: OFFLINE (SIMULATED DOGE ONLY)',act:()=>'NO WALLET. INSTALL METAMASK + OPEN VIA LOCALHOST.'}];
+  if(!eth())return [{label:'WALLET: OFFLINE (PLAY FREE, NO DOGE NEEDED)',act:()=>'NO WALLET. INSTALL METAMASK + OPEN VIA LOCALHOST.'}];
   if(!wallet.connected)return [{label:wallet.busy?'CONNECTING... CHECK YOUR WALLET':'CONNECT WALLET (DOGEOS CHIKYU TESTNET)',act:()=>{connectWallet();return 'CHECK YOUR WALLET...';}}];
   return [{label:wallet.chainOk?`WALLET ${shortAddr(wallet.addr)} ${wallet.bal==null?'?':wallet.bal} DOGE`:'WRONG NETWORK - SWITCH TO CHIKYU',act:()=>{(wallet.chainOk?refreshBal():switchChain().then(refreshBal)).then(()=>setWalletMsg(`${wallet.bal} TEST DOGE. FAUCET: ${CHAIN.faucet}`)).catch(err=>setWalletMsg(walletErr(err)));return 'REFRESHING...';}}];
 }
@@ -955,7 +955,7 @@ const SCHOOL=[
   ['FAUCET + GAS',['Every transaction costs a small fee called gas, paid in DOGE.','A faucet gives free testnet DOGE for gas. Get some before you mint or trade.']],
   ['SWAP',['A swap trades one asset for another at the price of a pool.','Bigger trades move the price more. That is slippage. I always protect you with a limit.']],
   ['LIQUIDITY POOL',['A pool holds two things: here, items and DOGE. Liquidity providers deposit both and get shares.','Traders pay a 2% fee that stays in the pool, so LPs earn. The price follows x times y equals k.','Risk: when prices move you can end with more of the cheaper side. That is impermanent loss.']],
-  ['STAKE',['Staking locks coins to earn a reward. My vault keeps your DOGE safe when you fall. It pays no yield.','My camp vault is off-chain (safe on death, no yield). On-chain staking pays 0.8% of DEX trades!']],
+  ['STAKE',['Staking locks coins to earn a reward. Here you stake real testnet DOGE from your wallet, on chain.','DogeStaking pays stakers 0.8% of every DEX trade. There is no in-game DOGE: only your wallet.']],
   ['ORACLE (REDSTONE)',['Contracts cannot see the outside world. An oracle brings real prices on-chain.','RedStone posts signed DOGE and BTC prices on the DogeOS testnet, so swaps and other DeFi built here have real prices.','My DEX reads DOGE/USD from RedStone. Trade prices still come from the pool itself; the oracle is for display and safety.']],
   ['NFT',['An NFT is a token with its own id. Your crafted gear and preserved fish are NFTs you truly own.','Owning gear NFTs means wearing them. Sell them, pool them, or eat the fish. Your call.']],
 ];
@@ -967,10 +967,6 @@ function bankMenu(n){openMenu(n,'THE SPHINX DEX - DOGEOS DEFI HUB',()=>{
   {label:'NFT MARKET: SWAP + LIQUIDITY POOLS',act:()=>{marketMenu(n);return '';}},
   {label:'ON-CHAIN STAKING: EARN 0.8% OF DEX FEES',act:()=>{stakeMenu(n);return '';}},
   linkRow('GET TESTNET DOGE (FAUCET)',LINKS.faucet),
-  {label:`STAKE ${P.doge} DOGE IN THE VAULT (SAFE ON DEATH)`,act:()=>{if(!P.doge){if(wallet.connected){stakeMenu(n);return 'OPENED ON-CHAIN WALLET STAKING.';}return 'NO DOGE TO STAKE.';}P.bank+=P.doge;P.doge=0;return 'STAKED. SAFE WHEN YOU FALL. NO YIELD (NO GAME TOKEN).';}},
-  {label:`UNSTAKE ${P.bank} DOGE`,act:()=>{if(!P.bank)return 'NOTHING STAKED.';const t=P.bank;P.doge+=t;P.bank=0;return `UNSTAKED ${t} DOGE. TO THE MOON.`;}},
-  {label:`BUY BONE CHARM (50 DOGE)`,act:P.hpUps>=3?()=>'MAX CHARMS ALREADY.':()=>{if(P.doge<50)return 'NOT ENOUGH DOGE.';P.doge-=50;P.hpUps++;P.maxHp+=15;return 'BONE CHARM BOUGHT! +15 MAX HP.';}},
-  {label:`BUY MOON BISCUIT (40 DOGE)`,act:P.mpUps>=2?()=>'MAX BISCUITS ALREADY.':()=>{if(P.doge<40)return 'NOT ENOUGH DOGE.';P.doge-=40;P.mpUps++;P.maxMp+=10;return 'MOON BISCUIT BOUGHT! +10 MAX MP.';}},
   oracleRow(),
   {label:'SPHINX SCHOOL: DEFI 101 LESSONS',act:()=>{schoolMenu(n);return '';}},
   linkRow('DOGEOS.COM: THE APP + COMMUNITY',LINKS.dogeos),
@@ -1021,7 +1017,6 @@ function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>{const o
   linkRow('JOIN THE HEIST: HEIST.DOGEOS.COM',LINKS.heist),
   {label:'PARTY & SQUAD ('+(NET_PARTY||'SOLO')+')',act:()=>{partyMenu(n);return '';}},
   {label:'DOGE MARKET REPORT',act:()=>{const pc=Math.round(mkt.sent*MARKET.sentScale*100);return `DOGE $${mkt.p.toFixed(3)} (${pc>=0?'+':''}${pc}%) ${pc>2?'BULL: FIGHTERS HIT HARDER':pc<-2?'BEAR: CATS HIT HARDER':'FLAT'}`;}}];
-  if(state.won&&state.shopT>0)o.splice(1,0,{label:`VICTORS MARKET (LIMITED: ${Math.ceil(state.shopT)}S)`,act:()=>{victorMarket(n);return '';}}); // D-065: post-boss limited shop
   if(state.won)o.splice(1,0,{label:'DOGEMASTER: MEME FORGE & RE-ROLL',act:()=>{dogeMasterMenu(n);return '';}}); // D-066: endgame DogeMaster
   o.push({label:'LEAVE',act:null});return o;});}
 function dogeMasterMenu(n){openMenu(n,'DOGEMASTER: MEME FORGE & RE-ROLL',()=>{const o=[],inv=myFree();
@@ -1038,17 +1033,9 @@ function modMenu(){openMenu(null,'MASTER MOD MENU (TEST SUITE)',()=>[
   {label:'SWITCH CLASS: ARCHER',act:()=>{P.prof='archer';syncMaxHp();syncMaxMp();return 'CLASS SET TO ARCHER.';}},
   {label:'SWITCH CLASS: HEALER',act:()=>{P.prof='healer';syncMaxHp();syncMaxMp();return 'CLASS SET TO HEALER.';}},
   {label:'SWITCH CLASS: NONE (LONE DOGE)',act:()=>{P.prof=null;syncMaxHp();syncMaxMp();return 'CLASS CLEARED.';}},
-  {label:'INSTA-KILL BOSS & SUMMON DOGEMASTER',act:()=>{state.won=true;state.stage=4;state.shopT=9999;return 'CAT LORD SLAIN! DOGEMASTER AWAKENED.';}},
+  {label:'INSTA-KILL BOSS & SUMMON DOGEMASTER',act:()=>{state.won=true;state.stage=4;return 'CAT LORD SLAIN! DOGEMASTER AWAKENED.';}},
   {label:'GIVE MAX GEAR STATS',isNft:true,act:()=>{P.hpUps=3;P.mpUps=2;P.sword=4;P.armor=2;syncMaxHp();syncMaxMp();P.hp=P.maxHp;P.mp=P.maxMp;return 'MAX COMBAT GEAR GRANTED.';}},
   {label:'CLOSE',act:null}]);}
-// D-065 post-boss business model: a LIMITED-TIME market (opens when the Cat Lord falls, closes after state.shopT) that
-// sells premium consumables for DOGE. Consumables only — gear still comes from the forge/mint (D-039), not a DOGE shop.
-function victorMarket(n){openMenu(n,'VICTORS MARKET (LIMITED)',()=>[
-  {label:`CLOSES IN ${Math.max(0,Math.ceil(state.shopT))}S — SPEND YOUR SPOILS`,act:()=>'THE CACHE OPENS ONLY AFTER THE CAT LORD FALLS. SPEND YOUR DOGE WHILE IT LASTS!'},
-  {label:'CHAMPION FEAST: +40 HP NOW (20 DOGE)',act:()=>{if(P.doge<20)return 'NOT ENOUGH DOGE.';if(P.hp>=P.maxHp)return 'ALREADY FULL HP.';P.doge-=20;P.hp=Math.min(P.maxHp,P.hp+40);return 'FEAST! +40 HP. SUCH FULL.';}},
-  {label:'WAR RATIONS: 3 COOKED FISH (30 DOGE)',act:()=>{if(P.doge<30)return 'NOT ENOUGH DOGE.';if(!addToBag('cooked_fish',3))return 'BAG FULL.';P.doge-=30;return 'BOUGHT 3 COOKED FISH. MUCH PREP.';}},
-  {label:'MOON BISCUIT: +10 MAX MP (40 DOGE)',act:P.mpUps>=2?()=>'MAX BISCUITS ALREADY.':()=>{if(P.doge<40)return 'NOT ENOUGH DOGE.';P.doge-=40;P.mpUps++;P.maxMp+=10;return 'MOON BISCUIT! +10 MAX MP.';}},
-  {label:'BACK',act:()=>{elderMenu(n);return '';}}]);}
 // partner NPCs: first talk = story, then a menu with the story + link (texts sourced in D-024)
 const PARTNERS={ // stories are factual (sources in docs/DECISIONS.md D-024); no claim of official DogeOS partnership unless sourced
   lotto:{title:'CLOVERHEART: RELOTTO',story:['Need a map or a lucky charm, traveler? I am Cloverheart, the clover guide of the Dogeon.',
@@ -1088,7 +1075,7 @@ function questTalk(n){
   const s=state.stage;
   const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;
   const mktLine=`DOGE IS $${mkt.p.toFixed(3)} (${up?'+':''}${pc}% ${pc>2?'BULL':pc<-2?'BEAR':'FLAT'}). ${up?'GOOD TIMES FOR FIGHTERS.':'BE CAREFUL. ENEMIES GROW STRONGER.'}`;
-  const lore=DOGE_LORE[Math.floor(time/20)%DOGE_LORE.length],qm=k=>Object.entries(QUEST_MATS[k]).map(([m,v])=>`${v} ${m==='steel'?'IRON':m.toUpperCase()}`).join(', '),give=k=>{for(const [m,v] of Object.entries(QUEST_MATS[k]))if(m==='steel')P.steel+=v;else addToBag(m,v);}; // D-089: NPCs never give DOGE
+  const lore=DOGE_LORE[Math.floor(time/20)%DOGE_LORE.length],qm=k=>Object.entries(QUEST_MATS[k]).map(([m,v])=>`${v} ${m==='steel'?'IRON':m.toUpperCase()}`).join(', '),give=k=>giveMats(QUEST_MATS[k]); // D-089: NPCs never give DOGE
   if(s===0)openDialog(n,[mktLine,lore,'...Young pup. The cats have risen. They took every field around our camp.','Outside the fence they hunt you. Inside, they cannot touch you. That is the old law.','Prove yourself. Slay 8 cats and return to me.'],()=>{state.stage=1;P.kills=0;toast('NEW QUEST: SLAY 8 CATS');});
   else if(s===1&&P.kills<8)openDialog(n,[mktLine,lore,`${P.kills}/8 cats. Keep fighting. When hurt, rest by the fire.`]);
   else if(s===1)openDialog(n,[mktLine,`Very fight. Much brave. Take ${qm(1)} for the forge.`,'Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{give(1);state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
@@ -1132,8 +1119,7 @@ function updateUI(dt){
     if(kp('escape','q'))ui=null;
     else if(kp('e',' ','enter','j')){const o=opts[ui.sel];
       if(!o.act){ui=null;return;}
-      if(o.cost&&P.doge<o.cost){ui.msg='NOT ENOUGH DOGE. MUCH POOR.';sfx(110,0.12,'square',0.04);return;}
-      if(o.cost)P.doge-=o.cost;ui.msg=o.act();sfx(o.cost?990:780,0.08,'square',0.04,200);}
+      ui.msg=o.act();sfx(780,0.08,'square',0.04,200);}
   }
 }
 
@@ -1227,7 +1213,6 @@ function update(dt){
   netTick(dt); // opt-in multiplayer (no-op without ?mp); before the UI early-return so you stay visible while in menus
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
   if(winT>0)winT-=dt;
-  if(state.shopT>0)state.shopT-=dt; // D-065 post-boss Victor's Market countdown
   shakeT=Math.max(0,shakeT-dt);
   if(state.bossT){state.bossT-=dt;if(state.bossT<=(netLive()?-10:0))bossCycle();} // D-095: offline the client runs the cycle; online the relay's {t:'cycle'} does (10 s fallback)
   if(ui){updateParts(dt);updateUI(dt);return;} // particles keep living while the world pauses (I-2)
@@ -1278,8 +1263,7 @@ function update(dt){
   for(const it of items){it.t+=dt;it.life-=dt;const d=dist(it.x,it.y,P.x,P.y);
     if(d<24){const s=130*dt/(d||1);it.x+=(P.x-it.x)*Math.min(1,s);it.y+=(P.y-it.y)*Math.min(1,s);}
     if(d<8){it.life=0;if(it.kind==='whisk'){P.whisk++;floater(P.x,P.y-24,'+1 WHISKER','#e0e0ff');sfx(1200,0.05,'square',0.03,400);}
-      else if(it.kind==='yarn'){P.doge+=150;floater(P.x,P.y-24,'+150 DOGE','#f0c030');toast('GOLDEN YARN! +150 DOGE',3);sfx(880,0.4,'triangle',0.06,600);}
-      else if(it.kind==='coin'){P.doge+=1;floater(P.x,P.y-24,'+1 DOGE','#f0c030');sfx(1200,0.05,'square',0.03,400);} // D-055 rare coin
+      else if(it.kind==='yarn'){giveMats(YARN_MATS);floater(P.x,P.y-24,'+3 WOOD STONE IRON','#f0c030');toast('GOLDEN YARN! MINT MATERIALS: 3 WOOD, 3 STONE, 3 IRON',3);sfx(880,0.4,'triangle',0.06,600);}
       else if(it.kind==='steel'||it.kind==='wood'||it.kind==='stone'){P[it.kind]=(P[it.kind]||0)+1;floater(P.x,P.y-24,'+1 '+it.kind.toUpperCase(),'#a0a8b0');sfx(1100,0.05,'square',0.03,300);}}}
   items=items.filter(i=>i.life>0);
   // respawn
@@ -1326,7 +1310,7 @@ function drawWorld(){
   const ox=cam.x+sx,oy=cam.y+sy;
   drawTiles(ox,oy);
   drawFire(ox,oy);
-  for(const it of items){if(it.life<4&&Math.floor(it.life*8)%2)continue;const bob=Math.round(Math.sin(it.t*5)*1.5);const img=it.kind==='whisk'?WHISK:it.kind==='yarn'?YARN:it.kind==='coin'?COIN:(MAT_ICONS[it.kind]||WHISK);ctx.drawImage(SHADOW,Math.round(it.x-6-ox),Math.round(it.y+1-oy));ctx.drawImage(img,Math.round(it.x-img.width/2-ox),Math.round(it.y-6+bob-oy));}
+  for(const it of items){if(it.life<4&&Math.floor(it.life*8)%2)continue;const bob=Math.round(Math.sin(it.t*5)*1.5);const img=it.kind==='whisk'?WHISK:it.kind==='yarn'?YARN:(MAT_ICONS[it.kind]||WHISK);ctx.drawImage(SHADOW,Math.round(it.x-6-ox),Math.round(it.y+1-oy));ctx.drawImage(img,Math.round(it.x-img.width/2-ox),Math.round(it.y-6+bob-oy));}
   const list=[];
   for(const n of NPCS)list.push({y:n.y,f:()=>{const near=dist(n.x,n.y,P.x,P.y)<40;const d=near?dirOf(P.x-n.x,P.y-n.y):'down';drawChar(SPR[n.spr],d,0,n.x,n.y+n.hh+Math.round(Math.sin(time*2+n.x)*0.6),1,ox,oy);if(near&&!ui){const b=Math.round(Math.sin(time*6));text('E',n.x-1-ox,n.y-30+b-oy,'#ffe040');}}});
   for(const e of enemies)list.push({y:e.y,f:()=>{
@@ -1387,17 +1371,16 @@ function drawHUD(){
   ctx.drawImage(WHISK,118,2);text('x'+P.whisk,129,3,'#e0e0ff');
   ctx.drawImage(COIN,118,9);
   const wBal=wallet.connected&&wallet.bal!=null;
-  const dDisp=wBal?(P.doge?`${fmtD(wallet.bal)}+${P.doge}`:fmtD(wallet.bal)):P.doge;
-  text(dDisp+' DOGE',128,10,wBal?'#ffd700':'#f8d050');
+  text(wBal?fmtD(wallet.bal)+' DOGE':'NO WALLET',128,10,wBal?'#ffd700':'#808890'); // D-097: the only DOGE is the wallet's testnet DOGE
   const curP=oracle.loaded?oracle.price:mkt.p;
   text('DOGE $'+curP.toFixed(curP<1?3:2),168,3,oracle.loaded?'#80f8c0':'#f8d050');
-  if(wBal){const u=((wallet.bal||0)+P.doge)*curP;text('≈$'+(u>=100?u.toFixed(1):u.toFixed(2))+(oracle.loaded?' RS':''),168,10,'#60e060');}
+  if(wBal){const u=(wallet.bal||0)*curP;text('≈$'+(u>=100?u.toFixed(1):u.toFixed(2))+(oracle.loaded?' RS':''),168,10,'#60e060');}
   else{const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');}
   text(state.bossT>0?`BOSS IN ${Math.ceil(state.bossT)}S`:'RAID ON',214,3,state.bossT>0?'#ffa0a0':'#80ff80'); // D-095 raid cycle
   text(questText(),222,10,'#fff');
   if(P.lazy||P.lazyT>0)text(P.lazyT>0?`LAZY ${Math.ceil(P.lazyT)}S`:'LAZY',276,10,'#ff5050');
   else if(isMod())text('MOD[M]',285,10,'#ffc040');
-  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?`CHAIN ${shortAddr(wallet.addr)} (${wallet.bal==null?'?':fmtD(wallet.bal)}D ≈$${(((wallet.bal||0)+P.doge)*curP).toFixed(2)})  R=REST  I=BAG`:'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
+  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?`CHAIN ${shortAddr(wallet.addr)} (${wallet.bal==null?'?':fmtD(wallet.bal)}D ≈$${((wallet.bal||0)*curP).toFixed(2)})  R=REST  I=BAG`:'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
   if(!ui&&!P.dead){const c=classOf();text(hudTag(),3,playerInCamp()?H-17:H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class + skill MP tag (D-028, D-038)
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
@@ -1417,7 +1400,7 @@ function drawUI(){
     box(30,y,260,h);
     textC(ui.title,W/2,y+6,'#ffe040');
     if(ui.chain&&wallet.connected){const cp=oracle.loaded?oracle.price:mkt.p;text(`WALLET: ${wallet.bal==null?'?':fmtD(wallet.bal)} DOGE (≈$${(((wallet.bal||0))*cp).toFixed(2)})`,40,y+16,'#f8d050');text(`ITEMS: ${chainData.inv.length}  STAKED: ${fromWei(chainData.staked)}`,172,y+16,'#60e0a0');}
-    else{text(`CARRIED: ${P.doge} DOGE`,40,y+16,'#f8d050');text(`VAULT: ${P.bank}`,200,y+16,'#b0a060');}
+    else text('TESTNET DOGE: CONNECT AT THE SPHINX',40,y+16,'#b0a060');
     ctx.fillStyle='#3848a0';ctx.fillRect(36,y+24,248,1);
     if(top>0)text('^',282,y+16,'#ffe040');if(top+MENU_ROWS<all.length)text('V',282,y+h-10,'#ffe040');
     opts.forEach((o,i)=>{const yy=y+29+i*11,idx=i+top,sel=idx===ui.sel,lb=o.label||'';
@@ -1428,7 +1411,7 @@ function drawUI(){
       if(isNft){ctx.fillStyle='#ff4040';ctx.fillRect(43,yy+2,3,3);px(ctx,44,yy+1,'#ffa0a0');px(ctx,44,yy+5,'#a01010');}
       else if(isMint){ctx.fillStyle='#ffd860';ctx.fillRect(43,yy+2,3,3);}
       else if(isPool){ctx.fillStyle='#80f8c0';ctx.fillRect(43,yy+2,3,3);}
-      const afford=!o.cost||P.doge>=o.cost,col=o.col||(sel?(isNft?'#ff9090':'#fff'):isNft?'#ff4040':isMint?'#ffd860':isPool?'#80f8c0':isBal?'#f8e090':'#c8d0f0');
+      const afford=true,col=o.col||(sel?(isNft?'#ff9090':'#fff'):isNft?'#ff4040':isMint?'#ffd860':isPool?'#80f8c0':isBal?'#f8e090':'#c8d0f0');
       text(lb,49,yy,col);if(o.cost)text(o.cost+' DOGE',280-(String(o.cost).length+4)*4,yy,afford?'#f8d050':'#a05050');});
     text(ui.msg||(all[ui.sel]&&all[ui.sel].adj?'W/S SELECT  A/D PRICE  E OK  ESC LEAVE':'W/S SELECT   E BUY   ESC LEAVE'),40,y+h-10,ui.msg?'#a0ffa0':'#8090c0');
   }

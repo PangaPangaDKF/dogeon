@@ -195,6 +195,7 @@ if (args.includes('--verify')) {
     [/EVM Paris/i, 'foundry.toml evm_version = cancun'],
     [/GATHER_CD=8s/, `GATHER_CD is ${(html.match(/GATHER_CD=(\d+)/) || [])[1]}s`],
     [/Walk cycle: front\/back/, 'sprites are frozen facing right (D-044)'],
+    [/COIN_DROP_P|\+150 DOGE|50% (of carried )?DOGE|camp vault (keeps|pays)|drops 6 materials \+ 5 coins/, 'no in-game DOGE since D-097 (no coins, vault or Golden Yarn DOGE)'],
   ];
   const prose = ['prompts/TRYNOAH_CLONE.md', 'prompts/TRYNOAH_RECREATE.md', 'TRYNOAH.md', 'MASTER_PROMPT.md', 'CLAUDE.md',
     '.claude/skills/dogeon-game/SKILL.md', '.agents/skills/dogeon-game/SKILL.md', 'contracts/README.md'].filter(f => existsSync(join(root, f)));

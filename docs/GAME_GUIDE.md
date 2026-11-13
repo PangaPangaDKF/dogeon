@@ -63,8 +63,8 @@ Characters are **frozen facing right** (a deliberate style choice) — but you s
 - **Resting only heals to 60%.** Hold `R` inside camp for 3 s, then +10 HP/s up to 60% of max, and MP back to full. Moving resets it.
 - **Above 60% you must eat.** Raw fish +15 HP, cooked fish +25 HP (cook at the campfire from the bag). No potions, no regen.
 - **MP only refills by resting in camp.** This is what keeps the Healer honest.
-- **Death costs you:** half your carried DOGE, all whiskers, all materials, and your whole bag. **Safe from death:** DOGE in the
-  camp vault, DOGE staked on-chain, and every NFT in your wallet. You wake at the campfire with 35% HP/MP.
+- **Death costs you:** all whiskers, all materials, and your whole bag. **Safe from death:** your wallet's testnet DOGE, DOGE staked
+  on-chain, and every NFT in your wallet. There is no in-game DOGE to lose. You wake at the campfire with 35% HP/MP.
 - **The market changes the difficulty.** A simulated DOGE price (anchored to the real RedStone DOGE/USD when you're connected)
   drifts every second. **Bear:** cats hit up to +50% harder and move +15% faster, screen tints red. **Bull:** you hit up to
   +50% harder and move +10% faster.
@@ -124,7 +124,8 @@ At the Sphinx:
 - **Staking** — stake DOGE, earn the stakers' 0.8% share of all DEX trades, claim or unstake any time. Staked DOGE is safe on death.
 - **Oracle** — RedStone DOGE/USD is shown for information and anchors the in-game market; **swap prices always come from the
   pool reserves**, never the oracle.
-- **The camp vault** is a separate, off-chain thing: it just keeps game DOGE safe when you die.
+- **No in-game DOGE:** monsters never drop DOGE and no NPC gives or sells anything for DOGE. Testnet DOGE from the faucet is
+  used only for minting, the DEX, staking and the class oath.
 
 ---
 
@@ -133,7 +134,7 @@ At the Sphinx:
 NPCs never hand out DOGE: there is no game token, and every mint or trade uses real testnet DOGE. Quests pay materials for the forge. Dungeon cats and mini-bosses come back every 20 seconds.
 
 0 Talk to Elder Shibe → 1 slay 8 cats (+2 wood, stone and iron) → 2 slay 3 brutes (+4 wood, stone and iron, opens the ruins gate) → 3 defeat the Cat Lord →
-4 complete (Golden Yarn, +150 DOGE).
+4 complete (Golden Yarn: +3 wood, stone and iron for minting).
 
 **Raid cycle:** 60 seconds after the Cat Lord falls he comes back at full HP, and the heist restarts at quest 1 for everyone in the
 room: the gate closes and anyone in the chamber is moved out. The HUD shows `BOSS IN 45S`, then `RAID ON`. There is no raid timer.

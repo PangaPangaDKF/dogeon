@@ -68,7 +68,7 @@ globalThis.__api = {
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy, damageEnemy,
   net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
-  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT, solidFor, GATE_ROW, BOSS_RESPAWN, bossCycle,
+  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT, solidFor, GATE_ROW, BOSS_RESPAWN, bossCycle, YARN_MATS,
 };`;
 
 function boot(seed, opts) {
@@ -90,7 +90,8 @@ function checkFrame(api, name, f) {
   const g = api.get();
   if (!Number.isFinite(g.P.x) || !Number.isFinite(g.P.y)) throw new Error(`player position NaN at frame ${f}`);
   if (g.P.hp > g.P.maxHp + 1e-6) throw new Error(`hp ${g.P.hp} > maxHp ${g.P.maxHp} at frame ${f}`);
-  if (g.P.doge < 0 || g.P.bank < 0 || g.P.whisk < 0) throw new Error(`negative currency at frame ${f}`);
+  if (g.P.whisk < 0) throw new Error(`negative whiskers at frame ${f}`);
+  if ('doge' in g.P || 'bank' in g.P || g.items.some(i => i.kind === 'coin')) throw new Error(`in-game DOGE exists at frame ${f} (D-097)`);
   for (const e of g.enemies) {
     const tx = Math.floor(e.x / 16), ty = Math.floor(e.y / 16);
     if (api.inCampT(tx, ty)) throw new Error(`${e.type} entered the camp at tile ${tx},${ty} (frame ${f})`);
@@ -200,11 +201,11 @@ scenario('economy: bank + shop flows', () => {
   bank.met = true; api.talk(bank);
   // D-089: the Sphinx no longer swaps whiskers for DOGE (NPCs never create DOGE; whiskers are forge material)
   const swap = api.get().ui.build().find(r => /WHISKERS ->|SWAP .*WHISK/.test(r.label));
-  if (swap || api.get().P.doge !== 0 || api.get().P.whisk !== 10) fail('no whisker swap', `swap row=${swap && swap.label} doge=${api.get().P.doge} whisk=${api.get().P.whisk}`);
+  if (swap || api.get().P.whisk !== 10) fail('no whisker swap', `swap row=${swap && swap.label} whisk=${api.get().P.whisk}`);
   else pass('no whisker swap', 'Sphinx has no WHISKERS -> DOGE row; 10 whiskers kept for the forge, 0 DOGE created');
   api.press('escape'); api.step(DT);
   const shop = g.NPCS.find(n => n.id === 'merchant');
-  shop.met = true; api.get().P.doge = 1000; api.get().P.armor = 1; api.talk(shop);
+  shop.met = true; api.get().P.armor = 1; api.talk(shop);
   const labels = api.get().ui.build().map(o => o.label);
   // Menu row: label starts at x=48, price is right-aligned near x=250 -> keep labels <= 50 chars, no float noise.
   const bad = labels.filter(l => l.length > 50 || /\d\.\d{3,}/.test(l));
@@ -305,29 +306,28 @@ scenario('forge: craft with materials, reject on insufficient', () => {
   api.press('escape'); api.step(DT);
 });
 
-scenario('pool: deposit safe on death, withdraw with no yield (D-089)', () => {
-  const api = boot(SEED + 10);
-  startGame(api);
+scenario('D-097: no in-game DOGE — no vault, no DOGE shop, no coin drops; Golden Yarn pays mint materials', () => {
+  const api = boot(SEED + 10); startGame(api);
   const g = api.get();
-  g.P.doge = 100;
-  const bank = g.NPCS.find(n => n.id === 'bank');
-  bank.met = true; api.talk(bank);
-  selectRow(api, /^STAKE /); // the vault (was ADD TO POOL)
-  api.press('e'); api.step(DT);
-  if (g.P.bank !== 100 || g.P.doge !== 0) fail('pool deposit', `expected bank=100 doge=0, got bank=${g.P.bank} doge=${g.P.doge}`);
-  else pass('pool deposit', '100 DOGE pooled');
-  // die and respawn — pool should be safe
+  if ('doge' in g.P || 'bank' in g.P) { fail('no carried doge', `P.doge=${g.P.doge} P.bank=${g.P.bank}`); return; }
+  const bank = g.NPCS.find(n => n.id === 'bank'); bank.met = true; api.talk(bank);
+  const bad = api.get().ui.build().filter(r => /VAULT|UNSTAKE \d|BUY BONE|BUY MOON|\(\d+ DOGE\)/.test(r.label));
+  if (bad.length) { fail('sphinx rows', bad.map(r => r.label).join(' | ')); return; }
   api.press('escape'); api.step(DT);
-  g.P.x = 40 * 16 + 8; g.P.y = 50 * 16 + 8; g.P.iT = 0; g.P.hp = 1;
-  api.hurtPlayer(50, { x: g.P.x + 5, y: g.P.y });
-  for (let f = 0; f < 60 * 3; f++) api.step(DT);
-  if (api.get().P.bank !== 100) fail('pool safe on death', `expected bank=100 after death, got ${api.get().P.bank}`);
-  else pass('pool safe on death', 'pooled DOGE survives death');
-  const g2 = api.get(); g2.P.doge = 0; api.talk(g2.NPCS.find(n => n.id === 'bank'));
-  const un = api.get().ui.build().find(r => /^UNSTAKE /.test(r.label)); un.act();
-  if (api.get().P.doge !== 100 || api.get().P.bank !== 0) fail('vault no yield', `unstake gave doge=${api.get().P.doge} bank=${api.get().P.bank} (want exactly 100, 0)`);
-  else pass('vault no yield', 'UNSTAKE returns exactly the 100 DOGE deposited (no NPC-made yield)');
-  api.press('escape'); api.step(DT);
+  g.items.length = 0;
+  for (const t of ['alley', 'archer', 'brute']) for (let i = 0; i < 30; i++) api.killEnemy(api.makeEnemy(t, 40 * 16 + 8, 50 * 16 + 8, 'field'));
+  if (g.items.some(i => i.kind === 'coin')) { fail('no coin drops', `${g.items.filter(i => i.kind === 'coin').length} coins dropped`); return; }
+  const boss = g.enemies.find(e => e.boss); g.items.length = 0; api.killEnemy(boss);
+  if (g.items.some(i => i.kind === 'coin') || !g.items.some(i => i.kind === 'yarn')) { fail('boss loot', g.items.map(i => i.kind).join(',')); return; }
+  const steel0 = g.P.steel, wood = () => g.P.bag.filter(b => b.kind === 'wood').reduce((a, b) => a + b.qty, 0), w0 = wood();
+  for (let i = g.items.length - 1; i >= 0; i--) if (g.items[i].kind !== 'yarn') g.items.splice(i, 1); // the boss may also drop iron (D-067)
+  const y = g.items.find(i => i.kind === 'yarn'); g.P.x = y.x; g.P.y = y.y; api.step(DT);
+  if (g.P.steel !== steel0 + api.YARN_MATS.steel || wood() !== w0 + api.YARN_MATS.wood || 'doge' in g.P) { fail('yarn reward', `steel ${steel0}->${g.P.steel} wood ${w0}->${wood()}`); return; }
+  g.P.x = 40 * 16 + 8; g.P.y = 50 * 16 + 8; g.P.iT = 0; g.P.hp = 1; g.P.god = false;
+  api.hurtPlayer(500, { x: g.P.x + 5, y: g.P.y }); for (let f = 0; f < 60 * 3; f++) api.step(DT);
+  const page = (api.get().ui && api.get().ui.pages || []).join(' ');
+  if (/\d+ DOGE/.test(page)) { fail('death text', page); return; }
+  pass('no in-game doge', `no P.doge/P.bank; Sphinx has no vault or DOGE shop; 90 kills + boss dropped 0 coins; Golden Yarn gave +${api.YARN_MATS.steel} iron +${api.YARN_MATS.wood} wood; death loses no DOGE`);
 });
 
 scenario('new enemies spawn and drop materials', () => {
@@ -574,22 +574,13 @@ scenario('D-067: hardcore gathering, iron drops, master chain permissions, red N
   pass('hardcore systems', 'stone always drops iron, monsters drop iron, master wallet authenticated, red NFT styling active');
 });
 
-scenario('D-065: post-boss Victors Market — limited shop opens on victory, sells consumables for DOGE', () => {
+scenario('D-097: the Victors Market (a DOGE shop) is gone after the boss falls', () => {
   const api = boot(SEED + 65); startGame(api);
-  const g = api.get();
-  const elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;
-  g.state.stage = 4; g.state.won = true; g.state.shopT = 300; g.P.doge = 100; // simulate boss defeated, market open
-  api.talk(elder); // stage>0 -> elderMenu
-  const open = api.get().ui.build().find(r => /VICTORS MARKET/.test(r.label));
-  if (!open) { fail('market opens', api.get().ui.build().map(r => r.label).join(' | ')); return; }
-  open.act(); // open the market
-  const feast = api.get().ui.build().find(r => /CHAMPION FEAST/.test(r.label));
-  if (!feast) { fail('market rows', api.get().ui.build().map(r => r.label).join(' | ')); return; }
-  g.P.hp = 10; feast.act(); // buy +40 HP for 20 DOGE
-  if (g.P.doge !== 80 || g.P.hp !== 50) { fail('feast', `doge=${g.P.doge} hp=${g.P.hp}`); return; }
-  g.state.shopT = 0; api.talk(elder); // timer expired -> market row gone
-  if (api.get().ui.build().some(r => /VICTORS MARKET/.test(r.label))) { fail('market closes', 'market still listed at shopT=0'); return; }
-  pass('victors market', `opens post-boss; CHAMPION FEAST +40 HP for 20 DOGE (doge 100->80, hp 10->50); closes when the timer ends`);
+  const g = api.get(), elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;
+  g.state.stage = 4; g.state.won = true; api.talk(elder);
+  const rows = api.get().ui.build().map(r => r.label);
+  if (rows.some(l => /VICTORS MARKET|\(\d+ DOGE\)/.test(l)) || !rows.some(l => /DOGEMASTER/.test(l))) fail('no victors market', rows.join(' | '));
+  else pass('no victors market', 'post-boss Elder menu: DogeMaster yes, no DOGE-priced rows');
 });
 
 scenario('D-064: random loot — deterministic rarity + buff per tokenId, meme buffs, weighted', () => {
@@ -687,10 +678,10 @@ scenario('D-057: mini-boss per region — two elites spawn, drop guaranteed loot
   if (!(m.maxHp > api.ETYPES[m.type].hp * 2) || m.zone !== 'mini') { fail('mini stats', `maxHp=${m.maxHp} base=${api.ETYPES[m.type].hp} zone=${m.zone}`); return; }
   g.items.length = 0; api.killEnemy(m);
   const coins = g.items.filter(i => i.kind === 'coin').length, mats = g.items.filter(i => i.kind === m.def.mat).length;
-  if (coins < 3 || mats < 1) { fail('mini loot', `coins=${coins} mats=${mats} (expected >=3 coins, >=1 material)`); return; }
+  if (coins !== 0 || mats < 1) { fail('mini loot', `coins=${coins} mats=${mats} (expected 0 coins (D-097), >=1 material)`); return; }
   const fieldCount = g.enemies.filter(e => e.zone === 'field').length;
   if (fieldCount !== api.FIELD_POP) { fail('mini refill', `field=${fieldCount}, mini leaked into field accounting (expected ${api.FIELD_POP})`); return; }
-  pass('mini-boss', `2 region elites (${minis.map(e => e.type).join(', ')}); mini dropped ${mats} ${m.def.mat} + ${coins} coins; field pop stays ${fieldCount}`);
+  pass('mini-boss', `2 region elites (${minis.map(e => e.type).join(', ')}); mini dropped ${mats} ${m.def.mat}, 0 coins; field pop stays ${fieldCount}`);
 });
 
 scenario('enemy pressure: field population and spawn timer', () => {
@@ -989,14 +980,14 @@ scenario('skills grow only by use: combat on hit, bark per cast, tier bonus on d
   if (P.skills.bark !== 1) fail('bark XP', `bark XP ${P.skills.bark}`); else pass('bark XP', 'bark +1 XP per cast');
 });
 
-scenario('death empties the bag (carried food), keeps pooled DOGE', () => {
+scenario('death empties the bag (carried food); NFTs stay on chain', () => {
   const api = boot(SEED + 26); startGame(api);
-  const P = api.get().P; api.addToBag('cooked_fish', 3); P.bank = 50;
+  const P = api.get().P; api.addToBag('cooked_fish', 3);
   P.x = 40 * 16 + 8; P.y = 50 * 16 + 8; P.iT = 0; P.hp = 1;
   api.hurtPlayer(50, { x: P.x + 5, y: P.y });
   for (let f = 0; f < 60 * 3; f++) api.step(DT);
   const p = api.get().P;
-  if (p.bag.length || p.bank !== 50) fail('death bag', `bag ${p.bag.length} slots, bank ${p.bank}`); else pass('death bag', 'bag emptied, pool safe');
+  if (p.bag.length) fail('death bag', `bag ${p.bag.length} slots`); else pass('death bag', 'bag emptied');
 });
 
 // ---------- D-021: IT-5 review fixes (mock wallet on the local dev chain, no anvil needed) ----------
@@ -1165,9 +1156,9 @@ scenario('Sphinx = DogeOS DeFi hub: connect, market, faucet, stake, oracle, scho
   const api = boot(SEED + 29); startGame(api);
   const bank = npc(api, 'bank'); bank.met = true; api.talk(bank);
   const labels = api.get().ui.build().map(r => r.label);
-  const need = [/^WALLET: OFFLINE|^CONNECT WALLET/, /^NFT MARKET: SWAP \+ LIQUIDITY/, /^ON-CHAIN STAKING/, /FAUCET/, /^STAKE /, /^UNSTAKE /, /REDSTONE/, /SPHINX SCHOOL/, /^DOGEOS\.COM/, /DEVELOPER DOCS/];
+  const need = [/^WALLET: OFFLINE|^CONNECT WALLET/, /^NFT MARKET: SWAP \+ LIQUIDITY/, /^ON-CHAIN STAKING/, /FAUCET/, /REDSTONE/, /SPHINX SCHOOL/, /^DOGEOS\.COM/, /DEVELOPER DOCS/];
   const missing = need.filter(re => !labels.some(l => re.test(l)));
-  if (missing.length) fail('hub rows', `missing ${missing.join(', ')} in: ${labels.join(' | ')}`); else pass('hub rows', `${labels.length} rows incl. connect, market, staking, faucet, vault, oracle, school, links`);
+  if (missing.length) fail('hub rows', `missing ${missing.join(', ')} in: ${labels.join(' | ')}`); else pass('hub rows', `${labels.length} rows incl. connect, market, staking, faucet, oracle, school, links`);
   // the on-chain DOGE-staking submenu opens (offline it prompts to connect; must never crash)
   api.get().ui.build().find(r => /^ON-CHAIN STAKING/.test(r.label)).act();
   const stk = api.get().ui;
@@ -1285,10 +1276,6 @@ await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChan
   const stkRow0 = api.get().ui.build()[0];
   if (!stkRow0 || !/^STAKE < 1 > DOGE/.test(stkRow0.label)) fail('stakeMenu row 0', stkRow0 ? stkRow0.label : 'missing');
   else pass('stakeMenu row 0', `"${stkRow0.label}" is row 0 for immediate staking`);
-  api.get().P.doge = 0; api.bankMenu(npc(api, 'bank'));
-  api.get().ui.build().find(r => /^STAKE 0 DOGE IN THE VAULT/.test(r.label)).act();
-  if (!api.get().ui || !/DOGE STAKING/.test(api.get().ui.title)) fail('vault stake redirect', api.get().ui && api.get().ui.title);
-  else pass('vault stake redirect', 'STAKE 0 DOGE IN THE VAULT redirects to ON-CHAIN STAKING when wallet is connected');
   api.press('escape'); api.step(DT);
   await api.stakeDoge(1); await idle(api);
   if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.stakeDoge)) fail('stakeDoge', JSON.stringify(eth.sent.at(-1)));
