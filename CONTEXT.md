@@ -18,6 +18,8 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ## 00. RESUME HERE (latest, 2026-11-13, after D-088)
 
+> **D-091 (landing):** gallery screenshots are HUD-less (no price), 6-card grid, captions match the pictures. Landing backlog left: B4 (retake shots + real-mint capture), B7 (trailer embed).
+
 > **D-090 (landing):** coin-centered hero (`hero-camp-coin.png`), positioning = **PonziFi meme game on testnet tokens** (skill rule T8: no DOGE price/USD/oracle on the page, disclaimer in hero + footer), new "Come build on DogeOS" section. Needs `fly deploy -a dogeon-game` to go live. Game-side follow-up for the game lane: the HUD still shows `DOGE $price`.
 
 > **D-089 (gameplay, user):** NPCs never give DOGE (Elder quests pay wood/stone/iron via `QUEST_MATS`; no Sphinx whisker swap; vault no
