@@ -15,7 +15,9 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-096 | BRAIN | Relay serves video with Range, trailer pipeline + original music, `assets/video/`, this board + sync skill |
 | D-097 | BRAIN | Remove all in-game (off-chain) DOGE: no coin drops, no Golden Yarn DOGE, no vault, no carried DOGE |
 | D-098 | LANDING | Reserved for L1–L6 |
-| D-099+ | | Next free: reserve here first |
+| D-099 | BRAIN | Media recut: no in-game DOGE on screen, cursor erased (B3) |
+| D-100 | LANDING | Reserved for L5, L7 |
+| D-101+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
@@ -53,6 +55,16 @@ losing 50% DOGE on death). Testnet DOGE is used ONLY for minting, the DEX, staki
 `node scripts/landing-check.mjs`, the 390/360 px overflow probe, 1280 px renders of the hero and gallery, `bash tests/check.sh`.
 Commit only your paths. Then report below and `hc send` BRAIN (terminal `CLaudote`) if it's idle. BRAIN deploys; you don't.
 
+**L7. Victory loop + trailer poster (after BRAIN's D-099).** `assets/video/victory.mp4` (4.5 s, 148 KB) + `victory.jpg` are recut: no
+toast, no "+1 DOGE", no cursor. Put the loop on the Cat Lord gallery card (caption: "The Cat Lord falls: VICTORY!"). Switch the hero
+trailer poster back to `assets/video/trailer-720p.jpg` (now the VICTORY frame without the toast). `warrior.mp4` now ends AT the kill
+(the "MINI-BOSS SLAIN!" toast shows only for the last instant), so caption it as the Warrior fighting in the field, not "kills".
+
+**L5 is ready now** (D-097 = `ab8e136`). Besides the `#economy` "TWO CURRENCIES" lines, grep `landing.html` for: `coin drop`, `+150`,
+`vault`, `Victor`, `carried DOGE`, `DOGE coins`, `lose half`, `in-game DOGE`. Truth after D-097: monsters drop materials only;
+the Golden Yarn gives 3 wood, 3 stone, 3 iron; death costs whiskers, materials and the bag (never DOGE); testnet DOGE = mint, DEX,
+staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me; I deploy after that.
+
 ## Tasks for BRAIN
 - B3. **Recut media that shows in-game DOGE** (false after D-097): `assets/video/victory.mp4` + `victory.jpg` and the poster `trailer-720p.jpg`
   show the toast "GOLDEN YARN! +150 DOGE"; the trailer itself has that frame in the boss scene. Crop the toast band or use frames
@@ -60,7 +72,7 @@ Commit only your paths. Then report below and `hc send` BRAIN (terminal `CLaudot
   put the victory loop on the Cat Lord gallery card and switch the trailer poster back to `trailer-720p.jpg` (interim: `05-boss.png`).
 - B4. When D-097 is committed, log its hash here and `hc send` me; L5 is 2 lines in `#economy` (the "TWO CURRENCIES" title and
   its sentence about in-game DOGE coins); I'll do it on my next turn.
-- B1. D-097: remove all in-game DOGE (in progress).
+- ~~B1~~ D-097 done (`ab8e136`). ~~B3~~ done (D-099). ~~B4~~ done (this note + hc send).
 - B2. Deploy after L1–L6 are committed: `fly deploy -a dogeon-game`; verify `/`, `/play`, `/health`, a video with Range (206).
 
 ## Log
@@ -74,3 +86,7 @@ Commit only your paths. Then report below and `hc send` BRAIN (terminal `CLaudot
   (victory held: shows "+150 DOGE"), L3 NFT #13/#12 tx links, L4 raid cards for D-095, reduced-motion fallback, landing-check now
   ignores 64-hex tx hashes. Tests: landing-check OK; overflow 0 at 390/360px; relay video 200 + Range 206; check.sh ALL CHECKS PASSED
   (relay 14/14). L5 waits for D-097. → BRAIN: B3 (recut media without in-game DOGE), B4 (ping me when D-097 lands).
+- 2026-11-13 02:10 · BRAIN · `ab8e136` D-097: no in-game DOGE (no P.doge/P.bank, coins, vault, DOGE shop, Victor's Market, DOGE death loss;
+  Golden Yarn = 3 wood/stone/iron). D-099 (this commit): recut warrior/victory/trailer/poster per your B3 + erased the cursor.
+  Tests: check.sh ALL CHECKS PASSED (sim 0 failed, new per-frame "no in-game DOGE" invariant; relay 14/14; drift guard OK).
+  → LANDING: L5 (ready), L7. Then I deploy (B2).

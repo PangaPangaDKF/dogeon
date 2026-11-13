@@ -21,6 +21,10 @@ WAL=crop=346:610:934:14      # wallet "Transaction request" panel (open 4.0-5.9 
 EXH=crop=900:506:8:14        # explorer tx #13, 16:9
 EXV=crop=560:300:10:110      # explorer, hash + "Transferred #13 DOGEI"
 BAGC=crop=572:325:418:180    # bag rows incl. "ON-CHAIN ITEMS (13): SAFE ON DEATH"
+CW=delogo=x=619:y=305:w=18:h=22   # erase the parked mouse cursor (warrior capture)
+CB=delogo=x=797:y=216:w=18:h=22   # erase the parked mouse cursor (boss capture)
+VIC=crop=728:413:340:160     # boss chamber without the top toast band (old "GOLDEN YARN! +150 DOGE", false since D-097)
+# D-097: the victory skips 7.3-8.1 s ("+1 DOGE" floaters from the removed coins); the warrior ends at the kill (coins drop after)
 n=0; F=; : > $O/h.txt; : > $O/v.txt
 out(){ n=$((n+1)); F=$(printf '%s/%02d_%s.mp4' $O $n "$1"); }
 # clip <list> <src> <ss> <dur> <filter ending in [v]> [overlay pngs...]
@@ -34,7 +38,7 @@ card(){ out card; $FF -v error -y -loop 1 -t "$3" -i "$2" -vf fps=60,format=yuv4
 H="scale=-2:1080:flags=neighbor,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=$BG,setsar=1"
 clip h "$HOOK" 0.5 1.5 "$GH,$H[v]"
 card h $C/h_hook.png 1.0
-KEEP=warrior clip h "$WAR" 1.4 3.0 "$G,$H[v]" $C/h_t_warrior.png
+KEEP=warrior clip h "$WAR" 0.0 3.0 "$CW,$G,$H[v]" $C/h_t_warrior.png
 card h $C/h_classes.png 1.0
 clip h "$HEAL" 0.0 3.0 "$G,$H[v]" $C/h_t_healer.png
 clip h "$ARCH" 0.3 2.5 "$G,$H[v]" $C/h_t_archer.png
@@ -45,14 +49,15 @@ KEEP=mint3 clip h "$MINT" 10.4 2.0 "$MENU,scale=1770:-2:flags=neighbor,pad=1920:
 KEEP=verified clip h "$MINT" 15.4 1.5 "$EXH,scale=1920:1080:flags=lanczos,tpad=stop_mode=clone:stop_duration=1,setsar=1[v]" $C/h_t_tx.png
 clip h "$BAG" 0.3 1.5 "$BAGC,scale=1716:-2:flags=neighbor,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=$BG,setsar=1[v]" $C/h_t_bag.png
 card h $C/h_boss.png 1.0
-clip h "$BOSS" 0.3 2.5 "$G,$H[v]"
-KEEP=victory clip h "$BOSS" 4.3 4.5 "$G,$H[v]"
+clip h "$BOSS" 0.3 2.5 "$CB,$G,$H[v]"
+KEEP=victory1 clip h "$BOSS" 4.3 3.0 "$CB,$VIC,$H[v]"
+KEEP=victory2 clip h "$BOSS" 8.1 0.5 "$CB,$VIC,$H,tpad=stop_mode=clone:stop_duration=1[v]"
 card h $C/h_end.png 4.0
 
 # ---------- 9:16 short: 30.0 s ----------
 VG="scale=1080:-2:flags=neighbor,pad=1080:1920:0:(oh-ih)/2:color=$BG,setsar=1"
 card v $C/v_hook.png 1.0
-clip v "$WAR" 1.4 3.0 "$G,$VG[v]" $C/v_brand.png $C/v_t_warrior.png
+clip v "$WAR" 0.0 3.0 "$CW,$G,$VG[v]" $C/v_brand.png $C/v_t_warrior.png
 clip v "$ARCH" 0.3 2.5 "$G,$VG[v]" $C/v_brand.png $C/v_t_archer.png
 clip v "$HEAL" 0.0 2.5 "$G,$VG[v]" $C/v_brand.png $C/v_t_healer.png
 card v $C/v_craft.png 1.0
@@ -61,8 +66,9 @@ clip v "$MINT" 6.0 4.0 "$MENU,scale=1062:-2:flags=neighbor,pad=1080:1920:(ow-iw)
 clip v "$MINT" 10.4 2.0 "$MENU,scale=1062:-2:flags=neighbor,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=$BG,setsar=1[v]" $C/v_brand.png
 clip v "$MINT" 15.4 1.5 "$EXV,scale=1080:-2:flags=lanczos,pad=1080:1920:0:(oh-ih)/2:color=$BG,tpad=stop_mode=clone:stop_duration=1,setsar=1[v]" $C/v_brand.png $C/v_t_tx.png
 card v $C/v_boss.png 1.0
-clip v "$BOSS" 0.3 2.5 "$G,$VG[v]" $C/v_brand.png
-clip v "$BOSS" 4.3 4.5 "$G,$VG[v]" $C/v_brand.png
+clip v "$BOSS" 0.3 2.5 "$CB,$G,$VG[v]" $C/v_brand.png
+clip v "$BOSS" 4.3 3.0 "$CB,$VIC,$VG[v]" $C/v_brand.png
+clip v "$BOSS" 8.1 0.5 "$CB,$VIC,$VG,tpad=stop_mode=clone:stop_duration=1[v]" $C/v_brand.png
 card v $C/v_end.png 3.5
 
 # ---------- music + final masters ----------
@@ -85,6 +91,6 @@ loop(){ # loop <name> <seg files...>: silent, 640 px, 30 fps, <= 1 MB, poster = 
 loop mint $O/*_mint1.mp4 $O/*_mint2.mp4 $O/*_mint3.mp4
 loop verified $O/*_verified.mp4
 loop warrior $O/*_warrior.mp4
-loop victory $O/*_victory.mp4
-$FF -v error -y -ss 3.9 -i $AV/victory.mp4 -frames:v 1 -q:v 3 $AV/victory.jpg   # poster on the VICTORY banner
+loop victory $O/*_victory1.mp4 $O/*_victory2.mp4
+$FF -v error -y -ss 3.6 -i $AV/victory.mp4 -frames:v 1 -q:v 3 $AV/victory.jpg   # poster on the VICTORY banner
 ls -la $OUT/*.mp4 $AV
