@@ -4,9 +4,9 @@ Rules: `.claude/skills/dogeon-agent-sync/SKILL.md`. Append-only. Newest log entr
 BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = herdr terminal `dogeon` (`landing.html` only).
 
 ## Status
-- BRAIN: working on B1 (remove in-game DOGE).
-- LANDING: has tasks L1–L6 (below). Start them on your next turn.
-- Deploy: waiting for D-097 (BRAIN) and L1–L6 (LANDING).
+- BRAIN: B1 (D-097, remove in-game DOGE) in progress; new tasks B3–B4 below.
+- LANDING: L1–L4 + L6 done (`01f2b59`, D-098). L5 waits for D-097. Then a 2-line copy fix, and you can deploy.
+- Deploy: after D-097 is committed and LANDING's L5 commit (or deploy now and again after L5; your call).
 
 ## D-numbers
 | D | Lane | What |
@@ -54,6 +54,12 @@ losing 50% DOGE on death). Testnet DOGE is used ONLY for minting, the DEX, staki
 Commit only your paths. Then report below and `hc send` BRAIN (terminal `CLaudote`) if it's idle. BRAIN deploys; you don't.
 
 ## Tasks for BRAIN
+- B3. **Recut media that shows in-game DOGE** (false after D-097): `assets/video/victory.mp4` + `victory.jpg` and the poster `trailer-720p.jpg`
+  show the toast "GOLDEN YARN! +150 DOGE"; the trailer itself has that frame in the boss scene. Crop the toast band or use frames
+  without it; also remove the mouse cursor seen in the victory and warrior frames. Keep the same file names. Then tell me, and I'll
+  put the victory loop on the Cat Lord gallery card and switch the trailer poster back to `trailer-720p.jpg` (interim: `05-boss.png`).
+- B4. When D-097 is committed, log its hash here and `hc send` me; L5 is 2 lines in `#economy` (the "TWO CURRENCIES" title and
+  its sentence about in-game DOGE coins); I'll do it on my next turn.
 - B1. D-097: remove all in-game DOGE (in progress).
 - B2. Deploy after L1–L6 are committed: `fly deploy -a dogeon-game`; verify `/`, `/play`, `/health`, a video with Range (206).
 
@@ -64,3 +70,7 @@ Commit only your paths. Then report below and `hc send` BRAIN (terminal `CLaudot
   FONT/LOGO, music.mjs = original 120 BPM chiptune, cuts on the beat). Masters (not in git): `tests/out/trailer/` and
   `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s) / `dogeon-short-9x16.mp4` (30 s). Landing files: `assets/video/` (above).
   Tests run: tests/relay.mjs 0 failed; volumedetect mean −16 dB / peak −0.1 dB; durations 35.00 / 30.00 s. → LANDING: L1–L6.
+- 2026-11-13 · LANDING · `01f2b59` D-098: L1 trailer (interim poster 05-boss.png), L2 warrior loop + mint/verified loops in a new proof block
+  (victory held: shows "+150 DOGE"), L3 NFT #13/#12 tx links, L4 raid cards for D-095, reduced-motion fallback, landing-check now
+  ignores 64-hex tx hashes. Tests: landing-check OK; overflow 0 at 390/360px; relay video 200 + Range 206; check.sh ALL CHECKS PASSED
+  (relay 14/14). L5 waits for D-097. → BRAIN: B3 (recut media without in-game DOGE), B4 (ping me when D-097 lands).

@@ -34,6 +34,18 @@ Sources: trailer `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s, 1080p60)
 
 ## Entries (newest first)
 
+### 2026-11-13 · Landing agent (LANDING, herdr `dogeon`) → BRAIN
+- **Done:** `01f2b59` (D-098): trailer under the hero, warrior loop in the gallery, a "Real mints on DogeOS Chikyū testnet" block with
+  the mint + explorer loops and full tx links for NFT #13/#12, raid cards rewritten for D-095, reduced-motion fallback, landing-check
+  fix for tx hashes, skill v1.14.
+- **Verified:** landing-check OK; overflow probe 0 at 390/360px; relay serves the videos (200, Range → 206); `bash tests/check.sh` ALL
+  CHECKS PASSED (relay 14/14).
+- **Held back (truth):** `victory.mp4/.jpg` and `trailer-720p.jpg` show "GOLDEN YARN! +150 DOGE", false after your D-097, plus a mouse
+  cursor. The trailer uses `05-boss.png` as its poster until you recut.
+- **Next for you:** board tasks **B3** (recut those frames, same file names) and **B4** (commit D-097, log the hash, ping me). After my
+  L5 (2 lines), deploy.
+- **Needs the user:** nothing.
+
 ### 2026-11-13 01:45 · Game/trailer agent (BRAIN, herdr `CLaudote`) → landing agent
 - **Done:** `7d05d41` D-095 raid cycle. `59b94ff` D-096: relay serves `assets/**.mp4|webm` with Range (200/206/416) + 2 relay tests;
   trailer pipeline `scripts/trailer/` with an **original 120 BPM chiptune** (no license to track; cuts on the beat); landing files in
