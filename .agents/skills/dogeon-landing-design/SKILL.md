@@ -5,7 +5,7 @@ description: Own design skill for DOGEON's public face — the landing page (lan
 
 # DOGEON Landing & Trailer Design Skill
 
-Version: 1.14 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
+Version: 1.15 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
 
 ## RULE L0 — this skill and its master prompt are living documents
 Every change to `landing.html`, `assets/**`, `docs/TRAILER_SCRIPT.md`, or any marketing image or video ends with:
@@ -106,7 +106,7 @@ kill <the PID of YOUR test relay>    # never pkill node/relay: the user's own se
 | ~~B1~~ | **Done D-085.** 23 card icons are game sprites rendered by `scripts/landing-icons.mjs` from `src/game.js` (`assets/icons/`, 4 KB, scaled ×3/×5/×6) | Emoji icons are an AI tell and break the 16-bit identity |
 | ~~B2~~ | **Done D-086.** Numbered section eyebrows removed; quickstart steps keep 01–03 | Numbering that isn't a sequence is decoration |
 | ~~B3~~ | **Done D-086.** Nav is 6 links: Classes, Economy, NFT Mint, Raid, Staking, Get Started | It wrapped to two lines at 1280px |
-| B4 | **Partly done D-098:** warrior loop replaced its screenshot; mint + explorer loops back the on-chain proof. Left: `victory` loop waits for BRAIN's recut (its frames show "GOLDEN YARN! +150 DOGE", false after D-097, and a mouse cursor) | T3: captures must match the current game |
+| ~~B4~~ | **Done D-100.** Warrior and victory loops in the gallery (recut by BRAIN in D-099: no in-game DOGE toast, no cursor); mint + explorer loops back the proof | T3 |
 | ~~B5~~ | **Done D-086.** Over 20 claims corrected against code (see changelog 1.1) | T1 |
 | ~~B6~~ | **Done D-087.** Play CTAs point at `https://play.dogeon.lat/` (HTTPS verified 200 before switching); `/play` stays as a route | T6 |
 | ~~B7~~ | **Done D-098.** Trailer under the hero: self-hosted `assets/video/trailer-720p.mp4` (35 s, 3.2 MB, controls, no autoplay); interim poster `05-boss.png` until BRAIN supplies a clean frame | Hero motion with no heavy scripts |
@@ -139,6 +139,7 @@ The game opens its multiplayer WebSocket to whatever host served it, so both hos
 8. **One machine, sleeps when idle.** The app runs a single Fly machine (`fly scale count 1`; in-memory relay rooms must not split across machines). `fly status` often shows it `stopped`: Fly auto-stops it when no one is connected and wakes it on the next request (~3 s cold, <1 s warm, measured 2026-11-13). That is normal, not an outage. `fly.toml` keeps `auto_stop_machines = "stop"`: the user prefers sleep (cheaper) over instant first loads (D-088 tried always-on and was reverted the same day). If a `fly` command fails with `token expired`, run `fly auth login`, open the printed URL in the Windows browser and click Authorize; never paste the URL into the code prompt.
 
 ## Changelog
+- 1.15 (2026-11-13, D-100): no in-game DOGE after D-097. The economy section is now "ONE CURRENCY: TESTNET DOGE" (monsters drop materials only; testnet DOGE only for mint, pools, staking and class). Victory loop on the Cat Lord card; that card's stale "30-minute extraction timer" caption replaced (missed in D-098). Trailer poster back to BRAIN's recut `trailer-720p.jpg`. Warrior caption says "fights", not "kills" (the recut ends at the kill). **Lesson:** after any game-rule change, grep every caption, not just the sections named in the task.
 - 1.14 (2026-11-13, D-098): trailer, warrior loop, real-mint proof (NFT #13/#12 tx links, blocks 9,429,362 / 9,429,348, verified by BRAIN via `eth_getTransactionReceipt`), raid cards for D-095, reduced-motion keeps loops on their poster. `landing-check` now matches only 40-hex addresses (a 64-hex tx hash used to trip "stray address"). Loops: `autoplay muted loop playsinline preload="none"` + poster. **Lessons:** Playwright's Chromium can't decode H.264, so videos render black in local screenshots (check the poster, and trust a 206 Range curl for delivery); iOS Safari needs a `poster` because it won't paint a frame with `preload=metadata`; check every frame of delivered media against the truth rules (one poster showed in-game DOGE that D-097 removes).
 - 1.13 (2026-11-13, D-094): coin art from the game export (favicon, header/footer coin sprite, Sanctuary, Build section). Removed the landing's duplicated `MOSAIC_PX`/`MOSAIC_PAL` (about 9 KB) and its pulsing `ctx.arc` halo + sparkles. Rule T9 + landing-check guard. B13 added. **Lesson:** a marketing page can quietly duplicate protected game art and re-add banned FX; guard the page with the same rules as the game.
 - 1.12 (2026-11-13, D-093): party system on the landing (P to pick ALPHA/BRAVO/GOLD or SOLO; green tag = your party, friendly fire off, relay referees PvP; red tag = everyone else). The user's "party" screenshot measured as a **red** tag (186 px of `#ff8080`, 0 green), i.e. not a party, so it is captioned as a rival. Healer copy fixed: Mend heals every nearby player, not only the party. **Lesson:** verify what a screenshot shows (pixel-measure tag colors against the code's palette) before captioning it, even when the user labels it.

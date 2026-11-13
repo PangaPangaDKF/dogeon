@@ -35,6 +35,13 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-100 · 2026-11-13 · Landing: no in-game DOGE copy, victory loop, recut trailer poster (Claude Code, LANDING lane)
+- What (board L5, L7): `#economy` is now "ONE CURRENCY: TESTNET DOGE": no in-game DOGE, monsters drop materials only, testnet DOGE only for mint, pools, staking and the class oath (follows D-097 `ab8e136`). The Cat Lord gallery card plays BRAIN's recut `assets/video/victory.mp4` (D-099 `d07dfa6`, no toast or cursor), captioned "the Cat Lord falls: VICTORY! He returns 60 seconds later and the heist starts over"; that card's old "30-minute extraction timer" caption (false since D-095, missed in D-098) is gone. Trailer poster back to the recut `trailer-720p.jpg`. Warrior card: "WARRIOR IN THE FIELD", fights a mini-boss (the recut ends at the kill). A grep for coin drops, vault, +150, carried/lost DOGE and two currencies finds no other in-game DOGE claim (the lore "vault" and the on-chain staking vault are true). Skill → v1.15 (B4 struck).
+- Why: user rule "no in-game DOGE" (D-097) and BRAIN's board tasks L5/L7; truth rule T1.
+- Tool: Claude Code (Opus 5.5); grep; poster contact sheet; landing-check; overflow probe; gallery render; `bash tests/check.sh`.
+- Alternatives rejected: rewording the hero headline "SURVIVE THE EXTRACTION RAID" (flavor, not a mechanic claim; scope freeze).
+- Verify: landing-check "Landing matches the game"; overflow probe 0 at 390/360px; gallery render reviewed; check.sh ALL CHECKS PASSED (relay 14/14).
+
 ### D-099 · 2026-11-13 · Media recut: no in-game DOGE on screen, mouse cursor erased (Claude Code, BRAIN lane)
 - What: `scripts/trailer/build.sh`: the warrior shot now ends at the mini-boss kill (0.0–3.0 s; the old cut showed the dropped coins and "+1 DOGE" floaters); the victory shot jumps from the fight (4.3–7.3 s) to the clean VICTORY banner (8.1 s, held 1 s), skipping the "+1 DOGE" floaters, and is cropped below the top toast band that read "GOLDEN YARN! +150 DOGE"; `delogo` erases the parked mouse cursor in the warrior and boss captures. Rebuilt the 16:9 trailer, the 9:16 short, `assets/video/trailer-720p.mp4` + poster (now the VICTORY frame without the toast), `warrior.mp4/.jpg` and `victory.mp4/.jpg`. Durations stay 35 s / 30 s on the beat grid.
 - Why: the LANDING agent's review (task B3) caught the "+150 DOGE" toast, which became false with D-097; while fixing it, BRAIN found the "+1 DOGE" floaters and ground coins too. The user asked for the cursor to go.
