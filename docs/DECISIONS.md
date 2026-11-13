@@ -35,6 +35,33 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-085 · 2026-11-12 · Landing: game-rendered pixel icons, wallet-RPC security fix, truth gate, domain runbook (Claude Code)
+- What:
+  - **B1:** `scripts/landing-icons.mjs` renders 23 icons from `src/game.js`'s own sprite code (class trainers, Elder, Sphinx, Cat Lord, items,
+    tiles) into `assets/icons/*.png` (4 KB). All 21 emoji card icons + the lazy-debuff hourglass + hero-badge stars replaced (integer ×3/×5/×6,
+    `image-rendering: pixelated`, real alt text).
+  - **Security:** the "Add DogeOS to MetaMask" button (`rpcUrls`, `blockExplorerUrls`), the network table, faucet and explorer links pointed at
+    `chikyu-rpc.dogeos.xyz` / `chikyu.dogeos.xyz` / `faucet.dogeos.xyz` — all one IP (103.224.212.141), a parked-looking domain the project
+    does not control. Now `CHAIN` values: `rpc.testnet.dogeos.com` (answers `eth_chainId` = `0x5fdaf3`), `dogeos-testnet.l2scan.co`,
+    `faucet.testnet.dogeos.com`. **Live on dogeon.lat until the next deploy.**
+  - **Truth fixes D-086 missed** (from a read-only audit subagent): "fully audited, immutable" (only an internal review; DogeItems is Ownable),
+    sanctuary particle aura (safety is fence tiles + damage guard), rest restores HP+MP (HP caps at 60%), camp ponds (all outside), all
+    materials drop on death (max 3 of each), raid timer starts at the gate (per-player, from game start), "Sphinx Keeper" (THE GREAT SPHINX),
+    STAKE 1+ (any amount), sprint (none), `?mp` needed (auto on the hosted game), "Camp Refuge" (not a game name).
+  - `scripts/landing-check.mjs` (new): landing truth/design gate — chain params = `CHAIN`, addresses = `CONTRACTS` + RedStone, assets exist,
+    no emoji, no numbered eyebrows, nav ≤ 7, play CTAs → `/play` or `https://play.dogeon.lat`. Not wired into `tests/check.sh` (shared file;
+    propose before changing).
+  - `dogeon-landing-design` skill v1.2 (+ mirror): rule T7, T5 explorer typo, landing-check in checklist, anchor-screenshot trap, **§10 Domains
+    and deploy** (dogeon.lat → landing, play.dogeon.lat → game: Spaceship A/AAAA records, `fly certs check`, `fly deploy`, verify, then B6).
+    `LANDING_MASTER_PROMPT.md` v1.1.
+- Why: user asked to finish the landing, help the other agent, and learn the main-domain + play-subdomain setup. Two Claude Code sessions
+  worked the page at once; this session waited for the D-086 commit before touching `landing.html` and committed only its own paths.
+- Tool: Claude Code (Opus 5.5) + a read-only audit subagent. Verify: `node scripts/landing-check.mjs` → all OK (was 3 FAIL: RPC, unknown hosts,
+  28 emoji); real-Chrome 1280px captures of the classes and quickstart sections show the sprites crisp; `/play` 200; `bash tests/check.sh` →
+  ALL CHECKS PASSED. `fly certs list`: dogeon.lat Issued, play.dogeon.lat Not verified (DNS missing) — user action.
+- Alternatives rejected: cropping icons from screenshots (blurrier, drifts when art changes); editing `landing.html` while D-086 was uncommitted
+  (would overwrite or be overwritten); wiring landing-check into `tests/check.sh` now (shared file → P-NNN first).
+
 ### D-086 · 2026-11-12 · Landing truth audit, 6-link nav, no decorative section numbers (Claude Code)
 - What: `landing.html` copy checked line by line against `src/game.js`, `contracts/` and D-entries (landing skill B5). Corrected: meme roll names and values (real `BUFFS`: BLAZE 420 +420 HP, NICE 69 +69 ATK, LUCKY 777 +77 HP, MUCH 4.2 +0.42 DEF, SPEED 6.9 +6.9 ATK; curses −42 HP / −6.9 ATK / −0.42 DEF), rolls derive from the token ID (not a block hash), RedStone feed address `0x2194…` → `0x434F…C968`, archer move +25% / attack rate +17%, fee wording (mint 80/20; trades 3% = 2% LP + 1% protocol split 80/20, so stakers get 0.8% of trades), tree regrow 14 s, F is press-and-stand (not hold), unverifiable "5 ponds" removed, DogeMaster unlocks at the Elder after the boss, and the false "no arcade coins / only wallet DOGE" claims (in-game DOGE coins still exist; currency purity is deferred) rewritten as two separate currencies. Nav cut from 11 links to 6 (B3); 12 decorative "NN //" section eyebrows removed (B2). Skill `dogeon-landing-design` → v1.1 (both mirrors).
 - Why: truth rule T1 — a landing that over-promises breaks trust the moment a player opens the game. User: "move on with the plan".

@@ -328,9 +328,12 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
     .card-icon {
-      font-size: 32px;
+      display: block;
       margin-bottom: 16px;
-      display: inline-block;
+    }
+    .card-icon, .pixel-icon {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
     }
     .card h3 {
       font-size: 20px;
@@ -627,7 +630,7 @@
     <!-- 1. Hero Section -->
     <section class="hero">
       <div class="container">
-        <div class="hero-badge pixel">★ DOGEOS CHIKYŪ TESTNET — HARDCORE MULTIPLAYER ARPG ★</div>
+        <div class="hero-badge pixel">DOGEOS CHIKYŪ TESTNET · HARDCORE MULTIPLAYER ARPG</div>
         <h1 class="pixel">
           RECLAIM THE <span class="gold">STOLEN TREASURY</span>.<br>
           SURVIVE THE <span class="cyan">EXTRACTION RAID</span>.
@@ -677,7 +680,7 @@
             <br>— Elder Shibe, Keeper of the Heist
           </div>
           <p>
-            You are an insurgent Shibe operating from the clandestine Camp Refuge. You must chop timber, mine raw iron, forge weaponry, 
+            You are an insurgent Shibe operating from a hidden camp. You must gather wood, mine raw iron, forge weaponry, 
             swarm the dungeon gates in co-op strike teams, slay the Cat Lord, and extract with genuine on-chain treasures before the chamber collapses.
           </p>
         </div>
@@ -698,7 +701,7 @@
           <!-- Warrior -->
           <div class="card class-card warrior">
             <span class="card-badge tag-danger pixel">FRONTLINE TANK</span>
-            <div class="card-icon">⚔️</div>
+            <img class="card-icon" src="assets/icons/warrior.png" width="48" height="60" alt="Warrior trainer sprite">
             <h3 class="pixel" style="color: #ff6b81;">WARRIOR</h3>
             <div class="silk" style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">FACTION: DEMOLITION DOGS</div>
             <p>
@@ -716,7 +719,7 @@
           <!-- Archer -->
           <div class="card class-card archer">
             <span class="card-badge tag-safe pixel">RANGED AGILITY</span>
-            <div class="card-icon">🏹</div>
+            <img class="card-icon" src="assets/icons/archer.png" width="48" height="60" alt="Archer trainer sprite">
             <h3 class="pixel" style="color: #7bed9f;">ARCHER</h3>
             <div class="silk" style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">FACTION: KERNEL CREW</div>
             <p>
@@ -734,7 +737,7 @@
           <!-- Healer -->
           <div class="card class-card healer">
             <span class="card-badge pixel" style="background: rgba(0,240,255,0.15); color: var(--cyan); border: 1px solid var(--cyan);">CO-OP SUPPORT</span>
-            <div class="card-icon">✨</div>
+            <img class="card-icon" src="assets/icons/healer.png" width="48" height="60" alt="Healer trainer sprite">
             <h3 class="pixel" style="color: #70a1ff;">HEALER</h3>
             <div class="silk" style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">FACTION: BARKITECTS</div>
             <p>
@@ -745,7 +748,7 @@
               <div class="stat-fill-wrap"><div class="stat-fill" style="width: 95%;"></div></div>
               <div class="stat-row"><span>MANA SIPHON</span><span>+2 MP PER HIT</span></div>
               <div class="stat-fill-wrap"><div class="stat-fill" style="width: 70%;"></div></div>
-              <div class="stat-row"><span>CO-OP HEAL</span><span style="color:#fff;">[K] MEND PULSE (+20 HP AOE)</span></div>
+              <div class="stat-row"><span>CO-OP HEAL</span><span style="color:#fff;">[K] MEND: +20 HP TO YOU + NEARBY ALLIES</span></div>
             </div>
           </div>
         </div>
@@ -753,12 +756,12 @@
         <!-- The Lazy Debuff System -->
         <div class="card" style="margin-top: 24px; border-left: 4px solid var(--purple);">
           <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-            <div style="font-size: 28px;">⏳</div>
+            <img class="pixel-icon" src="assets/icons/hero.png" width="48" height="60" alt="Hero doge sprite">
             <div style="flex: 1;">
               <h4 class="pixel" style="color: var(--purple); font-size: 14px; margin-bottom: 6px;">HARDCORE MECHANIC: THE TIMED LAZY DEBUFF</h4>
               <p style="font-size: 13px;">
                 DOGEON has no place for idle bots or couch potatoes. If your character stands idle without movement or combat for more than <strong>180 seconds</strong>, 
-                you suffer the <strong>60-Second Sloth Debuff</strong> (-15% movement speed). Shake off the laziness by moving, sprinting, or cleaving monsters!
+                you suffer the <strong>60-Second Sloth Debuff</strong> (-15% movement speed). Shake off the laziness by moving or hitting monsters.
               </p>
             </div>
           </div>
@@ -777,7 +780,7 @@
 
         <div class="grid-3">
           <div class="card">
-            <div class="card-icon">🪙</div>
+            <img class="card-icon" src="assets/icons/coin.png" width="42" height="42" alt="DOGE coin icon">
             <h3 class="pixel">REAL TESTNET DOGE</h3>
             <p>
               Minting, pool trades, staking and your class oath all cost real testnet DOGE. Your wallet balance is read straight from the DogeOS Chikyū chain, 
@@ -785,7 +788,7 @@
             </p>
           </div>
           <div class="card">
-            <div class="card-icon">⚖️</div>
+            <img class="card-icon" src="assets/icons/sphinx.png" width="48" height="60" alt="Great Sphinx sprite">
             <h3 class="pixel">80 / 20 FEE SPLIT</h3>
             <p>
               Each 1 DOGE mint fee is split by the contract: <strong>80% to the Staking Pool</strong>, 20% to the treasury. 
@@ -793,7 +796,7 @@
             </p>
           </div>
           <div class="card">
-            <div class="card-icon">🔮</div>
+            <img class="card-icon" src="assets/icons/orb.png" width="42" height="42" alt="Oracle orb icon">
             <h3 class="pixel">REDSTONE ORACLE</h3>
             <p>
               Live DOGE/USD price from the RedStone feed (`0x434F…C968`). When your wallet is connected it anchors the in-game market's mood; 
@@ -816,7 +819,7 @@
 
         <div class="grid-2">
           <div class="card">
-            <div class="card-icon">🔥</div>
+            <img class="card-icon" src="assets/icons/bone.png" width="45" height="45" alt="Bone charm icon">
             <h3 class="pixel">MEME STAT GENERATION</h3>
             <p style="margin-bottom: 14px;">
               Every gear NFT's bonus is derived from its token ID, so anyone can check it. Rarity (common ×1 up to legendary ×6) scales the roll. Meme rolls include:
@@ -834,7 +837,7 @@
           </div>
 
           <div class="card">
-            <div class="card-icon">♻️</div>
+            <img class="card-icon" src="assets/icons/yarn.png" width="45" height="45" alt="Golden Yarn icon">
             <h3 class="pixel">BURN-TO-REROLL ENGINE</h3>
             <p>
               Rolled a curse like HANGOVER 420? Feed it to the DogeMaster's furnace. 
@@ -870,13 +873,13 @@
             <div class="pixel" style="color: var(--gold); font-size: 24px; margin-bottom: 10px;">02</div>
             <h3 class="pixel">CLAIM TESTNET DOGE</h3>
             <p>Visit the official DogeOS faucet, enter your EVM address, and receive free Testnet DOGE to fund your crafting and minting.</p>
-            <a href="https://faucet.dogeos.xyz" target="_blank" class="btn btn-gold pixel" style="margin-top: 14px; width: 100%;">CLAIM FAUCET</a>
+            <a href="https://faucet.testnet.dogeos.com" target="_blank" class="btn btn-gold pixel" style="margin-top: 14px; width: 100%;">CLAIM FAUCET</a>
           </div>
 
           <div class="card">
             <div class="pixel" style="color: var(--purple); font-size: 24px; margin-bottom: 10px;">03</div>
             <h3 class="pixel">ENTER THE RAID</h3>
-            <p>Boot the game in your browser with multiplayer enabled (`?mp`), connect your wallet at the Sphinx Keeper, and begin the heist.</p>
+            <p>Boot the game in your browser at <a href="/play" style="color: var(--cyan);">/play</a> (multiplayer connects on its own), connect your wallet at the Great Sphinx, and begin the heist.</p>
             <a href="/play" target="_blank" class="btn btn-purple silk" style="margin-top: 14px; width: 100%;">LAUNCH GAME</a>
           </div>
         </div>
@@ -894,7 +897,7 @@
               <tr>
                 <td><strong>Network Name</strong></td>
                 <td>DogeOS Chikyū Testnet</td>
-                <td>Official EVM Rollup on Dogecoin</td>
+                <td>DogeOS testnet (EVM)</td>
               </tr>
               <tr>
                 <td><strong>Chain ID</strong></td>
@@ -903,8 +906,8 @@
               </tr>
               <tr>
                 <td><strong>RPC URL</strong></td>
-                <td><code>https://chikyu-rpc.dogeos.xyz</code></td>
-                <td>High-speed JSON-RPC endpoint</td>
+                <td><code>https://rpc.testnet.dogeos.com</code></td>
+                <td>Public JSON-RPC endpoint (same one the game uses)</td>
               </tr>
               <tr>
                 <td><strong>Currency Symbol</strong></td>
@@ -913,7 +916,7 @@
               </tr>
               <tr>
                 <td><strong>Block Explorer</strong></td>
-                <td><a href="https://chikyu.dogeos.xyz" target="_blank" style="color: var(--cyan);">https://chikyu.dogeos.xyz</a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co" target="_blank" style="color: var(--cyan);">https://dogeos-testnet.l2scan.co</a></td>
                 <td>Inspect transactions and NFTs</td>
               </tr>
             </tbody>
@@ -933,22 +936,22 @@
 
         <div class="grid-4">
           <div class="card">
-            <div class="card-icon">⛏️</div>
+            <img class="card-icon" src="assets/icons/steel.png" width="42" height="42" alt="Iron icon">
             <h3 class="pixel">STEEL / IRON</h3>
-            <p>Quarried from dense rock formations and dropped by armored Cat Knights. Essential for crafting weapons and armor.</p>
+            <p>Every rock you gather also gives 1 iron, and monsters sometimes drop it. Essential for crafting weapons and armor.</p>
           </div>
           <div class="card">
-            <div class="card-icon">🪓</div>
+            <img class="card-icon" src="assets/icons/tree.png" width="48" height="48" alt="Tree tile">
             <h3 class="pixel">WOOD</h3>
             <p>Face a tree, press F and stand still for 3.5 seconds to gather. Each tree needs 14 seconds to regrow, and taking a hit cancels the gather.</p>
           </div>
           <div class="card">
-            <div class="card-icon">🪨</div>
+            <img class="card-icon" src="assets/icons/rock.png" width="48" height="48" alt="Rock tile">
             <h3 class="pixel">STONE</h3>
-            <p>Excavated from boulders scattered across the plains. Used to reinforce defensive gear and camp fortifications.</p>
+            <p>Excavated from boulders scattered across the plains. Used in hammer, armor and charm recipes at the forge.</p>
           </div>
           <div class="card">
-            <div class="card-icon">🎣</div>
+            <img class="card-icon" src="assets/icons/fish.png" width="45" height="35" alt="Raw fish icon">
             <h3 class="pixel">RAW FISH</h3>
             <p>Face the water, press F and stand still to fish. Restores HP and supplies sustenance for prolonged dungeon expeditions.</p>
           </div>
@@ -964,12 +967,12 @@
         <div class="story-box" style="border-color: var(--red);">
           <h3 class="pixel" style="color: var(--red); font-size: 20px; margin-bottom: 12px;">DEATH MEANS LOSS: PROTECT YOUR LOOT</h3>
           <p>
-            The Wilderness and Dungeon Ruins are non-consensual PvP combat zones. 
+            In multiplayer, the wilds and the ruins are PvP zones: outside camp, players who are not in your party can attack you. 
             Rival players can ambuscade your squad while you battle bosses or mine iron.
           </p>
           <ul style="margin: 16px 0 16px 20px; color: var(--text);">
-            <li><strong>Loot Drops on Death:</strong> If you are slain by another player or monster, <em>all carried raw materials</em> (Steel, Wood, Stone, Whiskers) drop onto the ground as lootable pickups for anyone to plunder!</li>
-            <li><strong>Safe Camp Haven:</strong> The Camp Refuge behind the wooden spiked perimeter fence is 100% safe. Enemies and enemy projectiles cannot cross the barrier. Press <strong>[R]</strong> to rest and recover HP/MP.</li>
+            <li><strong>Loot Drops on Death:</strong> If you are slain by another player or monster, <em>up to 3 of each carried material</em> (Steel, Wood, Stone, Whiskers) drop as a pile anyone can loot. The rest is lost.</li>
+            <li><strong>Safe Camp Haven:</strong> The the camp behind the wooden spiked perimeter fence is 100% safe. Enemies and enemy projectiles cannot cross the barrier. Hold <strong>[R]</strong> to rest: HP back to 60%, MP to full.</li>
             <li><strong>NFT Invulnerability:</strong> On-chain ERC-721 gear NFTs stay bound to your crypto wallet address and will NEVER drop on death.</li>
           </ul>
         </div>
@@ -987,17 +990,17 @@
 
         <div class="grid-2">
           <div class="card" style="border-left: 4px solid var(--green);">
-            <div class="card-icon">⏱️</div>
+            <img class="card-icon" src="assets/icons/boss.png" width="48" height="60" alt="Cat Lord sprite">
             <h3 class="pixel">30-MINUTE EXTRACTION WINDOW</h3>
             <p>
-              When the dungeon gates grind open, an active <strong>30-minute raid timer</strong> starts ticking. 
+              From the moment you start playing, a <strong>30-minute raid timer</strong> counts down. 
               Players must assemble, coordinate professions, battle through Cat Minions, breach the inner sanctum, 
               and slay the Cat Lord before time expires.
             </p>
           </div>
 
           <div class="card" style="border-left: 4px solid var(--red);">
-            <div class="card-icon">🔒</div>
+            <img class="card-icon" src="assets/icons/gate.png" width="48" height="48" alt="Ruins gate tile">
             <h3 class="pixel">5-HOUR GATE SEAL LOCKOUT</h3>
             <p>
               If the 30-minute timer runs out before the Cat Lord falls, the raid <strong>FAILS</strong>! 
@@ -1020,17 +1023,17 @@
 
         <div class="grid-3">
           <div class="card">
-            <div class="card-icon">🏦</div>
-            <h3 class="pixel">STAKE 1+ DOGE</h3>
-            <p>Stake any amount of Testnet DOGE directly via the Sphinx Keeper NPC dialogue window or the Web3 interface.</p>
+            <img class="card-icon" src="assets/icons/coin.png" width="42" height="42" alt="DOGE coin icon">
+            <h3 class="pixel">STAKE ANY AMOUNT</h3>
+            <p>Stake any amount of Testnet DOGE directly via the Great Sphinx in camp or the Web3 interface.</p>
           </div>
           <div class="card">
-            <div class="card-icon">📈</div>
+            <img class="card-icon" src="assets/icons/sphinx.png" width="48" height="60" alt="Great Sphinx sprite">
             <h3 class="pixel">80% PROTOCOL FEES</h3>
             <p>Stakers receive 80% of every 1 DOGE mint fee, plus 0.8% of every pool trade (80% of the 1% protocol fee).</p>
           </div>
           <div class="card">
-            <div class="card-icon">🎁</div>
+            <img class="card-icon" src="assets/icons/yarn.png" width="45" height="45" alt="Golden Yarn icon">
             <h3 class="pixel">INSTANT CLAIM & UNSTAKE</h3>
             <p>No lockup lock-in traps. Claim accrued DOGE rewards or withdraw your staked principal on-chain at any time with a single transaction.</p>
           </div>
@@ -1044,47 +1047,47 @@
         <span class="section-tag pixel">CITIZENS OF DOGEON</span>
         <h2 class="section-title pixel">THE NPC ROSTER</h2>
         <p class="section-desc">
-          Interact with key characters in Camp Refuge and the deep ruins by pressing <strong>[E]</strong> when in proximity.
+          Interact with key characters in camp and in the ruins by pressing <strong>[E]</strong> when in proximity.
         </p>
 
         <div class="grid-3">
           <div class="card">
-            <div class="card-icon">🧙‍♂️</div>
+            <img class="card-icon" src="assets/icons/elder.png" width="48" height="60" alt="Elder sprite">
             <h3 class="pixel">ELDER SHIBE</h3>
             <div class="silk" style="color: var(--gold); font-size: 11px; margin-bottom: 8px;">KEEPER OF THE HEIST</div>
             <p>Guardian of the lore. Guides new recruits, tracks raid status, and presents faction enrollment into the rebellion.</p>
           </div>
 
           <div class="card">
-            <div class="card-icon">🔮</div>
-            <h3 class="pixel">SPHINX KEEPER</h3>
+            <img class="card-icon" src="assets/icons/sphinx.png" width="48" height="60" alt="Great Sphinx sprite">
+            <h3 class="pixel">THE GREAT SPHINX</h3>
             <div class="silk" style="color: var(--cyan); font-size: 11px; margin-bottom: 8px;">DEFI & STAKING HUB</div>
             <p>Portal master connecting off-chain gameplay to on-chain contracts. Handles wallet authentication, staking pools, and RedStone oracle feeds.</p>
           </div>
 
           <div class="card">
-            <div class="card-icon">🐕‍🦺</div>
+            <img class="card-icon" src="assets/icons/yarn.png" width="45" height="45" alt="Golden Yarn icon">
             <h3 class="pixel">DOGEMASTER</h3>
             <div class="silk" style="color: var(--purple); font-size: 11px; margin-bottom: 8px;">MEME FORGE & REROLL</div>
             <p>Unlocks at the Elder after the Cat Lord falls. Burns a gear NFT you don't want and mints a fresh one with a new meme roll.</p>
           </div>
 
           <div class="card">
-            <div class="card-icon">🛡️</div>
+            <img class="card-icon" src="assets/icons/warrior.png" width="48" height="60" alt="Sergeant Ironpaw sprite">
             <h3 class="pixel">SGT. IRONPAW</h3>
             <div class="silk" style="color: #ff6b81; font-size: 11px; margin-bottom: 8px;">DEMOLITION TRAINER</div>
             <p>Grizzled veteran who administers the Warrior oath and trains recruits in the Ground Pound combat skill.</p>
           </div>
 
           <div class="card">
-            <div class="card-icon">🎯</div>
+            <img class="card-icon" src="assets/icons/archer.png" width="48" height="60" alt="Scout Fleetwhisker sprite">
             <h3 class="pixel">SCOUT FLEETWHISKER</h3>
             <div class="silk" style="color: #7bed9f; font-size: 11px; margin-bottom: 8px;">KERNEL CREW TRAINER</div>
             <p>Swift reconnaissance scout who trains initiates in archery, quivercraft, and 3-arrow volley techniques.</p>
           </div>
 
           <div class="card">
-            <div class="card-icon">🌿</div>
+            <img class="card-icon" src="assets/icons/healer.png" width="48" height="60" alt="Mender Brighttail sprite">
             <h3 class="pixel">MENDER BRIGHTTAIL</h3>
             <div class="silk" style="color: #70a1ff; font-size: 11px; margin-bottom: 8px;">BARKITECTS TRAINER</div>
             <p>Sacred medicine doge who unlocks the Healer profession, staff mana siphoning, and party-wide radiant mend pulses.</p>
@@ -1099,7 +1102,7 @@
         <span class="section-tag pixel">ON-CHAIN REGISTRY</span>
         <h2 class="section-title pixel">VERIFIED SMART CONTRACTS</h2>
         <p class="section-desc">
-          Fully audited and deployed on DogeOS Chikyū Testnet. Transparent, immutable, and open-source.
+          Deployed on DogeOS Chikyū Testnet. The Solidity source is open in the repo under contracts/src.
         </p>
 
         <div class="table-wrap">
@@ -1114,27 +1117,27 @@
             <tbody>
               <tr>
                 <td><strong>DogeItems (ERC-721)</strong></td>
-                <td><a href="https://chikyu.dogeos.xyz/address/0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4" target="_blank" style="color: var(--gold); text-decoration: none;"><code class="pixel">0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4</code></a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4" target="_blank" style="color: var(--gold); text-decoration: none;"><code class="pixel">0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4</code></a></td>
                 <td>9 Gear NFT Types, Rarity/Meme Rolls & Burn-to-Reroll</td>
               </tr>
               <tr>
                 <td><strong>DogeDEX (AMM & Listings)</strong></td>
-                <td><a href="https://chikyu.dogeos.xyz/address/0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590" target="_blank" style="color: var(--cyan); text-decoration: none;"><code class="pixel">0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590</code></a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590" target="_blank" style="color: var(--cyan); text-decoration: none;"><code class="pixel">0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590</code></a></td>
                 <td>NFT Liquidity Pools, Fixed Listings & 1% Protocol Fee Split</td>
               </tr>
               <tr>
                 <td><strong>DogeProfession</strong></td>
-                <td><a href="https://chikyu.dogeos.xyz/address/0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055" target="_blank" style="color: var(--green); text-decoration: none;"><code class="pixel">0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055</code></a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055" target="_blank" style="color: var(--green); text-decoration: none;"><code class="pixel">0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055</code></a></td>
                 <td>Permanent 1-Class-Per-Wallet Oath Registry (0.05 DOGE)</td>
               </tr>
               <tr>
                 <td><strong>DogeStaking</strong></td>
-                <td><a href="https://chikyu.dogeos.xyz/address/0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d" target="_blank" style="color: var(--purple); text-decoration: none;"><code class="pixel">0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d</code></a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d" target="_blank" style="color: var(--purple); text-decoration: none;"><code class="pixel">0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d</code></a></td>
                 <td>DOGE Staking Vault & 80% Protocol Fee Harvest Yield</td>
               </tr>
               <tr>
                 <td><strong>RedStone Price Feed</strong></td>
-                <td><a href="https://chikyu.dogeos.xyz/address/0x434F8D17c0301cfEa143dba912972E24B827C968" target="_blank" style="color: #80f8c0; text-decoration: none;"><code class="pixel">0x434F8D17c0301cfEa143dba912972E24B827C968</code></a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0x434F8D17c0301cfEa143dba912972E24B827C968" target="_blank" style="color: #80f8c0; text-decoration: none;"><code class="pixel">0x434F8D17c0301cfEa143dba912972E24B827C968</code></a></td>
                 <td>Live On-Chain DOGE/USD Price Feed Oracle</td>
               </tr>
             </tbody>
@@ -1149,10 +1152,10 @@
         <span class="section-tag pixel">VISUAL SHOWCASE</span>
         <h2 class="section-title pixel">GAMEPLAY SCREENSHOTS & SANCTUARY</h2>
         <p class="section-desc">
-          Visual tour of DOGEON. Discover the sacred Camp Refuge safe haven and explore live gameplay captures across combat, crafting, and raids.
+          Visual tour of DOGEON. Discover the safe camp and explore live gameplay captures across combat, crafting, and raids.
         </p>
 
-        <!-- Camp Refuge & Sacred Doge Coin Sanctuary -->
+        <!-- the camp & Sacred Doge Coin Sanctuary -->
         <div class="sanctuary-showcase">
           <div class="sanctuary-canvas-wrap">
             <canvas id="sanctuary-canvas" width="96" height="96"></canvas>
@@ -1167,12 +1170,12 @@
             <span class="card-badge tag-safe pixel" style="position: static; display: inline-block; margin-bottom: 10px;">CAMP REFUGE SAFE ZONE</span>
             <h3 class="pixel" style="color: var(--gold); font-size: 20px; margin-bottom: 12px;">THE SACRED DOGE SANCTUARY</h3>
             <p style="margin-bottom: 14px;">
-              Carved directly into the flagstones of Camp Refuge lies the ancient <strong>DOGE Coin Floor Mosaic</strong>. 
+              Carved directly into the flagstones of the camp lies the ancient <strong>DOGE Coin Floor Mosaic</strong>. 
               Protected by a consecrated perimeter fence, this is the only true safe haven on the planet.
             </p>
             <ul style="color: var(--text-muted); font-size: 14px; margin-left: 20px; display: flex; flex-direction: column; gap: 6px;">
-              <li><strong>Sanctuary Aura:</strong> Radiates a holy golden particle field that keeps demons, boss minions, and flying bone projectiles at bay.</li>
-              <li><strong>Rest & Meditate [R]:</strong> Rest peacefully on the coin mosaic to regenerate both HP and MP over time.</li>
+              <li><strong>Safe Fence:</strong> Enemies and their projectiles cannot cross the camp fence. Nothing can hurt you inside.</li>
+              <li><strong>Rest & Meditate [R]:</strong> Hold R in camp to rest: HP back to 60%, MP to full. Eat fish to heal above 60%.</li>
               <li><strong>Immunity to PvP Plunder:</strong> Rival players cannot engage in combat inside the fence — your materials are 100% secure while in camp.</li>
             </ul>
           </div>
@@ -1258,7 +1261,7 @@
             <div class="ss-info">
               <div>
                 <h4 class="pixel">RESOURCE GATHERING & FISHING</h4>
-                <p>Mining guaranteed iron from stone, chopping lumber, and fishing at camp ponds for rations.</p>
+                <p>Mining guaranteed iron from stone, chopping lumber, and fishing at the ponds outside camp for rations.</p>
               </div>
               <div class="silk" style="font-size: 11px; color: var(--cyan); margin-top: 12px;">SYSTEM: HARDCORE GATHERING</div>
             </div>
@@ -1278,10 +1281,10 @@
             </div>
           </div>
 
-          <!-- Screenshot 8: Camp Refuge & Doge Sanctuary -->
+          <!-- Screenshot 8: the camp & Doge Sanctuary -->
           <div class="ss-card">
             <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/02-camp-coin.png')">
-              <img src="assets/screenshots/02-camp-coin.png" alt="Camp Refuge & Doge Sanctuary" loading="lazy">
+              <img src="assets/screenshots/02-camp-coin.png" alt="the camp & Doge Sanctuary" loading="lazy">
             </div>
             <div class="ss-info">
               <div>
@@ -1327,7 +1330,7 @@
             <li><a href="#mint">NFT Meme Forge</a></li>
             <li><a href="#staking">Staking Pool</a></li>
             <li><a href="#contracts">Smart Contracts</a></li>
-            <li><a href="https://chikyu.dogeos.xyz" target="_blank">Chikyū Explorer</a></li>
+            <li><a href="https://dogeos-testnet.l2scan.co" target="_blank">Chikyū Explorer</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -1335,7 +1338,7 @@
           <ul class="footer-links">
             <li><a href="https://dogeos.com" target="_blank">DogeOS Portal</a></li>
             <li><a href="https://heist.dogeos.com" target="_blank">The Grand Heist</a></li>
-            <li><a href="https://faucet.dogeos.xyz" target="_blank">Testnet Faucet</a></li>
+            <li><a href="https://faucet.testnet.dogeos.com" target="_blank">Testnet Faucet</a></li>
             <li><a href="https://docs.dogeos.com" target="_blank">Documentation</a></li>
           </ul>
         </div>
@@ -1393,8 +1396,8 @@
               symbol: 'DOGE',
               decimals: 18
             },
-            rpcUrls: ['https://chikyu-rpc.dogeos.xyz'],
-            blockExplorerUrls: ['https://chikyu.dogeos.xyz']
+            rpcUrls: ['https://rpc.testnet.dogeos.com'],
+            blockExplorerUrls: ['https://dogeos-testnet.l2scan.co']
           }]
         });
       } catch (err) {

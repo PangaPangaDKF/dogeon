@@ -16,7 +16,14 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ---
 
-## 00. RESUME HERE (latest, 2026-11-12, after D-084)
+## 00. RESUME HERE (latest, 2026-11-12, after D-085/D-086)
+
+> **D-085 (landing):** game-rendered icons (B1 done), **wallet RPC security fix** (landing used `*.dogeos.xyz`, now `CHAIN` values) and
+> `node scripts/landing-check.mjs`. **Deploy needed** so dogeon.lat stops sending wallets to the wrong RPC. **play.dogeon.lat:** Fly cert is
+> requested but Not verified — add DNS `play` A `66.241.125.199` + AAAA `2a09:8280:1::1f7:c716:0` at Spaceship, `fly certs check
+> play.dogeon.lat -a dogeon-game`, then `fly deploy -a dogeon-game`, then B6 (CTAs → play.dogeon.lat). Runbook: landing skill §10.
+> Remaining landing backlog: B4 (retake screenshots post-D-075 + real mint shot), B6, B7 (trailer embed).
+
 
 > **D-084 (TryNoah clone kit):** fresh clone → `bash scripts/setup-clone.sh [--install-foundry]` (fetches the gitignored, pinned
 > Solidity libs and fails unless the forge stage really ran). TryNoah: import the repo + paste `prompts/TRYNOAH_CLONE.md` (lean,

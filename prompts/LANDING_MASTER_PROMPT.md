@@ -1,6 +1,6 @@
 # DOGEON — Landing & Trailer Master Prompt
 
-Version: 1.0 (2026-11-12) · Pairs with the `dogeon-landing-design` skill · Update both in the same commit (skill RULE L0).
+Version: 1.1 (2026-11-12) · Pairs with the `dogeon-landing-design` skill · Update both in the same commit (skill RULE L0).
 
 Paste the block below to open any session that touches the landing page, the trailer, key art or social assets
 (Claude Code, Antigravity, or TryNoah). Replace `<TASK>` with one concrete goal.
@@ -35,6 +35,8 @@ Read only what the task needs, in this order:
   decorative numbering.
 - Small, surgical diffs. One logical change per commit. Don't touch `src/game.js`, `contracts/**` or the multiplayer
   logic in `server/relay.mjs` from this lane without proposing it first (`AGENTS.md` dual-brain rule).
+- Wallet/chain parameters (RPC, explorer, faucet, chain ID) are copied from `CHAIN` in `src/game.js`, never typed from memory (skill T7).
+- Another agent may be editing the same page: `git status` right before each write; never edit a file someone else has uncommitted; commit only your own paths.
 - Prove bugs before reporting them (measure, screenshot or curl), and prove fixes the same way.
 </rules>
 
@@ -44,7 +46,7 @@ Read only what the task needs, in this order:
 3. Plan: list the exact edits and how you will verify each one. Wait for approval if the change spans more than one
    section or alters the page structure.
 4. Edit: make the smallest change that meets the goal.
-5. Verify: route curls, a 1280px screenshot, the 390/360px iframe overflow probe (skill §7), and `bash tests/check.sh`.
+5. Verify: `node scripts/landing-check.mjs`, route curls, a 1280px screenshot, the 390/360px iframe overflow probe (skill §7), and `bash tests/check.sh`.
 6. Close out (RULE L0): bump the skill version and changelog, this prompt if the workflow changed, a `docs/DECISIONS.md` entry,
    `CONTEXT.md`, the `.agents/` mirror, then commit.
 </process>
@@ -64,4 +66,5 @@ DNS, wallet), and the next backlog item. Keep it short.
 - **The self-update closeout** turns every session's mistakes into rules, so the prompt improves with use.
 
 ## Changelog
+- 1.1 (2026-11-12, D-085): landing-check in the verify step; chain params from `CHAIN` (T7); two-agent collision rule.
 - 1.0 (2026-11-12, D-083): Created alongside the `dogeon-landing-design` skill v1.0.

@@ -5,7 +5,7 @@ description: Own design skill for DOGEON's public face — the landing page (lan
 
 # DOGEON Landing & Trailer Design Skill
 
-Version: 1.1 (2026-11-12) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
+Version: 1.2 (2026-11-12) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
 
 ## RULE L0 — this skill and its master prompt are living documents
 Every change to `landing.html`, `assets/**`, `docs/TRAILER_SCRIPT.md`, or any marketing image or video ends with:
@@ -51,8 +51,9 @@ Type: **Press Start 2P** for display (headlines and CTAs only, short strings; it
 - **T2. No fake live data.** Never show invented server status, wallet balances, levels or player counts as if they were live. Label static figures as examples or link to the real thing.
 - **T3. Gameplay images are real captures only.** Use `assets/screenshots/` at integer scale with `image-rendering: pixelated`. AI-generated images (nano banana and similar) are *key art* and must never be presented as gameplay.
 - **T4. The coin is sacred (R1).** In any image, AI or edited, the camp Dogecoin must come from a real capture, never redrawn or "enhanced" by a model.
-- **T5. Addresses match the chain.** Contract tables must equal `CONTRACTS['0x5fdaf3']` in `src/game.js` and link to `https://dogeon-testnet.l2scan.co/address/<addr>`.
-- **T6. Links must work today.** Play CTAs use `/play` on the same host (multiplayer auto-connects to the serving host). Only switch to `play.dogeon.lat` after its DNS and certificate are live.
+- **T5. Addresses match the chain.** Contract tables must equal `CONTRACTS['0x5fdaf3']` in `src/game.js` and link to `https://dogeos-testnet.l2scan.co/address/<addr>` (note: dogeo**s**, the explorer in `CHAIN.explorer`).
+- **T6. Links must work today.** Play CTAs use `/play` on the same host (multiplayer auto-connects to the serving host). Only switch to `play.dogeon.lat` after its DNS and certificate are live (see §10).
+- **T7. Chain parameters come from the game, never from memory.** The "Add DogeOS" button (`rpcUrls`, `blockExplorerUrls`, `chainId`), the network table and every faucet/explorer link must equal `CHAIN` in `src/game.js` (`rpc.testnet.dogeos.com`, `dogeos-testnet.l2scan.co`, `faucet.testnet.dogeos.com`, `0x5fdaf3`). A wrong RPC is a security bug, not a typo: the page sent players' wallets to `chikyu-rpc.dogeos.xyz`, a host on a parked-looking domain the project does not control (fixed D-085). `node scripts/landing-check.mjs` enforces this.
 
 ## 5. LLM design practices (how to keep the page from looking machine-made)
 1. **Content first, from the subject's world.** Real screenshots, real controls, real fees and chain ID. The hero is the real camp-and-coin capture; that one image carries the brand.
@@ -74,6 +75,7 @@ Type: **Press Start 2P** for display (headlines and CTAs only, short strings; it
 - [ ] A11y: alt text, focus, reduced motion.
 - [ ] Meta: title, description, og and twitter tags valid, with an absolute image URL that resolves.
 - [ ] No new emoji icons, fake stats or AI art posing as gameplay.
+- [ ] `node scripts/landing-check.mjs` green (chain URLs = `CHAIN`, addresses = `CONTRACTS`, assets exist, no emoji, nav ≤ 7, CTAs → `/play`).
 - [ ] `bash tests/check.sh` still green (the relay serves the landing).
 
 ## 7. Verification commands
@@ -84,7 +86,11 @@ curl -s localhost:8799/ | grep -o '<title>[^<]*'          # landing
 curl -s -o /dev/null -w '%{http_code}\n' localhost:8799/play # 200 = game
 CH=~/.cache/ms-playwright/chromium-1208/chrome-linux64/chrome
 $CH --headless=new --no-sandbox --hide-scrollbars --window-size=1280,1100 --screenshot=desk.png http://localhost:8799/
+node scripts/landing-check.mjs       # truth/design gate for this page
+node scripts/landing-icons.mjs       # regenerate assets/icons/*.png from the game's own sprite code
+kill <the PID of YOUR test relay>    # never pkill node/relay: the user's own server may be running
 ```
+**Anchor-screenshot trap:** `--screenshot` of `http://…/#section` comes out solid black in headless Chrome. To capture a section, wrap the page in an iframe pushed up with a negative margin (`<iframe src=… style="height:9000px;margin-top:-4000px">` inside a 1100px `overflow:hidden` body) and screenshot the wrapper.
 **Phone-width trap:** headless Chrome will not render narrower than 500px, so `--window-size=400,…` screenshots are a cropped 500px layout and look falsely broken. To measure a real phone, load the page inside an `<iframe width="390">` (and 360) with a probe script that lists every element whose right edge exceeds `innerWidth` outside `.table-wrap`, posts the list to the parent, and is read back with `--dump-dom`.
 
 ## 8. Trailer and art pipeline (summary; full detail in `docs/TRAILER_SCRIPT.md`)
@@ -95,14 +101,34 @@ $CH --headless=new --no-sandbox --hide-scrollbars --window-size=1280,1100 --scre
 ## 9. Open backlog (from the 2026-11-12 review; strike items when done)
 | # | Item | Why |
 |---|---|---|
-| B1 | Replace the emoji card icons with game sprites. **In progress as D-085 (other agent):** `scripts/landing-icons.mjs` renders `assets/icons/*.png` from `src/game.js` | Emoji icons are an AI tell and break the 16-bit identity |
+| ~~B1~~ | **Done D-085.** 23 card icons are game sprites rendered by `scripts/landing-icons.mjs` from `src/game.js` (`assets/icons/`, 4 KB, scaled ×3/×5/×6) | Emoji icons are an AI tell and break the 16-bit identity |
 | ~~B2~~ | **Done D-086.** Numbered section eyebrows removed; quickstart steps keep 01–03 | Numbering that isn't a sequence is decoration |
 | ~~B3~~ | **Done D-086.** Nav is 6 links: Classes, Economy, NFT Mint, Raid, Staking, Get Started | It wrapped to two lines at 1280px |
 | B4 | Retake screenshots after D-075 (they still show coin sparkles) and add a 09 real-mint capture | T3: captures must match the current game |
 | ~~B5~~ | **Done D-086.** Over 20 claims corrected against code (see changelog 1.1) | T1 |
-| B6 | Switch CTAs to `https://play.dogeon.lat` once DNS and the certificate are live | T6 |
+| B6 | Switch CTAs to `https://play.dogeon.lat` once DNS and the certificate are live — steps in §10 | T6 |
 | B7 | Embed the finished trailer (self-hosted MP4 `<video>` with a poster; no third-party iframe) | Hero motion with no heavy scripts |
 
+## 10. Domains and deploy (dogeon.lat = landing, play.dogeon.lat = game)
+One Fly app (`dogeon-game`; `fly.toml` + `Dockerfile`) runs `server/relay.mjs`, which routes by host and path (D-082):
+| Request | Serves |
+|---|---|
+| `dogeon.lat/` | `landing.html` |
+| `dogeon.lat/play`, `/game`, any URL with `?mp` | the game (`index.html` + `src/game.js`) |
+| `play.dogeon.lat/` (any host that starts with `play.`) | the game |
+| `/health` | JSON status |
+| `/assets/**`, `/src/**` | static files, path-traversal guarded |
+The game opens its multiplayer WebSocket to whatever host served it, so both hostnames reach the same relay and the same world.
+
+**Going live with `play.dogeon.lat` (the human does DNS + deploy; agents must not change DNS, certs or deploy on their own):**
+1. The Fly certificate is already requested: `fly certs list -a dogeon-game` showed `dogeon.lat` Issued and `play.dogeon.lat` Not verified (2026-11-12) because DNS was missing.
+2. At the registrar (Spaceship) → DNS for `dogeon.lat` → add two records for host **`play`**: `A 66.241.125.199` and `AAAA 2a09:8280:1::1f7:c716:0` (the app's IPs: `fly ips list -a dogeon-game`). A `CNAME play → dogeon-game.fly.dev` also works.
+3. Wait for the cert: `fly certs check play.dogeon.lat -a dogeon-game` until it says Issued.
+4. Deploy from the repo root in WSL: `git pull && fly deploy -a dogeon-game`. The `Dockerfile` must copy `landing.html` and `assets/` (it does since D-084; without them `/` silently falls back to the game).
+5. Verify: `curl -s https://play.dogeon.lat/ | grep -o '<title>[^<]*'` → `DOGEON`; `curl -s https://dogeon.lat/ | grep -o '<title>[^<]*'` → the landing title; `https://play.dogeon.lat/health` → `{"ok":true…}`.
+6. Only then do B6: point the play CTAs at `https://play.dogeon.lat` (landing-check accepts both forms). Keep `/play` working; old links depend on it.
+
 ## Changelog
+- 1.2 (2026-11-12, D-085): B1 done with game-rendered icons. **Security find:** the add-network button, network table, faucet and explorer links used `*.dogeos.xyz` (all one IP, parked-looking domain), not DogeOS's real `rpc.testnet.dogeos.com` / `dogeos-testnet.l2scan.co` / `faucet.testnet.dogeos.com`; fixed and guarded by new rule T7 + `scripts/landing-check.mjs`. Also fixed claims the D-086 pass missed ("fully audited, immutable", sanctuary particle aura, rest heals HP+MP fully, camp ponds, all materials drop, raid timer starts at the gate, Sphinx name, STAKE 1+, sprint, `?mp`). T5's explorer had a typo (`dogeon-` → `dogeos-`). Added §10 (domains + going live) and the anchor-screenshot trap. **Lessons:** (a) a truth audit must also cover URLs and wallet parameters, not only numbers; (b) two agents on one page: commit only your own paths (`git add <paths>`), wait for the other's commit before editing a file it has open, and check `git status` right before every write.
 - 1.1 (2026-11-12, D-086): Truth audit (B5) found over 20 false or unverifiable claims: meme rolls mislabeled (real `BUFFS`: BLAZE 420 = +420 HP, NICE 69 = +69 ATK, LUCKY 777 = +77 HP, MUCH 4.2 = +0.42 DEF, SPEED 6.9 = +6.9 ATK; curses −42 HP / −6.9 ATK / −0.42 DEF); rolls come from the token ID, not a block hash; a wrong oracle address (`0x2194…`); archer +25% speed (not +15%) and +17% attack rate; DEX trades pay stakers 0.8%, not 80%; tree regrow 14 s; F is a press, not a hold; "5 ponds" unverifiable; the DogeMaster unlocks at the Elder after the boss; and "NO ARCADE COINS" was false (in-game DOGE coins still exist, currency purity deferred), so the copy now says two separate currencies. **Lessons:** (a) truth-check numbers against the code's tables (`CLASSES`, `BUFFS`, `GATHER_*`, `kp('f')`), never against older docs or skills, which drift; (b) before writing into a shared folder like `assets/`, run `git status` and list the folder, because another agent may be filling it at the same moment (an icon export collided with D-085 and was rolled back). B2, B3 done.
 - 1.0 (2026-11-12, D-083): Created. Seeded from the `web3-game-landing-ui` user skill (palette, type) and `artifact-design` fundamentals. Lessons from the first review: fake hero stats and a broken `play.` CTA found and fixed. The grid `minmax(380px)` overflowed phones (fix: `min(N,100%)`). The headless 500px minimum produces false "broken phone" screenshots. Added og/twitter tags and reduced motion.
