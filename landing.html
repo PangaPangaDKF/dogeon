@@ -609,17 +609,12 @@
         DOGEON
       </a>
       <ul class="nav-links">
-        <li><a href="#heist">The Heist</a></li>
         <li><a href="#characters">Classes</a></li>
         <li><a href="#economy">Economy</a></li>
         <li><a href="#mint">NFT Mint</a></li>
-        <li><a href="#faucet">Faucet</a></li>
-        <li><a href="#resources">Gathering</a></li>
-        <li><a href="#pvp">PvP Loot</a></li>
-        <li><a href="#party">Raid Coop</a></li>
+        <li><a href="#party">Raid</a></li>
         <li><a href="#staking">Staking</a></li>
-        <li><a href="#npcs">NPCs</a></li>
-        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#faucet">Get Started</a></li>
       </ul>
       <div class="nav-cta">
         <button id="add-network-btn" class="btn btn-cyan silk" onclick="addDogeOSToMetaMask()">+ DogeOS RPC</button>
@@ -639,8 +634,8 @@
         </h1>
         <p class="hero-sub">
           DOGEON ("The Grand Heist") is an unforgiving retro 16-bit multiplayer Action RPG. 
-          8-player dungeon instances, high-stakes PvP full-loot drops, pure Testnet DOGE economics, 
-          real-time RedStone oracles, and meme-forged gear with wild ±420 and ±69 stats.
+          Up to 8 players per server, PvP that drops your carried materials, gear you mint as real NFTs with testnet DOGE, 
+          a RedStone DOGE/USD price feed, and meme rolls like BLAZE 420 and NICE 69.
         </p>
         <div class="hero-actions">
           <a href="/play" target="_blank" class="btn btn-gold pixel" style="padding: 14px 28px; font-size: 13px;">PLAY FREE NOW</a>
@@ -668,7 +663,7 @@
     <!-- 2. The Heist (Lore & Premise) -->
     <section id="heist">
       <div class="container">
-        <span class="section-tag pixel">01 // THE NARRATIVE</span>
+        <span class="section-tag pixel">THE NARRATIVE</span>
         <h2 class="section-title pixel">THE GRAND HEIST</h2>
         <div class="story-box">
           <h3 class="pixel" style="color: var(--gold); font-size: 18px; margin-bottom: 12px;">HOW THE CAT LORDS TOOK EVERYTHING</h3>
@@ -692,7 +687,7 @@
     <!-- 3. Characters & Sworn Professions -->
     <section id="characters">
       <div class="container">
-        <span class="section-tag pixel">02 // CLASSES & COMBAT</span>
+        <span class="section-tag pixel">CLASSES & COMBAT</span>
         <h2 class="section-title pixel">SWORN PROFESSIONS</h2>
         <p class="section-desc">
           Swear an irreversible on-chain oath at the guild pads. One profession per wallet. Each class boasts dedicated TTK mechanics, 
@@ -728,9 +723,9 @@
               High-velocity marksmen trained by Scout Fleetwhisker. Kite enemies from safety, unleash piercing arrows, and barrage hordes with 3-arrow volleys.
             </p>
             <div class="stat-bar">
-              <div class="stat-row"><span>MOVE SPEED</span><span>115% (+15%)</span></div>
+              <div class="stat-row"><span>MOVE SPEED</span><span>125% (+25%)</span></div>
               <div class="stat-fill-wrap"><div class="stat-fill green" style="width: 80%;"></div></div>
-              <div class="stat-row"><span>ATTACK SPEED</span><span>120% (+20%)</span></div>
+              <div class="stat-row"><span>ATTACK SPEED</span><span>117% (+17%)</span></div>
               <div class="stat-fill-wrap"><div class="stat-fill green" style="width: 85%;"></div></div>
               <div class="stat-row"><span>SPECIAL SKILL</span><span style="color:#fff;">[K] 3-ARROW VOLLEY (6 MP)</span></div>
             </div>
@@ -774,35 +769,35 @@
     <!-- 4. The Economy & Currency Purity -->
     <section id="economy">
       <div class="container">
-        <span class="section-tag pixel">03 // TOKENOMICS</span>
+        <span class="section-tag pixel">TOKENOMICS</span>
         <h2 class="section-title pixel">THE PURE ON-CHAIN ECONOMY</h2>
         <p class="section-desc">
-          Zero fake arcade coins. Zero off-chain infinite currency. The only currency in DOGEON is genuine <strong>Testnet DOGE</strong> in your Web3 wallet.
+          Two kinds of money, kept apart: in-game DOGE coins from quests and drops buy camp upgrades, and real <strong>Testnet DOGE</strong> in your wallet pays for every on-chain action.
         </p>
 
         <div class="grid-3">
           <div class="card">
             <div class="card-icon">🪙</div>
-            <h3 class="pixel">PURE TESTNET DOGE</h3>
+            <h3 class="pixel">REAL TESTNET DOGE</h3>
             <p>
-              Arcade coin drops have been purged. Your balance is read straight from the DogeOS Chikyū blockchain (`eth_getBalance`). 
-              Every transaction is an authentic cryptographic signature.
+              Minting, pool trades, staking and your class oath all cost real testnet DOGE. Your wallet balance is read straight from the DogeOS Chikyū chain, 
+              and every transaction is signed in your own wallet.
             </p>
           </div>
           <div class="card">
             <div class="card-icon">⚖️</div>
             <h3 class="pixel">80 / 20 FEE SPLIT</h3>
             <p>
-              Every 1 DOGE mint fee and marketplace fee is programmatically split by smart contracts: 
-              <strong>80% is sent directly to the Staking Pool</strong> for players, and 20% fuels the game ecosystem treasury.
+              Each 1 DOGE mint fee is split by the contract: <strong>80% to the Staking Pool</strong>, 20% to the treasury. 
+              Pool trades pay 3%: 2% to liquidity providers and 1% protocol fee, split the same 80/20.
             </p>
           </div>
           <div class="card">
             <div class="card-icon">🔮</div>
             <h3 class="pixel">REDSTONE ORACLE</h3>
             <p>
-              Live real-time DOGE/USD price feed via RedStone Oracle contract (`0x2194...7793`). 
-              In-game shop valuations, liquidity pool yields, and market sentiment adjust dynamically to live market trends.
+              Live DOGE/USD price from the RedStone feed (`0x434F…C968`). When your wallet is connected it anchors the in-game market's mood; 
+              pool swap prices always come from the pool reserves.
             </p>
           </div>
         </div>
@@ -812,7 +807,7 @@
     <!-- 5. On-Chain Minting & Meme Buffs -->
     <section id="mint">
       <div class="container">
-        <span class="section-tag pixel">04 // WEB3 GEAR & NFTS</span>
+        <span class="section-tag pixel">WEB3 GEAR & NFTS</span>
         <h2 class="section-title pixel">DOGEMASTER MEME FORGE & REROLL</h2>
         <p class="section-desc">
           Defeat the dungeon raid to unlock the legendary <strong>DogeMaster NPC</strong>. Mint verified ERC-721 gear NFTs for 1 Testnet DOGE, 
@@ -824,17 +819,17 @@
             <div class="card-icon">🔥</div>
             <h3 class="pixel">MEME STAT GENERATION</h3>
             <p style="margin-bottom: 14px;">
-              Every minted gear NFT rolls on-chain meme numbers derived from block hash and token ID. Buffs and debuffs feature exact community meme numbers:
+              Every gear NFT's bonus is derived from its token ID, so anyone can check it. Rarity (common ×1 up to legendary ×6) scales the roll. Meme rolls include:
             </p>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+420 ATK / HP</span>
-              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+69 DEF / AGI</span>
-              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+777 LUCK</span>
-              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+4.2 SPD</span>
-              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">+6.9 MAGIC</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">BLAZE 420: +420 HP</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">NICE 69: +69 ATK</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">LUCKY 777: +77 HP</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">MUCH 4.2: +0.42 DEF</span>
+              <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">SPEED 6.9: +6.9 ATK</span>
             </div>
             <p style="margin-top: 14px; font-size: 12px; color: var(--red);">
-              ⚠️ Beware: Cursed rolls can manifest negative variants (-420 HP, -69 DEF)!
+              Cursed rolls exist too: HANGOVER 420 (−42 HP), CURSED 69 (−6.9 ATK), PAPER 4.2 (−0.42 DEF).
             </p>
           </div>
 
@@ -842,7 +837,7 @@
             <div class="card-icon">♻️</div>
             <h3 class="pixel">BURN-TO-REROLL ENGINE</h3>
             <p>
-              Got an item cursed with -420 HP? Feed it to the DogeMaster's furnace! 
+              Rolled a curse like HANGOVER 420? Feed it to the DogeMaster's furnace. 
               The <strong>Burn-to-Reroll</strong> mechanism burns your debuffed ERC-721 NFT on-chain and triggers a fresh random mint.
             </p>
             <p style="margin-top: 12px;">
@@ -857,7 +852,7 @@
     <!-- 6. Faucet & Getting Started -->
     <section id="faucet">
       <div class="container">
-        <span class="section-tag pixel">05 // WALLET ONBOARDING</span>
+        <span class="section-tag pixel">WALLET ONBOARDING</span>
         <h2 class="section-title pixel">THE FAUCET & QUICKSTART</h2>
         <p class="section-desc">
           Ready to play? Getting setup takes less than 60 seconds with MetaMask, Rabby, or Bitget Wallet.
@@ -930,7 +925,7 @@
     <!-- 7. Resources & Hardcore Gathering -->
     <section id="resources">
       <div class="container">
-        <span class="section-tag pixel">06 // RESOURCE ECONOMY</span>
+        <span class="section-tag pixel">RESOURCE ECONOMY</span>
         <h2 class="section-title pixel">RAW GATHERING & FISHING</h2>
         <p class="section-desc">
           Gather raw resources in contested monster territories. Nodes are finite and renewable on strict cooldown timers.
@@ -945,7 +940,7 @@
           <div class="card">
             <div class="card-icon">🪓</div>
             <h3 class="pixel">WOOD</h3>
-            <p>Harvested by chopping trees with your axe. Trees enter a 15-second gathering cooldown once depleted.</p>
+            <p>Face a tree, press F and stand still for 3.5 seconds to gather. Each tree needs 14 seconds to regrow, and taking a hit cancels the gather.</p>
           </div>
           <div class="card">
             <div class="card-icon">🪨</div>
@@ -955,7 +950,7 @@
           <div class="card">
             <div class="card-icon">🎣</div>
             <h3 class="pixel">RAW FISH</h3>
-            <p>Catch fish at 5 scenic ponds. Restores HP and supplies sustenance for prolonged dungeon expeditions.</p>
+            <p>Face the water, press F and stand still to fish. Restores HP and supplies sustenance for prolonged dungeon expeditions.</p>
           </div>
         </div>
       </div>
@@ -964,7 +959,7 @@
     <!-- 8. Hardcore PvP Full-Loot Mode -->
     <section id="pvp">
       <div class="container">
-        <span class="section-tag pixel">07 // BLOOD IN THE WATER</span>
+        <span class="section-tag pixel">BLOOD IN THE WATER</span>
         <h2 class="section-title pixel">FULL-LOOT PVP RISK</h2>
         <div class="story-box" style="border-color: var(--red);">
           <h3 class="pixel" style="color: var(--red); font-size: 20px; margin-bottom: 12px;">DEATH MEANS LOSS: PROTECT YOUR LOOT</h3>
@@ -984,7 +979,7 @@
     <!-- 9. 8-Player Party & Open World Raid -->
     <section id="party">
       <div class="container">
-        <span class="section-tag pixel">08 // MULTIPLAYER RAID CYCLE</span>
+        <span class="section-tag pixel">MULTIPLAYER RAID CYCLE</span>
         <h2 class="section-title pixel">8-PLAYER SERVER RAID & LOCKOUT</h2>
         <p class="section-desc">
           To ensure peak game balance and low latency, each DOGEON server instance is strictly capped at <strong>8 simultaneous players</strong>.
@@ -1017,7 +1012,7 @@
     <!-- 10. The Staking Pool -->
     <section id="staking">
       <div class="container">
-        <span class="section-tag pixel">09 // PASSIVE YIELD</span>
+        <span class="section-tag pixel">PASSIVE YIELD</span>
         <h2 class="section-title pixel">DOGESTAKING POOL</h2>
         <p class="section-desc">
           Deposit Testnet DOGE into the on-chain staking contract to earn continuous passive revenue from game economic volume.
@@ -1032,7 +1027,7 @@
           <div class="card">
             <div class="card-icon">📈</div>
             <h3 class="pixel">80% PROTOCOL FEES</h3>
-            <p>Every time a player mints gear (1 DOGE), creates an LP pool, or trades in the marketplace, 80% of the fee flows directly into the staker reward pot.</p>
+            <p>Stakers receive 80% of every 1 DOGE mint fee, plus 0.8% of every pool trade (80% of the 1% protocol fee).</p>
           </div>
           <div class="card">
             <div class="card-icon">🎁</div>
@@ -1046,7 +1041,7 @@
     <!-- 11. NPC Roster & Lore -->
     <section id="npcs">
       <div class="container">
-        <span class="section-tag pixel">10 // CITIZENS OF DOGEON</span>
+        <span class="section-tag pixel">CITIZENS OF DOGEON</span>
         <h2 class="section-title pixel">THE NPC ROSTER</h2>
         <p class="section-desc">
           Interact with key characters in Camp Refuge and the deep ruins by pressing <strong>[E]</strong> when in proximity.
@@ -1071,7 +1066,7 @@
             <div class="card-icon">🐕‍🦺</div>
             <h3 class="pixel">DOGEMASTER</h3>
             <div class="silk" style="color: var(--purple); font-size: 11px; margin-bottom: 8px;">MEME FORGE & REROLL</div>
-            <p>Enigmatic craftsman residing past the boss gate. Mints high-tier meme gear with wild ±420/69 modifiers and burns debuffed NFTs.</p>
+            <p>Unlocks at the Elder after the Cat Lord falls. Burns a gear NFT you don't want and mints a fresh one with a new meme roll.</p>
           </div>
 
           <div class="card">
@@ -1101,7 +1096,7 @@
     <!-- 12. Smart Contract Registry -->
     <section id="contracts">
       <div class="container">
-        <span class="section-tag pixel">11 // ON-CHAIN REGISTRY</span>
+        <span class="section-tag pixel">ON-CHAIN REGISTRY</span>
         <h2 class="section-title pixel">VERIFIED SMART CONTRACTS</h2>
         <p class="section-desc">
           Fully audited and deployed on DogeOS Chikyū Testnet. Transparent, immutable, and open-source.
@@ -1151,7 +1146,7 @@
     <!-- 13. Screenshots & Visual Showcase -->
     <section id="gallery">
       <div class="container">
-        <span class="section-tag pixel">12 // VISUAL SHOWCASE</span>
+        <span class="section-tag pixel">VISUAL SHOWCASE</span>
         <h2 class="section-title pixel">GAMEPLAY SCREENSHOTS & SANCTUARY</h2>
         <p class="section-desc">
           Visual tour of DOGEON. Discover the sacred Camp Refuge safe haven and explore live gameplay captures across combat, crafting, and raids.
@@ -1346,7 +1341,7 @@
         </div>
       </div>
       <div class="footer-bottom silk">
-        DOGEON &copy; 2026 — BUILT ON DOGEOS CHIKYŪ. NO ARCADE COINS. PURE WEB3 PERMANENCE.
+        DOGEON &copy; 2026 — BUILT ON DOGEOS CHIKYŪ. YOUR NFTS STAY IN YOUR WALLET.
       </div>
     </div>
   </footer>

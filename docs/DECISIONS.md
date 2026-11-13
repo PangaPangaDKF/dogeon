@@ -35,6 +35,14 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-086 · 2026-11-12 · Landing truth audit, 6-link nav, no decorative section numbers (Claude Code)
+- What: `landing.html` copy checked line by line against `src/game.js`, `contracts/` and D-entries (landing skill B5). Corrected: meme roll names and values (real `BUFFS`: BLAZE 420 +420 HP, NICE 69 +69 ATK, LUCKY 777 +77 HP, MUCH 4.2 +0.42 DEF, SPEED 6.9 +6.9 ATK; curses −42 HP / −6.9 ATK / −0.42 DEF), rolls derive from the token ID (not a block hash), RedStone feed address `0x2194…` → `0x434F…C968`, archer move +25% / attack rate +17%, fee wording (mint 80/20; trades 3% = 2% LP + 1% protocol split 80/20, so stakers get 0.8% of trades), tree regrow 14 s, F is press-and-stand (not hold), unverifiable "5 ponds" removed, DogeMaster unlocks at the Elder after the boss, and the false "no arcade coins / only wallet DOGE" claims (in-game DOGE coins still exist; currency purity is deferred) rewritten as two separate currencies. Nav cut from 11 links to 6 (B3); 12 decorative "NN //" section eyebrows removed (B2). Skill `dogeon-landing-design` → v1.1 (both mirrors).
+- Why: truth rule T1 — a landing that over-promises breaks trust the moment a player opens the game. User: "move on with the plan".
+- Tool: Claude Code (Opus 5.5); grep against `CLASSES`, `BUFFS`, `GATHER_*`, `kp('f')`, `PONDS_EXTRA`, `elderMenu`; headless Chromium screenshot + iframe overflow probe.
+- Alternatives rejected: implementing currency purity in the game to make the old copy true (out of this lane, and the user deferred it); keeping the meme labels for marketing punch (they named stats the items don't give).
+- Collision note: an icon export for B1 overlapped D-085 (the other agent's `scripts/landing-icons.mjs`, started two minutes earlier). Rolled back: my 4 extra PNGs deleted and its script re-run to restore its 23 icons byte-for-byte; B1 left to D-085.
+- Verify: overflow probe clean at 390 and 360px (only the scroll-wrapped tables); 1280px nav on one line; `bash tests/check.sh` ALL CHECKS PASSED.
+
 ### D-084 · 2026-11-12 · TryNoah exact-clone environment + recreation-doc fact sync (Claude Code)
 - What:
   - `scripts/setup-clone.sh` (new): one-command env for a fresh clone — checks git + Node 18+, Foundry (`--install-foundry` runs foundryup),

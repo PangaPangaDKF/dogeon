@@ -5,7 +5,7 @@ description: Own design skill for DOGEON's public face — the landing page (lan
 
 # DOGEON Landing & Trailer Design Skill
 
-Version: 1.0 (2026-11-12) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
+Version: 1.1 (2026-11-12) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
 
 ## RULE L0 — this skill and its master prompt are living documents
 Every change to `landing.html`, `assets/**`, `docs/TRAILER_SCRIPT.md`, or any marketing image or video ends with:
@@ -95,13 +95,14 @@ $CH --headless=new --no-sandbox --hide-scrollbars --window-size=1280,1100 --scre
 ## 9. Open backlog (from the 2026-11-12 review; strike items when done)
 | # | Item | Why |
 |---|---|---|
-| B1 | Replace 21 emoji card icons with pixel sprites cropped from screenshots | Emoji icons are an AI tell and break the 16-bit identity |
-| B2 | Drop the "01 //"…"13 //" section eyebrows (keep numbers only in the quickstart) | Numbering that isn't a sequence is decoration |
-| B3 | Cut the nav from 12 links to about 6 (Play, Classes, Economy, Mint, Faucet, Raid) | It wraps to two lines at 1280px |
+| B1 | Replace the emoji card icons with game sprites. **In progress as D-085 (other agent):** `scripts/landing-icons.mjs` renders `assets/icons/*.png` from `src/game.js` | Emoji icons are an AI tell and break the 16-bit identity |
+| ~~B2~~ | **Done D-086.** Numbered section eyebrows removed; quickstart steps keep 01–03 | Numbering that isn't a sequence is decoration |
+| ~~B3~~ | **Done D-086.** Nav is 6 links: Classes, Economy, NFT Mint, Raid, Staking, Get Started | It wrapped to two lines at 1280px |
 | B4 | Retake screenshots after D-075 (they still show coin sparkles) and add a 09 real-mint capture | T3: captures must match the current game |
-| B5 | Audit every landing claim against code (PvP, oracle, meme stats, staking %) | T1. The hero paragraph lists many features at once |
+| ~~B5~~ | **Done D-086.** Over 20 claims corrected against code (see changelog 1.1) | T1 |
 | B6 | Switch CTAs to `https://play.dogeon.lat` once DNS and the certificate are live | T6 |
 | B7 | Embed the finished trailer (self-hosted MP4 `<video>` with a poster; no third-party iframe) | Hero motion with no heavy scripts |
 
 ## Changelog
+- 1.1 (2026-11-12, D-086): Truth audit (B5) found over 20 false or unverifiable claims: meme rolls mislabeled (real `BUFFS`: BLAZE 420 = +420 HP, NICE 69 = +69 ATK, LUCKY 777 = +77 HP, MUCH 4.2 = +0.42 DEF, SPEED 6.9 = +6.9 ATK; curses −42 HP / −6.9 ATK / −0.42 DEF); rolls come from the token ID, not a block hash; a wrong oracle address (`0x2194…`); archer +25% speed (not +15%) and +17% attack rate; DEX trades pay stakers 0.8%, not 80%; tree regrow 14 s; F is a press, not a hold; "5 ponds" unverifiable; the DogeMaster unlocks at the Elder after the boss; and "NO ARCADE COINS" was false (in-game DOGE coins still exist, currency purity deferred), so the copy now says two separate currencies. **Lessons:** (a) truth-check numbers against the code's tables (`CLASSES`, `BUFFS`, `GATHER_*`, `kp('f')`), never against older docs or skills, which drift; (b) before writing into a shared folder like `assets/`, run `git status` and list the folder, because another agent may be filling it at the same moment (an icon export collided with D-085 and was rolled back). B2, B3 done.
 - 1.0 (2026-11-12, D-083): Created. Seeded from the `web3-game-landing-ui` user skill (palette, type) and `artifact-design` fundamentals. Lessons from the first review: fake hero stats and a broken `play.` CTA found and fixed. The grid `minmax(380px)` overflowed phones (fix: `min(N,100%)`). The headless 500px minimum produces false "broken phone" screenshots. Added og/twitter tags and reduced motion.
