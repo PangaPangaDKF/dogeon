@@ -19,8 +19,9 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 ## 00. RESUME HERE (latest, 2026-11-12, after D-087)
 
 > **D-087:** `play.dogeon.lat` is LIVE (CNAME → `dogeon-game.fly.dev`, cert Issued, HTTPS 200). Landing play CTAs now point to it.
-> `www.dogeon.lat` has a CNAME but **no cert** (Fly free tier = 2 custom certs) → delete that record at Spaceship or add a card.
-> **Still needed: `fly deploy -a dogeon-game`** so the live landing gets the D-085 RPC fix (live still serves `dogeos.xyz` links) + D-086/D-087.
+> `www` record deleted at Spaceship (Fly free tier = 2 custom certs; a cert-less www would show a TLS error).
+> **Deployed 2026-11-13 03:04Z (Fly v5, includes e145aff), verified live:** 0 `dogeos.xyz` links, real RPC, 4 CTAs → play.dogeon.lat,
+> game-rendered icons serve 200, `play.dogeon.lat/health` OK. Fly scaled to **1 machine** (in-memory rooms must not split).
 
 > **D-085 (landing):** game-rendered icons (B1 done), **wallet RPC security fix** (landing used `*.dogeos.xyz`, now `CHAIN` values) and
 > `node scripts/landing-check.mjs`. **Deploy needed** so dogeon.lat stops sending wallets to the wrong RPC. **play.dogeon.lat:** Fly cert is
