@@ -143,3 +143,12 @@ Give Claude the file paths to wire them into the landing.
   `src/game.js` (`applyClass`, `mkt.hist`, `state.gateOpen`); `trailer-bots.mjs` gains a `boss` mode so the bots join the raid shot;
   nano banana prompt template and truth rules; step-by-step Canva edit; OBS Point scaling; S5 doubles as the real-mint proof.
 - 1.0 (D-081 follow-up): First shot list and recording setup.
+
+## 8. Automated cut (D-096)
+`FF=<ffmpeg> SRC=<captures folder> bash scripts/trailer/build.sh` rebuilds everything from the 7 captures of 2026-11-13:
+the 16:9 trailer (35 s) and 9:16 short (30 s) with the original chiptune from `scripts/trailer/music.mjs` (120 BPM; every
+segment is a multiple of 0.5 s so cuts land on the beat), into `tests/out/trailer/`, plus the landing's `assets/video/`
+(720p trailer + 4 silent loops + posters). Cards use the game's own FONT/LOGO. Crops remove every price, USD and address line.
+To change the cut, edit the segment list in `build.sh`; to change the song, edit the `PLAN` sections in `music.mjs` to match.
+Missing shots for a v2: a 3-player Cat Lord raid (bots or friends) and a fishing/gathering beat, recorded at 1080p with OBS
+"Capture Cursor" off.

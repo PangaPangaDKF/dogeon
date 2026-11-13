@@ -12,7 +12,7 @@
 // For an https:// page you need wss:// — put this behind TLS (Caddy/nginx), or use a host that terminates TLS (Render, Fly…).
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, createReadStream } from 'node:fs';
 import { join, dirname, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,7 +23,7 @@ const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'; // RFC 6455 §1.3
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PAGE = join(ROOT, 'index.html');
 const LANDING = join(ROOT, 'landing.html');
-const MIME = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const MIME = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.mp4': 'video/mp4', '.webm': 'video/webm' };
 const rooms = new Map(); // room -> Set<client>
 
 // ---- D-076 shared world: the relay is the referee for the 3 things players fight over ----
@@ -173,11 +173,20 @@ const server = createServer((req, res) => {
 
   // Static landing assets under assets/
   const p = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[\/\\])+/, "");
-  if (/^[\/\\]?assets[\/\\][\w.\-\/\\]+\.(png|jpg|jpeg|svg|css|js|json)$/.test(p)) {
+  if (/^[\/\\]?assets[\/\\][\w.\-\/\\]+\.(png|jpg|jpeg|svg|css|js|json|mp4|webm)$/.test(p)) {
     const file = join(ROOT, p);
     if (file.startsWith(join(ROOT, "assets")) && existsSync(file)) {
-      res.writeHead(200, { "content-type": MIME[extname(file)] || "application/octet-stream" });
-      return res.end(readFileSync(file));
+      // D-096: byte ranges (206) so <video> can seek and iOS Safari will play; streamed, never buffered whole
+      const size = statSync(file).size, type = MIME[extname(file)] || "application/octet-stream";
+      const r = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+      if (r && (r[1] || r[2])) {
+        let start = r[1] ? +r[1] : Math.max(0, size - +r[2]), end = r[1] && r[2] ? Math.min(+r[2], size - 1) : size - 1;
+        if (start > end || start >= size) { res.writeHead(416, { "content-range": `bytes */${size}` }); return res.end(); }
+        res.writeHead(206, { "content-type": type, "accept-ranges": "bytes", "content-range": `bytes ${start}-${end}/${size}`, "content-length": end - start + 1 });
+        return createReadStream(file, { start, end }).pipe(res);
+      }
+      res.writeHead(200, { "content-type": type, "accept-ranges": "bytes", "content-length": size });
+      return createReadStream(file).pipe(res);
     }
   }
 

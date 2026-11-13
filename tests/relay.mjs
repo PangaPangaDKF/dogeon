@@ -86,6 +86,16 @@ try {
   if (page.includes('src/game.js') && page.includes('<canvas') && gameRes.ok && game.includes('MULTIPLAYER (opt-in, D-040)'))
     pass('game served', 'one process serves the index.html shell + src/game.js and the relay');
   else fail('game served', `shell@/ ok=${page.includes('src/game.js')}, /src/game.js status=${gameRes.status}`);
+  // D-096: landing videos — mp4 is served, with byte ranges (iOS Safari needs 206 to play <video>)
+  const vu = `http://127.0.0.1:${PORT}/assets/video/mint.mp4`;
+  const full = await fetch(vu), part = await fetch(vu, { headers: { range: 'bytes=0-99' } }), bad = await fetch(vu, { headers: { range: 'bytes=999999999-' } });
+  const len = +full.headers.get('content-length');
+  if (full.status === 200 && full.headers.get('content-type') === 'video/mp4' && full.headers.get('accept-ranges') === 'bytes' && len > 1000
+      && part.status === 206 && (await part.arrayBuffer()).byteLength === 100 && part.headers.get('content-range') === `bytes 0-99/${len}` && bad.status === 416)
+    pass('video range', `mp4 200 (${len} B), Range 0-99 -> 206, past-end -> 416`);
+  else fail('video range', `full=${full.status} ${full.headers.get('content-type')} part=${part.status} ${part.headers.get('content-range')} bad=${bad.status}`);
+  const trav = await fetch(`http://127.0.0.1:${PORT}/assets/..%2f..%2fserver%2frelay.mjs`);
+  if (trav.status !== 200 || !(await trav.text()).includes('BOSS_HP')) pass('assets traversal', `status ${trav.status}`); else fail('assets traversal', 'served a file outside assets/');
   for (const cl of [a, c, x, d]) try { cl.ws.close(); } catch {}
 } catch (e) { fail('relay', e.message); }
 finally { srv.kill(); }
