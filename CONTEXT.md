@@ -18,6 +18,8 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ## 00. RESUME HERE (latest, 2026-11-13, after D-088)
 
+> **FINAL PHASE, TWO-AGENT LOOP:** read `docs/HANDOFF_LOOP.md` (protocol, phase checklist, newest note first) before doing anything; append your entry when you finish.
+
 > **D-094 (landing):** coin art from the game export (`assets/icons/dogecoin.png` via `scripts/landing-icons.mjs`), duplicated coin data + halo/sparkles removed, guards in landing-check. Waiting on the user: the DogeOS logo from its brand kit (B13), a green-tag party capture (B11), the trailer clips (B7).
 
 > **D-093 (landing):** party section (P → ALPHA/BRAVO/GOLD/SOLO; green = your party, red = can hit you). Needed: a green-tag capture (B11). After the game lane commits its 60 s boss cycle, rewrite the raid cards (B12).
