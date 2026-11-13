@@ -18,6 +18,8 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ## 00. RESUME HERE (latest, 2026-11-13, after D-088)
 
+> **D-093 (landing):** party section (P → ALPHA/BRAVO/GOLD/SOLO; green = your party, red = can hit you). Needed: a green-tag capture (B11). After the game lane commits its 60 s boss cycle, rewrite the raid cards (B12).
+
 > **D-092 (landing):** hero = the whole safe camp with the NPCs' new posts (user capture, HUD price cropped). Goes live with the next `fly deploy`.
 
 > **D-091 (landing):** gallery screenshots are HUD-less (no price), 6-card grid, captions match the pictures. Landing backlog left: B4 (retake shots + real-mint capture), B7 (trailer embed).

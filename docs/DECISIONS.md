@@ -35,6 +35,13 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-093 · 2026-11-13 · Landing: party system ("party up or go solo"), truthful rival capture, Healer copy (Claude Code)
+- What: In `#pvp`, a new two-card row: a real capture (`assets/screenshots/party-rival-tag.png`, the user's Screenshot_63 with HUD, wallet line and `$` value cropped, 632×408) captioned as a **rival** (red name tag), and "PARTY UP OR GO SOLO" rules from the code: P (or the Elder's squad row) joins ALPHA/BRAVO/GOLD or SOLO (`partyMenu`, `setParty`); same party = green tag `#80ff80`, friendly fire off, refereed by the relay (`pvp` handler checks `c.party === o.party`); others = red tag `#ff8080`, open PvP outside camp; Mend heals every nearby player. Healer class and trainer copy corrected ("party members" → every nearby player; the `heal` message has no party check). Skill → v1.12 (B11, B12 added).
+- Why: user asked to put the new party feature on the site using two screenshots. Pixel measurement showed both lack a green (party) tag; Screenshot_63's tag is red (not in your party), so it is captioned truthfully and a green-tag capture is requested (B11).
+- Tool: Claude Code (Opus 5.5); code reading (`netDraw` tag colors, relay `pvp`/`party`, `heal`); canvas pixel count; landing-check; overflow probe; 1280px render.
+- Alternatives rejected: captioning Screenshot_63 as a party (contradicts the tag color); reusing Screenshot_62 (it is the hero and shows no player tag); updating the raid cards to the in-progress 60 s boss cycle (uncommitted game work; B12 waits for it).
+- Verify: landing-check "Landing matches the game"; overflow probe 0 at 390/360px; 1280px render reviewed.
+
 ### D-092 · 2026-11-13 · Landing hero: the whole safe camp with the NPCs' new posts (Claude Code)
 - What: `assets/screenshots/hero-camp-coin.png` replaced with the user's newer capture (788×555 → 788×509): the full camp, the giant Dogecoin at its center and every NPC at its current pad. Only the HUD bar (with `DOGE $0.230`) is cropped; the bottom hint lines stay (no price; cropping them would cut the bottom NPCs). Same file name, so og/twitter keep working; `width/height`, `aspect-ratio` and og dimensions updated. Landing skill → v1.11.
 - Why: user — "use this new one as the main image; it shows the NPCs' latest positions and the whole safe area with the Dogecoin logo."

@@ -595,6 +595,10 @@
       .nav-links { display: none; }
       .nav-cta .btn-cyan { display: none; }
     }
+    .shot-card { margin: 0; padding: 0; overflow: hidden; }
+    .shot { display: block; width: 100%; max-width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+    .shot-card figcaption { padding: 14px 18px; font-size: 13px; color: var(--text-muted); }
+    .party-rules { margin: 14px 0 0 18px; display: grid; gap: 10px; font-size: 14px; color: var(--text-muted); }
     @media (prefers-reduced-motion: reduce) {
       #bg-canvas { display: none; }
       *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -744,7 +748,7 @@
             <h3 class="pixel" style="color: #70a1ff;">HEALER</h3>
             <div class="silk" style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">FACTION: BARKITECTS</div>
             <p>
-              Mystic spiritualists trained by Mender Brighttail. Siphon mana by striking foes with the staff, then broadcast co-op radiant healing pulses to nearby party members.
+              Mystic spiritualists trained by Mender Brighttail. Siphon mana by striking foes with the staff, then cast Mend to heal every player nearby.
             </p>
             <div class="stat-bar">
               <div class="stat-row"><span>MAX MP POOL</span><span>50 MP (HIGHEST)</span></div>
@@ -979,6 +983,22 @@
             <li><strong>NFT Invulnerability:</strong> On-chain ERC-721 gear NFTs stay bound to your crypto wallet address and will NEVER drop on death.</li>
           </ul>
         </div>
+
+        <div class="grid-2" style="margin-top: 24px;">
+          <figure class="card shot-card">
+            <img class="shot" src="assets/screenshots/party-rival-tag.png" width="632" height="408" alt="Two players at the camp gate; the other player's DOGE name tag is red, so they are not in your party" loading="lazy">
+            <figcaption>Real capture: the red <strong>DOGE</strong> tag means that player is not in your party. Outside camp, they can hit you.</figcaption>
+          </figure>
+          <div class="card">
+            <h3 class="pixel">PARTY UP OR GO SOLO</h3>
+            <ul class="party-rules">
+              <li>Press <strong>P</strong> at any time, or ask the Elder, to join party <strong>ALPHA</strong>, <strong>BRAVO</strong> or <strong>GOLD</strong>, or to go <strong>SOLO</strong>.</li>
+              <li>Players in your party wear a <span style="color: #80ff80;">green name tag</span> and can't hurt you: friendly fire is off, and the server referees every PvP hit.</li>
+              <li>Everyone else wears a <span style="color: #ff8080;">red name tag</span>. Outside camp, they can attack you and you can attack them.</li>
+              <li>A Healer's Mend heals every player nearby, party or not.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1093,7 +1113,7 @@
             <img class="card-icon" src="assets/icons/healer.png" width="48" height="60" alt="Mender Brighttail sprite">
             <h3 class="pixel">MENDER BRIGHTTAIL</h3>
             <div class="silk" style="color: #70a1ff; font-size: 11px; margin-bottom: 8px;">BARKITECTS TRAINER</div>
-            <p>Sacred medicine doge who unlocks the Healer profession, staff mana siphoning, and party-wide radiant mend pulses.</p>
+            <p>Sacred medicine doge who unlocks the Healer profession: staff mana siphoning and Mend, which heals every player nearby.</p>
           </div>
         </div>
       </div>
