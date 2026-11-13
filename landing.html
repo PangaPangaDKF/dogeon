@@ -513,7 +513,7 @@
       position: relative;
       overflow: hidden;
     }
-    .ss-img-wrap img {
+    .ss-img-wrap img, .ss-img-wrap video {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -524,7 +524,7 @@
       transition: transform 0.3s ease;
       cursor: pointer;
     }
-    .ss-card:hover .ss-img-wrap img {
+    .ss-card:hover .ss-img-wrap img, .ss-card:hover .ss-img-wrap video {
       transform: scale(1.04);
     }
     .ss-placeholder-icon {
@@ -602,6 +602,14 @@
     .build-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 40px; align-items: center; }
     .build-coin { image-rendering: pixelated; image-rendering: crisp-edges; max-width: 100%; height: auto; }
     @media (max-width: 900px) { .build-grid { grid-template-columns: minmax(0, 1fr); } .build-coin { width: 96px; } }
+    .trailer { margin: 28px auto 0; max-width: 880px; }
+    .trailer video { display: block; width: 100%; max-width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border: 2px solid var(--card-border); border-radius: 6px; }
+    .trailer figcaption { margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center; }
+    .proof { margin-top: 32px; }
+    .proof > p { margin: 8px 0 20px; color: var(--text-muted); max-width: 70ch; }
+    .proof-list { margin: 18px 0 0 18px; display: grid; gap: 8px; color: var(--text-muted); font-size: 14px; }
+    .proof-list code { color: var(--cyan); }
+    video.shot { background: #000; }
     .shot-card { margin: 0; padding: 0; overflow: hidden; }
     .shot { display: block; width: 100%; max-width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
     .shot-card figcaption { padding: 14px 18px; font-size: 13px; color: var(--text-muted); }
@@ -672,6 +680,10 @@
           </div>
           <div class="screen-caption silk">REAL GAMEPLAY &nbsp;|&nbsp; WASD MOVE &nbsp;|&nbsp; SPACE ATTACK &nbsp;|&nbsp; K SKILL &nbsp;|&nbsp; I BAG &nbsp;|&nbsp; R REST IN CAMP</div>
         </div>
+        <figure class="trailer">
+          <video controls preload="metadata" playsinline poster="assets/screenshots/05-boss.png" src="assets/video/trailer-720p.mp4" aria-label="DOGEON trailer"></video>
+          <figcaption class="silk">DOGEON TRAILER: REAL GAMEPLAY CAPTURES, REAL TESTNET MINT</figcaption>
+        </figure>
       </div>
     </section>
 
@@ -863,6 +875,25 @@
             </p>
           </div>
         </div>
+
+        <div class="proof">
+          <h3 class="pixel">REAL MINTS ON DOGEOS CHIKYŪ TESTNET</h3>
+          <p>Recorded in the game and confirmed on the explorer. Each mint paid exactly 1 testnet DOGE to DogeItems and created a new NFT.</p>
+          <div class="grid-2">
+            <figure class="card shot-card">
+              <video class="shot" autoplay muted loop playsinline preload="none" poster="assets/video/mint.jpg" src="assets/video/mint.mp4" aria-label="Minting a Hammer NFT in the forge"></video>
+              <figcaption>Forge → wallet "Transaction request" → MINTING → "MINTED HAMMER LV2 NFT!"</figcaption>
+            </figure>
+            <figure class="card shot-card">
+              <video class="shot" autoplay muted loop playsinline preload="none" poster="assets/video/verified.jpg" src="assets/video/verified.mp4" aria-label="The same transaction on the DogeOS explorer"></video>
+              <figcaption>The DogeOS explorer shows that transaction: Success, NFT #13 transferred to the player.</figcaption>
+            </figure>
+          </div>
+          <ul class="proof-list">
+            <li>NFT #13: <a href="https://dogeos-testnet.l2scan.co/tx/0x5025f871b37b0a0a88081d0b4798dfc4b9014f007a0b7341b43e1323c2c30767" target="_blank" title="0x5025f871b37b0a0a88081d0b4798dfc4b9014f007a0b7341b43e1323c2c30767"><code>0x5025f871…c30767</code></a> · block 9,429,362</li>
+            <li>NFT #12: <a href="https://dogeos-testnet.l2scan.co/tx/0xda810f92d27f00d59e2b0ea55499607a7ff1fd4cca194b46a23586287c46e1c0" target="_blank" title="0xda810f92d27f00d59e2b0ea55499607a7ff1fd4cca194b46a23586287c46e1c0"><code>0xda810f92…46e1c0</code></a> · block 9,429,348</li>
+          </ul>
+        </div>
       </div>
     </section>
 
@@ -1013,29 +1044,28 @@
     <section id="party">
       <div class="container">
         <span class="section-tag pixel">MULTIPLAYER RAID CYCLE</span>
-        <h2 class="section-title pixel">8-PLAYER SERVER RAID & LOCKOUT</h2>
+        <h2 class="section-title pixel">8-PLAYER RAID CYCLE</h2>
         <p class="section-desc">
-          To ensure peak game balance and low latency, each DOGEON server instance is strictly capped at <strong>8 simultaneous players</strong>.
+          Each server room holds up to <strong>8 players</strong>, and the whole room shares one Cat Lord.
         </p>
 
         <div class="grid-2">
           <div class="card" style="border-left: 4px solid var(--green);">
             <img class="card-icon" src="assets/icons/boss.png" width="48" height="60" alt="Cat Lord sprite">
-            <h3 class="pixel">30-MINUTE EXTRACTION WINDOW</h3>
+            <h3 class="pixel">ONE CAT LORD PER ROOM</h3>
             <p>
-              From the moment you start playing, a <strong>30-minute raid timer</strong> counts down. 
-              Players must assemble, coordinate professions, battle through Cat Minions, breach the inner sanctum, 
-              and slay the Cat Lord before time expires.
+              Slay 8 cats, then 3 brutes, and the Elder opens the ruins gate. The Cat Lord's HP grows with the raid:
+              <strong>+50% for every extra player</strong> in the room, so bring a party.
             </p>
           </div>
 
           <div class="card" style="border-left: 4px solid var(--red);">
             <img class="card-icon" src="assets/icons/gate.png" width="48" height="48" alt="Ruins gate tile">
-            <h3 class="pixel">5-HOUR GATE SEAL LOCKOUT</h3>
+            <h3 class="pixel">HE RETURNS IN 60 SECONDS</h3>
             <p>
-              If the 30-minute timer runs out before the Cat Lord falls, the raid <strong>FAILS</strong>! 
-              Any players inside the chamber are violently ejected back to the ruins, and the gates seal shut for <strong>5 hours</strong>. 
-              Players can still gather, fish, level skills, and trade in the overworld while waiting for the next raid window.
+              60 seconds after the Cat Lord falls, he comes back at full HP and the whole room restarts the heist at quest 1:
+              the gate closes and anyone still in the chamber is moved out. The HUD counts it down (<strong>BOSS IN 45S</strong>),
+              then shows <strong>RAID ON</strong>.
             </p>
           </div>
         </div>
@@ -1224,13 +1254,13 @@
 
           <!-- Screenshot 2: Warrior Combat -->
           <div class="ss-card">
-            <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/03-combat-warrior.png')">
-              <img src="assets/screenshots/03-combat-warrior.png" alt="Warrior Combat & Ground Pound" loading="lazy">
+            <div class="ss-img-wrap" onclick="openLightbox('assets/video/warrior.jpg')">
+              <video autoplay muted loop playsinline preload="none" poster="assets/video/warrior.jpg" src="assets/video/warrior.mp4" aria-label="The Warrior kills a field mini-boss"></video>
             </div>
             <div class="ss-info">
               <div>
-                <h4 class="pixel">WARRIOR COMBAT & GROUND POUND</h4>
-                <p>Melee tank cleaving Cat Knights with screen-shaking Ground Pound AoE and +15% armor.</p>
+                <h4 class="pixel">WARRIOR VS A MINI-BOSS</h4>
+                <p>Real capture: the Warrior class takes down a field mini-boss. "MINI-BOSS SLAIN! SUCH LOOT."</p>
               </div>
               <div class="silk" style="font-size: 11px; color: var(--red); margin-top: 12px;">SYSTEM: ACTION COMBAT</div>
             </div>
@@ -1341,7 +1371,7 @@
             <li><a href="#characters">Classes & Skills</a></li>
             <li><a href="#resources">Gathering & Fishing</a></li>
             <li><a href="#pvp">PvP Loot Rules</a></li>
-            <li><a href="#party">Raid Lockouts</a></li>
+            <li><a href="#party">Raid Cycle</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -1471,5 +1501,9 @@
     <img id="lightbox-img" style="max-width:92vw; max-height:88vh; border:2px solid var(--gold); border-radius:6px; box-shadow:0 0 35px rgba(255,215,0,0.35); image-rendering:pixelated; object-fit:contain;" src="" alt="Enlarged DOGEON Screenshot">
     <div class="pixel" style="position:absolute; bottom:20px; color:var(--text-muted); font-size:12px;">CLICK ANYWHERE OR PRESS [ESC] TO CLOSE</div>
   </div>
+  <script>
+    // prefers-reduced-motion: loops stay on their poster frame
+    try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('video[autoplay]').forEach(v => { v.removeAttribute('autoplay'); v.pause(); v.load(); }); } catch (e) {}
+  </script>
 </body>
 </html>

@@ -44,7 +44,7 @@ else bad('unknown external hosts (wrong chain URLs or unvetted links) — use CH
   [...new Map(unknown.map(m => [m[1], m])).values()].map(m => `line ${lineOf(m.index)}: ${m[1]}`));
 
 // T5: contract addresses
-const addrs = new Set([...page.matchAll(/0x[0-9a-fA-F]{40}/g)].map(m => m[0].toLowerCase()));
+const addrs = new Set([...page.matchAll(/(?<![0-9a-fA-F])0x[0-9a-fA-F]{40}(?![0-9a-fA-F])/g)]  /* 40-hex addresses only, not 64-hex tx hashes (D-098) */.map(m => m[0].toLowerCase()));
 const want = Object.entries(live).filter(([, v]) => v); // RedStone feed optional: the landing shows no price data (D-089)
 const miss = want.filter(([, v]) => !addrs.has(v.toLowerCase())).map(([k]) => k);
 miss.length ? bad(`contract addresses missing/stale: ${miss.join(', ')}`) : ok(`all ${want.length} live contract addresses present (CONTRACTS['0x5fdaf3'])`);
