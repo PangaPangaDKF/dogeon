@@ -1,6 +1,6 @@
 # DOGEON — Landing & Trailer Master Prompt
 
-Version: 1.1 (2026-11-12) · Pairs with the `dogeon-landing-design` skill · Update both in the same commit (skill RULE L0).
+Version: 1.2 (2026-11-13) · Pairs with the `dogeon-landing-design` skill · Update both in the same commit (skill RULE L0).
 
 Paste the block below to open any session that touches the landing page, the trailer, key art or social assets
 (Claude Code, Antigravity, or TryNoah). Replace `<TASK>` with one concrete goal.
@@ -36,6 +36,7 @@ Read only what the task needs, in this order:
 - Small, surgical diffs. One logical change per commit. Don't touch `src/game.js`, `contracts/**` or the multiplayer
   logic in `server/relay.mjs` from this lane without proposing it first (`AGENTS.md` dual-brain rule).
 - Wallet/chain parameters (RPC, explorer, faucet, chain ID) are copied from `CHAIN` in `src/game.js`, never typed from memory (skill T7).
+- Positioning (T8): DOGEON is a PonziFi meme game on testnet tokens. No DOGE price, USD value, oracle or yield promise on the page; keep the "testnet, no real-world value, not financial advice" disclaimer in the hero and footer.
 - Another agent may be editing the same page: `git status` right before each write; never edit a file someone else has uncommitted; commit only your own paths.
 - Prove bugs before reporting them (measure, screenshot or curl), and prove fixes the same way.
 </rules>
@@ -66,5 +67,6 @@ DNS, wallet), and the next backlog item. Keep it short.
 - **The self-update closeout** turns every session's mistakes into rules, so the prompt improves with use.
 
 ## Changelog
+- 1.2 (2026-11-13, D-090): positioning rule T8 (PonziFi meme game on testnet tokens, no price data).
 - 1.1 (2026-11-12, D-085): landing-check in the verify step; chain params from `CHAIN` (T7); two-agent collision rule.
 - 1.0 (2026-11-12, D-083): Created alongside the `dogeon-landing-design` skill v1.0.

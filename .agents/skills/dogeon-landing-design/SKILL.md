@@ -5,7 +5,7 @@ description: Own design skill for DOGEON's public face — the landing page (lan
 
 # DOGEON Landing & Trailer Design Skill
 
-Version: 1.8 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
+Version: 1.9 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
 
 ## RULE L0 — this skill and its master prompt are living documents
 Every change to `landing.html`, `assets/**`, `docs/TRAILER_SCRIPT.md`, or any marketing image or video ends with:
@@ -54,6 +54,7 @@ Type: **Press Start 2P** for display (headlines and CTAs only, short strings; it
 - **T5. Addresses match the chain.** Contract tables must equal `CONTRACTS['0x5fdaf3']` in `src/game.js` and link to `https://dogeos-testnet.l2scan.co/address/<addr>` (note: dogeo**s**, the explorer in `CHAIN.explorer`).
 - **T6. Links must work today.** Play CTAs use `/play` on the same host (multiplayer auto-connects to the serving host). Only switch to `play.dogeon.lat` after its DNS and certificate are live (see §10).
 - **T7. Chain parameters come from the game, never from memory.** The "Add DogeOS" button (`rpcUrls`, `blockExplorerUrls`, `chainId`), the network table and every faucet/explorer link must equal `CHAIN` in `src/game.js` (`rpc.testnet.dogeos.com`, `dogeos-testnet.l2scan.co`, `faucet.testnet.dogeos.com`, `0x5fdaf3`). A wrong RPC is a security bug, not a typo: the page sent players' wallets to `chikyu-rpc.dogeos.xyz`, a host on a parked-looking domain the project does not control (fixed D-085). `node scripts/landing-check.mjs` enforces this.
+- **T8. Testnet PonziFi, never a price.** DOGEON's positioning (user, 2026-11-13) is *a PonziFi meme game on testnet tokens*. The landing shows **no DOGE price, USD value, oracle feed or yield promise**, and every mention of PonziFi, staking or yield is clearly satire running on free testnet tokens with no real-world value. The hero and the footer must keep the "testnet, no real-world value, not financial advice" disclaimer. Images count too: crop HUD price/wallet readouts out of hero art (the in-game HUD still shows `DOGE $…`; gallery shots are a known gap, B10).
 
 ## 5. LLM design practices (how to keep the page from looking machine-made)
 1. **Content first, from the subject's world.** Real screenshots, real controls, real fees and chain ID. The hero is the real camp-and-coin capture; that one image carries the brand.
@@ -110,6 +111,7 @@ kill <the PID of YOUR test relay>    # never pkill node/relay: the user's own se
 | B7 | Embed the finished trailer (self-hosted MP4 `<video>` with a poster; no third-party iframe) | Hero motion with no heavy scripts |
 | B8 | Gallery: 8 cards in a 3-column grid leave an empty slot; use 4 columns on desktop (or 6/9 cards) | Repeated items should fill their rows |
 | B9 | Meme-stat card shows a bone icon; use a rolled-gear sprite (e.g. yarn or a weapon) | Icon should say what the card is about |
+| B10 | Gallery screenshots still show the HUD's `DOGE $0.245` price line; crop the HUD or retake (T8) | No price data on the page |
 
 ## 10. Domains and deploy (dogeon.lat = landing, play.dogeon.lat = game)
 One Fly app (`dogeon-game`; `fly.toml` + `Dockerfile`) runs `server/relay.mjs`, which routes by host and path (D-082):
@@ -133,6 +135,7 @@ The game opens its multiplayer WebSocket to whatever host served it, so both hos
 8. **One machine, sleeps when idle.** The app runs a single Fly machine (`fly scale count 1`; in-memory relay rooms must not split across machines). `fly status` often shows it `stopped`: Fly auto-stops it when no one is connected and wakes it on the next request (~3 s cold, <1 s warm, measured 2026-11-13). That is normal, not an outage. `fly.toml` keeps `auto_stop_machines = "stop"`: the user prefers sleep (cheaper) over instant first loads (D-088 tried always-on and was reverted the same day). If a `fly` command fails with `token expired`, run `fly auth login`, open the printed URL in the Windows browser and click Authorize; never paste the URL into the code prompt.
 
 ## Changelog
+- 1.9 (2026-11-13, D-090): new hero `assets/screenshots/hero-camp-coin.png` (user's capture, coin centered; HUD with price, wallet value and deployer address cropped off; 704×380). Rule T8: PonziFi meme game on testnet tokens, no price data anywhere. Removed the RedStone/price card, hero mention, contracts-table row and Sphinx "oracle feeds"; `landing-check.mjs` no longer requires the feed address. Lore and staking rewritten as PonziFi satire; footer disclaimer; new "Come build on DogeOS" section (docs, dogeos.com, source repo), nav 7 links. Added B10.
 - 1.8 (2026-11-13, D-089): economy copy follows the game change — off-chain DOGE now comes only from monster drops (NPCs never hand out DOGE; Elder quests pay materials). **Lesson:** a gameplay change can falsify landing copy; grep `landing.html` for the changed mechanic in the same commit.
 - 1.7 (2026-11-13, D-086 follow-up): full-page review of the live site. Fixed "The the camp" typo, literal backticks around the oracle address (prose must never contain Markdown backticks), economy title contradicting the two-currency copy, "VERIFIED" contracts (unproven on the explorer → "LIVE"), Sphinx gallery fee claim. Added B8, B9. **Screenshot lesson:** headless Chrome won't repaint after `scrollTo` and the relay 404s scratch HTML; to capture a long page by sections, load a scratch copy with `<base href="https://dogeon.lat/">` and `body{margin-top:-Ypx}`, `header{position:static}`.
 - 1.6 (2026-11-13, D-088): always-on reverted at the user's request; the machine sleeps when idle again.

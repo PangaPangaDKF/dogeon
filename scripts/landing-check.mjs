@@ -45,10 +45,10 @@ else bad('unknown external hosts (wrong chain URLs or unvetted links) — use CH
 
 // T5: contract addresses
 const addrs = new Set([...page.matchAll(/0x[0-9a-fA-F]{40}/g)].map(m => m[0].toLowerCase()));
-const want = Object.entries({ ...live, feed }).filter(([, v]) => v);
+const want = Object.entries(live).filter(([, v]) => v); // RedStone feed optional: the landing shows no price data (D-089)
 const miss = want.filter(([, v]) => !addrs.has(v.toLowerCase())).map(([k]) => k);
-miss.length ? bad(`contract addresses missing/stale: ${miss.join(', ')}`) : ok(`all ${want.length} live addresses present (CONTRACTS['0x5fdaf3'] + RedStone feed)`);
-const known = new Set(want.map(([, v]) => v.toLowerCase()).concat((game.match(/0x[0-9a-fA-F]{40}/g) || []).map(a => a.toLowerCase())));
+miss.length ? bad(`contract addresses missing/stale: ${miss.join(', ')}`) : ok(`all ${want.length} live contract addresses present (CONTRACTS['0x5fdaf3'])`);
+const known = new Set(want.map(([, v]) => v.toLowerCase()).concat(feed ? [feed.toLowerCase()] : []).concat((game.match(/0x[0-9a-fA-F]{40}/g) || []).map(a => a.toLowerCase())));
 const stray = [...addrs].filter(a => !known.has(a));
 stray.length ? bad('addresses on the page that the game does not use', stray) : ok('no stray addresses');
 

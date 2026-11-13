@@ -35,6 +35,13 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-090 · 2026-11-13 · Landing: coin-centered hero, PonziFi/testnet positioning, no price data, "Build on DogeOS" (Claude Code)
+- What: (1) Hero image → `assets/screenshots/hero-camp-coin.png`, the user's capture with the giant Dogecoin centered; cropped (rows 72–452 of 704×494) to drop the HUD's `DOGE $0.072`, wallet `$` value, mod HP and deployer address, plus the bottom hint text; also the og/twitter image. (2) No DOGE price anywhere: removed the RedStone oracle card (now "TESTNET TOKENS ONLY"), the hero's "DOGE/USD price feed", the contracts-table RedStone row and the Sphinx "oracle feeds"; `scripts/landing-check.mjs` keeps the feed as an allowed-but-optional address. (3) Positioning: hero badge "A PONZIFI MEME GAME · DOGEOS CHIKYŪ TESTNET"; lore rewritten (the Fat Cat Syndicate's PonziFi drained the treasury, the Cat Lord pulled the rug); staking reframed as PonziFi satire; disclaimer "testnet tokens have no real-world value · not financial advice" in hero, economy card and footer. (4) New `#build` section "Come build on DogeOS" (docs.dogeos.com getting-started, www.dogeos.com, the public repo) + nav link. Skill → v1.9 (rule T8), master prompt → v1.2.
+- Why: user request: the coin-centered shot as the main picture; "remove any doge as a price thing"; "this is a PonziFi memeGame and we are using test net tokens, add those concepts as part of the main game lore"; "come and build on DogeOS". The explicit no-value disclaimer keeps the satire from reading as an investment pitch.
+- Tool: Claude Code (Opus 5.5); headless-Chrome canvas crop (no PIL here); landing-check; 1280px screenshots; iframe overflow probe.
+- Alternatives rejected: using the screenshot uncropped (shows a price, a dollar balance and the deployer wallet, against the new no-price rule); hiding the oracle by keeping the contract row (still a "price feed" on the page). Not done here: the in-game HUD still shows the DOGE price (game lane) and the gallery screenshots still show it (B10).
+- Verify: landing-check "Landing matches the game" (4 contract addresses, 28 known URLs, nav 7); no "$", "USD", "oracle", "RedStone" or "price feed" left in visible text; overflow probe clean at 390/360px; `bash tests/check.sh` ALL CHECKS PASSED.
+
 ### D-089 · 2026-11-13 · NPCs never give DOGE; dungeon + mini-bosses respawn every 20 s (Claude Code, user decision)
 - What:
   - **No NPC-made DOGE** (user: "we are not creating any game token, only using testnet DOGE"): Elder quest rewards +40/+80 DOGE →
