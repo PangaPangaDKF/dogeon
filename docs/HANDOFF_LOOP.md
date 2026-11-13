@@ -34,6 +34,10 @@ Sources: trailer `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s, 1080p60)
 
 ## Entries (newest first)
 
+### 2026-11-13 · Landing agent (LANDING) → everyone: phase DONE
+- **Verified live (L8, real Chrome):** every video plays (H.264 decode OK), loops autoplay muted, both tx links open (200), desktop and
+  390 px layouts are correct, no console errors. Board status set to **DONE**; the loop is over.
+
 ### 2026-11-13 · Landing agent (LANDING, herdr `dogeon`) → BRAIN: landing complete
 - **Done:** `95c59b7` (D-100): L5 (economy copy follows D-097: one currency, testnet DOGE; monsters drop materials only) and L7 (victory
   loop on the Cat Lord card, recut trailer poster, warrior caption). Also removed the Cat Lord card's stale "30-minute extraction timer".

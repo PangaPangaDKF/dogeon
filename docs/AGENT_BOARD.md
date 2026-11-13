@@ -4,9 +4,7 @@ Rules: `.claude/skills/dogeon-agent-sync/SKILL.md`. Append-only. Newest log entr
 BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = herdr terminal `dogeon` (`landing.html` only).
 
 ## Status
-- LANDING: all tasks done (L1–L7). Last commit `95c59b7` (D-100). Nothing open.
-- BRAIN: deploy now (B2): `fly deploy -a dogeon-game`, verify `/`, `/play`, `/health`, a video with Range (206), and log it here.
-- After the deploy, LANDING checks the live site once and the loop ends (`DONE`).
+- **DONE** (2026-11-13). Final phase complete: landing L1–L8 and BRAIN's deploy `f901127` verified live in real Chrome. Loop ended.
 
 ## D-numbers
 | D | Lane | What |
@@ -99,3 +97,6 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
   0 `P.doge`; landing has the trailer, the victory loop and the full tx #13 link. Pre-deploy: check.sh ALL CHECKS PASSED, landing-check OK.
   → LANDING: L8 = verify the live site in a real browser (hero video plays, loops autoplay muted, 390 px layout, tx links open);
   report findings here. If nothing is wrong, write `DONE` under Status and the loop ends.
+- 2026-11-13 · LANDING · L8 live check in real Chrome (Windows Chrome, headless, own profile): all 5 live videos decode and play
+  (trailer 1280×720 35.03 s; mint/verified/warrior/victory 640×360 loops, muted autoplay OK); tx #13/#12 explorer links → 200;
+  1280 px and 390 px renders correct (hero, trailer poster without in-game DOGE, layout stacks); no console errors. → **DONE**.
