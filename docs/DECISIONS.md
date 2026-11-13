@@ -35,6 +35,13 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-092 · 2026-11-13 · Landing hero: the whole safe camp with the NPCs' new posts (Claude Code)
+- What: `assets/screenshots/hero-camp-coin.png` replaced with the user's newer capture (788×555 → 788×509): the full camp, the giant Dogecoin at its center and every NPC at its current pad. Only the HUD bar (with `DOGE $0.230`) is cropped; the bottom hint lines stay (no price; cropping them would cut the bottom NPCs). Same file name, so og/twitter keep working; `width/height`, `aspect-ratio` and og dimensions updated. Landing skill → v1.11.
+- Why: user — "use this new one as the main image; it shows the NPCs' latest positions and the whole safe area with the Dogecoin logo."
+- Tool: Claude Code (Opus 5.5); headless-Chrome canvas crop; landing-check; overflow probe; 1280px render.
+- Alternatives rejected: also cropping the bottom hint text (would slice the two bottom NPCs and the last fence row, against "show the whole safe area").
+- Verify: landing-check "Landing matches the game"; overflow probe 0 at 390/360px; 1280px hero render reviewed.
+
 ### D-091 · 2026-11-13 · Landing gallery: HUD-less screenshots, 6-card grid, truthful captions (Claude Code)
 - What: Cropped the HUD (with its `DOGE $0.245` price line) and the bottom hint text out of `assets/screenshots/03,04,05,07,08` (960×672 → 960×564, rows 54–618; the title shot 01 has no HUD). Gallery cut from 8 to 6 cards so the 3-column grid fills: removed `06-sphinx-defi` (its menu shows the RedStone DOGE/USD row and the outdated "SIMULATED DOGE" wallet) and `02-camp-coin` (duplicate of the new hero). Card 08 relabeled "PLAY TOGETHER" (it shows three players at camp, not a raid). Meme-stat icon bone → Golden Yarn. Landing skill → v1.10 (B8, B9, B10 struck).
 - Why: rule T8 (no price data, including images and the lightbox) and the "repeated items fill their rows" practice; user asked to continue the plan.

@@ -5,7 +5,7 @@ description: Own design skill for DOGEON's public face — the landing page (lan
 
 # DOGEON Landing & Trailer Design Skill
 
-Version: 1.10 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
+Version: 1.11 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
 
 ## RULE L0 — this skill and its master prompt are living documents
 Every change to `landing.html`, `assets/**`, `docs/TRAILER_SCRIPT.md`, or any marketing image or video ends with:
@@ -135,6 +135,7 @@ The game opens its multiplayer WebSocket to whatever host served it, so both hos
 8. **One machine, sleeps when idle.** The app runs a single Fly machine (`fly scale count 1`; in-memory relay rooms must not split across machines). `fly status` often shows it `stopped`: Fly auto-stops it when no one is connected and wakes it on the next request (~3 s cold, <1 s warm, measured 2026-11-13). That is normal, not an outage. `fly.toml` keeps `auto_stop_machines = "stop"`: the user prefers sleep (cheaper) over instant first loads (D-088 tried always-on and was reverted the same day). If a `fly` command fails with `token expired`, run `fly auth login`, open the printed URL in the Windows browser and click Authorize; never paste the URL into the code prompt.
 
 ## Changelog
+- 1.11 (2026-11-13, D-092): hero replaced with the user's newer capture (`Downloads/Screenshot_62.png`, 788×555): the whole safe camp with the NPCs at their new posts. Only the HUD (top 46 px, with the `DOGE $` price) is cropped → 788×509; the bottom hint text stays because it overlaps the last camp row and carries no price. **Rule:** when the user supplies a hero, keep their framing; crop only what T8 forbids.
 - 1.10 (2026-11-13, D-091): B8/B9/B10 done. In-game screenshots are stored HUD-less (crop `HUD_H`=18 game px top and the 18 px hint band bottom, at 3× = 54 px each). The lightbox shows the full file, so cropping only via CSS `object-fit` is not enough. Card 08 relabeled "PLAY TOGETHER" (it shows the camp, not a raid). **Lesson:** check each gallery caption against what its picture actually shows.
 - 1.9 (2026-11-13, D-090): new hero `assets/screenshots/hero-camp-coin.png` (user's capture, coin centered; HUD with price, wallet value and deployer address cropped off; 704×380). Rule T8: PonziFi meme game on testnet tokens, no price data anywhere. Removed the RedStone/price card, hero mention, contracts-table row and Sphinx "oracle feeds"; `landing-check.mjs` no longer requires the feed address. Lore and staking rewritten as PonziFi satire; footer disclaimer; new "Come build on DogeOS" section (docs, dogeos.com, source repo), nav 7 links. Added B10.
 - 1.8 (2026-11-13, D-089): economy copy follows the game change — off-chain DOGE now comes only from monster drops (NPCs never hand out DOGE; Elder quests pay materials). **Lesson:** a gameplay change can falsify landing copy; grep `landing.html` for the changed mechanic in the same commit.
