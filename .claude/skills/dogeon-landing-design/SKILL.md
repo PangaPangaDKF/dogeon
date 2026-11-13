@@ -5,7 +5,7 @@ description: Own design skill for DOGEON's public face — the landing page (lan
 
 # DOGEON Landing & Trailer Design Skill
 
-Version: 1.6 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
+Version: 1.7 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
 
 ## RULE L0 — this skill and its master prompt are living documents
 Every change to `landing.html`, `assets/**`, `docs/TRAILER_SCRIPT.md`, or any marketing image or video ends with:
@@ -108,6 +108,8 @@ kill <the PID of YOUR test relay>    # never pkill node/relay: the user's own se
 | ~~B5~~ | **Done D-086.** Over 20 claims corrected against code (see changelog 1.1) | T1 |
 | ~~B6~~ | **Done D-087.** Play CTAs point at `https://play.dogeon.lat/` (HTTPS verified 200 before switching); `/play` stays as a route | T6 |
 | B7 | Embed the finished trailer (self-hosted MP4 `<video>` with a poster; no third-party iframe) | Hero motion with no heavy scripts |
+| B8 | Gallery: 8 cards in a 3-column grid leave an empty slot; use 4 columns on desktop (or 6/9 cards) | Repeated items should fill their rows |
+| B9 | Meme-stat card shows a bone icon; use a rolled-gear sprite (e.g. yarn or a weapon) | Icon should say what the card is about |
 
 ## 10. Domains and deploy (dogeon.lat = landing, play.dogeon.lat = game)
 One Fly app (`dogeon-game`; `fly.toml` + `Dockerfile`) runs `server/relay.mjs`, which routes by host and path (D-082):
@@ -131,6 +133,7 @@ The game opens its multiplayer WebSocket to whatever host served it, so both hos
 8. **One machine, sleeps when idle.** The app runs a single Fly machine (`fly scale count 1`; in-memory relay rooms must not split across machines). `fly status` often shows it `stopped`: Fly auto-stops it when no one is connected and wakes it on the next request (~3 s cold, <1 s warm, measured 2026-11-13). That is normal, not an outage. `fly.toml` keeps `auto_stop_machines = "stop"`: the user prefers sleep (cheaper) over instant first loads (D-088 tried always-on and was reverted the same day). If a `fly` command fails with `token expired`, run `fly auth login`, open the printed URL in the Windows browser and click Authorize; never paste the URL into the code prompt.
 
 ## Changelog
+- 1.7 (2026-11-13, D-086 follow-up): full-page review of the live site. Fixed "The the camp" typo, literal backticks around the oracle address (prose must never contain Markdown backticks), economy title contradicting the two-currency copy, "VERIFIED" contracts (unproven on the explorer → "LIVE"), Sphinx gallery fee claim. Added B8, B9. **Screenshot lesson:** headless Chrome won't repaint after `scrollTo` and the relay 404s scratch HTML; to capture a long page by sections, load a scratch copy with `<base href="https://dogeon.lat/">` and `body{margin-top:-Ypx}`, `header{position:static}`.
 - 1.6 (2026-11-13, D-088): always-on reverted at the user's request; the machine sleeps when idle again.
 - 1.5 (2026-11-13, D-088): Fly machine set to always-on (`auto_stop_machines = "off"`) at the user's request.
 - 1.4 (2026-11-13, D-087): §10 step 8: single sleeping machine is normal (3 s cold start), always-on option, Fly re-login flow. Scaling to 1 destroyed the running machine; the stopped one woke after its lease expired (~90 s of timeouts).
