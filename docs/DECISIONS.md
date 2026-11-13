@@ -35,6 +35,17 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-083 · 2026-11-12 · Landing lane: own design skill + master prompt, landing truth/phone fixes, trailer v2 (Claude Code)
+- What:
+  1. **New skill `dogeon-landing-design` v1.0** (`.claude/` + `.agents/` mirror): read-first list, the real token system, truth rules T1–T6 (every claim maps to code; no fake live stats; gameplay = real captures only; AI never redraws the coin), LLM design practices, review checklist, verification commands (incl. the headless-500px phone trap), backlog B1–B7. **RULE L0:** every landing/trailer/art change bumps the skill + master prompt in the same commit, in English. Registered in `CLAUDE.md` and `AGENTS.md`.
+  2. **`prompts/LANDING_MASTER_PROMPT.md` v1.0:** paste-ready, tagged-section opener for any agent working on the landing or trailer.
+  3. **`landing.html` fixes:** all 3 play CTAs `https://play.dogeon.lat/?mp` (no DNS yet → broken) → `/play` (multiplayer auto-connects to the serving host). Fake hero mock (🐕 emoji, "SERVER ALIVE 8/8", "WALLET 420 DOGE", "LV. 42") → the real `02-camp-coin.png` capture at integer scale + a true controls caption. Phone overflow: 4 grids `minmax(Npx,1fr)` → `minmax(min(Npx,100%),1fr)`; header RPC button hidden ≤900px (the hero has the same action). Added og/twitter share tags and `prefers-reduced-motion`.
+  4. **`docs/TRAILER_SCRIPT.md` v2.0:** OBS / nano banana / Canva split, scene-by-scene staging with verified console hooks, nano banana prompt template + truth rules, step-by-step Canva edit; S5 (real mint capture) doubles as the mission item 1 proof. `scripts/trailer-bots.mjs` gains a `boss` mode (bots previously only circled the camp, so the old raid-shot instructions couldn't work).
+- Why: the user made Claude Code the landing-page dev and set the rule that this lane always has its own design skill and master prompt, kept current with best LLM practices.
+- Tool: Claude Code (Opus 5.5); `artifact-design` fundamentals; existing `web3-game-landing-ui` user skill as the palette source; headless Chromium screenshots + an iframe overflow probe at 390/360px. Searched the skills registry (`npx skills find`); the results (3–140 installs, generic SaaS/promo) were not installed.
+- Alternatives rejected: redesigning the landing from scratch (the existing token system is sound; fix truth and layout first); AI video for gameplay shots (would misrepresent the game); pointing CTAs at `play.dogeon.lat` before DNS exists.
+- Verify: relay smoke `/`→landing, `/play` 200, image 200; overflow probe at 390px and 360px lists only the scroll-wrapped tables; 1280px screenshot reviewed; `bash tests/check.sh` ALL CHECKS PASSED.
+
 ### D-082 · 2026-11-12 · Landing/game host split — `dogeon.lat`→landing, `play.dogeon.lat`/`/play`→game (Claude Code)
 - What: Shipped the standalone marketing landing (`landing.html`, 1540 lines, DogeOS "Grand Heist" design tokens + `assets/screenshots/`) and taught `server/relay.mjs` host-based routing:
   - `/health` → JSON (moved above routing).

@@ -1,11 +1,11 @@
 // Trailer helper: spawns ghost "bots" that walk around the camp so you can record a lively
 // multiplayer scene without needing friends online. Zero deps (Node 22+ native WebSocket).
-//   node scripts/trailer-bots.mjs [ws://localhost:8787] [room]
+//   node scripts/trailer-bots.mjs [ws://localhost:8787] [room] [camp|boss]
 // Then open the game in the SAME room and record:
-//   http://localhost:8787/?mp=ws://localhost:8787&room=trailer&name=YOU
+//   http://localhost:8787/play?room=trailer&name=YOU
 const url = process.argv[2] || 'ws://localhost:8787';
 const room = process.argv[3] || 'trailer';
-const CX = 40 * 16 + 8, CY = 34 * 16 + 8; // camp centre in pixels
+const [CX, CY] = process.argv[4] === 'boss' ? [40 * 16 + 8, 5 * 16 + 8] : [40 * 16 + 8, 34 * 16 + 8]; // boss chamber or camp centre, px
 const bots = [ // id must be lowercase alphanumeric <=12 chars (relay join rule: /^[a-z0-9]{1,12}$/)
   { id: 'botshadow', n: 'SHADOW', c: 'warrior', r: 44, ph: 0, spd: 1.3 },
   { id: 'botpixel', n: 'PIXEL', c: 'archer', r: 62, ph: Math.PI, spd: -1.0 },

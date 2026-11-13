@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DOGEON — The Grand Heist | 16-Bit Hardcore Web3 Action RPG on DogeOS</title>
   <meta name="description" content="A hardcore 16-bit retro multiplayer Action RPG & Web3 dungeon extraction raid on DogeOS Chikyū. Slay the Cat Lord, loot rival players, mint on-chain meme gear, and stake DOGE.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://dogeon.lat/">
+  <meta property="og:title" content="DOGEON: The Grand Heist">
+  <meta property="og:description" content="Free 16-bit multiplayer action RPG on DogeOS. Gather, craft, mint real on-chain gear, and raid the Cat Lord with friends.">
+  <meta property="og:image" content="https://dogeon.lat/assets/screenshots/02-camp-coin.png">
+  <meta property="og:image:width" content="960">
+  <meta property="og:image:height" content="672">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://dogeon.lat/assets/screenshots/02-camp-coin.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
@@ -267,57 +276,40 @@
     }
     @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     .screen-viewport {
-      height: 380px;
       position: relative;
-      background: #111425 radial-gradient(#1c223d 10%, transparent 11%);
-      background-size: 24px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      background: #000;
       overflow: hidden;
     }
-    .hud-overlay {
-      position: absolute;
-      top: 12px; left: 16px; right: 16px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      z-index: 2;
+    .screen-viewport img {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: 320 / 224;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
     }
-    .hud-chip {
-      background: rgba(0, 0, 0, 0.75);
-      border: 1px solid var(--card-border);
-      padding: 5px 10px;
-      border-radius: 4px;
+    .screen-caption {
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--cyan);
+      border-top: 1px solid var(--card-border);
     }
-    .doge-sprite {
-      width: 64px; height: 64px;
-      background: var(--gold);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-      animation: bob 1.8s ease-in-out infinite;
-    }
-    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
     /* Card Grids */
     .grid-3 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
       gap: 24px;
     }
     .grid-2 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
       gap: 24px;
     }
     .grid-4 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
       gap: 20px;
     }
 
@@ -487,7 +479,7 @@
     /* Gallery & Screenshots */
     .gallery-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
       gap: 24px;
       margin-top: 24px;
     }
@@ -598,6 +590,11 @@
       .footer-grid { grid-template-columns: 1fr; }
       .hero h1 { font-size: 32px; }
       .nav-links { display: none; }
+      .nav-cta .btn-cyan { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #bg-canvas { display: none; }
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
     }
   </style>
 </head>
@@ -626,7 +623,7 @@
       </ul>
       <div class="nav-cta">
         <button id="add-network-btn" class="btn btn-cyan silk" onclick="addDogeOSToMetaMask()">+ DogeOS RPC</button>
-        <a href="https://play.dogeon.lat/?mp" target="_blank" class="btn btn-gold pixel">Play Now</a>
+        <a href="/play" target="_blank" class="btn btn-gold pixel">Play Now</a>
       </div>
     </div>
   </header>
@@ -646,7 +643,7 @@
           real-time RedStone oracles, and meme-forged gear with wild ±420 and ±69 stats.
         </p>
         <div class="hero-actions">
-          <a href="https://play.dogeon.lat/?mp" target="_blank" class="btn btn-gold pixel" style="padding: 14px 28px; font-size: 13px;">ENTER THE DUNGEON (?mp)</a>
+          <a href="/play" target="_blank" class="btn btn-gold pixel" style="padding: 14px 28px; font-size: 13px;">PLAY FREE NOW</a>
           <button class="btn btn-cyan silk" onclick="addDogeOSToMetaMask()" style="padding: 14px 24px;">ADD DOGEOS TO METAMASK</button>
           <a href="#faucet" class="btn btn-purple silk" style="padding: 14px 24px;">CLAIM FAUCET DOGE</a>
         </div>
@@ -656,24 +653,14 @@
           <div class="screen-header">
             <div class="screen-status">
               <span class="status-dot"></span>
-              <span class="pixel" style="color: var(--green);">SERVER ALIVE: 8/8 SLOTS</span>
+              <span class="pixel" style="color: var(--green);">UP TO 8 PLAYERS PER SERVER</span>
             </div>
             <div class="pixel" style="color: var(--gold);">CHAIN ID: 6281971 (CHIKYŪ)</div>
           </div>
           <div class="screen-viewport">
-            <div class="hud-overlay">
-              <div class="hud-chip pixel" style="color: #ff5050;">HP 60/60 &nbsp; MP 30/30</div>
-              <div class="hud-chip pixel" style="color: var(--gold);">WALLET: 420.00 DOGE</div>
-              <div class="hud-chip pixel" style="color: #80ff80;">RAID: 28M LEFT</div>
-            </div>
-            <div class="doge-sprite">🐕</div>
-            <div class="pixel" style="color: #fff; font-size: 11px; margin-top: 14px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 4px;">
-              DEMOLITION DOGE [LV. 42]
-            </div>
-            <div class="silk" style="color: var(--cyan); font-size: 12px; margin-top: 6px;">
-              [SPC: CLEAVE &nbsp;|&nbsp; K: GROUND POUND 12MP &nbsp;|&nbsp; I: BAG &nbsp;|&nbsp; R: REST]
-            </div>
+            <img src="assets/screenshots/02-camp-coin.png" width="960" height="672" alt="DOGEON in-game screenshot: the safe camp with the giant Dogecoin, NPCs and the campfire">
           </div>
+          <div class="screen-caption silk">REAL GAMEPLAY &nbsp;|&nbsp; WASD MOVE &nbsp;|&nbsp; SPACE ATTACK &nbsp;|&nbsp; K SKILL &nbsp;|&nbsp; I BAG &nbsp;|&nbsp; R REST IN CAMP</div>
         </div>
       </div>
     </section>
@@ -895,7 +882,7 @@
             <div class="pixel" style="color: var(--purple); font-size: 24px; margin-bottom: 10px;">03</div>
             <h3 class="pixel">ENTER THE RAID</h3>
             <p>Boot the game in your browser with multiplayer enabled (`?mp`), connect your wallet at the Sphinx Keeper, and begin the heist.</p>
-            <a href="https://play.dogeon.lat/?mp" target="_blank" class="btn btn-purple silk" style="margin-top: 14px; width: 100%;">LAUNCH GAME</a>
+            <a href="/play" target="_blank" class="btn btn-purple silk" style="margin-top: 14px; width: 100%;">LAUNCH GAME</a>
           </div>
         </div>
 

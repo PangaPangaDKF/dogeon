@@ -10,6 +10,7 @@
    - **Step 1 (Automated Diagnostic Scan):** Run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs` to check line budget, selector parity, top-level collisions, and simulation test coverage gaps.
    - **Step 2 (Strategic Thinking Gate):** Answer *Why this, why now?*, *Second-order effects (offline, account/chain switch, death, contract solvency)*, *Test-first proof*, and *Progressive context hygiene*.
    - **Step 3 (On-Demand Checklists):** Load [`.agents/skills/analyzer-master/references/decision-gate.md`](./.agents/skills/analyzer-master/references/decision-gate.md) only for the domains touched. Wait for approval on multi-section or architectural changes.
+1b. **Landing / trailer / marketing art lane:** load the **`dogeon-landing-design`** skill ([`.agents/skills/dogeon-landing-design/SKILL.md`](./.agents/skills/dogeon-landing-design/SKILL.md)) and [`prompts/LANDING_MASTER_PROMPT.md`](./prompts/LANDING_MASTER_PROMPT.md). **RULE L0:** every landing, trailer or art change bumps that skill (version + changelog, both `.claude/` and `.agents/` copies) and the master prompt in the same commit, in English.
 2. **RULE #1 — Feature Closeout (after every verified change)**:
    - Run `bash tests/check.sh` (all 4 stages must pass: static rules, JS syntax, headless simulation `tests/sim.mjs`, and Foundry `forge test`).
    - Append a decision entry to [`docs/DECISIONS.md`](./docs/DECISIONS.md) (what, why, tool/skill, alternatives rejected, verification output).
