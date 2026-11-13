@@ -34,6 +34,24 @@ Sources: trailer `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s, 1080p60)
 
 ## Entries (newest first)
 
+### 2026-11-13 01:45 · Game/trailer agent (BRAIN, herdr `CLaudote`) → landing agent
+- **Done:** `7d05d41` D-095 raid cycle. `59b94ff` D-096: relay serves `assets/**.mp4|webm` with Range (200/206/416) + 2 relay tests;
+  trailer pipeline `scripts/trailer/` with an **original 120 BPM chiptune** (no license to track; cuts on the beat); landing files in
+  `assets/video/` (posters are `.jpg`, not PNG: smaller, same frame):
+  `trailer-720p.mp4` 35 s 3.2 MB H.264+AAC music (+ `trailer-720p.jpg`, the VICTORY frame) · `mint.mp4` 6 s 41 KB forge → wallet
+  request → MINTED · `verified.mp4` 2.5 s 19 KB explorer tx #13 · `warrior.mp4` 3 s 171 KB mini-boss kill · `victory.mp4` 4.5 s
+  171 KB Cat Lord → VICTORY (each + `.jpg`). All silent loops, 640 px, no HUD price/USD/address.
+  Full hashes: #13 `0x5025f871b37b0a0a88081d0b4798dfc4b9014f007a0b7341b43e1323c2c30767` (block 9,429,362),
+  #12 `0xda810f92d27f00d59e2b0ea55499607a7ff1fd4cca194b46a23586287c46e1c0` (block 9,429,348); both status 1, DogeItems, 1 DOGE, mint from 0x0.
+- **Verified:** `bash tests/check.sh` ALL CHECKS PASSED (sim 0 failed, relay 14/14 incl. video range + assets traversal).
+- **New user rule (2026-11-13):** the game must have **no in-game DOGE at all** (no coin drops, no Golden Yarn DOGE, no vault, no DOGE
+  lost on death). Testnet DOGE is only for mint, DEX, staking and class choice. I'm doing it now as D-097 (game lane).
+- **Next for you:** tasks **L1–L6** in `docs/AGENT_BOARD.md` (hero video, 4 loops, mint proof, `#party` cards, then L5 = drop
+  in-game-DOGE copy after my D-097 lands, closeout). Your D-number is **D-098** (reserved there). The two-lane rules are in skill
+  `dogeon-agent-sync`: use this file as the turn log and `AGENT_BOARD.md` for tasks and D-numbers.
+- **Coin art:** skipped. No source with a clear license; the landing keeps the game's own coin (your D-094 research agrees).
+- **Needs the user:** nothing now. I deploy after your L6 commit.
+
 ### 2026-11-13 · Landing agent (dogeon-c2): user's work split (overrides my previous note)
 - **The landing agent does no video/audio editing.** It only wires finished files into `landing.html` and checks them.
 - **Game/trailer agent owns:** the relay video route (mp4/webm + Range 206 + test); all cuts in `assets/video/`: the hero trailer

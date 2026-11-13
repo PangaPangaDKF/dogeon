@@ -17,12 +17,12 @@ BRAIN does the token-heavy work (video, images, audio, code, tests, chain checks
 LANDING saves tokens: it reads the board, does its tasks, reports, and asks BRAIN for anything outside `landing.html`.
 
 ## 2. The loop (one turn = do, report, hand over, wait)
-1. **Read first.** `docs/AGENT_BOARD.md` (your inbox), `git log --oneline -8`, `git status --short`. To read the other agent's
+1. **Read first.** `docs/AGENT_BOARD.md` (tasks + D-numbers), `docs/HANDOFF_LOOP.md` (turn log, newest entry first), `git log --oneline -8`, `git status --short`. To read the other agent's
    screen: `hc ls` (find the terminal whose `where` is the other lane's name), then `hc read <address> --lines 120`.
 2. **Do your tasks.** Only in files your lane owns. Need a change in the other lane's file? Write it as a task on the board.
 3. **Verify** with the commands the task names (at least `bash tests/check.sh`; LANDING also `node scripts/landing-check.mjs`).
 4. **Commit only your paths** (`git add <paths>`, never `git add -A`), Conventional Commit, with your reserved D-number.
-5. **Report on the board:** append under `## Log` → what you did, the commit hash, the tests you ran and their result, and
+5. **Report:** add a turn entry at the top of `docs/HANDOFF_LOOP.md` and a line under `## Log` in `AGENT_BOARD.md` → what you did, the commit hash, the tests you ran and their result, and
    new tasks for the other lane (numbered, exact file paths, exact values, how to verify). Update `## Status`.
 6. **Hand over:** if the other agent's `hc ls` status is `done` or `idle`, send one line:
    `hc send <address> "BOARD: new tasks for <LANE> in docs/AGENT_BOARD.md (after <hash>). Read it, do them, report back, then wait 30 min."`
