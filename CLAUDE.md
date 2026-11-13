@@ -27,7 +27,7 @@ cream face, cream eyebrow dots, red headband). Enemies are half-human cats. NPCs
 with distinct outfits. Tone: tryhard (hard but fair), with doge-speak jokes ("such X, much Y, wow").
 
 **Core loop:** leave the safe camp → fight cats → pick up whiskers → return to camp → trade
-whiskers for FUD at the bank → buy upgrades → heal ONLY by resting in camp → push further
+materials (whiskers, wood, stone, iron) at the forge → mint gear with real testnet DOGE → heal ONLY by resting in camp → push further
 (field → brutes → ruins → Cat Lord boss).
 
 ## 2. Stack & constraints (do not change without asking)
@@ -99,7 +99,7 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
 - **Camp is fully safe:** enemies can't enter, can't damage you, projectiles stop at the fence. `hurtPlayer` has a camp guard.
 - **Death:** lose 50% of carried DOGE, all whiskers, all materials and the whole bag (food). NFTs are safe on chain. Wake at fire at 35% HP/MP (RESPAWN_FRAC). Pooled DOGE is safe.
 - **DOGE Market:** price random-walks once per second; sentiment = price vs 30 s average. Bear: enemy dmg +50%, speed +15%, dark-red overlay. Bull: player dmg +50%, speed +10%.
-- **Economy:** whisker = 3 DOGE at the Sphinx (swap). Sphinx DEX: swap, buy items, pool/unpool DOGE. Mechanic forge: burn materials (ORB/SCRAP/HORN/STEEL) via RECIPES to craft hammer upgrades, armor, charms. **On-chain staking (D-030/D-031):** DEX charges a 1% protocol fee on every trade split **0.2% project treasury / 0.8% DOGE stakers**, skimmed outside the pool reserves (curve/k unchanged, D-022 audit holds); `DogeStaking` vault pays stakers pro-rata (MasterChef); the game's `stakeMenu` (Sphinx "ON-CHAIN STAKING" row) stakes/unstakes/claims and `flushStakerFees()` syncs fees in. The off-chain P.bank "safe vault" is a separate thing (DOGE safe on death).
+- **Economy:** **NPCs never give DOGE (D-089):** no game token — only real testnet DOGE pays for mints/trades. Whiskers are forge material (no Sphinx swap); the Sphinx camp vault keeps off-chain DOGE safe on death with no yield; off-chain DOGE comes only from monster coin drops (8%) and the Golden Yarn. Sphinx DEX: swap, buy items, pool/unpool DOGE. Mechanic forge: burn materials (ORB/SCRAP/HORN/STEEL) via RECIPES to craft hammer upgrades, armor, charms. **On-chain staking (D-030/D-031):** DEX charges a 1% protocol fee on every trade split **0.2% project treasury / 0.8% DOGE stakers**, skimmed outside the pool reserves (curve/k unchanged, D-022 audit holds); `DogeStaking` vault pays stakers pro-rata (MasterChef); the game's `stakeMenu` (Sphinx "ON-CHAIN STAKING" row) stakes/unstakes/claims and `flushStakerFees()` syncs fees in. The off-chain P.bank "safe vault" is a separate thing (DOGE safe on death).
   Enemies drop materials: frog→ORB, ninja→SCRAP, bull→HORN, knight→STEEL; cats→WHISKERS; brutes→3 WHISKERS.
 - **Wallet:** Sphinx row 0 = CONNECT WALLET / `WALLET 0x12..ab N DOGE` / OFFLINE label. Never ask for or store a private key.
 - **NFT items (D-019):** only crafted (forge credit `P.credits`) or caught (bag food) things can be minted. Owning a gear NFT = wearing it
@@ -111,9 +111,9 @@ New characters = new palette + `acc(g, dir, frame)` function that paints hats/we
 - **Starter Bag & DOGEON Pool DEX (D-036):** New players start with `WOOD x3` and `STONE x3` in `P.bag` (plus starter `orb/scrap/horn/steel`) so they can immediately mint a `HAMMER LV2 NFT` from `invMenu` (`I`/`Tab`), `shopMenu`, or `marketMenu` Row 0. Choosing `NFT MARKET: SWAP + LIQUIDITY POOLS` at the Sphinx opens `marketMenu` (`DOGEON POOL DEX: MINT, SWAP & LP`, `ui.pooldex=true`), showing your wallet's DOGE balance, `WALLET ITEMS (N)` minted item balance, Row-0 item minting, and `CREATE POOL` / `SWAP` / `ADD LP` rows on `DogeDEX`.
 - **Links + partners (D-024):** links open only from a menu row via `openLink()`; partner stories must be factual and sourced; no "official partner" claims without a source.
 - **Oracle (D-024):** RedStone DOGE/USD is display/safety only (and anchors the simulated market when connected); swap prices always come from pool reserves.
-- **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+40 DOGE) → 2 slay 3 brutes (+80 DOGE,
-  opens ruins gate) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 DOGE).
-- **Enemy populations:** field 52 (`FIELD_POP`), ruins lower hall 6 (`DUN_POP`), respawn one every 3 s (`SPAWN_EVERY`) out of view. Types: alley, archer, frog, ninja, bull, knight, brute.
+- **Quests (`state.stage`):** 0 talk to Elder → 1 slay 8 cats (+2 WOOD/STONE/IRON) → 2 slay 3 brutes (+4 WOOD/STONE/IRON,
+  opens ruins gate; `QUEST_MATS`) → 3 defeat the Cat Lord → 4 complete (Golden Yarn +150 DOGE).
+- **Enemy populations:** field 52 (`FIELD_POP`), ruins lower hall 6 (`DUN_POP`), field refills one every 3 s (`SPAWN_EVERY`) out of view; the ruins and mini-bosses refill every **20 s** (`DUN_RESPAWN`, `MINI_RESPAWN`, D-089). Types: alley, archer, frog, ninja, bull, knight, brute.
 - **Controls:** WASD/arrows move, Space/J slash (hammer swing), K/Q class skill (`useSkill()` → WOW bark, or GROUND POUND/ARROW VOLLEY/MEND by class, D-029), E talk, hold R rest, I/Tab bag, F fish, Esc close.
 
 ## 5. Coding rules for this project

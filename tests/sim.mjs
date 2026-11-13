@@ -198,10 +198,10 @@ scenario('economy: bank + shop flows', () => {
   g.P.whisk = 10;
   const bank = g.NPCS.find(n => n.id === 'bank');
   bank.met = true; api.talk(bank);
-  selectRow(api, /^SWAP .* WHISKERS/);
-  api.press('e'); api.step(DT); // exchange
-  if (api.get().P.doge !== 30 || api.get().P.whisk !== 0) fail('bank exchange', `expected 30 DOGE/0 whiskers, got ${api.get().P.doge}/${api.get().P.whisk}`);
-  else pass('bank exchange', '10 whiskers -> 30 DOGE');
+  // D-089: the Sphinx no longer swaps whiskers for DOGE (NPCs never create DOGE; whiskers are forge material)
+  const swap = api.get().ui.build().find(r => /WHISKERS ->|SWAP .*WHISK/.test(r.label));
+  if (swap || api.get().P.doge !== 0 || api.get().P.whisk !== 10) fail('no whisker swap', `swap row=${swap && swap.label} doge=${api.get().P.doge} whisk=${api.get().P.whisk}`);
+  else pass('no whisker swap', 'Sphinx has no WHISKERS -> DOGE row; 10 whiskers kept for the forge, 0 DOGE created');
   api.press('escape'); api.step(DT);
   const shop = g.NPCS.find(n => n.id === 'merchant');
   shop.met = true; api.get().P.doge = 1000; api.get().P.armor = 1; api.talk(shop);
@@ -305,7 +305,7 @@ scenario('forge: craft with materials, reject on insufficient', () => {
   api.press('escape'); api.step(DT);
 });
 
-scenario('pool: deposit safe on death, withdraw with yield', () => {
+scenario('pool: deposit safe on death, withdraw with no yield (D-089)', () => {
   const api = boot(SEED + 10);
   startGame(api);
   const g = api.get();
@@ -323,6 +323,11 @@ scenario('pool: deposit safe on death, withdraw with yield', () => {
   for (let f = 0; f < 60 * 3; f++) api.step(DT);
   if (api.get().P.bank !== 100) fail('pool safe on death', `expected bank=100 after death, got ${api.get().P.bank}`);
   else pass('pool safe on death', 'pooled DOGE survives death');
+  const g2 = api.get(); g2.P.doge = 0; api.talk(g2.NPCS.find(n => n.id === 'bank'));
+  const un = api.get().ui.build().find(r => /^UNSTAKE /.test(r.label)); un.act();
+  if (api.get().P.doge !== 100 || api.get().P.bank !== 0) fail('vault no yield', `unstake gave doge=${api.get().P.doge} bank=${api.get().P.bank} (want exactly 100, 0)`);
+  else pass('vault no yield', 'UNSTAKE returns exactly the 100 DOGE deposited (no NPC-made yield)');
+  api.press('escape'); api.step(DT);
 });
 
 scenario('new enemies spawn and drop materials', () => {
@@ -602,16 +607,31 @@ scenario('D-064: random loot — deterministic rarity + buff per tokenId, meme b
   pass('random loot', `id42=${a.label}; dist C${count.COMMON}/U${count.UNCOMMON}/R${count.RARE}/E${count.EPIC || 0}/L${count.LEGENDARY || 0}; legendary #${legId} ${lg.label}`);
 });
 
-scenario('D-063: survivor respawn — dungeon 2min / mini-boss 4min, field stays fast', () => {
+scenario('D-089: fast respawn — dungeon + mini-bosses every 20 s, field every 3 s', () => {
   const api = boot(SEED + 62); startGame(api);
-  if (api.DUN_RESPAWN < 120 || api.MINI_RESPAWN < api.DUN_RESPAWN) { fail('respawn consts', `dun=${api.DUN_RESPAWN}s mini=${api.MINI_RESPAWN}s (want dun>=120, mini>=dun)`); return; }
+  if (api.DUN_RESPAWN !== 20 || api.MINI_RESPAWN !== 20) { fail('respawn consts', `dun=${api.DUN_RESPAWN}s mini=${api.MINI_RESPAWN}s (user D-089: both 20 s)`); return; }
   const g = api.get(); g.P.x = api.CX * 16 + 8; g.P.y = (api.CY + 3) * 16 + 8; g.P.iT = 99; // sit safe in camp
   for (let i = g.enemies.length - 1; i >= 0; i--) if (g.enemies[i].zone === 'dun') { g.enemies.splice(i, 1); break; } // clear one dungeon cat
   const dun = () => api.get().enemies.filter(e => e.zone === 'dun').length;
   const d0 = dun();
-  for (let f = 0; f < 60 * 20; f++) api.step(DT); // 20s << 120s: dungeon must NOT refill (refill-after-interval uses the same code as the field, tested below)
-  if (dun() !== d0) { fail('dun slow', `dungeon refilled within 20s: ${d0} -> ${dun()}`); return; }
-  pass('survivor respawn', `dungeon stays cleared (${d0}/${api.DUN_POP}) for 20s; DUN_RESPAWN=${api.DUN_RESPAWN}s, MINI_RESPAWN=${api.MINI_RESPAWN}s`);
+  for (let f = 0; f < 60 * 21; f++) api.step(DT); // one full 20 s interval: the dungeon must refill one cat
+  if (dun() <= d0) { fail('dun fast', `dungeon did not refill within 21 s: ${d0} -> ${dun()}`); return; }
+  pass('fast respawn', `dungeon refilled ${d0} -> ${dun()} within 21 s; DUN_RESPAWN=${api.DUN_RESPAWN}s, MINI_RESPAWN=${api.MINI_RESPAWN}s`);
+});
+
+scenario('D-089: NPCs never give DOGE — Elder quests pay materials', () => {
+  const api = boot(SEED + 89); startGame(api);
+  const g = api.get(), wood = () => api.get().P.bag.filter(b => b.kind === 'wood').reduce((a, b) => a + b.qty, 0);
+  const elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;
+  const run = (stage, setup) => { g.state.stage = stage; setup(); api.talk(elder);
+    const q = api.get().ui.build().find(r => /^QUEST:/.test(r.label)); q.act();
+    const d = api.get().ui; if (!d || d.type !== 'dialog' || !d.onEnd) throw new Error('quest dialog did not open'); d.onEnd(); api.get().ui = null; };
+  const d0 = g.P.doge, s0 = g.P.steel, w0 = wood();
+  run(1, () => { g.P.kills = 8; });
+  if (g.P.doge !== d0 || g.state.stage !== 2 || g.P.steel !== s0 + 2 || wood() !== w0 + 2) { fail('quest 1 reward', `doge ${d0}->${g.P.doge} stage=${g.state.stage} steel ${s0}->${g.P.steel} wood ${w0}->${wood()}`); return; }
+  run(2, () => { g.P.bruteKills = 3; });
+  if (g.P.doge !== d0 || g.state.stage !== 3 || !g.state.gateOpen || g.P.steel !== s0 + 6 || wood() !== w0 + 6) { fail('quest 2 reward', `doge ${d0}->${g.P.doge} stage=${g.state.stage} steel=${g.P.steel} wood=${wood()}`); return; }
+  pass('npc no doge', `quests 1+2 gave ${g.P.steel - s0} IRON + ${wood() - w0} WOOD (+ stone), 0 DOGE; gate opened`);
 });
 
 scenario('D-060: DOGE gear stats — owning gear NFTs grants +ATK/+DEF/+HP/+MP (any class)', () => {

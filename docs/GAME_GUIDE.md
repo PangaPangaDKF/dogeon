@@ -130,7 +130,9 @@ At the Sphinx:
 
 ## 8. Quests
 
-0 Talk to Elder Shibe → 1 slay 8 cats (+40 DOGE) → 2 slay 3 brutes (+80 DOGE, opens the ruins gate) → 3 defeat the Cat Lord →
+NPCs never hand out DOGE: there is no game token, and every mint or trade uses real testnet DOGE. Quests pay materials for the forge. Dungeon cats and mini-bosses come back every 20 seconds.
+
+0 Talk to Elder Shibe → 1 slay 8 cats (+2 wood, stone and iron) → 2 slay 3 brutes (+4 wood, stone and iron, opens the ruins gate) → 3 defeat the Cat Lord →
 4 complete (Golden Yarn, +150 DOGE).
 
 ---

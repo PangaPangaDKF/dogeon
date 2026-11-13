@@ -5,7 +5,7 @@ description: Full context, exact stack, live DogeOS Chikyū contract registry, A
 
 # DOGEON — Master Game & Web3 Context Skill
 
-Version: 2.5 (2026-11-12, D-084 fact sync). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
+Version: 2.6 (2026-11-13, D-089 economy + respawn). Bump the version and add a line to `docs/DECISIONS.md` § Process whenever you edit this file.
 
 **RULE #0 (Pre-Decision Analyzer Gate — THE NUMBER ONE RULE):** before taking ANY decision or editing ANY file, activate the **`analyzer-master`** skill (`.agents/skills/analyzer-master/SKILL.md` / `/analyzer-master`), run `node .agents/skills/analyzer-master/scripts/audit-scan.mjs`, answer its 4 Strategic Thinking questions, and load `references/decision-gate.md` on demand.
 
@@ -59,7 +59,7 @@ Version: 2.5 (2026-11-12, D-084 fact sync). Bump the version and add a line to `
 6. **Instant Wallet Popup & Mouse UX (`D-036`):**
    - `chainAct()` never awaits `refreshChain()` before `await fn()` (so MetaMask/Bitget opens immediately on click/keypress).
    - Full mouse hover/wheel/click support on canvas (`cvPos`). In `tests/sim.mjs`, always close menus with `api.press('escape'); api.step(DT);` (never `api.get().ui = null`, which only mutates the wrapper object).
-7. **Hardcore survival (`D-052..D-063`):** normal `ETYPES` are **2× base HP + damage**; field holds **52** (`FIELD_POP`). Drops are rare — `dropP` per type gates the material + `COIN_DROP_P` (8%) drops a single DOGE coin. **Mini-boss per region** (`makeMini`/`spawnMini`, `zone:'mini'`, `region` field, 3.5× HP, drawn 1.5×, drops 6 materials + 5 coins). **Slow respawn**: dungeon `DUN_RESPAWN=120s`, mini-bosses `MINI_RESPAWN=240s` (separate `dunT`/`miniT` timers) — clear, rest in camp, return to the Cat Lord.
+7. **Hardcore survival (`D-052..D-063`):** normal `ETYPES` are **2× base HP + damage**; field holds **52** (`FIELD_POP`). Drops are rare — `dropP` per type gates the material + `COIN_DROP_P` (8%) drops a single DOGE coin. **Mini-boss per region** (`makeMini`/`spawnMini`, `zone:'mini'`, `region` field, 3.5× HP, drawn 1.5×, drops 6 materials + 5 coins). **Fast respawn (D-089, user):** dungeon `DUN_RESPAWN=20` s and mini-bosses `MINI_RESPAWN=20` s (separate `dunT`/`miniT` timers; field refills every 3 s). **NPCs never give DOGE (D-089):** Elder quests pay `QUEST_MATS` (wood/stone/iron), no Sphinx whisker swap, the off-chain camp vault pays no yield.
 8. **Gear stats + random loot (`D-058..D-064`):** 9 DOGE gear NFTs = `DogeItems` types **7–15** (DOGE SWORD/LEATHER ARMOR/SHIELD/STAFF/ROBE/WHIP/BOW/HEMP SHIRT/QUIVER), in `MINTABLE`+`ITEM_TYPES`, any class may wield any. `GEAR_STATS` gives base +ATK/+DEF/+HP/+MP; **`itemRoll(id)`** hashes an NFT's on-chain tokenId → a deterministic `{rarity, buff}` (COMMON..LEGENDARY ×1..×6, incl. big MEME buffs). `gearStats()` sums base + every non-food item's rolled buff, applied via `gatk()` (the 4 weapon formulas), `hurtPlayer` (def), and `syncMaxHp`/`syncMaxMp` (resynced after `refreshChain`). Only while `chainReady()` (owning = wearing). No contract stores the roll — it derives from the id.
 9. **Renewable gathering (`D-053`):** face a tree→**WOOD** / rock→**STONE**, hold `F` (reuses the fishing pipeline, so hit/move/attack cancels it), per-tile `GATHER_CD=14s` cooldown (`nodeAt`/`gatherCD`).
 10. **Per-class Max MP (`D-054`):** warrior **20** / archer **30** / healer **50** via `syncMaxMp()` (class `mp` field, mirrors `syncMaxHp`).

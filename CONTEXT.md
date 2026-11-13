@@ -18,6 +18,9 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 
 ## 00. RESUME HERE (latest, 2026-11-13, after D-088)
 
+> **D-089 (gameplay, user):** NPCs never give DOGE (Elder quests pay wood/stone/iron via `QUEST_MATS`; no Sphinx whisker swap; vault no
+> yield). Dungeon + mini-bosses respawn every 20 s. Monster coin drops + Golden Yarn kept. Needs `fly deploy -a dogeon-game` to go live.
+
 > **D-088 (reverted):** always-on was tried and undone; `fly.toml` keeps `auto_stop_machines = "stop"` — the machine sleeps when idle (~3 s wake). Normal.
 
 > **D-087:** `play.dogeon.lat` is LIVE (CNAME → `dogeon-game.fly.dev`, cert Issued, HTTPS 200). Landing play CTAs now point to it.

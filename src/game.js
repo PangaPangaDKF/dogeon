@@ -373,7 +373,7 @@ const SKILL_THRESH={combat:[0,10,25,50,100],fishing:[0,5,15,30,60],bark:[0,8,20,
 function skillLv(xp,kind){const t=SKILL_THRESH[kind||'combat'];for(let i=t.length-1;i>=0;i--)if(xp>=t[i])return i;return 0;}
 function skillMul(xp,kind){return 1+skillLv(xp,kind)*SKILL_BONUS;}
 // fishing (D-015): bar length in seconds (divided by the fishing skill multiplier); enemy pressure
-const FISH_MIN=3,FISH_MAX=5,FIELD_POP=52,DUN_POP=6,SPAWN_EVERY=3,DUN_RESPAWN=120,MINI_RESPAWN=240,NINJA_WATER={r:4,p:0.25}; // D-063 survivor: dungeon cats respawn in 2 min, mini-bosses in 4 min — you must clear AND survive; clear, rest in camp, return
+const FISH_MIN=3,FISH_MAX=5,FIELD_POP=52,DUN_POP=6,SPAWN_EVERY=3,DUN_RESPAWN=20,MINI_RESPAWN=20,NINJA_WATER={r:4,p:0.25},QUEST_MATS=[null,{wood:2,stone:2,steel:2},{wood:4,stone:4,steel:4}]; // D-089 (user): dungeon cats + mini-bosses respawn every 20 s (was 2/4 min, D-063). NPCs never give DOGE: Elder quests pay materials (QUEST_MATS[stage])
 function nearWaterT(tx,ty,r){for(let y=ty-r;y<=ty+r;y++)for(let x=tx-r;x<=tx+r;x++)if(get(x,y)===T.WATER)return true;return false;}
 // casting up throws the float 16 px further so it lands above the hero's head, not on it (D-017)
 function waterAt(d){const v=DIRV[d],x=P.x+v[0]*(P.hw+6),y=P.y+v[1]*(P.hh+6),o=d==='up'?16:6;return get(Math.floor(x/16),Math.floor(y/16))===T.WATER?{x:x+v[0]*o,y:y+v[1]*o}:null;}
@@ -489,7 +489,7 @@ function newGame(){
   for(let i=0;i<DUN_POP;i++)spawnEnemy('dun');
   for(const r in MINIS)spawnMini(r,MINIS[r]); // D-057/D-063: one mini-boss per region
   enemies.push(makeEnemy('boss',CX*16+8,5*16+8,'boss'));
-  spawnT=SPAWN_EVERY;dunT=DUN_RESPAWN;miniT=MINI_RESPAWN; // D-062/D-063: don't refill until a full interval passes (dungeon stays cleared ~45s)
+  spawnT=SPAWN_EVERY;dunT=DUN_RESPAWN;miniT=MINI_RESPAWN; // D-062/D-063/D-089: don't refill until a full interval passes (dungeon stays cleared ~20s)
   cam.x=P.x-W/2;cam.y=P.y-H/2;
 }
 function makeEnemy(type,x,y,zone){const d=ETYPES[type];return {type,def:d,x,y,hw:d.hw,hh:d.hh,hp:d.hp,maxHp:d.hp,dir:'down',anim:0,state:'wander',t:0,wx:0,wy:0,flash:0,kbx:0,kby:0,cool:1+Math.random()*2,enemy:true,boss:!!d.boss,zone,summonT:4,dead:false};}
@@ -891,7 +891,7 @@ function talk(n){
     if(!n.met){n.met=true;openDialog(n,['Wrenchpaw here. I forge gear from monster parts.','Bring me ORB, SCRAP, HORN or STEEL from fallen foes.','I burn the materials and craft upgrades. No refunds. Very forge.'],()=>shopMenu(n));}
     else shopMenu(n);
   }else if(n.id==='bank'){
-    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX, door to DogeOS. I connect your wallet, add the DogeOS testnet and teach you DeFi.','Swap your whiskers for DOGE, or trade DOGE for upgrades.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','Connect a wallet for real DogeOS testnet NFTs, pools and staking, or play offline!'],()=>bankMenu(n));}
+    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX, door to DogeOS. I connect your wallet, add the DogeOS testnet and teach you DeFi.','Whiskers go to the forge. Real testnet DOGE pays for every mint.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','Connect a wallet for real DogeOS testnet NFTs, pools and staking, or play offline!'],()=>bankMenu(n));}
     else bankMenu(n);
   }else if(n.id==='quest'){if(state.stage===0)questTalk(n);else elderMenu(n);}
   else if(n.cls){professorTalk(n);}
@@ -955,22 +955,20 @@ const SCHOOL=[
   ['FAUCET + GAS',['Every transaction costs a small fee called gas, paid in DOGE.','A faucet gives free testnet DOGE for gas. Get some before you mint or trade.']],
   ['SWAP',['A swap trades one asset for another at the price of a pool.','Bigger trades move the price more. That is slippage. I always protect you with a limit.']],
   ['LIQUIDITY POOL',['A pool holds two things: here, items and DOGE. Liquidity providers deposit both and get shares.','Traders pay a 2% fee that stays in the pool, so LPs earn. The price follows x times y equals k.','Risk: when prices move you can end with more of the cheaper side. That is impermanent loss.']],
-  ['STAKE',['Staking locks coins to earn a reward. My vault keeps your DOGE safe when you fall and pays 1% when you unstake.','My camp vault is off-chain (+1%, safe on death). On-chain staking pays you 0.8% of every DEX trade!']],
+  ['STAKE',['Staking locks coins to earn a reward. My vault keeps your DOGE safe when you fall. It pays no yield.','My camp vault is off-chain (safe on death, no yield). On-chain staking pays 0.8% of DEX trades!']],
   ['ORACLE (REDSTONE)',['Contracts cannot see the outside world. An oracle brings real prices on-chain.','RedStone posts signed DOGE and BTC prices on the DogeOS testnet, so swaps and other DeFi built here have real prices.','My DEX reads DOGE/USD from RedStone. Trade prices still come from the pool itself; the oracle is for display and safety.']],
   ['NFT',['An NFT is a token with its own id. Your crafted gear and preserved fish are NFTs you truly own.','Owning gear NFTs means wearing them. Sell them, pool them, or eat the fish. Your call.']],
 ];
 function schoolMenu(n){openMenu(n,'SPHINX SCHOOL: DEFI 101',()=>[...SCHOOL.map(([t,pages])=>({label:'LESSON: '+t,act:()=>{lesson(n,pages,()=>schoolMenu(n));return '';}})),{label:'BACK',act:()=>{bankMenu(n);return '';}}]);}
 // the Sphinx: DogeOS DeFi hub. Connect (auto add + switch DogeOS testnet), LP + swap, faucet, stake, oracle, links, school
 function bankMenu(n){openMenu(n,'THE SPHINX DEX - DOGEOS DEFI HUB',()=>{
-  const yld=Math.floor(P.bank*0.01);
   return[
   ...walletRows(), // CONNECT adds + switches to DogeOS Chikyu (D-016)
   {label:'NFT MARKET: SWAP + LIQUIDITY POOLS',act:()=>{marketMenu(n);return '';}},
   {label:'ON-CHAIN STAKING: EARN 0.8% OF DEX FEES',act:()=>{stakeMenu(n);return '';}},
   linkRow('GET TESTNET DOGE (FAUCET)',LINKS.faucet),
-  {label:`STAKE ${P.doge} DOGE IN THE VAULT (+1%)`,act:()=>{if(!P.doge){if(wallet.connected){stakeMenu(n);return 'OPENED ON-CHAIN WALLET STAKING.';}return 'NO DOGE TO STAKE.';}P.bank+=P.doge;P.doge=0;return 'STAKED. SAFE WHEN YOU FALL. EARNS 1%.';}},
-  {label:`UNSTAKE ${P.bank}+${yld} DOGE`,act:()=>{if(!P.bank)return 'NOTHING STAKED.';const t=P.bank+yld;P.doge+=t;P.bank=0;return `UNSTAKED ${t} DOGE (${yld} REWARD). TO THE MOON.`;}},
-  {label:`SWAP ${P.whisk} WHISKERS -> ${P.whisk*3} DOGE`,act:()=>{if(!P.whisk)return 'NO WHISKERS TO SWAP.';P.doge+=P.whisk*3;const m=`SWAPPED ${P.whisk} WHISKERS FOR ${P.whisk*3} DOGE.`;P.whisk=0;return m;}},
+  {label:`STAKE ${P.doge} DOGE IN THE VAULT (SAFE ON DEATH)`,act:()=>{if(!P.doge){if(wallet.connected){stakeMenu(n);return 'OPENED ON-CHAIN WALLET STAKING.';}return 'NO DOGE TO STAKE.';}P.bank+=P.doge;P.doge=0;return 'STAKED. SAFE WHEN YOU FALL. NO YIELD (NO GAME TOKEN).';}},
+  {label:`UNSTAKE ${P.bank} DOGE`,act:()=>{if(!P.bank)return 'NOTHING STAKED.';const t=P.bank;P.doge+=t;P.bank=0;return `UNSTAKED ${t} DOGE. TO THE MOON.`;}},
   {label:`BUY BONE CHARM (50 DOGE)`,act:P.hpUps>=3?()=>'MAX CHARMS ALREADY.':()=>{if(P.doge<50)return 'NOT ENOUGH DOGE.';P.doge-=50;P.hpUps++;P.maxHp+=15;return 'BONE CHARM BOUGHT! +15 MAX HP.';}},
   {label:`BUY MOON BISCUIT (40 DOGE)`,act:P.mpUps>=2?()=>'MAX BISCUITS ALREADY.':()=>{if(P.doge<40)return 'NOT ENOUGH DOGE.';P.doge-=40;P.mpUps++;P.maxMp+=10;return 'MOON BISCUIT BOUGHT! +10 MAX MP.';}},
   oracleRow(),
@@ -1090,12 +1088,12 @@ function questTalk(n){
   const s=state.stage;
   const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;
   const mktLine=`DOGE IS $${mkt.p.toFixed(3)} (${up?'+':''}${pc}% ${pc>2?'BULL':pc<-2?'BEAR':'FLAT'}). ${up?'GOOD TIMES FOR FIGHTERS.':'BE CAREFUL. ENEMIES GROW STRONGER.'}`;
-  const lore=DOGE_LORE[Math.floor(time/20)%DOGE_LORE.length];
+  const lore=DOGE_LORE[Math.floor(time/20)%DOGE_LORE.length],qm=k=>Object.entries(QUEST_MATS[k]).map(([m,v])=>`${v} ${m==='steel'?'IRON':m.toUpperCase()}`).join(', '),give=k=>{for(const [m,v] of Object.entries(QUEST_MATS[k]))if(m==='steel')P.steel+=v;else addToBag(m,v);}; // D-089: NPCs never give DOGE
   if(s===0)openDialog(n,[mktLine,lore,'...Young pup. The cats have risen. They took every field around our camp.','Outside the fence they hunt you. Inside, they cannot touch you. That is the old law.','Prove yourself. Slay 8 cats and return to me.'],()=>{state.stage=1;P.kills=0;toast('NEW QUEST: SLAY 8 CATS');});
   else if(s===1&&P.kills<8)openDialog(n,[mktLine,lore,`${P.kills}/8 cats. Keep fighting. When hurt, rest by the fire.`]);
-  else if(s===1)openDialog(n,[mktLine,'Very fight. Much brave. Take these 40 DOGE.','Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{P.doge+=40;state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
+  else if(s===1)openDialog(n,[mktLine,`Very fight. Much brave. Take ${qm(1)} for the forge.`,'Now the real test: armored BRUTE CATS roam far from camp and in the old ruins to the north.','They glow red before they charge. When you see it, dodge sideways. Slay 3 of them.'],()=>{give(1);state.stage=2;P.bruteKills=0;toast('NEW QUEST: SLAY 3 BRUTE CATS');});
   else if(s===2&&P.bruteKills<3)openDialog(n,[mktLine,lore,`Brutes slain: ${P.bruteKills}/3. They lurk far from camp and in the ruins.`]);
-  else if(s===2)openDialog(n,[mktLine,'You crushed the brutes! 80 DOGE is yours.','I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD in a 30M RAID.','If the timer runs out, the raid FAILS and gates seal for 5 hours. You can still farm and train, but the boss escapes. Move fast!'],()=>{P.doge+=80;state.stage=3;state.gateOpen=true;toast('RUINS GATE OPEN! 30M RAID RUNNING.');sfx(80,0.6,'sawtooth',0.06,40);});
+  else if(s===2)openDialog(n,[mktLine,`You crushed the brutes! Take ${qm(2)}.`,'I have opened the iron gate in the northern ruins. Beyond it waits the CAT LORD in a 30M RAID.','If the timer runs out, the raid FAILS and gates seal for 5 hours. You can still farm and train, but the boss escapes. Move fast!'],()=>{give(2);state.stage=3;state.gateOpen=true;toast('RUINS GATE OPEN! 30M RAID RUNNING.');sfx(80,0.6,'sawtooth',0.06,40);});
   else if(s===3&&!state.raidOpen)openDialog(n,[mktLine,lore,'The raid timer ran out! The Cat Lord sealed the gate for 5 hours.','You can still gather, fish, level skills, and trade at the Sphinx. Prepare for the next raid cycle!']);
   else if(s===3)openDialog(n,[mktLine,lore,'The Cat Lord waits beyond the iron gate, north of camp. Do not go in hurt.']);
   else openDialog(n,[mktLine,lore,'You did it. Such hero. Much legend. The camp is safe... for now.','Many cats still roam out there. Hunt them if you wish.']);

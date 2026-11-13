@@ -35,6 +35,27 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 
 ---
 
+### D-089 · 2026-11-13 · NPCs never give DOGE; dungeon + mini-bosses respawn every 20 s (Claude Code, user decision)
+- What:
+  - **No NPC-made DOGE** (user: "we are not creating any game token, only using testnet DOGE"): Elder quest rewards +40/+80 DOGE →
+    materials `QUEST_MATS` (quest 1: 2 wood, 2 stone, 2 iron; quest 2: 4 of each; wood/stone into the bag, iron to `P.steel`). The Sphinx
+    WHISKERS -> DOGE swap row is gone (whiskers stay forge material). The off-chain camp vault still keeps DOGE safe on death but pays **no
+    yield** (was 1%). Sphinx dialog lines updated. Kept by the user's choice: monster coin drops (8%) and the Golden Yarn, so the Sphinx
+    charms and the Victors Market still have a currency.
+  - **Fast respawn:** `DUN_RESPAWN` 120 → 20 s, `MINI_RESPAWN` 240 → 20 s. Field unchanged (one every 3 s, cap 52). Cat Lord unchanged
+    (relay `BOSS_RESET_MS` 30 min).
+  - Tests: `tests/sim.mjs` — "bank exchange" → "no whisker swap"; vault returns exactly the deposit; D-063 slow-respawn scenario → D-089
+    fast (dungeon refills within 21 s, both timers = 20); new "NPCs never give DOGE" scenario (quests 1+2 give 6 iron + 6 wood + stone, 0 DOGE,
+    gate opens). Docs: `CLAUDE.md`, `docs/GAME_GUIDE.md`, `MASTER_PROMPT.md`, `dogeon-game` skill v2.6, landing economy line (landing skill 1.8),
+    manifest regenerated.
+- Why: user decision (options offered: all NPC DOGE / only Elder / full currency purity; respawn: dungeon+mini / dungeon only / incl. Cat Lord).
+  Supersedes D-062/D-063 slow respawn and the hardcore "clear → rest → return" pacing for the ruins.
+- Tool: Claude Code (Opus 5.5). Verify: sim 0 failed (new scenarios pass); `bash tests/check.sh` ALL CHECKS PASSED; audit-scan 1498/1500
+  lines, 0 forbidden, 0 collisions; `node scripts/landing-check.mjs` OK.
+- Alternatives rejected: full currency purity now (removes coin drops, shops, death-DOGE penalty — the user chose the smaller cut);
+  quests paying nothing (breaks the reward loop; materials feed the mint, mission item 2); 20 s Cat Lord (the raid would stop being special).
+- Lane: gameplay is Antigravity's usual lane — told in `ANTIGRAVITY_HANDOFF.md`.
+
 ### D-088 · 2026-11-13 · Fly machine always-on (`auto_stop_machines = "off"`) — REVERTED same day (Claude Code)
 - **Reverted:** the user decided sleep is fine ("i am ok with sleep"); `fly.toml` is back to `"stop"`. Entry kept for history.
 - What: `fly.toml` `auto_stop_machines` `"stop"` → `"off"`. The single machine stays running; `auto_start_machines = true` and `min_machines_running = 1` kept as a safety net.

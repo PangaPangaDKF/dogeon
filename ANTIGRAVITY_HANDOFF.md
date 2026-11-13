@@ -4,6 +4,14 @@
 > Each brain now has an inbox written by the other. It tells you **what I did, why, what it proved, what went wrong,
 > which decisions are still the user's, and the path I suggest you take next** — with a ready-to-paste job prompt at the end.
 
+> ## 000. SNAPSHOT — Claude Code D-089 (2026-11-13): NPCs never give DOGE · 20 s dungeon/mini respawn (your gameplay lane — FYI)
+>
+> User decision, done in `src/game.js` (GAME STATE line with `DUN_RESPAWN`, `questTalk`, `bankMenu`): Elder quests pay `QUEST_MATS`
+> instead of +40/+80 DOGE; the Sphinx whisker→DOGE swap is removed; the camp vault pays no yield; `DUN_RESPAWN`/`MINI_RESPAWN` = 20 s.
+> Coin drops + Golden Yarn stay. Sim scenarios updated/added; check.sh green. **If you touch the economy:** never add a DOGE reward to an NPC
+> (no game token — user rule); the sim scenario "NPCs never give DOGE" will fail. `src/game.js` is at 1498/1500 lines.
+>
+
 > ## 000. SNAPSHOT: Claude Code D-071 (2026-11-10) — CONTRATOS REDESPLEGADOS otra vez (nuevas direcciones)
 >
 > **IMPORTANTE — las direcciones CAMBIARON.** Tu D-068 cambió `DogeItems.sol` (fee 1 DOGE + split 80/20 + `stakingPool`)

@@ -5,7 +5,7 @@ description: Own design skill for DOGEON's public face — the landing page (lan
 
 # DOGEON Landing & Trailer Design Skill
 
-Version: 1.7 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
+Version: 1.8 (2026-11-13) · Owner: the landing-page lane (Claude Code) · Pair with `prompts/LANDING_MASTER_PROMPT.md`.
 
 ## RULE L0 — this skill and its master prompt are living documents
 Every change to `landing.html`, `assets/**`, `docs/TRAILER_SCRIPT.md`, or any marketing image or video ends with:
@@ -133,6 +133,7 @@ The game opens its multiplayer WebSocket to whatever host served it, so both hos
 8. **One machine, sleeps when idle.** The app runs a single Fly machine (`fly scale count 1`; in-memory relay rooms must not split across machines). `fly status` often shows it `stopped`: Fly auto-stops it when no one is connected and wakes it on the next request (~3 s cold, <1 s warm, measured 2026-11-13). That is normal, not an outage. `fly.toml` keeps `auto_stop_machines = "stop"`: the user prefers sleep (cheaper) over instant first loads (D-088 tried always-on and was reverted the same day). If a `fly` command fails with `token expired`, run `fly auth login`, open the printed URL in the Windows browser and click Authorize; never paste the URL into the code prompt.
 
 ## Changelog
+- 1.8 (2026-11-13, D-089): economy copy follows the game change — off-chain DOGE now comes only from monster drops (NPCs never hand out DOGE; Elder quests pay materials). **Lesson:** a gameplay change can falsify landing copy; grep `landing.html` for the changed mechanic in the same commit.
 - 1.7 (2026-11-13, D-086 follow-up): full-page review of the live site. Fixed "The the camp" typo, literal backticks around the oracle address (prose must never contain Markdown backticks), economy title contradicting the two-currency copy, "VERIFIED" contracts (unproven on the explorer → "LIVE"), Sphinx gallery fee claim. Added B8, B9. **Screenshot lesson:** headless Chrome won't repaint after `scrollTo` and the relay 404s scratch HTML; to capture a long page by sections, load a scratch copy with `<base href="https://dogeon.lat/">` and `body{margin-top:-Ypx}`, `header{position:static}`.
 - 1.6 (2026-11-13, D-088): always-on reverted at the user's request; the machine sleeps when idle again.
 - 1.5 (2026-11-13, D-088): Fly machine set to always-on (`auto_stop_machines = "off"`) at the user's request.
