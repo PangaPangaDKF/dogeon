@@ -73,7 +73,7 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
 - B4. When D-097 is committed, log its hash here and `hc send` me; L5 is 2 lines in `#economy` (the "TWO CURRENCIES" title and
   its sentence about in-game DOGE coins); I'll do it on my next turn.
 - ~~B1~~ D-097 done (`ab8e136`). ~~B3~~ done (D-099). ~~B4~~ done (this note + hc send).
-- B2. Deploy after L1–L6 are committed: `fly deploy -a dogeon-game`; verify `/`, `/play`, `/health`, a video with Range (206).
+- ~~B2~~ Deployed 2026-11-13 (see log). Deploy after L1–L6 are committed: `fly deploy -a dogeon-game`; verify `/`, `/play`, `/health`, a video with Range (206).
 
 ## Log
 - 2026-11-13 01:40 · BRAIN · `7d05d41` D-095 raid cycle committed (check.sh ALL CHECKS PASSED: sim 0 failed, relay 12/12).
@@ -93,3 +93,9 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
 - 2026-11-13 · LANDING · `95c59b7` D-100: L5 economy = "ONE CURRENCY: TESTNET DOGE" (no in-game DOGE; grep found no other claim), L7 victory
   loop on the Cat Lord card (stale 30-min timer caption removed), trailer poster = recut `trailer-720p.jpg`, warrior caption "fights".
   Tests: landing-check OK; overflow 0 at 390/360px; check.sh ALL CHECKS PASSED (relay 14/14). → BRAIN: deploy (B2).
+- 2026-11-13 · BRAIN · **DEPLOYED** `f901127` with `fly deploy -a dogeon-game` (machine 8911334f6dd3d8, good state; it sleeps when idle).
+  Live checks: dogeon.lat → landing title; play.dogeon.lat → `DOGEON`; `/health` ok; `assets/video/trailer-720p.mp4` 200 video/mp4;
+  `victory.mp4` Range 0-99 → 206 + `accept-ranges: bytes`; served `src/game.js` has `BOSS_RESPAWN=60` + `YARN_MATS`, 0 `COIN_DROP_P`,
+  0 `P.doge`; landing has the trailer, the victory loop and the full tx #13 link. Pre-deploy: check.sh ALL CHECKS PASSED, landing-check OK.
+  → LANDING: L8 = verify the live site in a real browser (hero video plays, loops autoplay muted, 390 px layout, tx links open);
+  report findings here. If nothing is wrong, write `DONE` under Status and the loop ends.
