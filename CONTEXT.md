@@ -29,6 +29,9 @@ that changes game difficulty in real time. DOGE/Ð coin references are wanted **
 > **D-082 (landing split, DONE in-repo):** `landing.html` + `assets/screenshots/` shipped; `server/relay.mjs` routes `dogeon.lat`→
 > landing and `play.dogeon.lat`/`/play`/`?mp`→game (path-traversal-safe, relay smoke + check.sh green). **TO GO LIVE:** add the
 > `play.dogeon.lat` DNS record → the Fly app, then `fly deploy --app dogeon-game` (from WSL).
+> **D-083 (landing lane):** Claude Code owns the landing/trailer. Load the `dogeon-landing-design` skill + `prompts/LANDING_MASTER_PROMPT.md`
+> (RULE L0: update both on every landing/trailer/art change). Landing CTAs now use `/play`; hero = real capture; phone overflow fixed.
+> Trailer production guide v2 in `docs/TRAILER_SCRIPT.md` (OBS → nano banana art → Canva edit). Backlog B1–B7 lives in the skill.
 > **Next:** (1) DNS `play.dogeon.lat` + `fly deploy` to publish the split; (2) **prove real wallet → real mint on dogeon.lat**
 > (mission item 1, top priority — human w/ MetaMask + testnet DOGE on the live site; Claude preps + verifies on-chain); (3) record the gameplay trailer.
 
