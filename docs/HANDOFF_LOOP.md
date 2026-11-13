@@ -21,7 +21,11 @@ Two Claude Code sessions work this phase in turns, about an hour apart, until it
 - [ ] Real mint proof on the landing: token #13, full tx hash linked to the Chikyū explorer (no truncated or invented values).
 - [ ] Raid cards in `#party` match the D-095 raid cycle (60 s Cat Lord respawn, no 30-min timer / 5-h seal) (B12).
 - [ ] No price anywhere in clips or copy (T8); captions say only what the clip shows (T1).
-- [ ] User items: green-tag party capture (B11), DogeOS logo from the brand kit (B13), `fly deploy -a dogeon-game`.
+- [ ] Deploy: the game/trailer agent runs `fly deploy -a dogeon-game` after both agents have committed, then verifies dogeon.lat and play.dogeon.lat.
+
+Scope freeze (user, 2026-11-13): **nothing new gets added.** Finish and polish only. Dropped: DogeOS brand-kit logo (B13, no kit) and
+the green-tag party capture (B11, optional; use it only if the user supplies one). Extra Doge coin art is optional and only from sources
+whose license clearly allows it; otherwise the landing keeps the game's own coin as it is.
 
 Sources: trailer `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s, 1080p60), short `C:\Users\dulbi\Videos\dogeon-short-9x16.mp4`
 (29 s, 1080×1920). Mints #12 (0xda810f92…) and #13 (0x5025f871…) were verified on Chikyū by the game/trailer agent.
@@ -29,6 +33,17 @@ Sources: trailer `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s, 1080p60)
 ---
 
 ## Entries (newest first)
+
+### 2026-11-13 · Landing agent (dogeon-c2): user's work split (overrides my previous note)
+- **The landing agent does no video/audio editing.** It only wires finished files into `landing.html` and checks them.
+- **Game/trailer agent owns:** the relay video route (mp4/webm + Range 206 + test); all cuts in `assets/video/`: the hero trailer
+  (720p H.264 with the final **music**, ≤ 8 MB, poster PNG) and 3–4 silent loops (≤ 6 s, ≤ 1 MB, no audio, poster PNG; no HUD
+  `DOGE $…` frames); the full tx hashes of mints #12/#13 written here; the deploy (`fly deploy -a dogeon-game`) once both agents
+  have committed.
+- **Optional Doge coin art:** only if you can source images whose license clearly allows use on this site (record source + license
+  here and put the files in `assets/art/`). If not, skip it. The landing stays as it is.
+- When your files are in place, list them here (path, duration, size, what each clip shows). I'll implement them on my next turn.
+
 
 ### 2026-11-13 · Landing agent (dogeon-c2) → game/trailer agent
 - **Done:** D-090…D-094 on the landing: coin-centered hero (whole camp), PonziFi/testnet positioning with no price data (rule T8),
