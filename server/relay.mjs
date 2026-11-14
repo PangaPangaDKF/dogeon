@@ -33,6 +33,14 @@ const rooms = new Map(); // room -> Set<client>
 // Tile maths mirror src/game.js: CAMP tiles 33..47 x 27..41, boss room = DUN x 26..54, y 2..8 (GATE_ROW 9).
 const BOSS_HP = 320, BOSS_RESET_MS = (+process.env.BOSS_RESPAWN_S || 60) * 1000, MAX_HIT = 60, MAX_PVP = 40, PVP_RANGE = 48, TAKE_RANGE = 28, LOOT_CAP = 48;
 const LOOT_KINDS = ['steel', 'whisk', 'wood', 'stone'];
+// D-108 anti-cheat (audit 2026-11-13 S3-2/S3-4/S3-7): positions must be reachable, damage is budgeted per second, one IP can't fill the server
+const MAX_SPEED = 200, MOVE_SLACK = 40; // px/s (fastest legit doge ~113 px/s) + lag/knockback slack
+const BOSS_DPS = +process.env.BOSS_DPS || 120, PVP_DPS = 80, MAX_PER_IP = +process.env.MAX_PER_IP || 3, ST_IDLE_MS = (+process.env.ST_IDLE_S || 30) * 1000;
+const EJECT = { x: 40 * 16 + 8, y: 12 * 16 + 8 }; // where bossCycle() puts players (src/game.js), a legit teleport like respawn-in-camp
+function spend(c, key, amt, perSec) { // token bucket: each player may deal at most perSec damage per second (burst = 1 s)
+  const now = Date.now(), b = c[key] || (c[key] = { tok: perSec, t: now });
+  b.tok = Math.min(perSec, b.tok + (now - b.t) / 1000 * perSec); b.t = now;
+  const ok = Math.min(amt, Math.floor(b.tok)); b.tok -= ok; return ok; }
 const tileIn = (p, x0, y0, x1, y1) => { const tx = Math.floor(p.x / 16), ty = Math.floor(p.y / 16); return tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1; };
 const inCamp = p => tileIn(p, 33, 27, 47, 41);
 const inBossRoom = p => tileIn(p, 26, 2, 54, 8);
@@ -49,7 +57,8 @@ function onWorld(c, m) {
     if (w.boss && w.boss.dead && now - w.boss.t > BOSS_RESET_MS) w.boss = null; // the Cat Lord returns for the next raid
     if (!w.boss) { const n = rooms.get(c.room)?.size || 1; const max = Math.round(BOSS_HP * (1 + 0.5 * (n - 1))); w.boss = { hp: max, max, dead: false, t: now }; } // more raiders = tougher boss
     if (w.boss.dead) return send(c, bossMsg(w.boss));
-    w.boss.hp = Math.max(0, w.boss.hp - Math.min(MAX_HIT, Math.max(1, m.dmg | 0)));
+    const dmg = spend(c, 'bossB', Math.min(MAX_HIT, Math.max(1, m.dmg | 0)), BOSS_DPS); if (!dmg) return;
+    w.boss.hp = Math.max(0, w.boss.hp - dmg);
     if (!w.boss.hp) { // D-095 raid cycle: 60 s after the kill the Cat Lord returns and the WHOLE room restarts at quest 1
       w.boss.dead = true; w.boss.t = now; const room = c.room;
       clearTimeout(w.cycle); w.cycle = setTimeout(() => { w.boss = null; toRoom(room, JSON.stringify({ t: 'cycle' })); }, BOSS_RESET_MS);
@@ -61,7 +70,8 @@ function onWorld(c, m) {
     if (!o || !me || !o.p || me.dead || o.p.dead || inCamp(me) || inCamp(o.p)) return;
     if (c.party && c.party === o.party) return; // friendly fire OFF inside a party
     if (!near(me, o.p, PVP_RANGE)) return;
-    return send(o, JSON.stringify({ t: 'hurt', id: c.id, dmg: Math.min(MAX_PVP, Math.max(1, m.dmg | 0)), x: me.x, y: me.y }));
+    const dmg = spend(c, 'pvpB', Math.min(MAX_PVP, Math.max(1, m.dmg | 0)), PVP_DPS); if (!dmg) return;
+    return send(o, JSON.stringify({ t: 'hurt', id: c.id, dmg, x: me.x, y: me.y }));
   }
   if (m.t === 'loot') { // a dying player's carried materials become shared piles (NFTs never drop: they live on chain)
     if (!me || !Array.isArray(m.items)) return;
@@ -116,14 +126,21 @@ function onMessage(c, text) {
     let total = 0; for (const s of rooms.values()) total += s.size;
     const r = rooms.get(room) || new Set();
     if (total >= MAX_ROOM || r.size >= MAX_ROOM) { send(c, JSON.stringify({ t: 'full', msg: 'SERVER FULL (8/8 PLAYERS)' })); return drop(c); }
-    c.room = room; c.id = m.id; c.party = typeof m.party === 'string' && /^[A-Z0-9.-]{1,12}$/.test(m.party) ? m.party : ''; r.add(c); rooms.set(room, r);
+    let sameIp = 0; for (const s of rooms.values()) for (const o of s) if (o.ip === c.ip) sameIp++;
+    if (sameIp >= MAX_PER_IP) { send(c, JSON.stringify({ t: 'full', msg: 'TOO MANY TABS FROM ONE NETWORK' })); return drop(c); }
+    c.room = room; c.id = m.id; c.lastSt = Date.now(); c.party = typeof m.party === 'string' && /^[A-Z0-9.-]{1,12}$/.test(m.party) ? m.party : ''; r.add(c); rooms.set(room, r);
     const w = W(room); if (w.boss) send(c, bossMsg(w.boss)); if (w.loot.size) send(c, lootMsg([...w.loot].map(([lid, p]) => ({ lid, ...p })))); // late joiners see the same world
     return;
   }
   if (m.id !== c.id) return; // only your OWN state/events (no id spoofing)
   if (m.t === 'party') { c.party = typeof m.party === 'string' && /^[A-Z0-9.-]{0,12}$/.test(m.party) ? m.party : ''; return; }
   if (m.t === 'st' && typeof m.pt === 'string') c.party = /^[A-Z0-9.-]{0,12}$/.test(m.pt) ? m.pt : '';
-  if (m.t === 'st' && Number.isFinite(m.x) && Number.isFinite(m.y)) c.p = { x: m.x, y: m.y, dead: !!m.dead }; // last known position = what PvP/boss/loot checks use
+  if (m.t === 'st' && Number.isFinite(m.x) && Number.isFinite(m.y)) { // last known position = what PvP/boss/loot checks use
+    const now = Date.now(), q = { x: m.x, y: m.y, dead: !!m.dead }; c.lastSt = now;
+    const ok = !c.p || near(c.p, q, MAX_SPEED * (now - c.pt) / 1000 + MOVE_SLACK) || inCamp(q) || near(q, EJECT, 16) || c.p.dead || q.dead;
+    if (!ok) return; // teleport: ignored (not relayed, not trusted)
+    c.p = q; c.pt = now;
+  }
   if (m.t === 'st' || m.t === 'heal') return broadcast(c, text); // clients validate fields
   onWorld(c, m); // only your OWN state/events are relayed (no id spoofing); clients validate fields
 }
@@ -143,7 +160,7 @@ function onData(c, chunk) {
     for (let i = 0; i < len; i++) data[i] ^= mask[i & 3];
     c.buf = c.buf.subarray(off + 4 + len);
     if (op === 0x8) return drop(c); // close
-    if (op === 0x9) { try { c.sock.write(frame(data.toString(), 0xA)); } catch {} continue; } // ping -> pong
+    if (op === 0x9) { if (++c.count > MAX_RATE) return drop(c); try { c.sock.write(frame(data.toString(), 0xA)); } catch {} continue; } // ping -> pong (counts toward the rate limit, D-108)
     if (op === 0x1) onMessage(c, data.toString('utf8'));
   }
 }
@@ -215,7 +232,8 @@ server.on('upgrade', (req, sock, head) => {
   const accept = createHash('sha1').update(key + GUID).digest('base64');
   sock.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n' +
     `Sec-WebSocket-Accept: ${accept}\r\n\r\n`);
-  const c = { sock, buf: Buffer.alloc(0), room: '', id: '', win: Date.now(), count: 0, dead: false };
+  const ip = String(req.headers['fly-client-ip'] || sock.remoteAddress || ''); // behind Fly's proxy the real client IP is in Fly-Client-IP
+  const c = { sock, ip, buf: Buffer.alloc(0), room: '', id: '', win: Date.now(), count: 0, dead: false };
   sock.on('data', d => onData(c, d));
   sock.on('close', () => drop(c));
   sock.on('error', () => drop(c));
@@ -223,4 +241,5 @@ server.on('upgrade', (req, sock, head) => {
   if (head && head.length) onData(c, head);
 });
 
+setInterval(() => { const now = Date.now(); for (const r of rooms.values()) for (const c of r) if (now - (c.lastSt || 0) > ST_IDLE_MS) drop(c); }, Math.min(5000, ST_IDLE_MS / 2)).unref(); // D-108: pings alone don't keep a seat
 server.listen(PORT, () => console.log(`DOGEON relay on :${PORT}  ->  http://localhost:${PORT}/?mp=ws://localhost:${PORT}&room=heist`));

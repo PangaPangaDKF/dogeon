@@ -16,7 +16,7 @@ const fail = (n, d) => { fails++; console.log(`  FAIL  ${n} — ${d}`); };
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 const srv = spawn(process.execPath, [join(root, 'server/relay.mjs')],
-  { env: { ...process.env, PORT: String(PORT), MAX_ROOM: '3', BOSS_RESPAWN_S: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  { env: { ...process.env, PORT: String(PORT), MAX_ROOM: '3', BOSS_RESPAWN_S: '1', MAX_PER_IP: '50' }, stdio: ['ignore', 'pipe', 'pipe'] });
 await new Promise((res, rej) => {
   const t = setTimeout(() => rej(new Error('relay did not start')), 8000);
   srv.stdout.on('data', d => { if (String(d).includes('relay on')) { clearTimeout(t); res(); } });
@@ -70,7 +70,12 @@ try {
   else fail('cycle anti-spoof', 'client-sent cycle reached another player');
   const y = await client('yuri', 'r3'); await wait(150); // bob left, so a 3rd slot is free; yuri is alone in r3
   st(y, 40 * 16 + 8); await wait(150); // yuri stands in the boss chamber
+  // D-108: damage is budgeted (BOSS_DPS 120/s): a burst of 8 x 60 in 0.3 s must NOT kill a 320-HP boss
   for (let i = 0; i < 8; i++) { y.ws.send(JSON.stringify({ t: 'bhit', id: y.id, dmg: 60 })); await wait(40); }
+  await wait(150);
+  const hpBurst = (y.got.filter(m => m.t === 'boss').at(-1) || {}).hp;
+  if (hpBurst >= 140) pass('boss dps cap', `8 hits of 60 (480 dmg) in ~0.4 s -> boss alive at ${hpBurst}/320 (budget 120/s + 1 s burst)`); else fail('boss dps cap', `boss HP ${hpBurst} after a 0.3 s burst`);
+  for (let i = 0; i < 12; i++) { st(y, 40 * 16 + 8); y.ws.send(JSON.stringify({ t: 'bhit', id: y.id, dmg: 60 })); await wait(300); } // legit pace
   await wait(200);
   const dead = y.got.some(m => m.t === 'boss' && m.dead === 1);
   await wait(1300); // BOSS_RESPAWN_S=1 for the test (60 s in production)
@@ -94,6 +99,15 @@ try {
       && part.status === 206 && (await part.arrayBuffer()).byteLength === 100 && part.headers.get('content-range') === `bytes 0-99/${len}` && bad.status === 416)
     pass('video range', `mp4 200 (${len} B), Range 0-99 -> 206, past-end -> 416`);
   else fail('video range', `full=${full.status} ${full.headers.get('content-type')} part=${part.status} ${part.headers.get('content-range')} bad=${bad.status}`);
+  // D-108: a teleport (camp -> boss chamber in one update) is ignored, so its boss hits do nothing
+  const tp = await client('tele', 'r9'); await wait(100); st(tp, 40 * 16 + 8); await wait(100);
+  tp.ws.send(JSON.stringify({ t: 'st', id: 'tele', x: 40 * 16 + 8, y: 34 * 16 + 8, d: 'down', dead: 0 })); await wait(80); // walk into camp (legit respawn spot)
+  tp.ws.send(JSON.stringify({ t: 'st', id: 'tele', x: 40 * 16 + 8, y: 100, d: 'down', dead: 0 })); await wait(80); // camp -> chamber instantly
+  for (let i = 0; i < 3; i++) { tp.ws.send(JSON.stringify({ t: 'bhit', id: 'tele', dmg: 60 })); await wait(40); }
+  await wait(200);
+  if (!tp.got.some(m => m.t === 'boss')) pass('teleport ignored', 'camp -> boss chamber in 80 ms is rejected; its boss hits do nothing');
+  else fail('teleport ignored', JSON.stringify(tp.got.filter(m => m.t === 'boss')));
+  try { tp.ws.close(); } catch {}
   // D-107: a malformed percent-escape must not crash the relay (audit 2026-11-13 S3: GET /% killed the process)
   let bad400 = 0; for (const u of ['/%', '/assets/%E0%A4%A', '/src/%zz.js']) { try { const r = await fetch(`http://127.0.0.1:${PORT}${u}`); if (r.status === 400) bad400++; } catch {} }
   const alive = await fetch(`http://127.0.0.1:${PORT}/health`).then(r => r.ok).catch(() => false);
@@ -104,6 +118,23 @@ try {
   for (const cl of [a, c, x, d]) try { cl.ws.close(); } catch {}
 } catch (e) { fail('relay', e.message); }
 finally { srv.kill(); }
+
+// D-108: per-IP seat cap + "pings alone don't keep a seat", on a second relay with small limits
+const PORT2 = PORT + 1;
+const srv2 = spawn(process.execPath, [join(root, 'server/relay.mjs')], { env: { ...process.env, PORT: String(PORT2), MAX_PER_IP: '2', ST_IDLE_S: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+try {
+  await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('relay 2 did not start')), 8000); srv2.stdout.on('data', d => { if (String(d).includes('relay on')) { clearTimeout(t); res(); } }); });
+  const c2 = (id) => new Promise((res, rej) => { const ws = new WebSocket(`ws://127.0.0.1:${PORT2}`), c = { ws, id, got: [] };
+    ws.onmessage = e => { try { c.got.push(JSON.parse(e.data)); } catch {} }; ws.onopen = () => { ws.send(JSON.stringify({ t: 'join', room: 'ip', id })); res(c); }; ws.onerror = () => rej(new Error('c2 ' + id)); });
+  const p1 = await c2('pa'), p2 = await c2('pb'); await wait(150); const p3 = await c2('pc'); await wait(300);
+  if (p3.got.some(m => m.t === 'full') && !p1.got.some(m => m.t === 'full')) pass('per-ip cap', '3rd seat from one IP refused (MAX_PER_IP=2)'); else fail('per-ip cap', JSON.stringify(p3.got));
+  const live = setInterval(() => { try { p1.ws.send(JSON.stringify({ t: 'st', id: 'pa', x: 10, y: 10, dead: 0 })); } catch {} }, 200); // pa plays, pb only idles
+  await wait(2200); clearInterval(live);
+  if (p2.ws.readyState >= 2 && p1.ws.readyState === 1) pass('idle seat', 'a joined client that sends no state is dropped; the active one stays');
+  else fail('idle seat', `idle=${p2.ws.readyState} active=${p1.ws.readyState}`);
+  for (const k of [p1, p2, p3]) try { k.ws.close(); } catch {}
+} catch (e) { fail('relay 2', e.message); }
+finally { srv2.kill(); }
 
 console.log(fails ? `✗ ${fails} relay check(s) failed` : '✓ relay: 0 failed');
 process.exit(fails ? 1 : 0);

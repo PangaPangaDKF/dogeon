@@ -607,6 +607,26 @@ scenario('D-102: Elder tells the PonziFi chapter (satire, testnet disclaimer) ne
   pass('ponzi chapter', '5 pages, every glyph in FONT, ends with the 60 s raid cycle + testnet disclaimer');
 });
 
+scenario('D-108: rest never lowers HP; class switch is not a free heal; cursed gear has a floor (audit S4-1, S4-2, S2-2)', () => {
+  const api = boot(SEED + 108); startGame(api);
+  const g = api.get(), P = g.P;
+  P.x = 40 * 16 + 8; P.y = 37 * 16 + 8; P.hp = 54; // in camp, above the 60% rest cap (36/60)
+  api.hold('r', true); for (let f = 0; f < 60 * 5; f++) api.step(DT); api.releaseAll(); api.step(DT);
+  if (P.hp < 54) { fail('rest above cap', `hp 54 -> ${P.hp} after 5 s of R`); return; }
+  P.hp = 10; api.applyClass('warrior'); api.applyClass('healer'); api.applyClass('warrior');
+  if (P.hp > 10) { fail('class switch heal', `hp 10 -> ${P.hp}/${P.maxHp} after switching class`); return; }
+  api.wallet.connected = true; api.wallet.chainOk = true; // owning = wearing
+  let worst = 0, wid = 0; for (let id = 1; id < 4000; id++) { const r = api.itemRoll(id); if (r.buff.curse && r.buff.s === 'hp' && r.amount < worst) { worst = r.amount; wid = id; } }
+  let watk = 0, aid = 0; for (let id = 1; id < 4000; id++) { const r = api.itemRoll(id); if (r.buff.curse && r.buff.s === 'atk' && r.amount < watk) { watk = r.amount; aid = id; } }
+  let wdef = 0, did = 0; for (let id = 1; id < 4000; id++) { const r = api.itemRoll(id); if (r.buff.curse && r.buff.s === 'def' && r.amount < wdef) { wdef = r.amount; did = id; } }
+  api.chainData.inv = [...[0, 1, 2].map(i => ({ type: 7, level: 1, id: wid })), { type: 7, level: 1, id: aid }, { type: 7, level: 1, id: aid }, { type: 8, level: 1, id: did }, { type: 8, level: 1, id: did }];
+  api.applyClass('healer');
+  const gs = api.gearStats();
+  if (P.maxHp < 20 || P.hp < 1 || P.hp > P.maxHp || gs.atk < -4 || gs.def < -0.25) { fail('gear floor', `maxHp ${P.maxHp} hp ${P.hp} atk ${gs.atk} def ${gs.def}`); return; }
+  api.chainData.inv = []; api.wallet.connected = false;
+  pass('d-108 game fixes', `R at 54/60 keeps 54; class switches keep hp 10; 3x cursed hp (${worst}) + 2x atk (${watk}) + 2x def (${wdef}) -> maxHp ${P.maxHp}, atk ${gs.atk}, def ${gs.def}`);
+});
+
 scenario('D-097: the Victors Market (a DOGE shop) is gone after the boss falls', () => {
   const api = boot(SEED + 65); startGame(api);
   const g = api.get(), elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;

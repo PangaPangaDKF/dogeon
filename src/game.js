@@ -467,9 +467,9 @@ const classSpd=()=>{const c=classOf();return (c?c.spd:1)*(P.lazy?0.85:1);};
 const classDmg=()=>{const c=classOf();return c?c.dmg:1;};
 const classArmor=()=>{const c=classOf();return c?c.armor:0;};
 const CLASS_COL={warrior:'#ff8060',archer:'#80e080',healer:'#80d0ff'};
-function syncMaxHp(){const c=classOf(),base=60+(c?c.hp:0)+P.hpUps*15+gearStats().hp,d=base-P.maxHp;P.maxHp=base;if(d>0)P.hp+=d;else P.hp=Math.min(P.hp,P.maxHp);}
+function syncMaxHp(){const c=classOf();P.maxHp=Math.max(20,60+(c?c.hp:0)+P.hpUps*15+gearStats().hp);P.hp=Math.min(P.hp,P.maxHp);} // D-108: a higher max is not a free heal (rest/eat to fill); floor 20 vs cursed gear
 // D-054: per-class Max MP (user: "each hp and mp is different per profession"). Warrior 20, Archer 30, Healer 50. Mirrors syncMaxHp (absolute from class + mpUps).
-function syncMaxMp(){const c=classOf(),base=30+(c?c.mp||0:0)+P.mpUps*10+gearStats().mp,d=base-P.maxMp;P.maxMp=base;if(d>0)P.mp+=d;else P.mp=Math.min(P.mp,P.maxMp);}
+function syncMaxMp(){const c=classOf();P.maxMp=Math.max(10,30+(c?c.mp||0:0)+P.mpUps*10+gearStats().mp);P.mp=Math.min(P.mp,P.maxMp);}
 function applyClass(cls,onchain){if(!CLASSES[cls])return;P.prof=cls;syncMaxHp();syncMaxMp();const c=CLASSES[cls];puff(P.x,P.y-8,CLASS_COL[cls],14);
   toast(`${c.name} (${onchain?'ON-CHAIN':'ACTIVE'}): ${cls==='archer'?'SPACE SHOOTS ARROWS! K=VOLLEY':cls==='healer'?'FAST + K TO HEAL, WEAK MELEE':'+25 HP, +15% ARMOR, HEAVY HIT!'}`,3.5);}
 const NPCS=[
@@ -805,7 +805,7 @@ const BUFFS=[{n:'SHARP',s:'atk',v:3},{n:'TOUGH',s:'def',v:0.06},{n:'HEARTY',s:'h
   {n:'BLAZE 420',s:'hp',v:420,meme:1},{n:'NICE 69',s:'atk',v:69,meme:1},{n:'LUCKY 777',s:'hp',v:77,meme:1},{n:'MUCH 4.2',s:'def',v:0.42,meme:1},{n:'SPEED 6.9',s:'atk',v:6.9,meme:1},
   {n:'CURSED 69',s:'atk',v:-6.9,meme:1,curse:1},{n:'PAPER 4.2',s:'def',v:-0.42,meme:1,curse:1},{n:'HANGOVER 420',s:'hp',v:-42,meme:1,curse:1}];
 function itemRoll(id){id=Number(id)||0;let h=(id*2654435761)>>>0,acc=0,rar=RARITY[RARITY.length-1];for(const t of RARITY){acc+=t.w;if(h%100<acc){rar=t;break;}}const buff=BUFFS[Math.floor(h/97)%BUFFS.length];return {rar,buff,amount:buff.v*rar.mult,label:`${rar.n}: ${buff.n}`};}
-function gearStats(){const s={atk:0,def:0,hp:0,mp:0};if(!chainReady())return s;for(const it of chainData.inv){const g=GEAR_STATS[it.type];if(g){s.atk+=g.atk||0;s.def+=g.def||0;s.hp+=g.hp||0;s.mp+=g.mp||0;}if(it.type!==3&&it.type!==4){const r=itemRoll(it.id);s[r.buff.s]+=r.amount;}}return s;} // non-food items also add their random rolled buff
+function gearStats(){const s={atk:0,def:0,hp:0,mp:0};if(!chainReady())return s;for(const it of chainData.inv){const g=GEAR_STATS[it.type];if(g){s.atk+=g.atk||0;s.def+=g.def||0;s.hp+=g.hp||0;s.mp+=g.mp||0;}if(it.type!==3&&it.type!==4){const r=itemRoll(it.id);s[r.buff.s]+=r.amount;}}s.atk=Math.max(-4,s.atk);s.def=Math.max(-0.25,s.def);return s;} // non-food items also add their random rolled buff
 const gatk=()=>gearStats().atk;
 function addCredit(t,l){const k=t+':'+l;P.credits[k]=(P.credits[k]||0)+1;}
 // minting moves a crafted item onto the chain, so its off-chain effect goes away (one craft = one item, D-021)
@@ -1228,7 +1228,7 @@ function update(dt){
   // rest
   if(kd('r')){if(inCamp){if(!P.resting){P.resting=true;sfx(330,0.2,'triangle',0.04);}}else if(!toastMsg)toast('YOU CAN ONLY REST INSIDE THE CAMP!',1.5);}
   else P.resting=false;
-  if(P.resting){P.restT=(P.restT||0)+dt;if(P.restT>=REST_DELAY){const hpCap=Math.ceil(P.maxHp*REST_CAP);P.hp=Math.min(hpCap,P.hp+REST_HP*dt);P.mp=Math.min(P.maxMp,P.mp+REST_MP*dt);}}
+  if(P.resting){P.restT=(P.restT||0)+dt;if(P.restT>=REST_DELAY){const hpCap=Math.ceil(P.maxHp*REST_CAP);if(P.hp<hpCap)P.hp=Math.min(hpCap,P.hp+REST_HP*dt);P.mp=Math.min(P.maxMp,P.mp+REST_MP*dt);}}
   else P.restT=0;
   // move
   let vx=0,vy=0;
