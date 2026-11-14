@@ -3,6 +3,9 @@
 > Claude Code reads this file at the start of every session. Keep it accurate and short.
 > When an architectural decision changes, update this file in the same commit.
 
+> **New session? Read `START_HERE.md` first:** choose your lane (BRAIN → skill `dogeon-brain`, `claude --agent dogeon-brain`;
+> LANDING → skill `dogeon-landing-design`, `claude --agent dogeon-landing`) or ask the user before editing.
+
 ## 0. Session protocol (always)
 0. **RULE #0 (Pre-Decision Gate — NEVER SKIP):** Before taking ANY decision or editing ANY file, follow the **Analyzer Prompt Master** (`prompts/ANALYZER_PROMPT_MASTER.md`): Explore (`@file#lines`, visual evidence, parallel subagents for multi-lens audits) → Verify Baseline (`bash tests/check.sh`, reproduce bugs with a failing test first) → Plan & Invariant Gate (game invariants, Solidity CEI/solvency, offline fallback, name collisions, seeded RNG).
 1. Load **`dogeon-mission`** (`.claude/skills/dogeon-mission/`) **first** — the user's charter: what to build and what NOT to

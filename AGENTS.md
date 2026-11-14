@@ -2,6 +2,9 @@
 
 > Auto-loaded by Antigravity CLI (`agy`) and compatible coding agents. Keep concise, authoritative, and in sync with `CLAUDE.md`.
 
+> **New agent? Read [`START_HERE.md`](./START_HERE.md) first:** pick your lane (BRAIN = skill `dogeon-brain`, LANDING = skill
+> `dogeon-landing-design`) or ask the user which one before you edit anything.
+
 ## 0. RULE #0 (THE NUMBER ONE RULE — `/analyzer-master` SKILL GATE)
 0. **Load the `dogeon-mission` skill FIRST** ([`.agents/skills/dogeon-mission/SKILL.md`](./.agents/skills/dogeon-mission/SKILL.md)) —
    *what* to build and what NOT to (user's charter: priorities, hard rules R1–R6, scope fence, decision test). `analyzer-master`

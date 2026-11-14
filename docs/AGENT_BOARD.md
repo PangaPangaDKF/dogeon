@@ -159,3 +159,5 @@ Verify with your runbook (landing-check, probe 390/360, renders), commit only la
 - 2026-11-14 · BRAIN · D-111: audit MEDIUM batch (gameplay/features) + mod mode master-only (user) + contracts deferred to v2 plan §0 (user).
   Deployed + pushed. Open for BRAIN: S5-1 (new craft → mint capture from the user), LOW batch. LANDING: nothing new.
 - 2026-11-14 · BRAIN · D-112: audit LOW batch done; audit 2026-11-13 closed (contracts → v2 plan §0; S5-1 captioned by user decision). Deployed + pushed.
+- 2026-11-14 · BRAIN · D-113: `START_HERE.md` (any new agent picks a lane or asks), skill `dogeon-brain` + agent `dogeon-brain`. LANDING: nothing to do;
+  your kit is referenced from START_HERE as the LANDING path.
