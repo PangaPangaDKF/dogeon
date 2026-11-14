@@ -44,7 +44,7 @@ Version: 2.6 (2026-11-13, D-089 economy + respawn). Bump the version and add a l
 1. **Sanctuary Camp & Survival:** Camp (`x:33..47, y:27..41`) is 100% safe (`hurtPlayer` returns in camp; `solidFor` blocks `ent.enemy` and bone projectiles). Holding `R` in camp waits `3s` (`REST_DELAY`), then heals HP up to **60% (`REST_CAP`)** and MP to 100%. Healing above 60% requires eating fish (`RAW FISH +15`, `COOKED FISH +25`) or casting Healer `MEND` (`10 MP`).
 2. **Death & Greed vs. Safety:** Death loses all whiskers, all materials, and `P.bag`, respawning at campfire at 35% HP/MP (`RESPAWN_FRAC`). On-chain NFTs and wallet/staked DOGE are never lost. There is no in-game DOGE (D-097).
 3. **Starter Bag & NFT Minting (`D-019`, `D-021`, `D-036`):**
-   - `newGame()` starts every player with `wood:3, stone:3, orb:2, scrap:2, horn:2, steel:2` and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]`.
+   - `newGame()` starts every player with `steel:2` (wood/stone live only in the bag, D-103) and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]`.
    - **Spend → get (D-104):** every mint needs a source: a forge credit (`creditOk`/`takeOffChain`/`putBack`, 1 craft = 1 item, no dupes) or a caught bag food. `mintNft` throws without one. Players craft `HAMMER LV2` (2 steel + 1 wood, they start with it) then mint. `mintRows()` lists the mintable rows in the forge and the Pool DEX.
    - Owning a gear NFT = wearing it (`swordLv()`, `armorLv()`).
 4. **Distinct Profession Gameplay Mechanics (`D-027..D-029`, `D-036`):**

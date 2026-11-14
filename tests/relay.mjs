@@ -84,7 +84,8 @@ try {
   else fail('raid cycle', JSON.stringify({ dead, y: y.got.filter(m => m.t !== 'st'), aCycle: a.got.some(m => m.t === 'cycle') }));
 
   const h = await (await fetch(`http://127.0.0.1:${PORT}/health`)).json();
-  if (h.ok && h.rooms.some(r => r.room === 'r1')) pass('health', JSON.stringify(h.rooms)); else fail('health', JSON.stringify(h));
+  const hr = await fetch(`http://127.0.0.1:${PORT}/health`);
+  if (h.ok && h.rooms >= 2 && h.players >= 2 && !JSON.stringify(h).includes('r1') && hr.headers.get('x-content-type-options') === 'nosniff') pass('health', `${JSON.stringify(h)} (no room names) + nosniff`); else fail('health', JSON.stringify(h));
   const page = await (await fetch(`http://127.0.0.1:${PORT}/?mp=ws://127.0.0.1:${PORT}`)).text();
   const gameRes = await fetch(`http://127.0.0.1:${PORT}/src/game.js`); // D-074: game code is an external module
   const game = await gameRes.text();
@@ -143,7 +144,15 @@ try {
   const heals = h2.got.filter(m => m.t === 'heal');
   if (heals.length === 1 && heals[0].amt === 20 && heals[0].r === 72) pass('heal clamp', 'amt 999 -> 20, r -> 72; a heal claimed 800 px away is dropped');
   else fail('heal clamp', JSON.stringify(heals));
-  h1.ws.send(JSON.stringify({ t: 'loot', id: 'ha', items: [{ k: 'steel', x: 100, y: 100 }] })); await wait(150);
+  h1.ws.send(JSON.stringify({ t: 'loot', id: 'ha', items: [{ k: 'steel', x: 100, y: 100 }] })); await wait(150); // alive: must be ignored (D-112 S3-5)
+  const aliveLoot = h2.got.some(m => m.t === 'loot');
+  h1.ws.send(JSON.stringify({ t: 'st', id: 'ha', x: 100, y: 100, dead: 1 })); await wait(80);
+  h1.ws.send(JSON.stringify({ t: 'loot', id: 'ha', items: [{ k: 'steel', x: 100, y: 100 }] }));
+  h1.ws.send(JSON.stringify({ t: 'loot', id: 'ha', items: [{ k: 'steel', x: 100, y: 100 }] })); await wait(150); // 2nd drop in the same death: ignored
+  if (!aliveLoot && h2.got.filter(m => m.t === 'loot').length === 1) pass('loot only on death', 'a living player cannot make piles; one drop per death'); else fail('loot only on death', JSON.stringify(h2.got.filter(m => m.t === 'loot')));
+  try { h1.ws.close(); } catch {} await wait(250); // free an IP seat so only the name check can refuse
+  const dup = await c2('hb'); await wait(200); // the id 'hb' is already in the room
+  if (dup.got.some(m => m.t === 'full' && /NAME TAKEN/.test(m.msg))) pass('unique ids', 'a second player with an id already in the room is refused'); else fail('unique ids', JSON.stringify(dup.got));
   const lid = (h2.got.find(m => m.t === 'loot') || { items: [{}] }).items[0].lid; const keep = setInterval(() => { stH(h1, 100); stH(h2, 120); }, 250); await wait(6500); clearInterval(keep); // sweep runs every 0.5 s here
   if (lid && h2.got.some(m => m.t === 'gone' && m.lid === lid)) pass('loot expiry', `pile ${lid} expired and everyone was told`); else fail('loot expiry', JSON.stringify(h2.got.filter(m => m.t !== 'st')));
   for (const k of [h1, h2]) try { k.ws.close(); } catch {}

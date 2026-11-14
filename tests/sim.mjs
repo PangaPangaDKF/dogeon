@@ -53,6 +53,7 @@ globalThis.__api = {
   set P_(v) { Object.assign(P, v); },
   step(dt) { update(dt); render(); for (const k in pressed) delete pressed[k]; },
   press(k) { pressed[k] = true; },
+  closeUI() { ui = null; }, // D-112 S4-11: api.get() returns a copy, so setting ui on it never closed anything
   hold(k, v) { keys[k] = v; },
   releaseAll() { for (const k in keys) keys[k] = false; },
   inCampT, zoneOf, playerInCamp, talk, shopMenu, bankMenu, newGame, RECIPES, ETYPES,
@@ -526,10 +527,9 @@ scenario('D-066: DogeMaster meme buffs/debuffs (420/69/777/4.2/6.9), burn-to-rer
   godRow.act();
   if (!g.P.god) { fail('god mode', 'P.god not toggled'); return; }
   const giveMatsRow = modOpts.find(r => /GIVE 99 ALL MATERIALS/.test(r.label));
-  const dogeBefore = g.P.doge;
   giveMatsRow.act();
   const wd = api.get().P.bag.filter(b => b.kind === 'wood').reduce((a, b) => a + b.qty, 0);
-  if (wd < 40 || g.P.steel !== 99 || g.P.doge !== dogeBefore) { fail('give mats', `bag wood=${wd} steel=${g.P.steel} doge ${dogeBefore}->${g.P.doge} (must not add fake DOGE)`); return; }
+  if (wd < 40 || g.P.steel !== 99 || 'doge' in g.P) { fail('give mats', `bag wood=${wd} steel=${g.P.steel} (and no in-game DOGE field)`); return; }
   const switchRow = modOpts.find(r => /WARRIOR/.test(r.label));
   switchRow.act();
   if (g.P.prof !== 'warrior') { fail('switch class', `prof=${g.P.prof}`); return; }
@@ -651,6 +651,20 @@ scenario('D-111: bag-full rewards drop on the ground; DOGE gear is never burned 
   pass('d-111 gameplay', `bag full: ${ground} wood/stone dropped at your feet; DOGE gear row says OWNED = EQUIPPED and burns nothing`);
 });
 
+scenario('D-112: one yarn per kill across the raid cycle; no mint before the fee is read; glyphs & ; ~ exist', () => {
+  const api = boot(SEED + 113); startGame(api);
+  const g = api.get();
+  g.items.push({ x: 40 * 16 + 8, y: 5 * 16 + 8, kind: 'yarn', life: 9999, t: 0 }); api.bossCycle();
+  if (api.get().items.some(i => i.kind === 'yarn')) { fail('yarn cycle', 'an unpicked yarn survived the raid cycle'); return; }
+  api.wallet.connected = true; api.wallet.chainOk = true; api.chainData.loaded = false; api.addCredit(1, 2); g.P.sword = 2;
+  const before = g.P.credits['1:2']; api.mintNft(1, 2, 'credit');
+  if (g.P.credits['1:2'] !== before || !/READING THE MINT FEE/.test(api.wallet.msg || '')) { fail('fee guard', `credit ${before}->${g.P.credits['1:2']} msg ${api.wallet.msg}`); return; }
+  api.wallet.connected = false;
+  const missing = ['&', ';', '~'].filter(c => !(c in api.FONT));
+  if (missing.length) { fail('glyphs', missing.join('')); return; }
+  pass('d-112 game', 'unpicked yarn cleared by the raid cycle; mint waits for the real fee (credit kept); & ; ~ in FONT');
+});
+
 scenario('D-097: the Victors Market (a DOGE shop) is gone after the boss falls', () => {
   const api = boot(SEED + 65); startGame(api);
   const g = api.get(), elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;
@@ -713,12 +727,12 @@ scenario('D-089: NPCs never give DOGE — Elder quests pay materials', () => {
   const elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;
   const run = (stage, setup) => { g.state.stage = stage; setup(); api.talk(elder);
     const q = api.get().ui.build().find(r => /^QUEST:/.test(r.label)); q.act();
-    const d = api.get().ui; if (!d || d.type !== 'dialog' || !d.onEnd) throw new Error('quest dialog did not open'); d.onEnd(); api.get().ui = null; };
-  const d0 = g.P.doge, s0 = g.P.steel, w0 = wood();
+    const d = api.get().ui; if (!d || d.type !== 'dialog' || !d.onEnd) throw new Error('quest dialog did not open'); d.onEnd(); api.closeUI(); };
+  const s0 = g.P.steel, w0 = wood();
   run(1, () => { g.P.kills = 8; });
-  if (g.P.doge !== d0 || g.state.stage !== 2 || g.P.steel !== s0 + 2 || wood() !== w0 + 2) { fail('quest 1 reward', `doge ${d0}->${g.P.doge} stage=${g.state.stage} steel ${s0}->${g.P.steel} wood ${w0}->${wood()}`); return; }
+  if ('doge' in g.P || g.state.stage !== 2 || g.P.steel !== s0 + 2 || wood() !== w0 + 2) { fail('quest 1 reward', `stage=${g.state.stage} steel ${s0}->${g.P.steel} wood ${w0}->${wood()}`); return; }
   run(2, () => { g.P.bruteKills = 3; });
-  if (g.P.doge !== d0 || g.state.stage !== 3 || !g.state.gateOpen || g.P.steel !== s0 + 6 || wood() !== w0 + 6) { fail('quest 2 reward', `doge ${d0}->${g.P.doge} stage=${g.state.stage} steel=${g.P.steel} wood=${wood()}`); return; }
+  if ('doge' in g.P || g.state.stage !== 3 || !g.state.gateOpen || g.P.steel !== s0 + 6 || wood() !== w0 + 6) { fail('quest 2 reward', `stage=${g.state.stage} steel=${g.P.steel} wood=${wood()}`); return; }
   pass('npc no doge', `quests 1+2 gave ${g.P.steel - s0} IRON + ${wood() - w0} WOOD (+ stone), 0 DOGE; gate opened`);
 });
 
@@ -1027,7 +1041,7 @@ scenario('food: RAW +15, COOKED +25, cook only near the fire', () => {
   eatRaw.act();
   if (P.hp !== 25 || api.bagCount('raw_fish') !== 1) fail('eat raw', `hp ${P.hp} raw ${api.bagCount('raw_fish')}`); else pass('eat raw', 'hp 10 -> 25, 1 raw left');
   if (rows.some(r => /^COOK/.test(r.label))) fail('cook far', 'COOK offered away from the fire'); else pass('cook far', 'no COOK away from the fire');
-  api.get().ui = null;
+  api.closeUI();
   P.x = api.CX * 16 + 8; P.y = (api.CY + 4) * 16 - 4 - P.hh; // just north of the brazier (fire at FY = CY+4)
   api.invMenu(); rows = api.get().ui.build();
   const cook = rows.find(r => /^COOK RAW FISH/.test(r.label));
@@ -1076,7 +1090,7 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   for (let i = 0; i < 20 && !/NO CONTRACT/.test(api.wallet.msg); i++) await flush();
   if (!api.chainReady() || !/NO CONTRACT/.test(api.wallet.msg)) fail('0x contract', `ready=${api.chainReady()} msg="${api.wallet.msg}"`);
   else pass('0x contract', `"${api.wallet.msg}"`);
-  api.get().ui = null;
+  api.closeUI();
   const P = api.get().P, cd = api.chainData;
   cd.loaded = true; cd.fee = 0n; // pretend the reads worked; txs go to the mock
 
@@ -1092,7 +1106,7 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   else pass('charm dupe', 'mint moved the charm on chain: +15 max HP removed off-chain, credit spent');
 
   // hammer: crafted LV2 then minted -> off-chain hammer drops to LV1 (the NFT now carries LV2)
-  P.sword = 1; P.steel = 2; P.bag = [{ kind: 'wood', qty: 1 }]; api.get().ui = null;
+  P.sword = 1; P.steel = 2; P.bag = [{ kind: 'wood', qty: 1 }]; api.closeUI();
   api.shopMenu(api.get().NPCS.find(n => n.id === 'merchant'));
   api.get().ui.build().find(r => /^CRAFT HAMMER LV2/.test(r.label)).act();
   api.get().ui.build().find(r => /^MINT HAMMER LV2 NFT/.test(r.label)).act(); await idle(api);
@@ -1100,7 +1114,7 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   else pass('hammer dupe', 'minted HAMMER LV2: off-chain hammer back to LV1, no second mint');
 
   // tx broadcast but receipt unknown -> NO refund (the mint may still land); a mined revert -> refund
-  api.get().ui = null; eth.receipt = 'throw'; api.addToBag('raw_fish', 1);
+  api.closeUI(); eth.receipt = 'throw'; api.addToBag('raw_fish', 1);
   await api.mintNft(3, 1, 'raw_fish'); await idle(api);
   if (api.bagCount('raw_fish') !== 0 || !/UNKNOWN/.test(api.wallet.msg)) fail('unknown outcome', `bag ${api.bagCount('raw_fish')} msg "${api.wallet.msg}"`);
   else pass('unknown outcome', `no refund: "${api.wallet.msg}"`);
@@ -1115,7 +1129,7 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   api.invMenu(); const eat = api.get().ui.build().find(r => /^NFT #9 RAW FISH/.test(r.label));
   const msg = eat && eat.act();
   if (msg !== 'HP IS FULL ALREADY.') fail('sync msg', `got "${msg}"`); else pass('sync msg', '"HP IS FULL ALREADY." shown, no wallet prompt');
-  api.get().ui = null;
+  api.closeUI();
 
   // drained pool (shares 0) is hidden and can be created again
   cd.pools = [{ key: 769n, type: 3, level: 1, doge: 0n, n: 0, shares: 0n, mine: 0n, buy: 0n, sell: 0n }];
@@ -1123,7 +1137,7 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   const rows = api.get().ui.build().map(r => r.label);
   if (!rows.some(l => /^CREATE POOL: 1 RAW FISH/.test(l)) || rows.some(l => /^POOL RAW FISH/.test(l))) fail('drained pool', rows.join(' | '));
   else pass('drained pool', 'empty pool hidden, CREATE POOL offered again');
-  api.get().ui = null; await flush();
+  api.closeUI(); await flush();
 
   // switching accounts drops the old account's NFTs (no borrowed gear)
   cd.inv = [{ id: 1, type: 1, level: 4 }]; cd.loaded = true; P.sword = 1;
@@ -1150,7 +1164,7 @@ scenario('partner NPCs: Cloverheart (Relotto), Noah, Bitget Wallet Card tell the
     const msg = link.act();
     if (!api.opened().includes(url) || !/^LINK: /.test(msg)) fail(`npc ${id}`, `opened ${api.opened()} msg ${msg}`);
     else pass(`npc ${id}`, `${n.name}: ${pages.length} story pages, "${link.label}" -> ${url}`);
-    api.get().ui = null;
+    api.closeUI();
   }
   const solid = ['lotto', 'noah', 'bitget'].map(id => npc(api, id)).every(n => api.get().P && Math.abs(n.x - api.get().P.x) + Math.abs(n.y - api.get().P.y) > 0);
   if (!solid) fail('npc spots', 'an NPC sits on the spawn point'); else pass('npc spots', 'beside the fire and next to the Sphinx, clear of the spawn');
@@ -1180,7 +1194,7 @@ scenario('faction trainers: pick a class locally, its mechanic applies, one clas
   if (api.get().P.prof !== 'warrior') fail('become warrior', 'P.prof=' + api.get().P.prof);
   else if (!(api.classDmg() > 1.2 && api.classSpd() < 1 && api.classArmor() > 0 && api.get().P.maxHp === 85)) fail('warrior stats', `dmg ${api.classDmg()} spd ${api.classSpd()} armor ${api.classArmor()} maxHp ${api.get().P.maxHp}`);
   else pass('become warrior', `WARRIOR: dmg x${api.classDmg()}, spd x${api.classSpd()}, +${api.classArmor()} armor, maxHp ${api.get().P.maxHp}`);
-  api.get().ui = null;
+  api.closeUI();
   // retrain to archer (local switch) -> faster, 60 maxHp, and Space fires an arrow (0 MP)
   const a = npc(api, 'archer'); api.talk(a); readDialog(api); ui = api.get().ui;
   const sw = ui.build().find(r => /SWITCH TO ARCHER/.test(r.label));
@@ -1293,7 +1307,7 @@ await scenarioAsync('RedStone oracle on Chikyu: stale feed falls back to the las
   else pass('oracle fallback', `$${o.price} from ${o.src} (feed reverted as stale)`);
   const row = api.get().ui.build().find(r => /REDSTONE DOGE\/USD/.test(r.label));
   if (!row || !/REDSTONE DOGE\/USD \$0\.0716 \(STALE\)/.test(row.label)) fail('oracle row', row ? row.label : 'missing'); else pass('oracle row', `"${row.label}"`);
-  api.get().ui = null;
+  api.closeUI();
   for (let f = 0; f < 60 * 120; f++) api.step(DT); // 2 minutes of market ticks
   const p = api.get().mkt.p;
   if (p < 0.0716424 / 5 || p > 0.0716424 * 5) fail('market anchor', `price ${p} drifted outside the oracle band`); else pass('market anchor', `game DOGE $${p.toFixed(4)} drifts around the RedStone price`);
@@ -1508,7 +1522,7 @@ scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, pool DE
   // 1. Class TTK & survivability vs basic doge against a knight (35 HP) in neutral market
   const simKillFrames = (prof, useVolley) => {
     const cur = api.get();
-    cur.enemies.splice(0); cur.projs.splice(0); cur.mkt.sent = 0; api.get().ui = null;
+    cur.enemies.splice(0); cur.projs.splice(0); cur.mkt.sent = 0; api.closeUI();
     P.x = 20 * 16 + 8; P.y = 50 * 16 + 8; P.dir = 'right'; P.dead = false; P.iT = 99; P.kbx = 0; P.kby = 0; P.atkCd = 0; P.atkT = 0; P.skills.combat = 0; P.skills.bark = 0; P.mp = 30;
     P.prof = null; P.maxHp = 60; P.hp = 60;
     if (prof) api.applyClass(prof, false);
@@ -1614,7 +1628,7 @@ scenario('D-068: on-chain currency purity, raid timer, timed lazy debuff & fee s
   if (!dmRow) { fail('dogemaster menu', 'DOGEMASTER row missing in elderMenu'); return; }
   dmRow.act();
   if (api.get().ui.build().some(r => /^MINT /.test(r.label))) { fail('dogemaster no free mint', 'DogeMaster still mints gear from nothing'); return; } // D-104: re-roll burns first
-  g.ui = null;
+  api.closeUI();
 
   pass('d-068 systems', '1 DOGE fee, quest gate, timed lazy debuff, pvp material drop, DogeMaster meme store');
 });

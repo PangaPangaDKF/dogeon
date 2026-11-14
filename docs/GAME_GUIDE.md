@@ -31,7 +31,7 @@ The game is **fully playable with no wallet** — the chain adds ownership on to
 | `E` / `Enter` | Talk / confirm |
 | hold `R` | Rest (only inside camp) |
 | `I` / `Tab` | Bag (eat, cook, mint, skills) |
-| `F` | Fish (facing water, standing still) |
+| `F` | Fish (facing water) or gather a tree / rock next to you, standing still |
 | `A` / `D` in menus | Change an amount or item |
 | `Esc` | Close |
 | Mouse | Hover rows, click to pick, click `<` `>` to change amounts |
@@ -44,7 +44,8 @@ Characters are **frozen facing right** (a deliberate style choice) — but you s
 
 - **The camp (safe).** Enemies cannot enter, cannot hit you, and their arrows stop at the fence. The giant **Dogecoin** on the
   plaza floor is the game's identity art. All NPCs live here.
-- **The field.** 22 cats roam it, one more spawns every 3 seconds out of sight. Five fishing ponds, all outside the camp.
+- **The field.** 52 cats roam it, one more spawns every 3 seconds out of sight, plus a **mini-boss** (a brute; a knight in the
+  ruins) that comes back 20 s after it falls. Trees and rocks to gather, five fishing ponds, all outside the camp.
 - **The ruins (north).** Opens at quest stage 2. Six tougher enemies, then the **Cat Lord** boss behind the gate.
 
 ### Who is in camp
@@ -62,7 +63,7 @@ Characters are **frozen facing right** (a deliberate style choice) — but you s
 
 - **Resting only heals to 60%.** Hold `R` inside camp for 3 s, then +10 HP/s up to 60% of max, and MP back to full. Moving resets it.
 - **Above 60% you must eat.** Raw fish +15 HP, cooked fish +25 HP (cook at the campfire from the bag). No potions, no regen.
-- **MP only refills by resting in camp.** This is what keeps the Healer honest.
+- **MP refills by resting in camp**, plus two field sources by design: the Healer's staff (+2 MP per hit) and cooked salmon.
 - **Death costs you:** all whiskers, all materials, and your whole bag. **Safe from death:** your wallet's testnet DOGE, DOGE staked
   on-chain, and every NFT in your wallet. There is no in-game DOGE to lose. You wake at the campfire with 35% HP/MP.
 - **The market changes the difficulty.** A simulated DOGE price (anchored to the real RedStone DOGE/USD when you're connected)
@@ -87,14 +88,15 @@ can switch. Connect a wallet and you can **swear it on-chain** (`DogeProfession.
 | Armor | +15% damage reduction | — | +5% |
 
 > **Healer heals the party (D-046, built).** In multiplayer, Mend heals nearby **other players** too: the heal pulse is
-> relayed and each receiver applies it (capped, still paid in the caster's MP). Solo, it heals you.
+> relayed and each receiver applies it (max 20 HP within 72 px of where the healer stands, paid in the caster's MP). Solo, it heals you.
 
 ---
 
 ## 6. Resources, crafting and minting
 
-**Where resources come from:** cats drop **whiskers**; brutes drop 3; frogs → **orb**, ninjas → **scrap**, bulls → **horn**,
-knights → **steel**. Fishing gives **raw fish**. Every new player also starts with **3 wood + 3 stone**.
+**Where resources come from:** alley, archer and frog cats drop **whiskers**, brutes 3; ninjas, bulls and knights drop **steel**
+(iron), and any monster has a 25% iron chance. Gather **wood** from trees and **stone** from rocks (`F`). Fishing gives **fish**.
+Every new player starts with **2 steel + 3 wood + 3 stone**: enough to craft and mint a Hammer Lv2 on day one.
 
 **Your bag** holds 12 slots (food stacks 5, materials 20). Bag contents are **lost on death** — wallet NFTs are not.
 
@@ -104,7 +106,8 @@ knights → **steel**. Fishing gives **raw fish**. Every new player also starts 
 3. **DogeMaster re-roll** (after the boss): burn one of your NFTs to mint a new one.
 There is no free mint: nothing can be minted without crafting or catching it first, and one craft = one mint.
 
-Item types: Hammer (Lv1–4), Armor (Lv1–2), Raw Fish, Cooked Fish, Bone Charm, Moon Biscuit.
+Item types: Hammer (Lv1–4), Armor (Lv1–2), Raw Fish, Cooked Fish, Bone Charm, Moon Biscuit, and the DOGE gear set (Sword,
+Leather Armor, Shield, Staff, Robe, Whip, Bow, Hemp Shirt, Quiver) from the DogeMaster re-roll.
 
 **Owning gear = wearing it.** If your wallet holds a Hammer Lv3 NFT, you swing a Lv3 hammer. Eating a food NFT burns it.
 One craft always equals one item — minting removes the off-chain copy, so nothing is ever duplicated.
@@ -122,7 +125,8 @@ At the Sphinx:
   impact and your LP share. Nothing is for sale until a player creates it.
 - **Fees:** every trade pays **2% to liquidity providers** (kept in the pool) plus a **1% protocol fee** split
   **0.2% to the project treasury / 0.8% to DOGE stakers**. Verified on-chain to the wei.
-- **Staking** — stake DOGE, earn the stakers' 0.8% share of all DEX trades, claim or unstake any time. Staked DOGE is safe on death.
+- **Staking** — stake testnet DOGE; stakers share 0.8% of every DEX trade and 80% of mint fees (pushed by `SEND MINT FEES TO
+  STAKERS`). Claim or unstake any time. Staked DOGE is safe on death. Testnet only, no real value, not financial advice.
 - **Oracle** — RedStone DOGE/USD is shown for information and anchors the in-game market; **swap prices always come from the
   pool reserves**, never the oracle.
 - **No in-game DOGE:** monsters never drop DOGE and no NPC gives or sells anything for DOGE. Testnet DOGE from the faucet is
@@ -144,15 +148,15 @@ room: the gate closes and anyone in the chamber is moved out. The HUD shows `BOS
 
 ## 9. Playing with other people
 
-The game is **live at https://dogeon.lat** — share that link and others can join. Multiplayer is opt-in; the deployed site
-auto-connects players to its shared relay (D-077, single URL). To self-host:
+The game is **live at https://dogeon.lat** — share that link and others can join. Served over http(s) the game joins
+the relay on its own host automatically (`?mp=off` disables it; opened as a file it stays offline). To self-host:
 
 ```bash
 node server/relay.mjs      # serves the game AND the relay on port 8787, no install needed
 ```
 
 Then open `http://<host>:8787/?mp=ws://<host>:8787&room=heist&name=YOURNAME` (use `wss://` over HTTPS). Up to 8 players per
-room see each other's doge — class sprite, movement, HP bar and name.
+server (all rooms together, max 3 per network) see each other's doge — class sprite, movement, HP bar and name.
 
 **Shared & server-authoritative (D-076):** the relay runs a real referee — a **shared Cat Lord raid** (one boss, HP scaled to
 the number of raiders), **open-world PvP** outside the camp, and **parties** (`?party=NAME`) with friendly-fire disabled between
@@ -166,14 +170,15 @@ allies. The **Healer heals the party** (D-046).
 
 | Enemy | HP | Behaviour | Drops |
 |---|---|---|---|
-| Alley cat | 15 | Chases you | Whisker |
-| Archer cat | 12 | Keeps distance, shoots bones | Whisker |
-| Frog | 14 | Kites and shoots | Orb |
-| Ninja | 18 | Fast, likes the ponds | Scrap |
-| Bull | 55 | Winds up, then charges | Horn |
-| Knight | 35 | Tanky melee | Steel |
-| Brute | 48 | Flashes red, then dashes | 3 whiskers |
-| **Cat Lord** (boss) | 320 | Arrow spreads; summons help below 50% HP | Golden Yarn |
+| Alley cat | 30 | Chases you | Whisker |
+| Archer cat | 24 | Keeps distance, shoots bones | Whisker |
+| Frog | 28 | Kites and shoots | Whisker |
+| Ninja | 36 | Fast, likes the ponds | Steel |
+| Bull | 110 | Winds up, then charges | Steel |
+| Knight | 70 | Tanky melee | Steel |
+| Brute | 96 | Flashes red, then dashes | 3 whiskers |
+| **Cat Lord** (boss) | 320 (+50% per extra raider) | Bone spreads; summons help below 50% HP | Golden Yarn (3 wood, 3 stone, 3 iron) |
+Drops are rare (each type has its own chance), and any monster may also drop iron (25%). HP values are `ETYPES` in `src/game.js`.
 
 Everything is readable: brutes telegraph before dashing, you get invulnerability frames and knockback after a hit.
 

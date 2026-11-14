@@ -156,3 +156,4 @@ Verify with your runbook (landing-check, probe 390/360, renders), commit only la
   hero-camp-coin.png / video/victory.jpg. Deployed `0e43885` (D-110) + this commit. S5-1 waits for a new craft → mint capture from the user.
 - 2026-11-14 · BRAIN · D-111: audit MEDIUM batch (gameplay/features) + mod mode master-only (user) + contracts deferred to v2 plan §0 (user).
   Deployed + pushed. Open for BRAIN: S5-1 (new craft → mint capture from the user), LOW batch. LANDING: nothing new.
+- 2026-11-14 · BRAIN · D-112: audit LOW batch done; audit 2026-11-13 closed (contracts → v2 plan §0; S5-1 captioned by user decision). Deployed + pushed.

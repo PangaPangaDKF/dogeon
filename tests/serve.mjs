@@ -13,7 +13,7 @@ const port = Number(process.argv[2]) || 8080;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.md': 'text/plain; charset=utf-8' };
 
 createServer(async (req, res) => {
-  const url = decodeURIComponent((req.url || '/').split('?')[0]);
+  let url; try { url = decodeURIComponent((req.url || '/').split('?')[0]); } catch { res.writeHead(400).end('bad request'); return; } // D-112 S3-1r
   const rel = normalize(url === '/' ? '/index.html' : url).replace(/^([/\\])+/, '');
   const file = join(root, rel);
   if (!file.startsWith(root) || rel.startsWith('.') ) { res.writeHead(403).end('forbidden'); return; }

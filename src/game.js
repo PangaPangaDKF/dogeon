@@ -44,9 +44,9 @@ const kp=(...ks)=>ks.some(k=>pressed[k]);
 // ================= PIXEL FONT 3x5 =================
 const FONT={A:[2,5,7,5,5],B:[6,5,6,5,6],C:[3,4,4,4,3],D:[6,5,5,5,6],E:[7,4,6,4,7],F:[7,4,6,4,4],G:[3,4,5,5,3],H:[5,5,7,5,5],I:[7,2,2,2,7],J:[1,1,1,5,2],K:[5,5,6,5,5],L:[4,4,4,4,7],M:[5,7,5,5,5],N:[6,5,5,5,5],O:[2,5,5,5,2],P:[6,5,6,4,4],Q:[2,5,5,6,3],R:[6,5,6,5,5],S:[3,4,2,1,6],T:[7,2,2,2,2],U:[5,5,5,5,7],V:[5,5,5,5,2],W:[5,5,7,7,5],X:[5,5,2,5,5],Y:[5,5,2,2,2],Z:[7,1,2,4,7],
 '0':[7,5,5,5,7],'1':[2,6,2,2,7],'2':[6,1,2,4,7],'3':[6,1,2,1,6],'4':[5,5,7,1,1],'5':[7,4,6,1,6],'6':[3,4,7,5,7],'7':[7,1,2,2,2],'8':[7,5,7,5,7],'9':[7,5,7,1,6],
-'.':[0,0,0,0,2],',':[0,0,0,2,4],'!':[2,2,2,0,2],'?':[6,1,2,0,2],':':[0,2,0,2,0],'-':[0,0,7,0,0],'+':[0,2,7,2,0],'/':[1,1,2,4,4],"'":[2,2,0,0,0],'(':[1,2,2,2,1],')':[4,2,2,2,4],'>':[4,2,1,2,4],'<':[1,2,4,2,1],'=':[0,7,0,7,0],'%':[5,1,2,4,5],'$':[3,6,2,3,6],'*':[0,5,2,5,0],'"':[5,5,0,0,0],'#':[5,7,5,7,5],'^':[2,5,0,0,0],'[':[3,2,2,2,3],']':[6,2,2,2,6]}; // D-103: brackets were blank in every menu label
+'.':[0,0,0,0,2],',':[0,0,0,2,4],'!':[2,2,2,0,2],'?':[6,1,2,0,2],':':[0,2,0,2,0],'-':[0,0,7,0,0],'+':[0,2,7,2,0],'/':[1,1,2,4,4],"'":[2,2,0,0,0],'(':[1,2,2,2,1],')':[4,2,2,2,4],'>':[4,2,1,2,4],'<':[1,2,4,2,1],'=':[0,7,0,7,0],'%':[5,1,2,4,5],'$':[3,6,2,3,6],'*':[0,5,2,5,0],'"':[5,5,0,0,0],'#':[5,7,5,7,5],'^':[2,5,0,0,0],'[':[3,2,2,2,3],']':[6,2,2,2,6],'&':[2,5,2,5,3],';':[0,2,0,2,4],'~':[0,0,3,6,0]}; // D-112: & ; ~ added // D-103: brackets were blank in every menu label
 function textRaw(s,x,y,col,sc){ctx.fillStyle=col;let cx=x;for(const ch of s){const gl=FONT[ch];if(gl){for(let r=0;r<5;r++){const b=gl[r];for(let c=0;c<3;c++)if(b&(4>>c))ctx.fillRect(cx+c*sc,y+r*sc,sc,sc);}}cx+=4*sc;}}
-function text(s,x,y,col='#fff',sc=1,shadow='#000'){s=String(s).toUpperCase();x=Math.round(x);y=Math.round(y);if(shadow)textRaw(s,x+sc,y+sc,shadow,sc);textRaw(s,x,y,col,sc);}
+function text(s,x,y,col='#fff',sc=1,shadow='#000'){s=String(s).toUpperCase().replace(/[—–]/g,'-').replace(/≈/g,'~');x=Math.round(x);y=Math.round(y);if(shadow)textRaw(s,x+sc,y+sc,shadow,sc);textRaw(s,x,y,col,sc);}
 function textC(s,cx,y,col,sc=1,shadow='#000'){s=String(s);text(s,cx-(s.length*4*sc-sc)/2,y,col,sc,shadow);}
 function wrap(s,n){const out=[];let line='';for(const w of s.split(' ')){if((line+' '+w).trim().length>n){out.push(line.trim());line=w;}else line+=' '+w;}if(line.trim())out.push(line.trim());return out;}
 
@@ -497,7 +497,7 @@ function newGame(){
 }
 function makeEnemy(type,x,y,zone){const d=ETYPES[type];return {type,def:d,x,y,hw:d.hw,hh:d.hh,hp:d.hp,maxHp:d.hp,dir:'down',anim:0,state:'wander',t:0,wx:0,wy:0,flash:0,kbx:0,kby:0,cool:1+Math.random()*2,enemy:true,boss:!!d.boss,zone,summonT:4,dead:false};}
 // D-057 mini-boss per region: a scaled-up elite of a region type. zone:'mini' keeps it OUT of the FIELD_POP/DUN_POP refill
-// (it stays unique and never respawns). Bigger, tankier, hits harder (3.5x HP, 1.6x dmg), with guaranteed drops.
+// (it stays unique and respawns every MINI_RESPAWN s). Bigger, tankier, hits harder (3.5x HP, 1.6x dmg), with guaranteed drops.
 const MINIS={field:'brute',dun:'knight'}; // one mini-boss type per region
 function makeMini(type,x,y,region){const d=ETYPES[type],md={...d,hp:Math.round(d.hp*3.5),dmg:Math.round(d.dmg*1.6),spd:d.spd*1.12,drop:6,dropP:1,hw:d.hw+2,hh:d.hh+2,chase:d.chase+80}; // drop:6 = lots of loot
   return {type,def:md,x,y,hw:md.hw,hh:md.hh,hp:md.hp,maxHp:md.hp,dir:'down',anim:0,state:'wander',t:0,wx:0,wy:0,flash:0,kbx:0,kby:0,cool:1+Math.random()*2,enemy:true,boss:false,mini:true,region,zone:'mini',summonT:4,dead:false};}
@@ -632,7 +632,7 @@ function killEnemy(e){
   const mat=e.def.mat||'whisk';
   if(Math.random()<(e.def.dropP??1))for(let i=0;i<e.def.drop;i++)items.push({x:e.x+R(-7,7),y:e.y+R(-4,4),kind:mat,life:18,t:Math.random()*3}); // D-055: drops are rare now
   if(Math.random()<0.25)items.push({x:e.x+R(-6,6),y:e.y+R(-4,4),kind:'steel',life:18,t:Math.random()*3}); // D-067: monsters drop iron (steel) too
-  if(e.mini){toast('MINI-BOSS SLAIN! SUCH LOOT.',2.5);} // D-063: elite drops 6 materials (dropP 1) + 5 coins
+  if(e.mini){toast('MINI-BOSS SLAIN! SUCH LOOT.',2.5);} // D-063: elite drops 6 materials (dropP 1) 
   if(state.stage===1){P.kills++;if(P.kills===8)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(state.stage===2&&e.type==='brute'){P.bruteKills++;if(P.bruteKills===3)toast('QUEST DONE! RETURN TO ELDER SHIBE');}
   if(e.boss){items.push({x:e.x,y:e.y,kind:'yarn',life:9999,t:0});state.won=true;state.bossT=BOSS_RESPAWN;if(state.stage<4)state.stage=4;winT=4.5;shake(0.6);puff(e.x,e.y-16,'#f0c030',30);sfx(400,1.2,'triangle',0.08,400);}
@@ -770,7 +770,8 @@ async function refreshChain(){
   await refreshBal();
 }
 // Phase 5 (D-028): claim your class on-chain. One per wallet forever; pays profFee DOGE + gas. Local pick stays free when offline.
-function chooseProfession(cls){const c=CLASSES[cls];if(!c)return;
+function chooseProfession(cls){const c=CLASSES[cls];if(!c)return;if(chainReady()&&addrs().prof&&!chainData.loaded){refreshChain().catch(()=>{});return setWalletMsg('READING THE OATH FEE... TRY AGAIN.');} // D-112 S2-7
+  
   if(!chainReady()||!addrs().prof){applyClass(cls,false);setWalletMsg(`YOU TRAIN AS A ${c.name} (LOCAL). SPACE=${cls==='archer'?'ARROWS':cls==='healer'?'STAFF':'CLEAVE'}!`);return;} // offline / registry not here: free local pick (game stays playable with no wallet)
   if(chainData.profession&&!isMod()){setWalletMsg(`THIS WALLET IS LOCKED IN AS A ${CLASSES[CLASS_IDS[chainData.profession]].name}. ONE CLASS PER WALLET.`);return;}
   return chainAct(`YOU ARE NOW A ${c.name}, SWORN ON-CHAIN. SUCH OATH.`,async()=>{await etx(addrs().prof,SEL.chooseProf+W32(c.id),chainData.profFee);applyClass(cls,true);});}
@@ -811,14 +812,14 @@ function addCredit(t,l){const k=t+':'+l;P.credits[k]=(P.credits[k]||0)+1;}
 function creditOk(t,l){if(!(P.credits[t+':'+l]>0))return false;if(t===1)return P.sword===l;if(t===2)return P.armor===l;if(t===5)return P.hpUps>0;if(t===6)return P.mpUps>0;return true;}
 function takeOffChain(t,l){if(t===1)P.sword=Math.max(1,l-1);else if(t===2)P.armor=l-1;else if(t===5){P.hpUps--;P.maxHp-=15;P.hp=Math.min(P.hp,P.maxHp);}else if(t===6){P.mpUps--;P.maxMp-=10;P.mp=Math.min(P.mp,P.maxMp);}}
 function putBack(t,l){if(t===1)P.sword=l;else if(t===2)P.armor=l;else if(t===5){P.hpUps++;P.maxHp+=15;}else if(t===6){P.mpUps++;P.maxMp+=10;}}
-function mintNft(type,level,src){ // D-104 SPEND -> GET: src is 'credit' (crafted at the forge = materials burned) or a caught bag food; never nothing
+function mintNft(type,level,src){if(!chainData.loaded){refreshChain().catch(()=>{});return setWalletMsg('READING THE MINT FEE... TRY AGAIN IN A SECOND.');} // D-112 S2-7 // D-104 SPEND -> GET: src is 'credit' (crafted at the forge = materials burned) or a caught bag food; never nothing
   return chainAct(`MINTED ${itemName({type,level})} NFT! TO THE MOON.`,async()=>{
     const k=type+':'+level;
     if(!src||(src!=='credit'&&!FOOD_TYPE[src]))throw new Error('CRAFT IT AT THE FORGE FIRST: EVERY MINT SPENDS MATERIALS');
     if(src==='credit'){if(!creditOk(type,level))throw new Error('CRAFT IT FIRST AND KEEP IT EQUIPPED');P.credits[k]--;takeOffChain(type,level);}
     else if(!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
     try{await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(type)+W32(level),chainData.fee);}
-    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else addToBag(src,1);}throw e;} // unknown outcome: no refund (no dupes)
+    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else if(!addToBag(src,1))items.push({x:P.x,y:P.y,kind:src,life:60,t:0});}throw e;} // unknown outcome: no refund (no dupes)
   });}
 function useNft(it){ // eat food / drink charm: burns the NFT, then applies the effect
   const food=TYPE_FOOD[it.type];
@@ -826,7 +827,7 @@ function useNft(it){ // eat food / drink charm: burns the NFT, then applies the 
   if(it.type===5&&P.hpUps>=3||it.type===6&&P.mpUps>=2){setWalletMsg('MAXED ALREADY. SELL IT AT THE SPHINX.');return;}
   chainAct(`USED ${itemName(it)} #${it.id}. SUCH NOM.`,async()=>{await etx(addrs().items,SEL.burn+W32(it.id),0);
     if(food)P.hp=Math.min(P.maxHp,P.hp+FOODS[food].heal);else if(it.type===5){if(P.hpUps<3){P.hpUps++;P.maxHp+=15;}}else if(it.type===6){if(P.mpUps<2){P.mpUps++;P.maxMp+=10;}}});}
-function burnAndReroll(it){return chainAct(`BURNED #${it.id} & RE-ROLLED ${itemName(it)}!`,async()=>{await etx(addrs().items,SEL.burn+W32(it.id),0);await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(it.type)+W32(it.level),chainData.fee||10n**17n);});}
+function burnAndReroll(it){if(!chainData.loaded)return setWalletMsg('READING THE MINT FEE... TRY AGAIN.');return chainAct(`BURNED #${it.id} & RE-ROLLED ${itemName(it)}!`,async()=>{await etx(addrs().items,SEL.burn+W32(it.id),0);await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(it.type)+W32(it.level),chainData.fee);});}
 const dex=()=>addrs().dex;
 function listNft(it,priceDoge){return chainAct(`LISTED #${it.id} FOR ${priceDoge} DOGE.`,async()=>{await ensureApproved();await etx(dex(),SEL.list+W32(it.id)+W32(toWei(priceDoge)),0);});}
 function delistNft(l){return chainAct(`DELISTED #${l.id}.`,()=>etx(dex(),SEL.delist+W32(l.id),0));}
@@ -937,7 +938,7 @@ function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
   for(const r of RECIPES){if(!r.req())continue;
     const parts=Object.entries(r.need).map(([k,v])=>`${v} ${k==='whisk'?'WHISK':k.toUpperCase()}`).join('+');
     const has=Object.entries(r.need).every(([k,v])=>matN(k)>=v);
-    o.push({label:`CRAFT ${r.name} (${parts})`,col:has?null:'#707890',act:has?()=>{for(const [k,v] of Object.entries(r.need))matTake(k,v);if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act()+(r.nft?' MINT IT BELOW.':'');}:()=>`NEED ${parts}. HUNT MORE.`});} // D-103
+    o.push({label:`CRAFT ${r.name} (${parts})`,col:has?null:'#707890',act:has?()=>{if(wallet.busy)return 'WAIT FOR THE PENDING TRANSACTION.';for(const [k,v] of Object.entries(r.need))matTake(k,v);if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act()+(r.nft?' MINT IT BELOW.':'');}:()=>`NEED ${parts}. HUNT MORE.`});} // D-103
   // on-chain mint (D-019): crafted credits, starter wood+stone bag kit, or caught bag food can be minted
   o.push(...mintRows());
   o.push({label:`HAVE: STEEL ${P.steel} WHISK ${P.whisk} WOOD ${bagCount('wood')} STONE ${bagCount('stone')}`,act:()=>'MATERIALS FOR CRAFTING. LOST ON DEATH.'});
@@ -1159,7 +1160,8 @@ function netPvp(cx,cy,hw,hh,dmg,skip){ // client pre-check; the relay re-checks 
   for(const k in net.peers){const g=net.peers[k];if(g.dead||(NET_PARTY&&g.pt===NET_PARTY)||(skip&&skip.has(k))||inCampT(Math.floor(g.x/16),Math.floor(g.y/16)))continue;
     if(Math.abs(g.x-cx)<hw+6&&Math.abs(g.y-6-cy)<hh+9){netSend({t:'pvp',to:k,dmg:Math.round(dmg)});if(skip)skip.add(k);hit=true;}}
   return hit;}
-function bossCycle(){state.bossT=0;if(!enemies.some(e=>e.boss))enemies.push(makeEnemy('boss',CX*16+8,5*16+8,'boss'));if(state.stage>=1){state.stage=1;P.kills=0;P.bruteKills=0;}state.gateOpen=false;if(zoneOf(P.x,P.y)==='boss'){P.x=CX*16+8;P.y=(GATE_ROW+3)*16+8;}toast('THE CAT LORD RETURNS! NEW HEIST: SLAY 8 CATS.',4);} // D-095 raid cycle
+function bossCycle(){state.bossT=0;items=items.filter(i=>i.kind!=='yarn'); // D-112 S4-9: one yarn per kill
+  if(!enemies.some(e=>e.boss))enemies.push(makeEnemy('boss',CX*16+8,5*16+8,'boss'));if(state.stage>=1){state.stage=1;P.kills=0;P.bruteKills=0;}state.gateOpen=false;if(zoneOf(P.x,P.y)==='boss'){P.x=CX*16+8;P.y=(GATE_ROW+3)*16+8;}toast('THE CAT LORD RETURNS! NEW HEIST: SLAY 8 CATS.',4);} // D-095 raid cycle
 function netBoss(m){const e=enemies.find(e=>e.boss);if(!e)return;e.maxHp=Math.max(1,m.max|0);e.hp=Math.max(0,m.hp|0);
   if(m.dead&&!e.dead){if(zoneOf(P.x,P.y)==='boss')killEnemy(e);else{e.dead=true;state.bossT=BOSS_RESPAWN;toast('YOUR PARTY SLEW THE CAT LORD! HE RETURNS IN 60S.',3);}enemies=enemies.filter(x=>!x.dead);}}
 function netConnect(){
@@ -1215,7 +1217,7 @@ function update(dt){
   if(kp('n')){heroNameIdx=(heroNameIdx+1)%HERO_NAMES.length;net.name=HERO_NAMES[heroNameIdx];sfx(440,0.06);}
   if(kp('c')){classOptIdx=(classOptIdx+1)%CLASS_OPTS.length;sfx(520,0.06);}
   if(kp('p')){partyOptIdx=(partyOptIdx+1)%PARTY_OPTS.length;NET_PARTY=PARTY_OPTS[partyOptIdx]==='SOLO'?'':PARTY_OPTS[partyOptIdx];sfx(600,0.06);}
-  if(kp('enter',' ')){newGame();net.name=netClean(netParam('name'))||net.name||HERO_NAMES[heroNameIdx];if(CLASS_OPTS[classOptIdx]!=='novice'){P.wantClass=CLASS_OPTS[classOptIdx];toast('CLASS IS ONE-PER-WALLET, ON-CHAIN. YOU START A WEAK NOVICE — SWEAR YOUR CLASS AT A TRAINER.',3.5);}scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
+  if(kp('enter',' ')){newGame();net.name=netClean(netParam('name'))||net.name||HERO_NAMES[heroNameIdx];if(CLASS_OPTS[classOptIdx]!=='novice'){P.wantClass=CLASS_OPTS[classOptIdx];toast('YOU START AS A NOVICE. SWEAR A CLASS AT A TRAINER (1 PER WALLET).',3.5);}scene='play';sfx(523,0.1);setTimeout(()=>sfx(784,0.15),100);}return;}
   updMarket(dt);chainTick(dt);
   netTick(dt); // opt-in multiplayer (no-op without ?mp); before the UI early-return so you stay visible while in menus
   if(toastMsg){toastMsg.life-=dt;if(toastMsg.life<=0)toastMsg=null;}
@@ -1395,7 +1397,7 @@ function drawUI(){
   if(ui.type==='dialog'){
     const n=ui.npc;box(8,148,304,70);
     let tx=16;
-    if(n){box(12,152,38,58);const bob=Math.round(Math.sin(time*4)*1.5);ctx.drawImage(SPR[n.spr].down[0],15,161+bob,32,40);tx=58;box(8,137,n.name.length*4+8,12);text(n.name,12,140,'#ffe040');}
+    if(n){box(12,152,38,58);const bob=Math.round(Math.sin(time*4)*1.5);ctx.drawImage(SPR[n.spr].right[0],15,161+bob,32,40);tx=58;box(8,137,n.name.length*4+8,12);text(n.name,12,140,'#ffe040');}
     const page=ui.pages[ui.idx],shown=page.slice(0,Math.floor(ui.chars));
     const lines=wrap(page,n?60:72);let used=0;
     lines.forEach((ln,i)=>{const take=Math.max(0,Math.min(ln.length,shown.length-used));text(ln.slice(0,take),tx,156+i*9,'#fff');used+=ln.length+1;});
@@ -1418,7 +1420,7 @@ function drawUI(){
       else if(isMint){ctx.fillStyle='#ffd860';ctx.fillRect(43,yy+2,3,3);}
       else if(isPool){ctx.fillStyle='#80f8c0';ctx.fillRect(43,yy+2,3,3);}
       const afford=true,col=o.col||(sel?(isNft?'#ff9090':'#fff'):isNft?'#ff4040':isMint?'#ffd860':isPool?'#80f8c0':isBal?'#f8e090':'#c8d0f0');
-      text(lb,49,yy,col);if(o.cost)text(o.cost+' DOGE',280-(String(o.cost).length+4)*4,yy,afford?'#f8d050':'#a05050');});
+      text(lb.length>58?lb.slice(0,57)+'.':lb,49,yy,col);if(o.cost)text(o.cost+' DOGE',280-(String(o.cost).length+4)*4,yy,afford?'#f8d050':'#a05050');});
     text(ui.msg||(all[ui.sel]&&all[ui.sel].adj?'W/S SELECT  A/D PRICE  E OK  ESC LEAVE':'W/S SELECT   E BUY   ESC LEAVE'),40,y+h-10,ui.msg?'#a0ffa0':'#8090c0');
   }
 }
@@ -1433,12 +1435,12 @@ function drawTitle(){
   logo(x,y+3,s,'#8a4008','#8a4008');logo(x,y,s,'#f8c838','#fff4b0');
   textC('- THE GRAND HEIST - POWERED BY DOGEOS',W/2,y+44,'#ffe8c0',1);
   const b=Math.round(Math.sin(time*4));
-  ctx.drawImage(SPR.hero.down[0],W/2-24,96+b,48,60);
-  ctx.drawImage(SPR.ninja.left[Math.floor(time*5)%2],W/2+44,108,32,40);
-  ctx.drawImage(SPR.bull.left[0],W/2+76,104-b,32,40);
-  ctx.drawImage(SPR.frog.right[Math.floor(time*3)%2],W/2-110,108,32,40);
-  ctx.drawImage(SPR.knight.right[0],W/2-80,108,16,20);ctx.drawImage(SPR.alley.left[0],W/2+30,118,16,20);
-  ctx.drawImage(SPR.merchant.down[0],10,180,16,20);ctx.drawImage(SPR.bank.down[0],28,180,16,20);ctx.drawImage(SPR.sage.down[0],46,180,16,20);
+  ctx.drawImage(SPR.hero.right[0],W/2-24,96+b,48,60);
+  ctx.drawImage(SPR.ninja.right[0],W/2+44,108,32,40);
+  ctx.drawImage(SPR.bull.right[0],W/2+76,104-b,32,40);
+  ctx.drawImage(SPR.frog.right[0],W/2-110,108,32,40);
+  ctx.drawImage(SPR.knight.right[0],W/2-80,108,16,20);ctx.drawImage(SPR.alley.right[0],W/2+30,118,16,20);
+  ctx.drawImage(SPR.merchant.right[0],10,180,16,20);ctx.drawImage(SPR.bank.right[0],28,180,16,20);ctx.drawImage(SPR.sage.right[0],46,180,16,20);
   if(Math.floor(time*2.5)%2)textC('PRESS ENTER TO START',W/2,152,'#ffffff',2);
   const curHero=net.name||HERO_NAMES[heroNameIdx],curCls=CLASS_OPTS[classOptIdx].toUpperCase(),curPt=NET_PARTY||'SOLO (PVP)';
   textC(`[N] NAME: ${curHero}   [C] CLASS: ${curCls}   [P] PARTY: ${curPt}`,W/2,172,'#ffe040');

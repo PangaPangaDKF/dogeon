@@ -32,7 +32,7 @@ DOGEON is NOT a relaxed idle clicker or a casual web game. It is a **hardcore su
 
 ### Axiom 3: Brutal Death Penalty vs Web3 Permanence & PvP Looting
 - **Dungeon Raid Timer & Sealing:**
-  - The northern dungeon operates on a raid instance cycle: boss gates open for 30 minutes (`RAID_OPEN = 1800s`), then seal shut for 5 hours (`RAID_SEAL = 18000s`).
+- **Raid cycle (D-095):** the Cat Lord returns 60 s (`BOSS_RESPAWN`) after he falls and the whole room restarts at quest 1. No raid timer, no seal.
   - When sealed, boss gates are solid and impassable (`solidFor` blocks entry).
 - **PvP Material Loot Theft:**
   - When killed by monsters or other players, carried materials (`steel`, `whisk`, `wood`, `stone`) scatter on the ground as lootable pickups for rivals to steal.

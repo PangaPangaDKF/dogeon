@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 // DOGEON multiplayer relay (D-040) — zero dependencies: a minimal RFC 6455 WebSocket server on Node's built-in http/crypto.
 //
-//   node server/relay.mjs                       # PORT=8787 by default; MAX_ROOM=8 players per room
-//   open http://localhost:8787/?mp=ws://localhost:8787&room=heist&name=YOU
+//   node server/relay.mjs                       # PORT=8787 by default; MAX_ROOM=8 players per SERVER (all rooms)
+//   open http://localhost:8787/?room=heist&name=YOU (the page joins the relay on its own host; ?mp=off disables it)
 //
-// One process serves BOTH the game page ("/") and the relay, so a host only runs this one command for their friends.
-// It keeps NO game state and never sees a wallet or key: it rebroadcasts each player's own small position message
-// {t:'st', id, x, y, d, m, c, h, n, dead} to the other players in the same room. Shared enemies/loot would need an
-// authoritative server (e.g. Colyseus) — intentionally out of scope (D-040).
-// Limits: payload <= 1 KB, <= 20 msgs/s per client, MAX_ROOM players per room, idle clients dropped after 30 s.
+// One process serves the landing ("/"), the game ("/play", play.*) and the relay. It never sees a wallet or key.
+// It rebroadcasts each player's own position {t:'st', ...} to the room and referees the shared parts (D-076, D-095, D-109,
+// D-111): one Cat Lord per room with budgeted damage and the 60 s raid cycle, PvP (range, camp, party, damage budget),
+// death-loot piles (one drop per death, first take wins, 120 s expiry), capped heals. Field enemies stay client-side.
+// Limits (D-109/D-112): payload <= 1 KB, <= 30 msgs/s per client (pings count), 8 seats per server, 3 per IP, a seat with no
+// position for 30 s is dropped, ids unique per room, positions must be reachable.
 // For an https:// page you need wss:// — put this behind TLS (Caddy/nginx), or use a host that terminates TLS (Render, Fly…).
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
@@ -74,7 +75,8 @@ function onWorld(c, m) {
     return send(o, JSON.stringify({ t: 'hurt', id: c.id, dmg, x: me.x, y: me.y }));
   }
   if (m.t === 'loot') { // a dying player's carried materials become shared piles (NFTs never drop: they live on chain)
-    if (!me || !Array.isArray(m.items)) return;
+    if (!me || !me.dead || c.dropped || !Array.isArray(m.items)) return; // D-112 S3-5: only a dead player drops, once per death
+    c.dropped = true;
     const out = [];
     for (const it of m.items.slice(0, 12)) {
       if (!it || !LOOT_KINDS.includes(it.k) || !Number.isFinite(it.x) || !Number.isFinite(it.y) || !near(me, it, 40) || w.loot.size >= LOOT_CAP) continue;
@@ -108,7 +110,7 @@ function drop(c) {
   if (r) {
     r.delete(c);
     if (c.id) for (const o of r) send(o, JSON.stringify({ t: 'bye', id: c.id }));
-    if (!r.size) { rooms.delete(c.room); world.delete(c.room); }
+    if (!r.size) { clearTimeout(world.get(c.room)?.cycle); rooms.delete(c.room); world.delete(c.room); } // D-112 S3-11
   }
   try { c.sock.end(); } catch {} // end() flushes pending frames (e.g. {t:'full'}) before closing
 }
@@ -128,6 +130,7 @@ function onMessage(c, text) {
     if (total >= MAX_ROOM || r.size >= MAX_ROOM) { send(c, JSON.stringify({ t: 'full', msg: 'SERVER FULL (8/8 PLAYERS)' })); return drop(c); }
     let sameIp = 0; for (const s of rooms.values()) for (const o of s) if (o.ip === c.ip) sameIp++;
     if (sameIp >= MAX_PER_IP) { send(c, JSON.stringify({ t: 'full', msg: 'TOO MANY TABS FROM ONE NETWORK' })); return drop(c); }
+    if ([...r].some(o => o.id === m.id)) { send(c, JSON.stringify({ t: 'full', msg: 'NAME TAKEN, RELOAD' })); return drop(c); } // D-112 S3-10
     c.room = room; c.id = m.id; c.lastSt = Date.now(); c.party = typeof m.party === 'string' && /^[A-Z0-9.-]{1,12}$/.test(m.party) ? m.party : ''; r.add(c); rooms.set(room, r);
     const w = W(room); if (w.boss) send(c, bossMsg(w.boss)); if (w.loot.size) send(c, lootMsg([...w.loot].map(([lid, p]) => ({ lid, ...p })))); // late joiners see the same world
     return;
@@ -139,7 +142,7 @@ function onMessage(c, text) {
     const now = Date.now(), q = { x: m.x, y: m.y, dead: !!m.dead }; c.lastSt = now;
     const ok = !c.p || near(c.p, q, MAX_SPEED * (now - c.pt) / 1000 + MOVE_SLACK) || inCamp(q) || near(q, EJECT, 16) || c.p.dead || q.dead;
     if (!ok) return; // teleport: ignored (not relayed, not trusted)
-    c.p = q; c.pt = now;
+    c.p = q; c.pt = now; if (!q.dead) c.dropped = false;
   }
   if (m.t === 'heal') { // D-111 S3-3: a heal must start where the healer stands and is capped like MEND (20 HP, 72 px)
     if (!c.p || c.p.dead || !Number.isFinite(m.x) || !Number.isFinite(m.y) || !near(c.p, m, 48)) return;
@@ -178,10 +181,13 @@ function handle(req, res) {
   const host = (req.headers.host || "").toLowerCase();
   const url = req.url || "/";
   const pathname = url.split("?")[0];
+  // D-112 S3-13: safe defaults on every response (no MIME sniffing, no full referrer to other sites)
+  res.setHeader("x-content-type-options", "nosniff"); res.setHeader("referrer-policy", "strict-origin-when-cross-origin");
 
-  if (pathname === "/health") {
+  if (pathname === "/health") { // D-112 S3-12: counts only, never room names
+    let players = 0; for (const s of rooms.values()) players += s.size;
     res.writeHead(200, { "content-type": "application/json" });
-    return res.end(JSON.stringify({ ok: true, rooms: [...rooms].map(([room, s]) => ({ room, players: s.size })) }));
+    return res.end(JSON.stringify({ ok: true, rooms: rooms.size, players }));
   }
 
   // Game request: play subdomain, /play route, or ?mp multiplayer parameter
