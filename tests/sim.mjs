@@ -607,7 +607,7 @@ scenario('D-102: Elder tells the PonziFi chapter (satire, testnet disclaimer) ne
   pass('ponzi chapter', '5 pages, every glyph in FONT, ends with the 60 s raid cycle + testnet disclaimer');
 });
 
-scenario('D-108: rest never lowers HP; class switch is not a free heal; cursed gear has a floor (audit S4-1, S4-2, S2-2)', () => {
+scenario('D-109: rest never lowers HP; class switch is not a free heal; cursed gear has a floor (audit S4-1, S4-2, S2-2)', () => {
   const api = boot(SEED + 108); startGame(api);
   const g = api.get(), P = g.P;
   P.x = 40 * 16 + 8; P.y = 37 * 16 + 8; P.hp = 54; // in camp, above the 60% rest cap (36/60)

@@ -70,7 +70,7 @@ try {
   else fail('cycle anti-spoof', 'client-sent cycle reached another player');
   const y = await client('yuri', 'r3'); await wait(150); // bob left, so a 3rd slot is free; yuri is alone in r3
   st(y, 40 * 16 + 8); await wait(150); // yuri stands in the boss chamber
-  // D-108: damage is budgeted (BOSS_DPS 120/s): a burst of 8 x 60 in 0.3 s must NOT kill a 320-HP boss
+  // D-109: damage is budgeted (BOSS_DPS 120/s): a burst of 8 x 60 in 0.3 s must NOT kill a 320-HP boss
   for (let i = 0; i < 8; i++) { y.ws.send(JSON.stringify({ t: 'bhit', id: y.id, dmg: 60 })); await wait(40); }
   await wait(150);
   const hpBurst = (y.got.filter(m => m.t === 'boss').at(-1) || {}).hp;
@@ -99,7 +99,7 @@ try {
       && part.status === 206 && (await part.arrayBuffer()).byteLength === 100 && part.headers.get('content-range') === `bytes 0-99/${len}` && bad.status === 416)
     pass('video range', `mp4 200 (${len} B), Range 0-99 -> 206, past-end -> 416`);
   else fail('video range', `full=${full.status} ${full.headers.get('content-type')} part=${part.status} ${part.headers.get('content-range')} bad=${bad.status}`);
-  // D-108: a teleport (camp -> boss chamber in one update) is ignored, so its boss hits do nothing
+  // D-109: a teleport (camp -> boss chamber in one update) is ignored, so its boss hits do nothing
   const tp = await client('tele', 'r9'); await wait(100); st(tp, 40 * 16 + 8); await wait(100);
   tp.ws.send(JSON.stringify({ t: 'st', id: 'tele', x: 40 * 16 + 8, y: 34 * 16 + 8, d: 'down', dead: 0 })); await wait(80); // walk into camp (legit respawn spot)
   tp.ws.send(JSON.stringify({ t: 'st', id: 'tele', x: 40 * 16 + 8, y: 100, d: 'down', dead: 0 })); await wait(80); // camp -> chamber instantly
@@ -119,7 +119,7 @@ try {
 } catch (e) { fail('relay', e.message); }
 finally { srv.kill(); }
 
-// D-108: per-IP seat cap + "pings alone don't keep a seat", on a second relay with small limits
+// D-109: per-IP seat cap + "pings alone don't keep a seat", on a second relay with small limits
 const PORT2 = PORT + 1;
 const srv2 = spawn(process.execPath, [join(root, 'server/relay.mjs')], { env: { ...process.env, PORT: String(PORT2), MAX_PER_IP: '2', ST_IDLE_S: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
 try {

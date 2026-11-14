@@ -33,7 +33,7 @@ const rooms = new Map(); // room -> Set<client>
 // Tile maths mirror src/game.js: CAMP tiles 33..47 x 27..41, boss room = DUN x 26..54, y 2..8 (GATE_ROW 9).
 const BOSS_HP = 320, BOSS_RESET_MS = (+process.env.BOSS_RESPAWN_S || 60) * 1000, MAX_HIT = 60, MAX_PVP = 40, PVP_RANGE = 48, TAKE_RANGE = 28, LOOT_CAP = 48;
 const LOOT_KINDS = ['steel', 'whisk', 'wood', 'stone'];
-// D-108 anti-cheat (audit 2026-11-13 S3-2/S3-4/S3-7): positions must be reachable, damage is budgeted per second, one IP can't fill the server
+// D-109 anti-cheat (audit 2026-11-13 S3-2/S3-4/S3-7): positions must be reachable, damage is budgeted per second, one IP can't fill the server
 const MAX_SPEED = 200, MOVE_SLACK = 40; // px/s (fastest legit doge ~113 px/s) + lag/knockback slack
 const BOSS_DPS = +process.env.BOSS_DPS || 120, PVP_DPS = 80, MAX_PER_IP = +process.env.MAX_PER_IP || 3, ST_IDLE_MS = (+process.env.ST_IDLE_S || 30) * 1000;
 const EJECT = { x: 40 * 16 + 8, y: 12 * 16 + 8 }; // where bossCycle() puts players (src/game.js), a legit teleport like respawn-in-camp
@@ -160,7 +160,7 @@ function onData(c, chunk) {
     for (let i = 0; i < len; i++) data[i] ^= mask[i & 3];
     c.buf = c.buf.subarray(off + 4 + len);
     if (op === 0x8) return drop(c); // close
-    if (op === 0x9) { if (++c.count > MAX_RATE) return drop(c); try { c.sock.write(frame(data.toString(), 0xA)); } catch {} continue; } // ping -> pong (counts toward the rate limit, D-108)
+    if (op === 0x9) { if (++c.count > MAX_RATE) return drop(c); try { c.sock.write(frame(data.toString(), 0xA)); } catch {} continue; } // ping -> pong (counts toward the rate limit, D-109)
     if (op === 0x1) onMessage(c, data.toString('utf8'));
   }
 }
@@ -241,5 +241,5 @@ server.on('upgrade', (req, sock, head) => {
   if (head && head.length) onData(c, head);
 });
 
-setInterval(() => { const now = Date.now(); for (const r of rooms.values()) for (const c of r) if (now - (c.lastSt || 0) > ST_IDLE_MS) drop(c); }, Math.min(5000, ST_IDLE_MS / 2)).unref(); // D-108: pings alone don't keep a seat
+setInterval(() => { const now = Date.now(); for (const r of rooms.values()) for (const c of r) if (now - (c.lastSt || 0) > ST_IDLE_MS) drop(c); }, Math.min(5000, ST_IDLE_MS / 2)).unref(); // D-109: pings alone don't keep a seat
 server.listen(PORT, () => console.log(`DOGEON relay on :${PORT}  ->  http://localhost:${PORT}/?mp=ws://localhost:${PORT}&room=heist`));

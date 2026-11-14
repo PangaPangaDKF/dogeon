@@ -467,7 +467,7 @@ const classSpd=()=>{const c=classOf();return (c?c.spd:1)*(P.lazy?0.85:1);};
 const classDmg=()=>{const c=classOf();return c?c.dmg:1;};
 const classArmor=()=>{const c=classOf();return c?c.armor:0;};
 const CLASS_COL={warrior:'#ff8060',archer:'#80e080',healer:'#80d0ff'};
-function syncMaxHp(){const c=classOf();P.maxHp=Math.max(20,60+(c?c.hp:0)+P.hpUps*15+gearStats().hp);P.hp=Math.min(P.hp,P.maxHp);} // D-108: a higher max is not a free heal (rest/eat to fill); floor 20 vs cursed gear
+function syncMaxHp(){const c=classOf();P.maxHp=Math.max(20,60+(c?c.hp:0)+P.hpUps*15+gearStats().hp);P.hp=Math.min(P.hp,P.maxHp);} // D-109: a higher max is not a free heal (rest/eat to fill); floor 20 vs cursed gear
 // D-054: per-class Max MP (user: "each hp and mp is different per profession"). Warrior 20, Archer 30, Healer 50. Mirrors syncMaxHp (absolute from class + mpUps).
 function syncMaxMp(){const c=classOf();P.maxMp=Math.max(10,30+(c?c.mp||0:0)+P.mpUps*10+gearStats().mp);P.mp=Math.min(P.mp,P.maxMp);}
 function applyClass(cls,onchain){if(!CLASSES[cls])return;P.prof=cls;syncMaxHp();syncMaxMp();const c=CLASSES[cls];puff(P.x,P.y-8,CLASS_COL[cls],14);

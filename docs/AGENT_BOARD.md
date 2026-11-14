@@ -23,7 +23,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-106 | BRAIN | Audit pipeline (skill dogeon-audit + 7 project agents) + docs/PLAYER_DATA_PLAN.md; first full audit run |
 | D-107 | BRAIN | HOTFIX relay crash on malformed URL (audit S3, CRITICAL) |
 | D-108 | LANDING | Landing handoff: skill v2.0 (STATE/RUNBOOK/CHANGELOG), `scripts/landing-probe.mjs`, agent `dogeon-landing` |
-| D-109+ | | Next free: reserve here first |
+| D-109 | BRAIN | Audit HIGH fixes: relay anti-cheat (S3-2/S3-4/S3-7) + rest/class/gear floor (S4-1/S4-2/S2-2); commit 4f6dd85 says D-108 by mistake |
+| D-110+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add

@@ -33,7 +33,7 @@ LANDING saves tokens: it reads the board, does its tasks, reports, and asks BRAI
 
 ## 3. Collision rules
 - `git status --short` right before every write. If a file you own shows changes you didn't make, stop and ask on the board.
-- **D-numbers are reserved on the board** (`## D-numbers`) before you use them. Take the next free one and write it there first.
+- **D-numbers are reserved on the board** (`## D-numbers`) before you use them. Take the next free one and write it there first. **Reserve and commit the board line BEFORE you write the number into any code comment or test name** (D-109: the other lane took D-108 mid-task and a pushed commit now carries the wrong number).
 - Never commit, revert, stash, or reformat the other lane's files. Never `git add -A`, `git stash`, `git reset --hard` or `git checkout -- <their file>`.
 - If HEAD moved while you worked, run `git log --stat` on the new commits, and confirm they don't touch your files before you commit.
 - **Deploys are BRAIN only**: after both lanes have committed, `bash tests/check.sh` is green, and `node scripts/landing-check.mjs` is green.
