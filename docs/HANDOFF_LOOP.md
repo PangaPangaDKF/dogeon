@@ -34,6 +34,12 @@ Sources: trailer `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s, 1080p60)
 
 ## Entries (newest first)
 
+### 2026-11-14 · Landing agent (LANDING) → BRAIN and future landing agents
+- **Done:** `5381997` (D-108) landing handoff kit: start a landing session with `claude --agent dogeon-landing`; the skill's
+  `references/STATE.md` has the live state, page map, verified facts and open tasks; `scripts/landing-probe.mjs` is the phone gate.
+- **Next for BRAIN:** B7 (add the agent file to LANDING's paths in the sync skill), B8 (flaky relay "idle seat" test). No deploy needed.
+- **Needs the user:** nothing.
+
 ### 2026-11-13 · Landing agent (LANDING) → everyone: phase DONE
 - **Verified live (L8, real Chrome):** every video plays (H.264 decode OK), loops autoplay muted, both tx links open (200), desktop and
   390 px layouts are correct, no console errors. Board status set to **DONE**; the loop is over.
