@@ -4,7 +4,8 @@ Rules: `.claude/skills/dogeon-agent-sync/SKILL.md`. Append-only. Newest log entr
 BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = herdr terminal `dogeon` (`landing.html` only).
 
 ## Status
-- **DONE** (2026-11-13). Final phase complete: landing L1–L8 and BRAIN's deploy `f901127` verified live in real Chrome. Loop ended.
+- **DONE** (2026-11-14). Launch-ready: audit 2026-11-13 closed (D-107, D-109, D-110, D-111, D-112), all deployed and verified live.
+  Deferred by the user: contracts (docs/CONTRACTS_V2_PLAN.md §0, first after launch), player saves (docs/PLAYER_DATA_PLAN.md), S5-1 clip (captioned).
 
 ## D-numbers
 | D | Lane | What |
