@@ -24,7 +24,9 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-107 | BRAIN | HOTFIX relay crash on malformed URL (audit S3, CRITICAL) |
 | D-108 | LANDING | Landing handoff: skill v2.0 (STATE/RUNBOOK/CHANGELOG), `scripts/landing-probe.mjs`, agent `dogeon-landing` |
 | D-109 | BRAIN | Audit HIGH fixes: relay anti-cheat (S3-2/S3-4/S3-7) + rest/class/gear floor (S4-1/S4-2/S2-2); commit 4f6dd85 says D-108 by mistake |
-| D-110+ | | Next free: reserve here first |
+| D-110 | LANDING | Audit findings on landing.html (L9) |
+| D-111 | BRAIN | Audit MEDIUM fixes, BRAIN lane (next batch) |
+| D-112+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
@@ -71,6 +73,19 @@ trailer poster back to `assets/video/trailer-720p.jpg` (now the VICTORY frame wi
 `vault`, `Victor`, `carried DOGE`, `DOGE coins`, `lose half`, `in-game DOGE`. Truth after D-097: monsters drop materials only;
 the Golden Yarn gives 3 wood, 3 stone, 3 iron; death costs whiskers, materials and the bag (never DOGE); testnet DOGE = mint, DEX,
 staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me; I deploy after that.
+
+**L9. Audit 2026-11-13: landing findings (verified REAL by stage 6).** Read `docs/audits/2026-11-13/06-verified.md` (Details) and
+`05-landing.md` for evidence and lines. Fix in `landing.html`, one D-110 commit:
+- S5-2: contracts table: DogeItems has no rolls/re-roll on chain (rolls are computed by the game from the token id; re-roll = burn + new mint).
+- S5-3: re-roll copy: it is 2 transactions (burn, then mint) with the full mint fee; a rejected 2nd step loses the item; the roll is derived from the token id.
+- S5-4: staking copy: no "earn", no "any amount", no "Web3 interface"; the 80% of mint fees reaches stakers only when someone calls `withdrawFees()`.
+- S5-5: the cap is 8 players per **server** (all rooms), not per room; the relay checks PvP range/camp/party and now budgets damage (D-109), it does not "referee every hit".
+- S5-6 (drops: monsters drop materials, not wood/stone), S5-7 (no piercing arrows, no NPCs in the ruins, not an "extraction" raid, no "<60 s" claim),
+  S5-8 (gallery captions = only what the capture shows), S5-9 (hero: add "not financial advice"; the pulsing green dot reads as live status),
+  S5-10 (hardcoded fees: say "1 testnet DOGE mint fee (current)"), S5-12 (`rel="noopener noreferrer"` on every `_blank`; keyboard-usable gallery; img sizes; stop the hidden canvas).
+- S5-1: the "real mint" loop and trailer show the removed `1 WOOD+1 STONE` row (recorded before D-104). Caption it "recorded 2026-11-13, before the
+  craft-first rule" until the user records a new craft → mint clip (BRAIN will recut then). S5-11: retired screenshots are BRAIN's to delete (next batch).
+Verify with your runbook (landing-check, probe 390/360, renders), commit only landing paths, report, `hc send` BRAIN. Then I deploy.
 
 ## Tasks for BRAIN
 - B8. **Flaky relay test:** `tests/relay.mjs` "idle seat" failed once inside the full `bash tests/check.sh` run (`idle=3 active=3`, 2026-11-14), then passed 3/3 alone. Looks timing-dependent under load; widen its wait or make it event-driven.
@@ -132,3 +147,5 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
 - 2026-11-14 · LANDING · D-108: landing handoff kit. Skill `dogeon-landing-design` v2.0 (lean SKILL.md + references/STATE.md, RUNBOOK.md,
   CHANGELOG.md), `scripts/landing-probe.mjs` (390/360 overflow probe + section screenshots), agent `.claude/agents/dogeon-landing.md`,
   master prompt v1.3. No landing.html change (no deploy needed). → BRAIN: B7 (sync skill lane table).
+- 2026-11-14 · BRAIN · Audit run 2026-11-13 done (`docs/audits/2026-11-13/`, 56 verified). Fixed CRITICAL S3-1 (D-107) and the 6 HIGH (D-109, code
+  commit `4f6dd85` says D-108 by mistake: you had reserved it). Deployed + pushed. B7 done (lane table). → LANDING: L9 (D-110). BRAIN next: MEDIUM batch (D-111).
