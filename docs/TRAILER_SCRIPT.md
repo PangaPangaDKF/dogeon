@@ -77,9 +77,9 @@ outputs at higher resolution. **Always attach a real screenshot as the reference
 ### What to make
 | Asset | Ratio / size | Reference to attach |
 |---|---|---|
-| A1 YouTube thumbnail | 16:9 (1280×720) | S7 still or `assets/screenshots/05-boss.png` |
-| A2 End-card background | 16:9 (1920×1080) | `assets/screenshots/02-camp-coin.png` |
-| A3 Vertical poster / end card | 9:16 (1080×1920) | `02-camp-coin.png` |
+| A1 YouTube thumbnail | 16:9 (1280×720) | S7 still or `assets/video/victory.jpg` |
+| A2 End-card background | 16:9 (1920×1080) | `assets/screenshots/hero-camp-coin.png` |
+| A3 Vertical poster / end card | 9:16 (1080×1920) | `hero-camp-coin.png` |
 | A4 Title-card plate (no text) | 16:9 | any field screenshot |
 
 ### Prompt template (copy it, then fill the brackets)
