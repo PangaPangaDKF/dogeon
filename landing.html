@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DOGEON — The Grand Heist | 16-Bit Hardcore Web3 Action RPG on DogeOS</title>
-  <meta name="description" content="A hardcore 16-bit retro multiplayer Action RPG & Web3 dungeon extraction raid on DogeOS Chikyū. Slay the Cat Lord, loot rival players, mint on-chain meme gear, and stake DOGE.">
+  <meta name="description" content="A hardcore 16-bit retro multiplayer Action RPG & Web3 dungeon raid on DogeOS Chikyū. Slay the Cat Lord, loot rival players, mint on-chain meme gear, and stake DOGE.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://dogeon.lat/">
   <meta property="og:title" content="DOGEON: The Grand Heist">
@@ -270,12 +270,8 @@
     }
     .status-dot {
       width: 8px; height: 8px;
-      background: var(--green);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--green);
-      animation: pulse 1.5s infinite;
+      background: var(--text-muted);
     }
-    @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     .screen-viewport {
       position: relative;
       background: #000;
@@ -641,7 +637,7 @@
       </ul>
       <div class="nav-cta">
         <button id="add-network-btn" class="btn btn-cyan silk" onclick="addDogeOSToMetaMask()">+ DogeOS RPC</button>
-        <a href="https://play.dogeon.lat/" target="_blank" class="btn btn-gold pixel">Play Now</a>
+        <a href="https://play.dogeon.lat/" target="_blank" rel="noopener noreferrer" class="btn btn-gold pixel">Play Now</a>
       </div>
     </div>
   </header>
@@ -653,15 +649,15 @@
         <div class="hero-badge pixel">A PONZIFI MEME GAME · DOGEOS CHIKYŪ TESTNET</div>
         <h1 class="pixel">
           RECLAIM THE <span class="gold">STOLEN TREASURY</span>.<br>
-          SURVIVE THE <span class="cyan">EXTRACTION RAID</span>.
+          SURVIVE THE <span class="cyan">CAT LORD RAID</span>.
         </h1>
         <p class="hero-sub">
           DOGEON is a PonziFi meme game: a hardcore 16-bit multiplayer action RPG where the Fat Cat Syndicate's yield scheme
           drained the Doge treasury, and you raid it back. Up to 8 players per server, PvP that drops your carried materials,
-          gear you mint as real NFTs, and meme rolls like BLAZE 420 and NICE 69. Everything runs on free testnet DOGE with no real-world value.
+          gear you mint as real NFTs, and meme rolls like BLAZE 420 and NICE 69. Everything runs on free testnet DOGE with no real-world value. Not financial advice.
         </p>
         <div class="hero-actions">
-          <a href="https://play.dogeon.lat/" target="_blank" class="btn btn-gold pixel" style="padding: 14px 28px; font-size: 13px;">PLAY FREE NOW</a>
+          <a href="https://play.dogeon.lat/" target="_blank" rel="noopener noreferrer" class="btn btn-gold pixel" style="padding: 14px 28px; font-size: 13px;">PLAY FREE NOW</a>
           <button class="btn btn-cyan silk" onclick="addDogeOSToMetaMask()" style="padding: 14px 24px;">ADD DOGEOS TO METAMASK</button>
           <a href="#faucet" class="btn btn-purple silk" style="padding: 14px 24px;">CLAIM FAUCET DOGE</a>
         </div>
@@ -670,8 +666,8 @@
         <div class="game-screen">
           <div class="screen-header">
             <div class="screen-status">
-              <span class="status-dot"></span>
-              <span class="pixel" style="color: var(--green);">UP TO 8 PLAYERS PER SERVER</span>
+              <span class="status-dot" aria-hidden="true"></span>
+              <span class="pixel" style="color: var(--text-muted);">UP TO 8 PLAYERS PER SERVER</span>
             </div>
             <div class="pixel" style="color: var(--gold);">CHAIN ID: 6281971 (CHIKYŪ)</div>
           </div>
@@ -756,7 +752,7 @@
             <h3 class="pixel" style="color: #7bed9f;">ARCHER</h3>
             <div class="silk" style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">FACTION: KERNEL CREW</div>
             <p>
-              High-velocity marksmen trained by Scout Fleetwhisker. Kite enemies from safety, unleash piercing arrows, and barrage hordes with 3-arrow volleys.
+              High-velocity marksmen trained by Scout Fleetwhisker. Kite enemies from safety, loose fast arrows, and barrage hordes with 3-arrow volleys.
             </p>
             <div class="stat-bar">
               <div class="stat-row"><span>MOVE SPEED</span><span>125% (+25%)</span></div>
@@ -808,7 +804,7 @@
         <span class="section-tag pixel">TOKENOMICS</span>
         <h2 class="section-title pixel">ONE CURRENCY: TESTNET DOGE</h2>
         <p class="section-desc">
-          There is no in-game DOGE. Monsters drop materials only (whiskers, wood, stone, iron), and your <strong>testnet DOGE</strong> stays in your wallet, used only to mint, trade in pools, stake and swear your class.
+          There is no in-game DOGE. Monsters drop materials only (whiskers and iron; trees and rocks give wood and stone), and your <strong>testnet DOGE</strong> stays in your wallet, used only to mint, trade in pools, stake and swear your class.
         </p>
 
         <div class="grid-3">
@@ -824,7 +820,7 @@
             <img class="card-icon" src="assets/icons/sphinx.png" width="48" height="60" alt="Great Sphinx sprite">
             <h3 class="pixel">80 / 20 FEE SPLIT</h3>
             <p>
-              Each 1 DOGE mint fee is split by the contract: <strong>80% to the Staking Pool</strong>, 20% to the treasury. 
+              The mint fee (1 testnet DOGE today; the game shows the live fee before you sign) is split by the contract: <strong>80% to the Staking Pool</strong>, 20% to the treasury. 
               Pool trades pay 3%: 2% to liquidity providers and 1% protocol fee, split the same 80/20.
             </p>
           </div>
@@ -846,8 +842,8 @@
         <span class="section-tag pixel">WEB3 GEAR & NFTS</span>
         <h2 class="section-title pixel">DOGEMASTER MEME FORGE & REROLL</h2>
         <p class="section-desc">
-          Defeat the dungeon raid to unlock the legendary <strong>DogeMaster NPC</strong>. Mint verified ERC-721 gear NFTs for 1 Testnet DOGE, 
-          imbued with deterministic meme stats or burn them to reroll!
+          Defeat the dungeon raid to unlock the legendary <strong>DogeMaster NPC</strong>. Craft gear at the forge, then mint it as an ERC-721 NFT for the mint fee (1 testnet DOGE today). 
+          Each NFT gets a meme roll the game derives from its token ID, or burn it and mint again.
         </p>
 
         <div class="grid-2">
@@ -855,7 +851,7 @@
             <img class="card-icon" src="assets/icons/yarn.png" width="45" height="45" alt="Golden Yarn icon">
             <h3 class="pixel">MEME STAT GENERATION</h3>
             <p style="margin-bottom: 14px;">
-              Every gear NFT's bonus is derived from its token ID, so anyone can check it. Rarity (common ×1 up to legendary ×6) scales the roll. Meme rolls include:
+              The game (not the contract) derives every gear NFT's bonus from its token ID, so every player sees the same roll. Rarity (common ×1 up to legendary ×6) scales the roll. Meme rolls include:
             </p>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <span class="tag-meme pixel" style="padding: 4px 8px; border-radius: 4px; font-size: 11px;">BLAZE 420: +420 HP</span>
@@ -874,7 +870,8 @@
             <h3 class="pixel">BURN-TO-REROLL ENGINE</h3>
             <p>
               Rolled a curse like HANGOVER 420? Feed it to the DogeMaster's furnace. 
-              The <strong>Burn-to-Reroll</strong> mechanism burns your debuffed ERC-721 NFT on-chain and triggers a fresh random mint.
+              <strong>Burn-to-Reroll</strong> is two transactions: the first burns your NFT, the second mints a new one for the full mint fee.
+              Reject the second and the old item is gone. The new roll comes from the new token ID, not from luck.
             </p>
             <p style="margin-top: 12px;">
               <strong>Web3 Custody Permanence:</strong> Your gear NFTs live safely in your crypto wallet. Unlike raw materials, 
@@ -885,7 +882,7 @@
 
         <div class="proof">
           <h3 class="pixel">REAL MINTS ON DOGEOS CHIKYŪ TESTNET</h3>
-          <p>Recorded in the game and confirmed on the explorer. Each mint paid exactly 1 testnet DOGE to DogeItems and created a new NFT.</p>
+          <p>Recorded in the game on 2026-11-13, before the craft-first rule, and confirmed on the explorer. Each of these two mints paid 1 testnet DOGE to DogeItems and created a new NFT. Today you craft the item at the forge first.</p>
           <div class="grid-2">
             <figure class="card shot-card">
               <video class="shot" autoplay muted loop playsinline preload="none" poster="assets/video/mint.jpg" src="assets/video/mint.mp4" aria-label="Minting a Hammer NFT in the forge"></video>
@@ -897,8 +894,8 @@
             </figure>
           </div>
           <ul class="proof-list">
-            <li>NFT #13: <a href="https://dogeos-testnet.l2scan.co/tx/0x5025f871b37b0a0a88081d0b4798dfc4b9014f007a0b7341b43e1323c2c30767" target="_blank" title="0x5025f871b37b0a0a88081d0b4798dfc4b9014f007a0b7341b43e1323c2c30767"><code>0x5025f871…c30767</code></a> · block 9,429,362</li>
-            <li>NFT #12: <a href="https://dogeos-testnet.l2scan.co/tx/0xda810f92d27f00d59e2b0ea55499607a7ff1fd4cca194b46a23586287c46e1c0" target="_blank" title="0xda810f92d27f00d59e2b0ea55499607a7ff1fd4cca194b46a23586287c46e1c0"><code>0xda810f92…46e1c0</code></a> · block 9,429,348</li>
+            <li>NFT #13: <a href="https://dogeos-testnet.l2scan.co/tx/0x5025f871b37b0a0a88081d0b4798dfc4b9014f007a0b7341b43e1323c2c30767" target="_blank" rel="noopener noreferrer" title="0x5025f871b37b0a0a88081d0b4798dfc4b9014f007a0b7341b43e1323c2c30767"><code>0x5025f871…c30767</code></a> · block 9,429,362</li>
+            <li>NFT #12: <a href="https://dogeos-testnet.l2scan.co/tx/0xda810f92d27f00d59e2b0ea55499607a7ff1fd4cca194b46a23586287c46e1c0" target="_blank" rel="noopener noreferrer" title="0xda810f92d27f00d59e2b0ea55499607a7ff1fd4cca194b46a23586287c46e1c0"><code>0xda810f92…46e1c0</code></a> · block 9,429,348</li>
           </ul>
         </div>
       </div>
@@ -910,7 +907,7 @@
         <span class="section-tag pixel">WALLET ONBOARDING</span>
         <h2 class="section-title pixel">THE FAUCET & QUICKSTART</h2>
         <p class="section-desc">
-          Ready to play? Getting setup takes less than 60 seconds with MetaMask, Rabby, or Bitget Wallet.
+          Ready to play? Getting set up takes about a minute with an EVM wallet such as MetaMask.
         </p>
 
         <div class="grid-3">
@@ -925,14 +922,14 @@
             <div class="pixel" style="color: var(--gold); font-size: 24px; margin-bottom: 10px;">02</div>
             <h3 class="pixel">CLAIM TESTNET DOGE</h3>
             <p>Visit the official DogeOS faucet, enter your EVM address, and receive free Testnet DOGE to fund your crafting and minting.</p>
-            <a href="https://faucet.testnet.dogeos.com" target="_blank" class="btn btn-gold pixel" style="margin-top: 14px; width: 100%;">CLAIM FAUCET</a>
+            <a href="https://faucet.testnet.dogeos.com" target="_blank" rel="noopener noreferrer" class="btn btn-gold pixel" style="margin-top: 14px; width: 100%;">CLAIM FAUCET</a>
           </div>
 
           <div class="card">
             <div class="pixel" style="color: var(--purple); font-size: 24px; margin-bottom: 10px;">03</div>
             <h3 class="pixel">ENTER THE RAID</h3>
             <p>Boot the game in your browser at <a href="https://play.dogeon.lat/" style="color: var(--cyan);">play.dogeon.lat</a> (multiplayer connects on its own), connect your wallet at the Great Sphinx, and begin the heist.</p>
-            <a href="https://play.dogeon.lat/" target="_blank" class="btn btn-purple silk" style="margin-top: 14px; width: 100%;">LAUNCH GAME</a>
+            <a href="https://play.dogeon.lat/" target="_blank" rel="noopener noreferrer" class="btn btn-purple silk" style="margin-top: 14px; width: 100%;">LAUNCH GAME</a>
           </div>
         </div>
 
@@ -964,11 +961,11 @@
               <tr>
                 <td><strong>Currency Symbol</strong></td>
                 <td><code>DOGE</code> (18 Decimals)</td>
-                <td>Gas and in-game economy</td>
+                <td>Gas, mints, pools and staking</td>
               </tr>
               <tr>
                 <td><strong>Block Explorer</strong></td>
-                <td><a href="https://dogeos-testnet.l2scan.co" target="_blank" style="color: var(--cyan);">https://dogeos-testnet.l2scan.co</a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co" target="_blank" rel="noopener noreferrer" style="color: var(--cyan);">https://dogeos-testnet.l2scan.co</a></td>
                 <td>Inspect transactions and NFTs</td>
               </tr>
             </tbody>
@@ -1038,7 +1035,7 @@
             <h3 class="pixel">PARTY UP OR GO SOLO</h3>
             <ul class="party-rules">
               <li>Press <strong>P</strong> at any time, or ask the Elder, to join party <strong>ALPHA</strong>, <strong>BRAVO</strong> or <strong>GOLD</strong>, or to go <strong>SOLO</strong>.</li>
-              <li>Players in your party wear a <span style="color: #80ff80;">green name tag</span> and can't hurt you: friendly fire is off, and the server referees every PvP hit.</li>
+              <li>Players in your party wear a <span style="color: #80ff80;">green name tag</span> and can't hurt you: friendly fire is off. The server checks range, camp and party for every PvP hit and caps damage per second.</li>
               <li>Everyone else wears a <span style="color: #ff8080;">red name tag</span>. Outside camp, they can attack you and you can attack them.</li>
               <li>A Healer's Mend heals every player nearby, party or not.</li>
             </ul>
@@ -1053,7 +1050,7 @@
         <span class="section-tag pixel">MULTIPLAYER RAID CYCLE</span>
         <h2 class="section-title pixel">8-PLAYER RAID CYCLE</h2>
         <p class="section-desc">
-          Each server room holds up to <strong>8 players</strong>, and the whole room shares one Cat Lord.
+          Up to <strong>8 players</strong> on the server at once, and the whole room shares one Cat Lord.
         </p>
 
         <div class="grid-2">
@@ -1082,27 +1079,27 @@
     <!-- 10. The Staking Pool -->
     <section id="staking">
       <div class="container">
-        <span class="section-tag pixel">PONZIFI YIELD</span>
+        <span class="section-tag pixel">PONZIFI SATIRE</span>
         <h2 class="section-title pixel">DOGESTAKING POOL</h2>
         <p class="section-desc">
-          Stake testnet DOGE, earn testnet DOGE from everyone else's mint and trade fees. Peak PonziFi, except it runs on testnet, so the only thing at stake is your bragging rights.
+          Stake testnet DOGE and get a share of everyone else's mint and trade fees, paid in testnet DOGE. Peak PonziFi, except it runs on testnet, so the only thing at stake is your bragging rights.
         </p>
 
         <div class="grid-3">
           <div class="card">
             <img class="card-icon" src="assets/icons/coin.png" width="42" height="42" alt="DOGE coin icon">
-            <h3 class="pixel">STAKE ANY AMOUNT</h3>
-            <p>Stake any amount of Testnet DOGE directly via the Great Sphinx in camp or the Web3 interface.</p>
+            <h3 class="pixel">STAKE AT THE SPHINX</h3>
+            <p>Pick 0.1 to 50 testnet DOGE at the Great Sphinx in camp. Testnet only, no real-world value, not financial advice.</p>
           </div>
           <div class="card">
             <img class="card-icon" src="assets/icons/sphinx.png" width="48" height="60" alt="Great Sphinx sprite">
             <h3 class="pixel">80% PROTOCOL FEES</h3>
-            <p>Stakers receive 80% of every 1 DOGE mint fee, plus 0.8% of every pool trade (80% of the 1% protocol fee).</p>
+            <p>Stakers share 80% of mint fees and 0.8% of every pool trade (80% of the 1% protocol fee). Mint fees reach stakers only when someone flushes them on chain (<code>withdrawFees</code>); pool fees sync from the Sphinx.</p>
           </div>
           <div class="card">
             <img class="card-icon" src="assets/icons/yarn.png" width="45" height="45" alt="Golden Yarn icon">
             <h3 class="pixel">INSTANT CLAIM & UNSTAKE</h3>
-            <p>No lockup lock-in traps. Claim accrued DOGE rewards or withdraw your staked principal on-chain at any time with a single transaction.</p>
+            <p>No lockup lock-in traps. Claim your share or withdraw your staked principal on-chain at any time with a single transaction.</p>
           </div>
         </div>
       </div>
@@ -1114,7 +1111,7 @@
         <span class="section-tag pixel">CITIZENS OF DOGEON</span>
         <h2 class="section-title pixel">THE NPC ROSTER</h2>
         <p class="section-desc">
-          Interact with key characters in camp and in the ruins by pressing <strong>[E]</strong> when in proximity.
+          Interact with key characters in camp by pressing <strong>[E]</strong> when in proximity.
         </p>
 
         <div class="grid-3">
@@ -1136,7 +1133,7 @@
             <img class="card-icon" src="assets/icons/yarn.png" width="45" height="45" alt="Golden Yarn icon">
             <h3 class="pixel">DOGEMASTER</h3>
             <div class="silk" style="color: var(--purple); font-size: 11px; margin-bottom: 8px;">MEME FORGE & REROLL</div>
-            <p>Unlocks at the Elder after the Cat Lord falls. Burns a gear NFT you don't want and mints a fresh one with a new meme roll.</p>
+            <p>Unlocks at the Elder after the Cat Lord falls. Burns a gear NFT you don't want, then mints a new one for the full mint fee in a second transaction.</p>
           </div>
 
           <div class="card">
@@ -1184,22 +1181,22 @@
             <tbody>
               <tr>
                 <td><strong>DogeItems (ERC-721)</strong></td>
-                <td><a href="https://dogeos-testnet.l2scan.co/address/0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4" target="_blank" style="color: var(--gold); text-decoration: none;"><code class="pixel">0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4</code></a></td>
-                <td>9 Gear NFT Types, Rarity/Meme Rolls & Burn-to-Reroll</td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4" target="_blank" rel="noopener noreferrer" style="color: var(--gold); text-decoration: none;"><code class="pixel">0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4</code></a></td>
+                <td>ERC-721 items: 15 types (gear, food, charms). Mint for the fee, burn. Meme rolls are computed by the game from the token ID.</td>
               </tr>
               <tr>
                 <td><strong>DogeDEX (AMM & Listings)</strong></td>
-                <td><a href="https://dogeos-testnet.l2scan.co/address/0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590" target="_blank" style="color: var(--cyan); text-decoration: none;"><code class="pixel">0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590</code></a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590" target="_blank" rel="noopener noreferrer" style="color: var(--cyan); text-decoration: none;"><code class="pixel">0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590</code></a></td>
                 <td>NFT Liquidity Pools, Fixed Listings & 1% Protocol Fee Split</td>
               </tr>
               <tr>
                 <td><strong>DogeProfession</strong></td>
-                <td><a href="https://dogeos-testnet.l2scan.co/address/0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055" target="_blank" style="color: var(--green); text-decoration: none;"><code class="pixel">0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055</code></a></td>
-                <td>Permanent 1-Class-Per-Wallet Oath Registry (0.05 DOGE)</td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055" target="_blank" rel="noopener noreferrer" style="color: var(--green); text-decoration: none;"><code class="pixel">0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055</code></a></td>
+                <td>Permanent 1-Class-Per-Wallet Oath Registry (0.05 DOGE today)</td>
               </tr>
               <tr>
                 <td><strong>DogeStaking</strong></td>
-                <td><a href="https://dogeos-testnet.l2scan.co/address/0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d" target="_blank" style="color: var(--purple); text-decoration: none;"><code class="pixel">0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d</code></a></td>
+                <td><a href="https://dogeos-testnet.l2scan.co/address/0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d" target="_blank" rel="noopener noreferrer" style="color: var(--purple); text-decoration: none;"><code class="pixel">0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d</code></a></td>
                 <td>Testnet DOGE staking vault (80% of mint fees, 0.8% of trades)</td>
               </tr>
             </tbody>
@@ -1248,12 +1245,12 @@
           <!-- Screenshot 1: Title Screen -->
           <div class="ss-card">
             <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/01-title.png')">
-              <img src="assets/screenshots/01-title.png" alt="DOGEON 16-Bit Genesis Title Screen" loading="lazy">
+              <img src="assets/screenshots/01-title.png" alt="DOGEON 16-Bit Genesis Title Screen" width="960" height="672" loading="lazy">
             </div>
             <div class="ss-info">
               <div>
                 <h4 class="pixel">16-BIT GENESIS TITLE SCREEN</h4>
-                <p>Authentic Genesis aesthetic, 320×224 canvas, zero external runtime dependencies.</p>
+                <p>An earlier title screen capture: Genesis look, 320×224 canvas, no external runtime dependencies.</p>
               </div>
               <div class="silk" style="font-size: 11px; color: var(--gold); margin-top: 12px;">SYSTEM: AESTHETIC & LOOP</div>
             </div>
@@ -1276,12 +1273,12 @@
           <!-- Screenshot 3: Archer Ranged Volleys -->
           <div class="ss-card">
             <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/04-archer-bow.png')">
-              <img src="assets/screenshots/04-archer-bow.png" alt="Archer Rapid-Fire & Volleys" loading="lazy">
+              <img src="assets/screenshots/04-archer-bow.png" alt="The Archer in the field near three cats" width="960" height="564" loading="lazy">
             </div>
             <div class="ss-info">
               <div>
-                <h4 class="pixel">ARCHER RAPID-FIRE & VOLLEYS</h4>
-                <p>High-mobility ranged archery picking off feline patrols from safe distance with arrow spread volleys.</p>
+                <h4 class="pixel">THE ARCHER</h4>
+                <p>The Archer in the field facing a cat patrol. Space shoots single arrows; K fires a 3-arrow volley.</p>
               </div>
               <div class="silk" style="font-size: 11px; color: var(--green); margin-top: 12px;">SYSTEM: RANGED PRECISION</div>
             </div>
@@ -1304,12 +1301,12 @@
           <!-- Screenshot 5: Resource Gathering & Fishing -->
           <div class="ss-card">
             <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/07-fishing.png')">
-              <img src="assets/screenshots/07-fishing.png" alt="Resource Gathering & Fishing" loading="lazy">
+              <img src="assets/screenshots/07-fishing.png" alt="A pond in the field outside the camp fence" width="960" height="564" loading="lazy">
             </div>
             <div class="ss-info">
               <div>
-                <h4 class="pixel">RESOURCE GATHERING & FISHING</h4>
-                <p>Mining guaranteed iron from stone, chopping lumber, and fishing at the ponds outside camp for rations.</p>
+                <h4 class="pixel">THE FIELD POND</h4>
+                <p>A pond outside camp. Press F next to water to fish; no safe fishing spot exists.</p>
               </div>
               <div class="silk" style="font-size: 11px; color: var(--cyan); margin-top: 12px;">SYSTEM: HARDCORE GATHERING</div>
             </div>
@@ -1318,7 +1315,7 @@
           <!-- Screenshot 6: Play together -->
           <div class="ss-card">
             <div class="ss-img-wrap" onclick="openLightbox('assets/screenshots/08-multiplayer-3p.png')">
-              <img src="assets/screenshots/08-multiplayer-3p.png" alt="Three players together at the camp around the giant Dogecoin" loading="lazy">
+              <img src="assets/screenshots/08-multiplayer-3p.png" alt="Three players together at the camp around the giant Dogecoin" width="960" height="564" loading="lazy">
             </div>
             <div class="ss-info">
               <div>
@@ -1345,9 +1342,9 @@
           and this page are open source, so fork it, read it, and build your own meme on DogeOS.
         </p>
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
-          <a href="https://docs.dogeos.com/en/getting-started/overview" target="_blank" class="btn btn-gold pixel" style="padding: 14px 24px;">READ THE DOGEOS DOCS</a>
-          <a href="https://www.dogeos.com/" target="_blank" class="btn btn-cyan silk" style="padding: 14px 24px;">VISIT DOGEOS</a>
-          <a href="https://github.com/PangaPangaDKF/dogeon" target="_blank" class="btn btn-purple silk" style="padding: 14px 24px;">SEE DOGEON'S SOURCE</a>
+          <a href="https://docs.dogeos.com/en/getting-started/overview" target="_blank" rel="noopener noreferrer" class="btn btn-gold pixel" style="padding: 14px 24px;">READ THE DOGEOS DOCS</a>
+          <a href="https://www.dogeos.com/" target="_blank" rel="noopener noreferrer" class="btn btn-cyan silk" style="padding: 14px 24px;">VISIT DOGEOS</a>
+          <a href="https://github.com/PangaPangaDKF/dogeon" target="_blank" rel="noopener noreferrer" class="btn btn-purple silk" style="padding: 14px 24px;">SEE DOGEON'S SOURCE</a>
         </div>
         </div>
         <img class="build-coin" src="assets/icons/dogecoin.png" width="192" height="192" alt="The DOGEON camp Dogecoin">
@@ -1388,16 +1385,16 @@
             <li><a href="#mint">NFT Meme Forge</a></li>
             <li><a href="#staking">Staking Pool</a></li>
             <li><a href="#contracts">Smart Contracts</a></li>
-            <li><a href="https://dogeos-testnet.l2scan.co" target="_blank">Chikyū Explorer</a></li>
+            <li><a href="https://dogeos-testnet.l2scan.co" target="_blank" rel="noopener noreferrer">Chikyū Explorer</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4 class="pixel">COMMUNITY</h4>
           <ul class="footer-links">
-            <li><a href="https://dogeos.com" target="_blank">DogeOS Portal</a></li>
-            <li><a href="https://heist.dogeos.com" target="_blank">The Grand Heist</a></li>
-            <li><a href="https://faucet.testnet.dogeos.com" target="_blank">Testnet Faucet</a></li>
-            <li><a href="https://docs.dogeos.com" target="_blank">Documentation</a></li>
+            <li><a href="https://dogeos.com" target="_blank" rel="noopener noreferrer">DogeOS Portal</a></li>
+            <li><a href="https://heist.dogeos.com" target="_blank" rel="noopener noreferrer">The Grand Heist</a></li>
+            <li><a href="https://faucet.testnet.dogeos.com" target="_blank" rel="noopener noreferrer">Testnet Faucet</a></li>
+            <li><a href="https://docs.dogeos.com" target="_blank" rel="noopener noreferrer">Documentation</a></li>
           </ul>
         </div>
       </div>
@@ -1409,11 +1406,12 @@
 
   <script>
     // Lightbox Modal Controls
-    function openLightbox(src) {
+    function openLightbox(src, alt) {
       const modal = document.getElementById('lightbox-modal');
       const img = document.getElementById('lightbox-img');
       if (modal && img) {
         img.src = src;
+        img.alt = alt || 'Enlarged DOGEON screenshot';
         modal.style.display = 'flex';
       }
     }
@@ -1423,6 +1421,20 @@
     }
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeLightbox();
+    });
+    // Gallery tiles: keyboard-usable, lightbox gets the tile's own alt text
+    document.querySelectorAll('.ss-img-wrap').forEach(t => {
+      const m = (t.getAttribute('onclick') || '').match(/openLightbox\('([^']+)'\)/);
+      if (!m) return;
+      const media = t.querySelector('img, video');
+      const alt = media ? (media.getAttribute('alt') || media.getAttribute('aria-label') || '') : '';
+      t.removeAttribute('onclick');
+      t.setAttribute('role', 'button');
+      t.setAttribute('tabindex', '0');
+      t.setAttribute('aria-label', 'Enlarge: ' + alt);
+      const open = () => openLightbox(m[1], alt);
+      t.addEventListener('click', open);
+      t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     });
 
     // EVM Provider Discovery (Filters out TRON / multichain injectors per D-080)
@@ -1465,6 +1477,7 @@
 
     // Interactive Starfield / Particle Background
     (function initCanvas() {
+      try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}
       const cvs = document.getElementById('bg-canvas');
       const ctx = cvs.getContext('2d');
       let w = cvs.width = window.innerWidth;

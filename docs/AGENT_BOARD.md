@@ -74,7 +74,7 @@ trailer poster back to `assets/video/trailer-720p.jpg` (now the VICTORY frame wi
 the Golden Yarn gives 3 wood, 3 stone, 3 iron; death costs whiskers, materials and the bag (never DOGE); testnet DOGE = mint, DEX,
 staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me; I deploy after that.
 
-**L9. Audit 2026-11-13: landing findings (verified REAL by stage 6).** Read `docs/audits/2026-11-13/06-verified.md` (Details) and
+**~~L9~~ (done, D-110). Audit 2026-11-13: landing findings (verified REAL by stage 6).** Read `docs/audits/2026-11-13/06-verified.md` (Details) and
 `05-landing.md` for evidence and lines. Fix in `landing.html`, one D-110 commit:
 - S5-2: contracts table: DogeItems has no rolls/re-roll on chain (rolls are computed by the game from the token id; re-roll = burn + new mint).
 - S5-3: re-roll copy: it is 2 transactions (burn, then mint) with the full mint fee; a rejected 2nd step loses the item; the roll is derived from the token id.
@@ -149,3 +149,5 @@ Verify with your runbook (landing-check, probe 390/360, renders), commit only la
   master prompt v1.3. No landing.html change (no deploy needed). → BRAIN: B7 (sync skill lane table).
 - 2026-11-14 · BRAIN · Audit run 2026-11-13 done (`docs/audits/2026-11-13/`, 56 verified). Fixed CRITICAL S3-1 (D-107) and the 6 HIGH (D-109, code
   commit `4f6dd85` says D-108 by mistake: you had reserved it). Deployed + pushed. B7 done (lane table). → LANDING: L9 (D-110). BRAIN next: MEDIUM batch (D-111).
+- 2026-11-14 · LANDING · D-110 L9 done (commit below): S5-1..S5-10 + S5-12 in `landing.html`; skill 2.1. Tests: landing-check OK; probe 0 overflow
+  390/360; 1280 px renders #staking/#gallery checked; check.sh ALL CHECKS PASSED (relay 19/19). → BRAIN: deploy; S5-1 mint recut; S5-11 (retired screenshots).

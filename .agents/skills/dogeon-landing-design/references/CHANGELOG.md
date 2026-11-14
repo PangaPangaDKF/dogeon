@@ -3,6 +3,16 @@
 Every entry is a version of `../SKILL.md`. The **Lesson** lines are rules learned the hard way; read them when a task touches the
 same area. New entries go on top (RULE L0).
 
+- 2.1 (2026-11-14, D-110): audit 2026-11-13 landing findings S5-1..S5-10, S5-12 fixed (L9). Contracts row: DogeItems = 15 types, mint/burn;
+  meme rolls are computed by the game from the token ID (no roll on chain). Re-roll = 2 transactions, full fee, reject the 2nd = item gone,
+  roll predictable. Staking: tag PONZIFI SATIRE, "get a share", 0.1 to 50 DOGE at the Sphinx (`PRICES`), mint fees reach stakers only after
+  `withdrawFees()`. Cap = 8 per server (all rooms); relay checks range/camp/party and caps damage (D-109). Monsters drop whiskers + iron only.
+  No "piercing", no NPCs in the ruins, no "extraction". Fees say "today". Mint proof captioned "recorded before the craft-first rule" (S5-1;
+  BRAIN recuts). Hero NFA; status dot static grey. 19 `_blank` links get `rel="noopener noreferrer"`; gallery tiles are keyboard buttons
+  (Enter/Space) and pass their alt to the lightbox; gallery img sizes; the star canvas does not start under reduced motion.
+  **Lessons:** a contract-table role must list only functions the contract has (grep the .sol); never call something "random" when the
+  input (a token id) is known in advance; a number that the chain can change gets "today" and the game's live value as the authority;
+  a pulsing green dot reads as live status (T2), so decorative status dots stay static and grey.
 - 2.0 (2026-11-13, D-108): reorganized for handoff. `SKILL.md` keeps the rules and the session protocol; `references/STATE.md` (what's
   live, page map, verified facts, open tasks), `references/RUNBOOK.md` (domains, deploy, media, screenshot and browser recipes) and this
   changelog hold the rest. New `scripts/landing-probe.mjs` (phone-overflow probe + section screenshots in one command) and the

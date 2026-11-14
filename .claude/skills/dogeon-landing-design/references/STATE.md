@@ -1,6 +1,6 @@
 # Landing state: what's live, the page map, verified facts, open tasks
 
-Updated: 2026-11-13 (D-108). **Update this file in the same commit as any landing change** (RULE L0).
+Updated: 2026-11-14 (D-110). **Update this file in the same commit as any landing change** (RULE L0).
 
 ## 1. Live status
 - `https://dogeon.lat/` serves `landing.html`; `https://play.dogeon.lat/` serves the game. Last landing deploy: commit `9aa1436`
@@ -39,15 +39,17 @@ Nav (7): Classes, Economy, NFT Mint, Raid, Staking, Get Started, Build.
 - **Parties:** P (or the Elder) → ALPHA / BRAVO / GOLD / SOLO; same party = green tag `#80ff80`, friendly fire off (relay); others red
   `#ff8080`.
 - **Economy (D-097):** no in-game DOGE at all; monsters drop materials only; testnet DOGE = mint, DEX, staking, class oath.
-- **Fees:** mint 1 DOGE (80% stakers / 20% treasury); DEX trade 3% = 2% LP + 1% protocol (0.8% stakers / 0.2% treasury).
+- **Fees:** mint 1 DOGE today (say "today": `setMintFee` can change it; the game reads it live) (80% stakers / 20% treasury, mint share reaches stakers only after `withdrawFees()`); DEX trade 3% = 2% LP + 1% protocol (0.8% stakers / 0.2% treasury).
+- **Multiplayer cap:** 8 players per **server** (all rooms, `relay.mjs` `total`), max 3 per IP; relay checks PvP range/camp/party and budgets damage (D-109).
+- **Drops:** monsters drop whiskers and steel (iron) only; wood/stone come from trees/rocks, quests and the Golden Yarn. Staking presets 0.1–50 DOGE (`PRICES`).
 - **Raid (D-095):** Cat Lord returns 60 s after a kill, room restarts at quest 1; HP +50% per extra raider; no timer, no seal.
 - **Hosting:** one Fly machine that sleeps when idle (~3 s cold start); 2 custom certs max on the free plan (no `www`).
 
 ## 4. Open tasks (LANDING lane)
 | ID | Task | Status |
 |---|---|---|
-| S1 | **Audit findings:** BRAIN's audit (`docs/audits/2026-11-13/`, stage 5 = `dogeon-audit-landing`) may file LANDING tasks on `docs/AGENT_BOARD.md`. Do them first. | Check the board |
-| S2 | Mint copy after D-103/D-104 (no mint without a forge credit or a caught fish): `#mint` intro says "Mint verified ERC-721 gear NFTs for 1 Testnet DOGE". Consider "craft it at the forge, then mint it for 1 testnet DOGE". | Optional polish |
+| S1 | Audit 2026-11-13 findings (L9): S5-1..S5-10, S5-12 done in D-110. Open: S5-1 recaption → new craft → mint clip when BRAIN recuts `assets/video/mint.*`; S5-11 (delete retired `02/03/05/06` screenshots) is BRAIN's next batch; S5-8 better archer/gather captures if BRAIN records them. | Waiting on BRAIN |
+| ~~S2~~ | Mint intro now says craft first, then mint for the fee (D-110). | Done |
 | B11 | Green-tag party capture next to the red-tag rival shot. Only if the user supplies one (both players press P, same party). | Waiting on the user |
 | B13 | DogeOS logo in Build/footer. **Dropped:** the user has no brand kit. | Dropped |
 Scope freeze (user, 2026-11-13): finish and polish only; no new sections or features unless the user asks.

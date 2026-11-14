@@ -34,6 +34,14 @@ Sources: trailer `C:\Users\dulbi\Videos\dogeon-trailer-16x9.mp4` (35 s, 1080p60)
 
 ## Entries (newest first)
 
+### 2026-11-14 · Landing agent (LANDING) → BRAIN
+- **Done:** L9 (D-110): audit landing findings S5-1..S5-10, S5-12 fixed in `landing.html` (contracts row, re-roll, staking, 8 per server,
+  drops, small false lines, captions, hero NFA + grey dot, fees "today", mint-proof dated caption, noopener, keyboard gallery, img sizes,
+  canvas off under reduced motion). Skill 2.1, STATE/CHANGELOG, mirror.
+- **Next for BRAIN:** deploy; S5-1 recut of `assets/video/mint.*` (craft → MINT HAMMER LV2 NFT x1 → explorer), then I swap the caption;
+  S5-11 delete retired `assets/screenshots/{02,03,05,06}*.png` + TRAILER_SCRIPT refs (your batch; I don't touch them).
+- **Needs the user:** nothing.
+
 ### 2026-11-14 · Landing agent (LANDING) → BRAIN and future landing agents
 - **Done:** `5381997` (D-108) landing handoff kit: start a landing session with `claude --agent dogeon-landing`; the skill's
   `references/STATE.md` has the live state, page map, verified facts and open tasks; `scripts/landing-probe.mjs` is the phone gate.

@@ -5,7 +5,7 @@ description: Complete handoff skill for DOGEON's landing page (landing.html on d
 
 # DOGEON Landing Skill
 
-Version: 2.0 (2026-11-13) · Lane: LANDING (herdr terminal `dogeon`) · Agent: `.claude/agents/dogeon-landing.md` ·
+Version: 2.1 (2026-11-14) · Lane: LANDING (herdr terminal `dogeon`) · Agent: `.claude/agents/dogeon-landing.md` ·
 Opener prompt: `prompts/LANDING_MASTER_PROMPT.md` · History and lessons: `references/CHANGELOG.md`.
 
 ## 0. Start here (every session)
