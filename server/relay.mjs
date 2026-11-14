@@ -35,7 +35,7 @@ const BOSS_HP = 320, BOSS_RESET_MS = (+process.env.BOSS_RESPAWN_S || 60) * 1000,
 const LOOT_KINDS = ['steel', 'whisk', 'wood', 'stone'];
 // D-109 anti-cheat (audit 2026-11-13 S3-2/S3-4/S3-7): positions must be reachable, damage is budgeted per second, one IP can't fill the server
 const MAX_SPEED = 200, MOVE_SLACK = 40; // px/s (fastest legit doge ~113 px/s) + lag/knockback slack
-const BOSS_DPS = +process.env.BOSS_DPS || 120, PVP_DPS = 80, MAX_PER_IP = +process.env.MAX_PER_IP || 3, ST_IDLE_MS = (+process.env.ST_IDLE_S || 30) * 1000;
+const LOOT_TTL_MS = (+process.env.LOOT_TTL_S || 120) * 1000, BOSS_DPS = +process.env.BOSS_DPS || 120, PVP_DPS = 80, MAX_PER_IP = +process.env.MAX_PER_IP || 3, ST_IDLE_MS = (+process.env.ST_IDLE_S || 30) * 1000;
 const EJECT = { x: 40 * 16 + 8, y: 12 * 16 + 8 }; // where bossCycle() puts players (src/game.js), a legit teleport like respawn-in-camp
 function spend(c, key, amt, perSec) { // token bucket: each player may deal at most perSec damage per second (burst = 1 s)
   const now = Date.now(), b = c[key] || (c[key] = { tok: perSec, t: now });
@@ -78,7 +78,7 @@ function onWorld(c, m) {
     const out = [];
     for (const it of m.items.slice(0, 12)) {
       if (!it || !LOOT_KINDS.includes(it.k) || !Number.isFinite(it.x) || !Number.isFinite(it.y) || !near(me, it, 40) || w.loot.size >= LOOT_CAP) continue;
-      const lid = 'l' + (++w.lid), pile = { k: it.k, x: Math.round(it.x), y: Math.round(it.y) };
+      const lid = 'l' + (++w.lid), pile = { k: it.k, x: Math.round(it.x), y: Math.round(it.y), t: Date.now() };
       w.loot.set(lid, pile); out.push({ lid, ...pile });
     }
     if (out.length) toRoom(c.room, lootMsg(out));
@@ -141,7 +141,11 @@ function onMessage(c, text) {
     if (!ok) return; // teleport: ignored (not relayed, not trusted)
     c.p = q; c.pt = now;
   }
-  if (m.t === 'st' || m.t === 'heal') return broadcast(c, text); // clients validate fields
+  if (m.t === 'heal') { // D-111 S3-3: a heal must start where the healer stands and is capped like MEND (20 HP, 72 px)
+    if (!c.p || c.p.dead || !Number.isFinite(m.x) || !Number.isFinite(m.y) || !near(c.p, m, 48)) return;
+    return broadcast(c, JSON.stringify({ t: 'heal', id: c.id, amt: Math.max(1, Math.min(20, m.amt | 0)), x: Math.round(m.x), y: Math.round(m.y), r: Math.min(72, Math.max(0, m.r | 0) || 72) }));
+  }
+  if (m.t === 'st') return broadcast(c, text); // clients validate fields
   onWorld(c, m); // only your OWN state/events are relayed (no id spoofing); clients validate fields
 }
 
@@ -241,5 +245,6 @@ server.on('upgrade', (req, sock, head) => {
   if (head && head.length) onData(c, head);
 });
 
-setInterval(() => { const now = Date.now(); for (const r of rooms.values()) for (const c of r) if (now - (c.lastSt || 0) > ST_IDLE_MS) drop(c); }, Math.min(5000, ST_IDLE_MS / 2)).unref(); // D-109: pings alone don't keep a seat
+setInterval(() => { const now = Date.now(); for (const r of rooms.values()) for (const c of r) if (now - (c.lastSt || 0) > ST_IDLE_MS) drop(c);
+  for (const [room, w] of world) for (const [lid, p] of w.loot) if (now - p.t > LOOT_TTL_MS) { w.loot.delete(lid); toRoom(room, JSON.stringify({ t: 'gone', lid })); } }, Math.min(5000, ST_IDLE_MS / 2)).unref(); // D-109: pings alone don't keep a seat; D-111 S3-6: loot piles expire
 server.listen(PORT, () => console.log(`DOGEON relay on :${PORT}  ->  http://localhost:${PORT}/?mp=ws://localhost:${PORT}&room=heist`));

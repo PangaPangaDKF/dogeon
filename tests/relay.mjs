@@ -121,7 +121,7 @@ finally { srv.kill(); }
 
 // D-109: per-IP seat cap + "pings alone don't keep a seat", on a second relay with small limits
 const PORT2 = PORT + 1;
-const srv2 = spawn(process.execPath, [join(root, 'server/relay.mjs')], { env: { ...process.env, PORT: String(PORT2), MAX_PER_IP: '2', ST_IDLE_S: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+const srv2 = spawn(process.execPath, [join(root, 'server/relay.mjs')], { env: { ...process.env, PORT: String(PORT2), MAX_PER_IP: '2', ST_IDLE_S: '1', LOOT_TTL_S: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
 try {
   await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('relay 2 did not start')), 8000); srv2.stdout.on('data', d => { if (String(d).includes('relay on')) { clearTimeout(t); res(); } }); });
   const c2 = (id) => new Promise((res, rej) => { const ws = new WebSocket(`ws://127.0.0.1:${PORT2}`), c = { ws, id, got: [] };
@@ -132,6 +132,21 @@ try {
   await wait(2200); clearInterval(live);
   if (p2.ws.readyState >= 2 && p1.ws.readyState === 1) pass('idle seat', 'a joined client that sends no state is dropped; the active one stays');
   else fail('idle seat', `idle=${p2.ws.readyState} active=${p1.ws.readyState}`);
+  // D-111: a heal from far away is dropped; a heal is capped at 20; loot piles expire (LOOT_TTL_S=1)
+  for (const k of [p1, p2, p3]) try { k.ws.close(); } catch {}
+  await wait(300);
+  const h1 = await c2('ha'), h2 = await c2('hb'); await wait(100);
+  const stH = (c, x) => c.ws.send(JSON.stringify({ t: 'st', id: c.id, x, y: 100, dead: 0 }));
+  stH(h1, 100); stH(h2, 120); await wait(120);
+  h1.ws.send(JSON.stringify({ t: 'heal', id: 'ha', amt: 999, x: 100, y: 100, r: 9999 }));
+  h1.ws.send(JSON.stringify({ t: 'heal', id: 'ha', amt: 20, x: 900, y: 100, r: 72 })); await wait(150);
+  const heals = h2.got.filter(m => m.t === 'heal');
+  if (heals.length === 1 && heals[0].amt === 20 && heals[0].r === 72) pass('heal clamp', 'amt 999 -> 20, r -> 72; a heal claimed 800 px away is dropped');
+  else fail('heal clamp', JSON.stringify(heals));
+  h1.ws.send(JSON.stringify({ t: 'loot', id: 'ha', items: [{ k: 'steel', x: 100, y: 100 }] })); await wait(150);
+  const lid = (h2.got.find(m => m.t === 'loot') || { items: [{}] }).items[0].lid; const keep = setInterval(() => { stH(h1, 100); stH(h2, 120); }, 250); await wait(6500); clearInterval(keep); // sweep runs every 0.5 s here
+  if (lid && h2.got.some(m => m.t === 'gone' && m.lid === lid)) pass('loot expiry', `pile ${lid} expired and everyone was told`); else fail('loot expiry', JSON.stringify(h2.got.filter(m => m.t !== 'st')));
+  for (const k of [h1, h2]) try { k.ws.close(); } catch {}
   for (const k of [p1, p2, p3]) try { k.ws.close(); } catch {}
 } catch (e) { fail('relay 2', e.message); }
 finally { srv2.kill(); }

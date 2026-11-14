@@ -3,6 +3,22 @@
 Status: proposal, 2026-11-13 (D-105). Rules: skill `dogeon-solidity` (nerve **N0 SPEND → GET** first). Testnet only; PonziFi is satire.
 Every number marked **(tunable)** is a proposal for the user to approve before code is written.
 
+## 0. FIRST when development restarts (user decision 2026-11-14: contracts frozen until after launch)
+From the audit `docs/audits/2026-11-13/06-verified.md` (all verified REAL; none is exploitable for real money: testnet only).
+Fix these before any other v2 work, each with a failing Foundry test first (skill `dogeon-solidity` §3):
+| # | ID | What | Where it lands |
+|---|---|---|---|
+| 1 | D-104 / S1-5 | `DogeItems.mint` is open: any item/level for the fee (breaks N0 on chain) | §2 `mintBase` caps + `craft` by burn |
+| 2 | S1-1 | Just-in-time stake → flush → claim → unstake in one tx takes most pending fees | §3 positions + lock tiers; fees accrue to weight held before the deposit |
+| 3 | S1-2 | A 1-wei stake into an empty vault takes the whole `residual` | §3 minimum stake + residual to treasury or streamed |
+| 4 | S2-3 | Re-roll = burn tx + mint tx; a rejected 2nd step loses the item | §2 atomic `reroll(burnId)` |
+| 5 | S1-3, S1-4 | Owner can repoint/freeze stakers' 80% (`setStakingPool/setTreasury`), `setMintFee` unbounded (0 = free) | §2: immutable or timelocked, bounded fee, events |
+| 6 | S1-6, S0-1 | Deploy script defaults to 0.1 DOGE and never calls `setStakingPool`; `deployments/6281971.json` says 0.1 | §6 deploy script v2 |
+| 7 | S1-7 | No invariant tests (N2); staking rounding unproven | §3 invariant suite |
+| 8 | S1-8 | `dogeUsd()` can revert on a code-less feed; `poolTvlUsd` ignores `fresh` | §4 DEX v2 |
+| 9 | S1-9 | Single-step `Ownable`, silent profession withdraw (no event), stale comments | all v2 contracts: `Ownable2Step`, events |
+| 10 | S2-6 (game side done in D-111 if wired) | Mint fees reach stakers only when someone calls `withdrawFees()` | §2 push on mint or keeper |
+
 ## 1. Why v2
 - `DogeItems.mint` lets anyone mint any item/level for 1 DOGE (breaks N0 on chain; the game itself was fixed in D-104).
 - Staking is free in and free out with no lock, so the PonziFi loop has no "nerve": nothing rewards patience or charges impatience.

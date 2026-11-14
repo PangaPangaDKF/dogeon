@@ -59,7 +59,7 @@ globalThis.__api = {
   setScene(s) { scene = s; },
   ARMOR_RED, SWORD_DMG, CAMP, CX, CY,
   REST_CAP, SKILL_THRESH, skillLv, skillMul, BAG_SIZE, FOODS,
-  addToBag, bagCount, bagRemove, invMenu,
+  addToBag, bagCount, bagRemove, invMenu, giveMats,
   tile: get, T, SOLID, MW, MH, FISH_MIN, FISH_MAX, FIELD_POP, DUN_POP, SPAWN_EVERY, DUN_RESPAWN, MINI_RESPAWN, startFish, waterAt, wallet, CHAIN, connectWallet, walletRows, nearWaterT, NINJA_WATER, spawnEnemy, inDunT,
   chainData, chainReady, refreshChain, mintNft, useNft, listNft, buyListing, delistNft, addLp, buyPool, sellPool, removeLp, withdrawProceeds,
   swordLv, armorLv, gearStats, syncMaxHp, syncMaxMp, GEAR_STATS, MINTABLE, ITEM_TYPES, itemRoll, RARITY, BUFFS, addCredit, marketMenu, shopMenu, CONTRACTS, DEV_LOCAL, CHAIN_ID: () => CHAIN.id, FONT, creditOk, RECIPES_: () => RECIPES,
@@ -68,7 +68,7 @@ globalThis.__api = {
   useSkill, groundPound, quickShot, mend, SKILL_MP, makeEnemy, killEnemy, damageEnemy,
   net, NET_URL, NET_TTL,
   disconnectWallet, stakeDoge, unstakeStake, claimStakeRewards, syncDexFees, stakeMenu, SEL,
-  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, IS_MOD, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT, solidFor, GATE_ROW, BOSS_RESPAWN, bossCycle, YARN_MATS,
+  applyClass, syncMaxHp, hudTag, dogeMasterMenu, burnAndReroll, modMenu, isMod, MASTER_ADDR, GATHER_DUR, GATHER_CD, nearResT, solidFor, GATE_ROW, BOSS_RESPAWN, bossCycle, YARN_MATS,
 };`;
 
 function boot(seed, opts) {
@@ -516,7 +516,7 @@ scenario('D-066: DogeMaster meme buffs/debuffs (420/69/777/4.2/6.9), burn-to-rer
   if (!dogeMasterRow) { fail('dogemaster menu', 'DOGEMASTER row not found in elder menu'); return; }
   dogeMasterRow.act();
   const dmOpts = api.get().ui.build();
-  if (!dmOpts.some(r => /420, 69 & 777/.test(r.label))) { fail('dogemaster options', dmOpts.map(r => r.label).join(' | ')); return; }
+  if (!dmOpts.some(r => /420, 69, 777/.test(r.label))) { fail('dogemaster options', dmOpts.map(r => r.label).join(' | ')); return; }
 
   // 3. Mod Menu: God mode, give mats, switch class, instant slay
   api.modMenu();
@@ -625,6 +625,30 @@ scenario('D-109: rest never lowers HP; class switch is not a free heal; cursed g
   if (P.maxHp < 20 || P.hp < 1 || P.hp > P.maxHp || gs.atk < -4 || gs.def < -0.25) { fail('gear floor', `maxHp ${P.maxHp} hp ${P.hp} atk ${gs.atk} def ${gs.def}`); return; }
   api.chainData.inv = []; api.wallet.connected = false;
   pass('d-108 game fixes', `R at 54/60 keeps 54; class switches keep hp 10; 3x cursed hp (${worst}) + 2x atk (${watk}) + 2x def (${wdef}) -> maxHp ${P.maxHp}, atk ${gs.atk}, def ${gs.def}`);
+});
+
+scenario('D-111: mod mode only for the master wallet; ?mod=1 / ?master=1 do nothing (audit S2-1, user 2026-11-14)', () => {
+  for (const q of ['?mod=1', '?master=1']) { const api = boot(SEED + 111, { search: q }); startGame(api);
+    if (api.isMod()) { fail('mod url', `${q} enabled mod mode`); return; }
+    api.wallet.connected = true; api.wallet.addr = '0x' + '1'.repeat(40);
+    if (api.isMod()) { fail('mod other wallet', 'a non-master wallet enabled mod mode'); return; }
+    api.wallet.addr = api.MASTER_ADDR; if (!api.isMod()) { fail('mod master', 'the master wallet lost mod mode'); return; } }
+  pass('mod master only', '?mod=1 and ?master=1 do nothing; only the connected master wallet gets the mod menu');
+});
+
+scenario('D-111: bag-full rewards drop on the ground; DOGE gear is never burned for nothing; MP reconnect backs off', () => {
+  const api = boot(SEED + 112); startGame(api);
+  const g = api.get(), P = g.P;
+  P.bag = Array.from({ length: 12 }, () => ({ kind: 'raw_fish', qty: 5 })); g.items.length = 0;
+  api.giveMats(api.YARN_MATS);
+  const ground = g.items.filter(i => i.kind === 'wood' || i.kind === 'stone').length;
+  if (ground !== api.YARN_MATS.wood + api.YARN_MATS.stone) { fail('bag full reward', `${ground} wood/stone on the ground (bag full)`); return; }
+  api.wallet.connected = true; api.wallet.chainOk = true; api.chainData.inv = [{ type: 7, level: 1, id: 5 }]; P.bag = [];
+  api.invMenu(); const row = api.get().ui.build().find(r => /^NFT #5 /.test(r.label));
+  const sent = (api.eth && api.eth.sent || []).length, msg = row && row.act();
+  if (!row || /BURN/.test(row.label) || !/NEVER BURN/.test(msg || '')) { fail('gear burn', row ? row.label + ' -> ' + msg : 'no row'); return; }
+  api.chainData.inv = []; api.wallet.connected = false;
+  pass('d-111 gameplay', `bag full: ${ground} wood/stone dropped at your feet; DOGE gear row says OWNED = EQUIPPED and burns nothing`);
 });
 
 scenario('D-097: the Victors Market (a DOGE shop) is gone after the boss falls', () => {
@@ -1325,7 +1349,7 @@ await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChan
     else pass('market no free mint', `"${mktRow0.label}": no tx without a crafted or caught item`); }
   api.stakeMenu(npc(api, 'bank'));
   const stkRow0 = api.get().ui.build()[0];
-  if (!stkRow0 || !/^STAKE < 1 > DOGE/.test(stkRow0.label)) fail('stakeMenu row 0', stkRow0 ? stkRow0.label : 'missing');
+  if (!stkRow0 || !/^STAKE < 1 > TESTNET DOGE/.test(stkRow0.label)) fail('stakeMenu row 0', stkRow0 ? stkRow0.label : 'missing');
   else pass('stakeMenu row 0', `"${stkRow0.label}" is row 0 for immediate staking`);
   api.press('escape'); api.step(DT);
   await api.stakeDoge(1); await idle(api);
@@ -1468,10 +1492,13 @@ scenario('D-046: Healer heals self and peers in multiplayer (Mission Item 5)', (
   else fail('healer mend pulse', `hp=${P.hp} msg=${JSON.stringify(healMsg)}`);
 
   // Receiving a heal pulse from a peer heals P
-  P.hp = 15;
-  sock.onmessage({ data: JSON.stringify({ t: 'heal', id: 'bob9', amt: 25, x: Math.round(P.x), y: Math.round(P.y), r: 72 }) });
-  if (P.hp === 40) pass('receive peer heal', 'received peer heal pulse: hp 15->40');
-  else fail('receive peer heal', `hp=${P.hp}`);
+  P.hp = 15; // D-111 S3-3: capped at 20 and only from where the healer stands
+  api.net.peers.bob9 = Object.assign(api.net.peers.bob9 || {}, { x: Math.round(P.x) + 10, y: Math.round(P.y) });
+  sock.onmessage({ data: JSON.stringify({ t: 'heal', id: 'bob9', amt: 999, x: Math.round(P.x) + 10, y: Math.round(P.y), r: 9999 }) });
+  const hpNear = P.hp;
+  sock.onmessage({ data: JSON.stringify({ t: 'heal', id: 'bob9', amt: 20, x: Math.round(P.x) + 400, y: Math.round(P.y), r: 72 }) });
+  if (hpNear === 35 && P.hp === 35) pass('receive peer heal', 'peer heal capped 15->35 (amt 999 -> 20); a heal claimed from far away is ignored');
+  else fail('receive peer heal', `near=${hpNear} after-forged=${P.hp}`);
 });
 
 scenario('D-038: class TTK & MP balance, invMenu ON-CHAIN ITEMS clarity, pool DEX LP/impact rows, HUD skill MP cost', () => {

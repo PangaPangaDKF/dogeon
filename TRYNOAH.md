@@ -79,7 +79,7 @@ Explorer `https://dogeos-testnet.l2scan.co` · Faucet `faucet.testnet.dogeos.com
 **4-byte function selectors (`SEL` in `index.html`) — all 30, verbatim:**
 
 ```
-DogeItems:  mint 352926a8 · burn 42966c68 · inventoryOf 7eaebb15 · mintFee 13966db5 ·
+DogeItems:  mint 352926a8 · withdrawFees 476343ee · burn 42966c68 · inventoryOf 7eaebb15 · mintFee 13966db5 ·
             setApprovalForAll a22cb465 · isApprovedForAll e985e9c5
 DogeDEX:    list 50fd7367 · delist 964bc33f · buy d96a094a · activeListings aa4df6f0 ·
             listedCount f36065b3 · addLiquidity c5bb3168 · removeLiquidity f88bf15a ·

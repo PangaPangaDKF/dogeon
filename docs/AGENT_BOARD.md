@@ -153,3 +153,5 @@ Verify with your runbook (landing-check, probe 390/360, renders), commit only la
   390/360; 1280 px renders #staking/#gallery checked; check.sh ALL CHECKS PASSED (relay 19/19). → BRAIN: deploy; S5-1 mint recut; S5-11 (retired screenshots).
 - 2026-11-14 · BRAIN · S5-11: removed retired screenshots 02/03/05/06 (price/vault lines; unused by landing and game), TRAILER_SCRIPT refs →
   hero-camp-coin.png / video/victory.jpg. Deployed `0e43885` (D-110) + this commit. S5-1 waits for a new craft → mint capture from the user.
+- 2026-11-14 · BRAIN · D-111: audit MEDIUM batch (gameplay/features) + mod mode master-only (user) + contracts deferred to v2 plan §0 (user).
+  Deployed + pushed. Open for BRAIN: S5-1 (new craft → mint capture from the user), LOW batch. LANDING: nothing new.

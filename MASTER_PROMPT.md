@@ -256,7 +256,7 @@ const CONTRACTS={
 };
 const REDSTONE={'0x5fdaf3':{feed:'0x434F8D17c0301cfEa143dba912972E24B827C968',adapter:'0xB08342D907D2df47B6F73e25F4fa033978B344B1'}};
 const SEL={
-  mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',
+  mint:'352926a8',withdrawFees:'476343ee',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',
   setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',
   list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',
   addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',

@@ -49,7 +49,8 @@ materials (whiskers, wood, stone, iron) at the forge → mint gear with real tes
   CHAIN section, and only after the player presses CONNECT. The wallet does all network traffic. No wallet = fully playable.
   MetaMask does not inject into `file://` → run `node tests/serve.mjs` and open http://localhost:8080.
 - **Multiplayer exception (D-040):** the browser's native `WebSocket` may be used **only** inside the `MULTIPLAYER` section, and
-  **only** when the URL has `?mp=ws(s)://host` (opt-in; off by default). Without `?mp` the game makes zero network calls.
+  **only** to the relay: when the page is served over http(s) (e.g. play.dogeon.lat) it connects to the same host by default; `?mp=ws(s)://host`
+  picks another relay and `?mp=off` disables it. Opened as `file://` (no host) the game makes zero network calls (D-111 doc fix, audit S3-8).
   Scope is "the option": other players appear as ghosts (class sprite, facing, walk, HP, name). Field enemies stay local; the relay
   referees only one Cat Lord per room, PvP and death-loot piles (D-076). Self-host: `node server/relay.mjs` (zero deps, serves the game +
   relay). Peer data is untrusted → validate ids/coords, sanitize names, cap peers. `tests/check.sh` enforces the confinement.

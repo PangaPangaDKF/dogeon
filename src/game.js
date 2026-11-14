@@ -432,7 +432,7 @@ const bearF=()=>Math.max(0,-mkt.sent),bullF=()=>Math.max(0,mkt.sent);
 // D-055 rare drops: dropP = chance to drop the material at all (user: "not every monster drops something; hard as fuck to
 // get resources"). D-097 (user): no in-game DOGE at all — monsters never drop coins; testnet DOGE is only for web3 (mint/DEX/stake/class).
 const YARN_MATS={wood:3,stone:3,steel:3}; // the Cat Lord's Golden Yarn pays mint materials, not DOGE (D-097)
-function giveMats(o){for(const [m,v] of Object.entries(o))matAdd(m,v);}
+function giveMats(o){for(const [m,v] of Object.entries(o))if(!matAdd(m,v))for(let i=0;i<v;i++)items.push({x:P.x+R(-10,10),y:P.y+R(-8,8),kind:m,life:60,t:0});} // D-111 S4-4: bag full -> on the ground
 const ETYPES={
   alley:{hp:30,spd:48,dmg:12,drop:1,dropP:0.2,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
   archer:{hp:24,spd:34,dmg:10,drop:1,dropP:0.2,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
@@ -721,11 +721,10 @@ function walletRows(){
 // dev: open with ?chain=local to use a local anvil chain (contracts/README.md); Chikyu addresses go in CONTRACTS after deploy
 const DEV_LOCAL=(()=>{try{return /[?&]chain=local\b/.test(location.search);}catch(e){return false;}})();
 const MASTER_ADDR='0x7be839793765f18e36cc97b5312d094f6ae282ca';
-const IS_MOD=(()=>{try{return /[?&](mod|master)=1\b/.test(location.search);}catch(e){return false;}})();
-const isMod=()=>IS_MOD||(wallet.connected&&wallet.addr&&wallet.addr.toLowerCase()===MASTER_ADDR);
+const isMod=()=>!!(wallet.connected&&wallet.addr&&wallet.addr.toLowerCase()===MASTER_ADDR); // D-111 (user): mod mode ONLY for the master wallet; no ?mod=1 URL switch
 if(DEV_LOCAL)Object.assign(CHAIN,{id:'0x7a69',name:'Anvil Local (DOGEON dev)',rpc:'http://127.0.0.1:8545',explorer:''});
 const CONTRACTS={'0x5fdaf3':{items:'0xbF858f66251005D1d20c92B9359A7dbD0E6Dd6C4',dex:'0x6E26235E3b359f9b78e5c420e8AfdF4140EE7590',prof:'0x7AEF681331EFa8C356d27b96BC5B223a2B4FC055',stake:'0x4a1BF177c842bD55d933f49ee8297Ec6D190e12d'},'0x7a69':{items:'0x5FbDB2315678afecb367f032d93F642f64180aa3',dex:'0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',prof:'',stake:''}};
-const SEL={mint:'352926a8',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',flushFees:'6811406e',stakerFeesView:'67f7cf97'};
+const SEL={mint:'352926a8',withdrawFees:'476343ee',burn:'42966c68',inventoryOf:'7eaebb15',mintFee:'13966db5',setApprovalForAll:'a22cb465',isApprovedForAll:'e985e9c5',list:'50fd7367',delist:'964bc33f',buy:'d96a094a',activeListings:'aa4df6f0',listedCount:'f36065b3',addLiquidity:'c5bb3168',removeLiquidity:'f88bf15a',buyFromPool:'66c1dbf3',sellToPool:'0de77491',withdraw:'3ccfd60b',dogeUsd:'435a3613',proceeds:'35adde54',allPools:'c5c63e65',poolInfo:'81ea4ee7',chooseProf:'f94e349d',professionOf:'31544fd8',profFee:'ddca3f43',stakeDoge:'3a4b66f1',unstakeDoge:'2e17de78',claimStake:'4e71d92d',pendingRewards:'31d7a262',stakedOf:'98807d84',flushFees:'6811406e',stakerFeesView:'67f7cf97'};
 const ITEM_TYPES={1:'HAMMER',2:'ARMOR',3:'RAW FISH',4:'COOKED FISH',5:'BONE CHARM',6:'MOON BISCUIT',7:'DOGE SWORD',8:'DOGE LEATHER ARMOR',9:'DOGE SHIELD',10:'DOGE STAFF',11:'DOGE ROBE',12:'DOGE WHIP',13:'DOGE BOW',14:'DOGE HEMP SHIRT',15:'DOGE QUIVER'},FOOD_TYPE={raw_fish:3,cooked_fish:4},TYPE_FOOD={3:'raw_fish',4:'cooked_fish'};
 const PRICES=[0.1,0.25,0.5,1,2,5,10,25,50],LIST_PAGE=100,LIST_MAX=500; // sell / LP presets in DOGE, picked with A/D in the market menu
 const W32=n=>BigInt(n).toString(16).padStart(64,'0'),A32=a=>String(a).toLowerCase().replace(/^0x/,'').padStart(64,'0');
@@ -776,9 +775,9 @@ function chooseProfession(cls){const c=CLASSES[cls];if(!c)return;
   if(chainData.profession&&!isMod()){setWalletMsg(`THIS WALLET IS LOCKED IN AS A ${CLASSES[CLASS_IDS[chainData.profession]].name}. ONE CLASS PER WALLET.`);return;}
   return chainAct(`YOU ARE NOW A ${c.name}, SWORN ON-CHAIN. SUCH OATH.`,async()=>{await etx(addrs().prof,SEL.chooseProf+W32(c.id),chainData.profFee);applyClass(cls,true);});}
 // Phase 5 (D-030): on-chain DOGE staking — stake real testnet DOGE, earn the holders' 0.8% share of every DEX trade
-function stakeDoge(doge){if(!addrs().stake)return setWalletMsg('STAKING NOT DEPLOYED ON THIS CHAIN YET.');return chainAct(`STAKED ${doge} DOGE. NOW EARNING DEX FEES.`,()=>etx(addrs().stake,SEL.stakeDoge,toWei(doge)));}
+function stakeDoge(doge){if(!addrs().stake)return setWalletMsg('STAKING NOT DEPLOYED ON THIS CHAIN YET.');return chainAct(`STAKED ${doge} TESTNET DOGE. YOU SHARE THE FEES. NO REAL VALUE.`,()=>etx(addrs().stake,SEL.stakeDoge,toWei(doge)));}
 function unstakeStake(){if(!(chainData.staked>0n))return setWalletMsg('NOTHING STAKED.');return chainAct('UNSTAKED. DOGE BACK IN YOUR WALLET.',()=>etx(addrs().stake,SEL.unstakeDoge+W32(chainData.staked),0));}
-function claimStakeRewards(){if(!(chainData.rewards>0n))return setWalletMsg('NO REWARDS YET. TRADING DRIVES THE YIELD.');return chainAct('CLAIMED DEX-FEE REWARDS. SUCH YIELD.',()=>etx(addrs().stake,SEL.claimStake,0));}
+function claimStakeRewards(){if(!(chainData.rewards>0n))return setWalletMsg('NO REWARDS YET. THEY COME ONLY FROM FEES OTHERS PAY.');return chainAct('CLAIMED YOUR SHARE OF THE FEES. SUCH TESTNET.',()=>etx(addrs().stake,SEL.claimStake,0));}
 function syncDexFees(){if(!(chainData.dexFees>0n))return setWalletMsg('NO UNSYNCED DEX FEES RIGHT NOW.');return chainAct('DEX FEES SENT TO THE STAKERS. MUCH SHARE.',()=>etx(addrs().dex,SEL.flushFees,0));}
 // one chain action at a time; every result lands in the open menu via setWalletMsg
 async function chainAct(done,fn){
@@ -846,15 +845,16 @@ const MINTABLE=[{type:1,level:2},{type:1,level:3},{type:1,level:4},{type:2,level
 const mktUI={price:{},lp:{},mint:0}; // per-row preset index for the market menu (NOT mkt = price sim)
 const stakeUI={amt:3}; // preset index (PRICES) for the on-chain staking amount (D-030)
 // Phase 5 (D-030): on-chain DOGE staking menu — stake real DOGE, earn the holders' 0.8% share of DEX fees
-function stakeMenu(n){openMenu(n,'DOGE STAKING: EARN 0.8% OF DEX FEES',()=>{
+function stakeMenu(n){openMenu(n,'DOGE STAKING (TESTNET, NOT ADVICE)',()=>{
   if(!chainReady())return [...walletRows(),{label:'CONNECT YOUR WALLET TO STAKE',act:()=>'CONNECT AT THE SPHINX (DOGEOS CHIKYU) FIRST.'},{label:'BACK',act:()=>{bankMenu(n);return '';}}];
   if(!addrs().stake)return [{label:'STAKING NOT DEPLOYED ON THIS CHAIN YET',act:()=>'DEPLOY THE STAKING CONTRACT (CONTRACTS/README), THEN APPLY-DEPLOYMENT.'},{label:'BACK',act:()=>{bankMenu(n);return '';}}];
   const amt=PRICES[stakeUI.amt],o=[
-    {label:`STAKE < ${amt} > DOGE (EARN 0.8% FEES)`,adj:d=>{stakeUI.amt=Math.max(0,Math.min(PRICES.length-1,stakeUI.amt+d));},act:()=>{stakeDoge(amt);return wallet.msg;}},
-    {label:`YOUR STAKE: ${fromWei(chainData.staked)} DOGE`,act:()=>'STAKED DOGE EARNS THE HOLDERS 0.8% OF EVERY DEX TRADE. PROJECT KEEPS 0.2%.'},
+    {label:`STAKE < ${amt} > TESTNET DOGE`,adj:d=>{stakeUI.amt=Math.max(0,Math.min(PRICES.length-1,stakeUI.amt+d));},act:()=>{stakeDoge(amt);return wallet.msg;}},
+    {label:`YOUR STAKE: ${fromWei(chainData.staked)} DOGE`,act:()=>'STAKERS SHARE 0.8% OF EVERY DEX TRADE + 80% OF MINT FEES. NO REAL VALUE.'},
     {label:`PENDING REWARDS: ${fromWei(chainData.rewards)} DOGE (CLAIM)`,act:()=>{claimStakeRewards();return wallet.msg;}}];
   if(chainData.staked>0n)o.push({label:`UNSTAKE ALL (${fromWei(chainData.staked)} DOGE)`,act:()=>{unstakeStake();return wallet.msg;}});
   if(chainData.dexFees>0n)o.push({label:`SYNC DEX FEES TO STAKERS (${fromWei(chainData.dexFees)} DOGE)`,act:()=>{syncDexFees();return wallet.msg;}});
+  o.push({label:'SEND MINT FEES TO STAKERS (80%)',act:()=>{chainAct('MINT FEES SENT: 80% STAKERS, 20% TREASURY.',()=>etx(addrs().items,SEL.withdrawFees,0));return wallet.msg;}}); // D-111 S2-6: DogeItems.withdrawFees() is public
   o.push({label:'REFRESH',act:()=>{refreshChain().then(()=>setWalletMsg('STAKING REFRESHED.')).catch(e=>setWalletMsg(walletErr(e)));return 'REFRESHING...';}});
   o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;refreshChain().catch(()=>{});}
 function marketMenu(n){openMenu(n,'DOGEON POOL DEX: MINT, SWAP & LP',()=>{const o=[],blk=chainBlockRow();
@@ -889,10 +889,10 @@ function openMenu(npc,title,build){ui={type:'menu',npc,title,build,sel:0,msg:''}
 function talk(n){
   n.dir=dirOf(P.x-n.x,P.y-n.y);
   if(n.id==='merchant'){
-    if(!n.met){n.met=true;openDialog(n,['Wrenchpaw here. I forge gear from monster parts.','Bring me ORB, SCRAP, HORN or STEEL from fallen foes.','I burn the materials and craft upgrades. No refunds. Very forge.'],()=>shopMenu(n));}
+    if(!n.met){n.met=true;openDialog(n,['Wrenchpaw here. I forge gear from monster parts.','Bring me STEEL, WHISKERS, WOOD and STONE. Craft first, then mint.','I burn the materials and craft upgrades. No refunds. Very forge.'],()=>shopMenu(n));}
     else shopMenu(n);
   }else if(n.id==='bank'){
-    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX, door to DogeOS. I connect your wallet, add the DogeOS testnet and teach you DeFi.','Whiskers go to the forge. Real testnet DOGE pays for every mint.','Pool your DOGE for safekeeping — pooled DOGE is safe when you die.','Connect a wallet for real DogeOS testnet NFTs, pools and staking, or play offline!'],()=>bankMenu(n));}
+    if(!n.met){n.met=true;openDialog(n,['Welcome to the Sphinx DEX, door to DogeOS. I connect your wallet, add the DogeOS testnet and teach you DeFi.','Whiskers go to the forge. Real testnet DOGE pays for every mint.','Your NFTs live on chain: they stay safe when you die.','Connect a wallet for real DogeOS testnet NFTs, pools and staking, or play offline!'],()=>bankMenu(n));}
     else bankMenu(n);
   }else if(n.id==='quest'){if(state.stage===0)questTalk(n);else elderMenu(n);}
   else if(n.cls){professorTalk(n);}
@@ -967,7 +967,7 @@ function bankMenu(n){openMenu(n,'THE SPHINX DEX - DOGEOS DEFI HUB',()=>{
   return[
   ...walletRows(), // CONNECT adds + switches to DogeOS Chikyu (D-016)
   {label:'NFT MARKET: SWAP + LIQUIDITY POOLS',act:()=>{marketMenu(n);return '';}},
-  {label:'ON-CHAIN STAKING: EARN 0.8% OF DEX FEES',act:()=>{stakeMenu(n);return '';}},
+  {label:'ON-CHAIN STAKING (TESTNET DOGE)',act:()=>{stakeMenu(n);return '';}},
   linkRow('GET TESTNET DOGE (FAUCET)',LINKS.faucet),
   oracleRow(),
   {label:'SPHINX SCHOOL: DEFI 101 LESSONS',act:()=>{schoolMenu(n);return '';}},
@@ -1029,7 +1029,7 @@ function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>{const o
   if(state.won)o.splice(1,0,{label:'DOGEMASTER: MEME FORGE & RE-ROLL',act:()=>{dogeMasterMenu(n);return '';}}); // D-066: endgame DogeMaster
   o.push({label:'LEAVE',act:null});return o;});}
 function dogeMasterMenu(n){openMenu(n,'DOGEMASTER: MEME FORGE & RE-ROLL',()=>{const o=[],inv=myFree();
-  o.push({label:'DOGEMASTER: 420, 69 & 777 STATS! SACRIFICE CURSES.',act:()=>'ROLL THE ULTIMATE SHIBE GEAR. IF CURSED WITH NEGATIVE STATS, BURN IT HERE TO RE-ROLL!'});
+  o.push({label:'DOGEMASTER: 420, 69, 777 STATS. SACRIFICE CURSES.',act:()=>'RE-ROLL = 2 TRANSACTIONS: BURN, THEN MINT (FEE). CONFIRM BOTH OR THE OLD ITEM IS GONE.'});
   if(inv.length){for(const it of inv){const r=itemRoll(it.id);o.push({label:`SACRIFICE #${it.id} ${itemName(it)} [${r.label}] -> RE-ROLL`,isNft:true,act:()=>{burnAndReroll(it);return wallet.msg;}});}}
   else{o.push({label:'NO GEAR NFTS IN WALLET TO RE-ROLL.',act:()=>'MINT OR CRAFT AN NFT FIRST TO RE-ROLL ITS MEME STATS.'});}
   o.push({label:'BACK',act:()=>{elderMenu(n);return '';}});return o;});}
@@ -1101,12 +1101,12 @@ function invMenu(){
         o.push({label:`${fd.name} x${s.qty} [EAT +${fd.heal} HP${mpStr}]`,act:()=>{if(P.hp>=P.maxHp&&(!fd.mp||P.mp>=P.maxMp))return 'HP IS FULL ALREADY.';bagRemove(s.kind,1);P.hp=Math.min(P.maxHp,P.hp+fd.heal);if(fd.mp)P.mp=Math.min(P.maxMp,P.mp+fd.mp);sfx(660,0.1,'triangle',0.05,200);return `ATE ${fd.name}. +${fd.heal} HP${mpStr}. YUM.`;}});
         if(s.kind==='raw_fish'&&nearFire)o.push({label:`COOK RAW FISH -> COOKED FISH`,act:()=>{if(!bagRemove('raw_fish',1))return 'NO RAW FISH.';if(!addToBag('cooked_fish',1)){addToBag('raw_fish',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED SARDINE (+25 HP)! MUCH DELICIOUS.';}});
         if(s.kind==='raw_salmon'&&nearFire)o.push({label:`COOK RAW SALMON -> COOKED SALMON`,act:()=>{if(!bagRemove('raw_salmon',1))return 'NO SALMON.';if(!addToBag('cooked_salmon',1)){addToBag('raw_salmon',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED SALMON (+50 HP/+25 MP)! MUCH DELICIOUS.';}});
-      }else{const names={wood:'WOOD',stone:'STONE',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'CRAFTING MATERIAL: CRAFT AT THE FORGE, THEN MINT (1 DOGE).'});}}
+      }else{const names={wood:'WOOD',stone:'STONE',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>`CRAFTING MATERIAL: CRAFT AT THE FORGE, THEN MINT (${chainData.loaded?fromWei(chainData.fee):'1'} TESTNET DOGE).`});}}
     const sk=P.skills,lv=k=>skillLv(sk[k],k);o.push({label:`SKILLS: COMBAT LV${lv('combat')} (${sk.combat}XP) BARK LV${lv('bark')} (${sk.bark}XP) FISH LV${lv('fishing')} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(lv('combat')*SKILL_BONUS*100)}% DMG  BARK +${Math.round(lv('bark')*SKILL_BONUS*100)}% DMG  FISH +${Math.round(lv('fishing')*SKILL_BONUS*100)}% SPD`});
     const nfts=chainReady()?chainData.inv:[]; // D-038: explicit off-chain bag (at risk) vs on-chain wallet NFTs (safe) boundary
     o.push({label:`ON-CHAIN ITEMS (${nfts.length}): ${nfts.length?'SAFE ON DEATH':'MINT AT SPHINX/FORGE'}`,act:()=>'WALLET NFTS SURVIVE DEATH. BAG ITEMS & MATERIALS DROP WHEN YOU FALL.'});
     for(const it of nfts){const f=TYPE_FOOD[it.type];
-      o.push({label:`NFT #${it.id} ${itemName(it)} `+(f?`[EAT +${FOODS[f].heal} HP, BURNS]`:it.type<=2?'(OWNED = EQUIPPED)':'[USE, BURNS]'),isNft:true,act:it.type<=2?()=>`ON-CHAIN GEAR. EFFECTIVE HAMMER LV${swordLv()} ARMOR LV${armorLv()}.`:()=>{useNft(it);return wallet.msg;}});}
+      o.push({label:`NFT #${it.id} ${itemName(it)} `+(f?`[EAT +${FOODS[f].heal} HP, BURNS]`:(it.type<=2||it.type>=7)?'(OWNED = EQUIPPED)':'[USE, BURNS]'),isNft:true,act:it.type<=2?()=>`ON-CHAIN GEAR. EFFECTIVE HAMMER LV${swordLv()} ARMOR LV${armorLv()}.`:it.type>=7?()=>'DOGE GEAR WORKS WHILE YOU OWN IT. SELL OR RE-ROLL IT; NEVER BURN IT FOR NOTHING.':()=>{useNft(it);return wallet.msg;}});} // D-111 S2-4
     o.push({label:'PARTY: '+(NET_PARTY||'SOLO')+' [P TO CHANGE]',act:()=>{partyMenu(null);return '';}});
     if(!P.bag.length)o.push({label:'BAG IS EMPTY',act:()=>'HUNT MONSTERS OR CATCH FISH.'});
     o.push({label:'CLOSE',act:null});return o;});ui.chain=true;if(chainReady())refreshChain().catch(()=>{});}
@@ -1130,8 +1130,8 @@ function updateUI(dt){
 }
 
 // ================= MULTIPLAYER (opt-in, D-040) =================
-// OFF unless the URL has ?mp=ws(s)://host[:port] (optional &room=NAME &name=NAME). Native browser WebSocket only: no library,
-// no CDN. Without ?mp the game makes ZERO network calls, so single-player and sandboxed publishing are unchanged.
+// Served over http(s) it joins the relay on the same host; ?mp=ws(s)://host picks another, ?mp=off disables it (D-111). Native
+// WebSocket only: no library, no CDN. From file:// (no host) the game makes ZERO network calls (single-player, sandboxed publishing).
 // Scope = "the option": up to NET_MAX players see each other's doge (class sprite, facing, walk, HP, name). Shared enemies and
 // loot need an authoritative server (e.g. Colyseus) and are deliberately NOT built. Host the relay: `node server/relay.mjs`.
 // Peer data is untrusted: ids are whitelisted (no __proto__), coords must be finite, names sanitized + capped, peers capped.
@@ -1179,8 +1179,9 @@ function netConnect(){
       if(!m||typeof m.id!=='string'||!/^[a-z0-9]{1,12}$/.test(m.id)||m.id===net.id)return;
       if(m.t==='bye'){delete net.peers[m.id];return;}
       if(m.t==='heal'&&Number.isFinite(m.x)&&Number.isFinite(m.y)){
-        if(!P.dead&&Math.hypot(P.x-m.x,P.y-m.y)<=(m.r||72)){
-          const amt=Math.max(1,m.amt|0);P.hp=Math.min(P.maxHp,P.hp+amt);
+        const hp=net.peers[m.id]; // D-111 S3-3: trust only a heal from the healer's last known spot, capped like MEND
+        if(!P.dead&&hp&&Math.hypot(hp.x-m.x,hp.y-m.y)<=48&&Math.hypot(P.x-m.x,P.y-m.y)<=Math.min(72,m.r||72)){
+          const amt=Math.max(1,Math.min(20,m.amt|0));P.hp=Math.min(P.maxHp,P.hp+amt);
           floater(P.x,P.y-12,'+'+amt,'#80ffb0');sfx(620,0.14,'sine',0.05,220);
         }
         return;
@@ -1189,11 +1190,11 @@ function netConnect(){
       if(!net.peers[m.id]&&Object.keys(net.peers).length>=NET_PEERS)return;
       net.peers[m.id]={x:m.x,y:m.y,d:['down','up','left','right'].includes(m.d)?m.d:'down',m:!!m.m,c:Object.prototype.hasOwnProperty.call(CLASSES,m.c)?m.c:'',
         h:Math.max(0,Math.min(100,m.h|0)),n:netClean(m.n)||'DOGE',pt:netClean(m.pt),dead:!!m.dead,seen:time};};
-    ws.onclose=()=>{net.on=false;net.ws=null;net.peers=Object.create(null);net.loot=Object.create(null);};
+    ws.onclose=()=>{net.on=false;net.ws=null;net.peers=Object.create(null);net.loot=Object.create(null);net.fails=(net.fails||0)+1;net.retry=time+Math.min(30,2**net.fails);}; // D-111 S3-9 backoff
   }catch(e){net.ws=null;}}
 function netTick(dt){ // from update(): broadcast own state at NET_HZ, drop silent peers
   if(!NET_URL)return;
-  if(!net.ws)netConnect();
+  if(!net.ws&&time>=(net.retry||0))netConnect();
   for(const k in net.peers)if(time-net.peers[k].seen>NET_TTL)delete net.peers[k];
   if(!P.dead)for(const lid in net.loot){const l=net.loot[lid];if(dist(l.x,l.y,P.x,P.y)<12&&!(time-(net.pend[lid]||-9)<1)){net.pend[lid]=time;netSend({t:'take',lid});}} // claim; relay decides who gets it
   net.t-=dt;if(net.t>0||!net.on||!net.ws||net.ws.readyState!==1)return;net.t=1/NET_HZ;
@@ -1380,13 +1381,12 @@ function drawHUD(){
   text(wBal?fmtD(wallet.bal)+' DOGE':'NO WALLET',128,10,wBal?'#ffd700':'#808890'); // D-097: the only DOGE is the wallet's testnet DOGE
   const curP=oracle.loaded?oracle.price:mkt.p;
   text('DOGE $'+curP.toFixed(curP<1?3:2),168,3,oracle.loaded?'#80f8c0':'#f8d050');
-  if(wBal){const u=(wallet.bal||0)*curP;text('≈$'+(u>=100?u.toFixed(1):u.toFixed(2))+(oracle.loaded?' RS':''),168,10,'#60e060');}
-  else{const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');}
+  {const pc=Math.round(mkt.sent*MARKET.sentScale*100),up=pc>=0;text((up?'+':'')+pc+'% '+(pc>2?'BULL':pc<-2?'BEAR':'FLAT'),168,10,up?'#60e060':'#ff5050');}
   text(state.bossT>0?`BOSS IN ${Math.ceil(state.bossT)}S`:'RAID ON',214,3,state.bossT>0?'#ffa0a0':'#80ff80'); // D-095 raid cycle
   text(questText(),222,10,'#fff');
   if(P.lazy||P.lazyT>0)text(P.lazyT>0?`LAZY ${Math.ceil(P.lazyT)}S`:'LAZY',276,10,'#ff5050');
   else if(isMod())text('MOD[M]',285,10,'#ffc040');
-  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?`CHAIN ${shortAddr(wallet.addr)} (${wallet.bal==null?'?':fmtD(wallet.bal)}D ≈$${((wallet.bal||0)*curP).toFixed(2)})  R=REST  I=BAG`:'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
+  if(!P.dead&&playerInCamp()&&!ui){const wait=P.resting&&P.restT<REST_DELAY;const hpCap=Math.ceil(P.maxHp*REST_CAP);const capped=P.hp>=hpCap;const t=wait?'CATCHING BREATH... '+Math.ceil(REST_DELAY-P.restT):capped&&P.resting?'HP CAPPED AT 60%. EAT FOOD FOR MORE.':P.resting?'RESTING... HP/MP RECOVERING':(wallet.connected?`CHAIN ${shortAddr(wallet.addr)} (${wallet.bal==null?'?':fmtD(wallet.bal)} TESTNET DOGE)  R=REST  I=BAG`:'SAFE CAMP - R REST  I BAG  SPHINX=WALLET');textC(t,W/2,H-9,capped&&P.resting?'#f0c040':P.resting&&!wait?'#a0ffa0':'#c8e8ff');}
   if(!ui&&!P.dead){const c=classOf();text(hudTag(),3,playerInCamp()?H-17:H-9,c?CLASS_COL[P.prof]:'#80809a');} // persistent class + skill MP tag (D-028, D-038)
 }
 function box(x,y,w,h){ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle='#e8e8f8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#0a1460';ctx.fillRect(x+2,y+2,w-4,h-4);ctx.fillStyle='#14248e';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.55));ctx.fillStyle='#1c30a8';ctx.fillRect(x+2,y+2,w-4,Math.floor((h-4)*0.2));}
@@ -1405,7 +1405,7 @@ function drawUI(){
     const all=ui.build(),top=Math.max(0,Math.min(ui.sel-Math.floor(MENU_ROWS/2),all.length-MENU_ROWS)),opts=all.slice(top,top+MENU_ROWS),h=44+opts.length*11;const y=Math.round((H-h)/2)+6;
     box(30,y,260,h);
     textC(ui.title,W/2,y+6,'#ffe040');
-    if(ui.chain&&wallet.connected){const cp=oracle.loaded?oracle.price:mkt.p;text(`WALLET: ${wallet.bal==null?'?':fmtD(wallet.bal)} DOGE (≈$${(((wallet.bal||0))*cp).toFixed(2)})`,40,y+16,'#f8d050');text(`ITEMS: ${chainData.inv.length}  STAKED: ${fromWei(chainData.staked)}`,172,y+16,'#60e0a0');}
+    if(ui.chain&&wallet.connected){const cp=oracle.loaded?oracle.price:mkt.p;text(`WALLET: ${wallet.bal==null?'?':fmtD(wallet.bal)} TESTNET DOGE`,40,y+16,'#f8d050');text(`ITEMS: ${chainData.inv.length}  STAKED: ${fromWei(chainData.staked)}`,172,y+16,'#60e0a0');}
     else text('TESTNET DOGE: CONNECT AT THE SPHINX',40,y+16,'#b0a060');
     ctx.fillStyle='#3848a0';ctx.fillRect(36,y+24,248,1);
     if(top>0)text('^',282,y+16,'#ffe040');if(top+MENU_ROWS<all.length)text('V',282,y+h-10,'#ffe040');
