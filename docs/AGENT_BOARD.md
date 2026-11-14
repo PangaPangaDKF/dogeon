@@ -26,7 +26,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-109 | BRAIN | Audit HIGH fixes: relay anti-cheat (S3-2/S3-4/S3-7) + rest/class/gear floor (S4-1/S4-2/S2-2); commit 4f6dd85 says D-108 by mistake |
 | D-110 | LANDING | Audit findings on landing.html (L9) |
 | D-111 | BRAIN | Audit MEDIUM fixes, BRAIN lane (next batch) |
-| D-112+ | | Next free: reserve here first |
+| D-112 | BRAIN | Audit LOW batch (game, relay, container, docs); audit closed |
+| D-113+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
