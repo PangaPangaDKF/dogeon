@@ -28,7 +28,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-110 | LANDING | Audit findings on landing.html (L9) |
 | D-111 | BRAIN | Audit MEDIUM fixes, BRAIN lane (next batch) |
 | D-112 | BRAIN | Audit LOW batch (game, relay, container, docs); audit closed |
-| D-113+ | | Next free: reserve here first |
+| D-113 | BRAIN | BRAIN handoff kit: START_HERE.md, skill dogeon-brain (+ references), agent dogeon-brain |
+| D-114+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
