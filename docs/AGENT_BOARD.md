@@ -20,7 +20,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-103 | BRAIN | Forge fix: one wood/stone counter (bag), CRAFT vs MINT rows, [ ] glyphs |
 | D-104 | BRAIN | Spend -> get: no mint without a forge credit or caught food (game side) |
 | D-105 | BRAIN | Skill dogeon-solidity (N0 SPEND -> GET) + docs/CONTRACTS_V2_PLAN.md (plan only) |
-| D-106+ | | Next free: reserve here first |
+| D-106 | BRAIN | Audit pipeline (skill dogeon-audit + 7 project agents) + docs/PLAYER_DATA_PLAN.md; first full audit run |
+| D-107+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
