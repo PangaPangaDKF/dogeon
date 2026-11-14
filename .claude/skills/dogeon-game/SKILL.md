@@ -45,7 +45,7 @@ Version: 2.6 (2026-11-13, D-089 economy + respawn). Bump the version and add a l
 2. **Death & Greed vs. Safety:** Death loses all whiskers, all materials, and `P.bag`, respawning at campfire at 35% HP/MP (`RESPAWN_FRAC`). On-chain NFTs and wallet/staked DOGE are never lost. There is no in-game DOGE (D-097).
 3. **Starter Bag & NFT Minting (`D-019`, `D-021`, `D-036`):**
    - `newGame()` starts every player with `wood:3, stone:3, orb:2, scrap:2, horn:2, steel:2` and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]`.
-   - Players can immediately mint a `HAMMER LV2 NFT` using `1 WOOD + 1 STONE` (`mintNft(1,2,'starter')` in `invMenu` or `shopMenu`), mint crafted items via `creditOk`/`takeOffChain`/`putBack` (1 craft = 1 item, no dupes), preserve fish, or mint any item directly at Row 0 of `marketMenu()` (`MINT < ITEM > NFT (1 DOGE)`).
+   - **Spend → get (D-104):** every mint needs a source: a forge credit (`creditOk`/`takeOffChain`/`putBack`, 1 craft = 1 item, no dupes) or a caught bag food. `mintNft` throws without one. Players craft `HAMMER LV2` (2 steel + 1 wood, they start with it) then mint. `mintRows()` lists the mintable rows in the forge and the Pool DEX.
    - Owning a gear NFT = wearing it (`swordLv()`, `armorLv()`).
 4. **Distinct Profession Gameplay Mechanics (`D-027..D-029`, `D-036`):**
    - `applyClass(cls, onchain)` updates `P.prof`, recalculates `P.maxHp` via `syncMaxHp()`, and transforms the hero sprite (`SPR[classOf()?.spr || 'hero']`).
@@ -55,7 +55,7 @@ Version: 2.6 (2026-11-13, D-089 economy + respawn). Bump the version and add a l
 5. **DOGEON Pool DEX (`marketMenu`, `ui.pooldex`, `D-036`):**
    - Opened at the Sphinx NPC via `NFT MARKET: SWAP + LIQUIDITY POOLS`. Uses ONLY our game contracts (`DogeItems` + `DogeDEX`).
    - Header shows `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <staked>`.
-   - Row 0 (`MINT < ITEM > NFT (1 DOGE)`) mints item tokens directly (consuming `1 WOOD + 1 STONE` for starter Hammer Lv2 if in bag); Row 1 (`WALLET ITEMS (N): #id ITEM...`) shows the player's minted item tokens balance; below that are `CREATE POOL` / `POOL` / `SWAP` / `ADD LP` / `REMOVE LP` rows styled with an amber/slate/emerald card colors in `drawUI()`.
+   - Top rows = `mintRows()` (crafted credits + caught food only, or `NOTHING TO MINT`); Row 1 (`WALLET ITEMS (N): #id ITEM...`) shows the player's minted item tokens balance; below that are `CREATE POOL` / `POOL` / `SWAP` / `ADD LP` / `REMOVE LP` rows styled with an amber/slate/emerald card colors in `drawUI()`.
 6. **Instant Wallet Popup & Mouse UX (`D-036`):**
    - `chainAct()` never awaits `refreshChain()` before `await fn()` (so MetaMask/Bitget opens immediately on click/keypress).
    - Full mouse hover/wheel/click support on canvas (`cvPos`). In `tests/sim.mjs`, always close menus with `api.press('escape'); api.step(DT);` (never `api.get().ui = null`, which only mutates the wrapper object).

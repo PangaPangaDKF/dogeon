@@ -98,10 +98,11 @@ knights → **steel**. Fishing gives **raw fish**. Every new player also starts 
 
 **Your bag** holds 12 slots (food stacks 5, materials 20). Bag contents are **lost on death** — wallet NFTs are not.
 
-**Three ways to mint an NFT** (each costs a 1 DOGE fee on `DogeItems`):
-1. **Starter mint** — 1 wood + 1 stone → a Hammer Lv2 NFT, straight from the bag (`I`), the forge, or the DEX.
-2. **Forge a recipe** at Wrenchpaw (burns materials), which gives a mint credit you can put on-chain.
-3. **Mint directly** at the Sphinx's DEX, row 0.
+**Every mint spends something (D-104): you spend, you get.** Each mint is a `DogeItems` transaction: 1 testnet DOGE fee + gas.
+1. **Craft at Wrenchpaw** (burns the recipe's materials, e.g. Hammer Lv2 = 2 steel + 1 wood), then pick its `MINT … NFT (1 DOGE)` row.
+2. **Preserve a caught fish** from your bag as an NFT (the fish leaves the bag).
+3. **DogeMaster re-roll** (after the boss): burn one of your NFTs to mint a new one.
+There is no free mint: nothing can be minted without crafting or catching it first, and one craft = one mint.
 
 Item types: Hammer (Lv1–4), Armor (Lv1–2), Raw Fish, Cooked Fish, Bone Charm, Moon Biscuit.
 

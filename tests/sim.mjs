@@ -589,8 +589,8 @@ scenario('D-067: hardcore gathering, iron drops, master chain permissions, red N
   const forge = g.NPCS.find(n => n.id === 'forge');
   api.shopMenu(forge);
   const forgeOpts = api.get().ui.build();
-  const nftCraft = forgeOpts.filter(o => /^MINT .* NFT/.test(o.label)); // D-103: only MINT rows are red NFT rows; CRAFT rows are plain
-  if (!nftCraft.length || forgeOpts.some(o => /^CRAFT /.test(o.label) && (o.nft || o.isNft))) { fail('forge nft tag', forgeOpts.map(o => o.label).join(' | ')); return; }
+  // D-104: nothing crafted yet -> no MINT row at all (spend -> get); CRAFT rows are plain, not NFT rows
+  if (forgeOpts.some(o => /^MINT /.test(o.label)) || forgeOpts.some(o => /^CRAFT /.test(o.label) && (o.nft || o.isNft))) { fail('forge nft tag', forgeOpts.map(o => o.label).join(' | ')); return; }
   api.press('escape'); api.step(DT);
 
   pass('hardcore systems', 'stone always drops iron, monsters drop iron, master wallet authenticated, red NFT styling active');
@@ -1298,13 +1298,11 @@ await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChan
 
   // stakeDoge, claimStakeRewards, unstakeStake, syncDexFees, delistNft + direct marketMenu mint & stakeMenu Row 0
   api.marketMenu(npc(api, 'bank'));
-  const mktRow0 = api.get().ui.build()[0];
-  if (!mktRow0 || !/^MINT < HAMMER LV2 > NFT/.test(mktRow0.label)) fail('market direct mint row', mktRow0 ? mktRow0.label : 'missing');
-  else {
-    mktRow0.act(); await idle(api);
-    if (!eth.sent.at(-1).data.startsWith('0x' + api.SEL.mint)) fail('market direct mint tx', JSON.stringify(eth.sent.at(-1)));
-    else pass('market direct mint', `"${mktRow0.label}" at row 0 mints directly on DogeItems`);
-  }
+  const mktRow0 = api.get().ui.build()[0], sent0 = eth.sent.length; // D-104: no free item picker; row 0 lists only crafted/caught items
+  if (!mktRow0 || !/^NOTHING TO MINT/.test(mktRow0.label)) fail('market no free mint', mktRow0 ? mktRow0.label : 'missing');
+  else { mktRow0.act(); await idle(api);
+    if (eth.sent.length !== sent0) fail('market no free mint tx', 'a transaction was sent with nothing crafted');
+    else pass('market no free mint', `"${mktRow0.label}": no tx without a crafted or caught item`); }
   api.stakeMenu(npc(api, 'bank'));
   const stkRow0 = api.get().ui.build()[0];
   if (!stkRow0 || !/^STAKE < 1 > DOGE/.test(stkRow0.label)) fail('stakeMenu row 0', stkRow0 ? stkRow0.label : 'missing');
@@ -1328,9 +1326,10 @@ await scenarioAsync('D-035: on-chain profession oath, staking, delist, chainChan
 
   // D-036: starter material mint (1 WOOD + 1 STONE) + DOGEON Pool DEX wallet items balance & CREATE POOL row
   const woodBefore = api.bagCount('wood'), stoneBefore = api.bagCount('stone');
-  await api.mintNft(1, 2, 'starter'); await idle(api);
-  if (api.bagCount('wood') !== woodBefore - 1 || api.bagCount('stone') !== stoneBefore - 1 || !eth.sent.at(-1).data.startsWith('0x' + api.SEL.mint)) fail('starter mint', `wood=${api.bagCount('wood')} stone=${api.bagCount('stone')}`);
-  else pass('starter mint', 'minted HAMMER LV2 NFT consuming 1 WOOD + 1 STONE from starter bag');
+  const sentS = eth.sent.length; // D-104: the old 1 wood + 1 stone shortcut and source-less mints must send nothing
+  await api.mintNft(1, 2, 'starter'); await idle(api); await api.mintNft(1, 4); await idle(api); await api.mintNft(7, 1, undefined); await idle(api);
+  if (eth.sent.length !== sentS || api.bagCount('wood') !== woodBefore || api.bagCount('stone') !== stoneBefore) fail('no free mint', `txs ${eth.sent.length - sentS}, wood=${api.bagCount('wood')} stone=${api.bagCount('stone')}`);
+  else pass('no free mint', 'starter shortcut, HAMMER LV4 and gear without a source: 0 transactions, materials untouched');
 
   api.chainData.inv = [{ id: 1, type: 1, level: 2 }];
   api.marketMenu(npc(api, 'bank'));
@@ -1567,8 +1566,7 @@ scenario('D-068: on-chain currency purity, raid timer, timed lazy debuff & fee s
   const dmRow = api.get().ui.build().find(r => /DOGEMASTER/.test(r.label));
   if (!dmRow) { fail('dogemaster menu', 'DOGEMASTER row missing in elderMenu'); return; }
   dmRow.act();
-  const mintGear = api.get().ui.build().find(r => /MINT RANDOM GEAR NFT/.test(r.label));
-  if (!mintGear || !mintGear.isNft) { fail('dogemaster mint row', 'missing MINT RANDOM GEAR NFT or isNft flag'); return; }
+  if (api.get().ui.build().some(r => /^MINT /.test(r.label))) { fail('dogemaster no free mint', 'DogeMaster still mints gear from nothing'); return; } // D-104: re-roll burns first
   g.ui = null;
 
   pass('d-068 systems', '1 DOGE fee, quest gate, timed lazy debuff, pvp material drop, DogeMaster meme store');

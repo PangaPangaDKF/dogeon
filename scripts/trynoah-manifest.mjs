@@ -139,7 +139,7 @@ const md = () => {
 
   L.push('## 6. Items, mintables, recipes');
   L.push(`- **Item types:** ${Object.entries(itemTypes).map(([k, v]) => `${k}=${v}`).join(' · ')}`);
-  L.push(`- **Mintable at DOGEON Pool DEX Row 0 (${mintable.length}):** ${mintable.map(m => `${itemTypes[m.type] || m.type} LV${m.level}`).join(' · ')}`);
+  L.push(`- **Item levels DogeItems accepts (${mintable.length}; the game mints only crafted/caught ones, D-104):** ${mintable.map(m => `${itemTypes[m.type] || m.type} LV${m.level}`).join(' · ')}`);
   L.push(`- **Forge recipes (${recipes.length}):** ${recipes.join(' · ')}`);
   L.push('');
 
@@ -196,6 +196,7 @@ if (args.includes('--verify')) {
     [/GATHER_CD=8s/, `GATHER_CD is ${(html.match(/GATHER_CD=(\d+)/) || [])[1]}s`],
     [/Walk cycle: front\/back/, 'sprites are frozen facing right (D-044)'],
     [/COIN_DROP_P|\+150 DOGE|50% (of carried )?DOGE|camp vault (keeps|pays)|drops 6 materials \+ 5 coins/, 'no in-game DOGE since D-097 (no coins, vault or Golden Yarn DOGE)'],
+    [/mintNft\(1,2,'starter'\)|MINT < ITEM > NFT|Row 0 \(Direct \/ Starter|MINT RANDOM GEAR/, 'no free mint since D-104: every mint needs a forge credit or a caught food'],
   ];
   const prose = ['prompts/TRYNOAH_CLONE.md', 'prompts/TRYNOAH_RECREATE.md', 'TRYNOAH.md', 'MASTER_PROMPT.md', 'CLAUDE.md',
     '.claude/skills/dogeon-game/SKILL.md', '.agents/skills/dogeon-game/SKILL.md', 'contracts/README.md'].filter(f => existsSync(join(root, f)));

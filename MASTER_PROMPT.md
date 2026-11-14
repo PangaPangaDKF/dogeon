@@ -303,7 +303,7 @@ const SEL={
 - **5 Fishing Ponds:** 3 base ellipses + `PONDS_EXTRA = [[54,25,3.5,2.5], [24,53,4,2.5]]` with cleared `GRASS` shore rings.
 
 ### 4.4 Starter Bag, Enemy Table & Three Distinct Professions (§8–§12)
-- **Starter Player State (`newGame()`):** Starts with `wood:3, stone:3, orb:2, scrap:2, horn:2, steel:2` and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]` so every new player can immediately mint a Starter Hammer NFT (`mintNft(1,2,'starter')`).
+- **Starter Player State (`newGame()`):** Starts with `steel:2` and `bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}]` (wood/stone live only in the bag, D-103) so every new player can craft a HAMMER LV2 (2 steel + 1 wood) and then mint it (D-104: every mint spends a forge credit or a caught food).
 - **12-Slot Bag (`BAG_SIZE = 12`):** `FOODS` (`raw_fish` +15 HP, `cooked_fish` +25 HP cooked at campfire) stack to `5`; `MAT_TYPES` stack to `20`. Death drops off-chain bag items/materials (`RESPAWN_FRAC = 0.35`); **on-chain wallet NFTs are permanent and never lost on death**.
 - **Three Distinct Professions (`CLASSES`, `applyClass`, `syncMaxHp`, `attack`, `useSkill`, `drawWorld`, `drawSlash`, `hudTag`):**
   1. **`WARRIOR` (`id:1`, Demolition Dogs, Sergeant Ironpaw):** `spd:0.95`, `dmg:1.35`, `armor:0.15`, `hp:+25` (`85` Max HP). `Space`: wide melee cleave (`+4 px` reach, `1.35×` knockback, crimson/gold arc). `K`/`Q` (`groundPound()`, `12 MP`): radial AoE (`R=46`).
@@ -315,7 +315,7 @@ const SEL={
 - **DOGEON Pool DEX (`marketMenu(n)` at the Sphinx NPC):**
   - Title: `'DOGEON POOL DEX: MINT, SWAP & LP'`, flags `ui.chain = true; ui.pooldex = true;`.
   - Header (`drawUI`): `WALLET: <bal> DOGE` and `ITEMS: <chainData.inv.length>  STAKED: <fromWei(chainData.staked)>`.
-  - **Row 0 (Direct / Starter Item Mint):** `MINT < ${itemName(mt)} > NFT (${fromWei(chainData.fee||10n**17n)} DOGE)` (`A/D` or mouse `<`/`>` cycles the 9 `MINTABLE` items; uses `'starter'` wood+stone source if available for Hammer Lv2, else mints directly on `DogeItems`).
+  - **Top rows (D-104, spend → get):** `mintRows()`: `MINT <ITEM> NFT xN (1 DOGE)` for each forge credit and `PRESERVE <FISH> AS NFT` for caught food; with neither, `NOTHING TO MINT: CRAFT AT FORGE OR CATCH FISH`. No free item picker.
   - **Row 1 (Wallet Minted Items Balance):** `WALLET ITEMS (${inv.length}): ${invTxt}` showing `#id ITEM` tokens in `myFree()`.
   - **Pool & Listing Rows (`DogeDEX`, all labels ≤ 50 chars):**
     - `WITHDRAW PROCEEDS: <X> DOGE` (`withdrawProceeds()`)

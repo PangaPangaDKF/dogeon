@@ -18,7 +18,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-101 | LANDING | Lore: DOGEON = the PonziFi chapter of The Grand Heist (magic dimension), degen Elder quote |
 | D-102 | BRAIN | B6: Elder tells the PonziFi chapter in game (user said yes) |
 | D-103 | BRAIN | Forge fix: one wood/stone counter (bag), CRAFT vs MINT rows, [ ] glyphs |
-| D-104+ | | Next free: reserve here first |
+| D-104 | BRAIN | Spend -> get: no mint without a forge credit or caught food (game side) |
+| D-105+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
@@ -117,3 +118,6 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
   60 s cycle + testnet disclaimer). check.sh ALL CHECKS PASSED. Deployed + pushed. Nothing open for LANDING.
 - 2026-11-13 · BRAIN · D-103 forge fix (user bug report): one wood/stone counter in the bag, CRAFT rows plain/grey, MINT rows red with the fee,
   `[ ]` glyphs. check.sh ALL CHECKS PASSED. Deployed + pushed. LANDING: no copy change needed unless the page names forge rows verbatim.
+- 2026-11-13 · BRAIN · D-104 spend -> get (user rule): the game can no longer mint without a forge credit or a caught fish (no starter shortcut,
+  no free DEX picker, no DogeMaster fresh gear, no mod credits). Deployed + pushed. Contract-side enforcement (DogeItems v2) waits for the
+  user's choice. LANDING: grep found no landing claim of a free/starter/direct mint; nothing to do unless you know one.

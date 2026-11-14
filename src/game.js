@@ -812,14 +812,14 @@ function addCredit(t,l){const k=t+':'+l;P.credits[k]=(P.credits[k]||0)+1;}
 function creditOk(t,l){if(!(P.credits[t+':'+l]>0))return false;if(t===1)return P.sword===l;if(t===2)return P.armor===l;if(t===5)return P.hpUps>0;if(t===6)return P.mpUps>0;return true;}
 function takeOffChain(t,l){if(t===1)P.sword=Math.max(1,l-1);else if(t===2)P.armor=l-1;else if(t===5){P.hpUps--;P.maxHp-=15;P.hp=Math.min(P.hp,P.maxHp);}else if(t===6){P.mpUps--;P.maxMp-=10;P.mp=Math.min(P.mp,P.maxMp);}}
 function putBack(t,l){if(t===1)P.sword=l;else if(t===2)P.armor=l;else if(t===5){P.hpUps++;P.maxHp+=15;}else if(t===6){P.mpUps++;P.maxMp+=10;}}
-function mintNft(type,level,src){ // src 'credit' (crafted at the forge), 'starter' (1 wood + 1 stone), a bag food kind, or direct on-chain mint at Sphinx
+function mintNft(type,level,src){ // D-104 SPEND -> GET: src is 'credit' (crafted at the forge = materials burned) or a caught bag food; never nothing
   return chainAct(`MINTED ${itemName({type,level})} NFT! TO THE MOON.`,async()=>{
     const k=type+':'+level;
+    if(!src||(src!=='credit'&&!FOOD_TYPE[src]))throw new Error('CRAFT IT AT THE FORGE FIRST: EVERY MINT SPENDS MATERIALS');
     if(src==='credit'){if(!creditOk(type,level))throw new Error('CRAFT IT FIRST AND KEEP IT EQUIPPED');P.credits[k]--;takeOffChain(type,level);}
-    else if(src==='starter'){if(bagCount('wood')<1||bagCount('stone')<1)throw new Error('NEED 1 WOOD + 1 STONE IN BAG');bagRemove('wood',1);bagRemove('stone',1);}
-    else if(src&&!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
+    else if(!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
     try{await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(type)+W32(level),chainData.fee);}
-    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else if(src==='starter'){addToBag('wood',1);addToBag('stone',1);}else if(src)addToBag(src,1);}throw e;} // unknown outcome: no refund (no dupes)
+    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else addToBag(src,1);}throw e;} // unknown outcome: no refund (no dupes)
   });}
 function useNft(it){ // eat food / drink charm: burns the NFT, then applies the effect
   const food=TYPE_FOOD[it.type];
@@ -859,9 +859,8 @@ function stakeMenu(n){openMenu(n,'DOGE STAKING: EARN 0.8% OF DEX FEES',()=>{
   o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;});ui.chain=true;refreshChain().catch(()=>{});}
 function marketMenu(n){openMenu(n,'DOGEON POOL DEX: MINT, SWAP & LP',()=>{const o=[],blk=chainBlockRow();
   if(blk){o.push({label:blk,act:()=>'SEE CONTRACTS/README.MD TO DEPLOY.'});o.push({label:'BACK',act:()=>{bankMenu(n);return '';}});return o;}
-  const mi=mktUI.mint||0,mt=MINTABLE[mi],starter=mt.type===1&&mt.level===2&&bagCount('wood')>0&&bagCount('stone')>0;
-  o.push({label:`MINT < ${itemName(mt)} > NFT (${fromWei(chainData.fee||10n**17n)} DOGE)`,adj:d=>{mktUI.mint=(mi+d+MINTABLE.length)%MINTABLE.length;},act:()=>{mintNft(mt.type,mt.level,starter?'starter':undefined);return wallet.msg;}});
-  const inv=myFree(),invTxt=inv.length?inv.slice(0,2).map(it=>'#'+it.id+' '+itemName(it)).join(', ')+(inv.length>2?' +MORE':''):'NONE YET - MINT ONE ABOVE';
+  const mr=mintRows();o.push(...(mr.length?mr:[{label:'NOTHING TO MINT: CRAFT AT FORGE OR CATCH FISH',act:()=>'EVERY MINT SPENDS MATERIALS + 1 DOGE. CRAFT GEAR AT WRENCHPAW FIRST.'}])); // D-104
+  const inv=myFree(),invTxt=inv.length?inv.slice(0,2).map(it=>'#'+it.id+' '+itemName(it)).join(', ')+(inv.length>2?' +MORE':''):'NONE YET - CRAFT, THEN MINT';
   o.push({label:`WALLET ITEMS (${inv.length}): ${invTxt}`,act:()=>inv.length?inv.slice(0,4).map(it=>`#${it.id} ${itemName(it)} [${itemRoll(it.id).label}]`).join(' | '):'MINT AN ITEM ABOVE TO ROLL A RARITY + BUFF.'}); // D-064: show each item's rolled rarity + buff
   if(!chainData.loaded)o.push({label:'LOADING THE CHAIN...',act:()=>{refreshChain().catch(()=>{});return 'REFRESHING...';}});
   if(chainData.proceeds>0n)o.push({label:`WITHDRAW PROCEEDS: ${fromWei(chainData.proceeds)} DOGE`,act:()=>{withdrawProceeds();return wallet.msg;}});
@@ -930,16 +929,17 @@ const RECIPES=[
   {name:'BONE CHARM (+15 HP)',nft:[5,1],need:{whisk:3,stone:2},req:()=>P.hpUps<3,act:()=>{P.hpUps++;P.maxHp+=15;return 'MAX HP UP! REST TO FILL IT.';}},
   {name:'MOON BISCUIT (+10 MP)',nft:[6,1],need:{whisk:2,wood:2},req:()=>P.mpUps<2,act:()=>{P.mpUps++;P.maxMp+=10;return 'MAX MP UP! REST TO FILL IT.';}}
 ];
+function mintRows(){const fee=chainData.loaded?fromWei(chainData.fee)+' DOGE':'FEE',o=[]; // D-104: only things you crafted or caught
+  for(const k in P.credits){const [t,l]=k.split(':').map(Number);if(!creditOk(t,l))continue;o.push({label:`MINT ${itemName({type:t,level:l})} NFT x${P.credits[k]} (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(t,l,'credit');return wallet.msg;}});}
+  for(const f in FOOD_TYPE)if(bagCount(f))o.push({label:`PRESERVE ${FOODS[f].name} AS NFT (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(FOOD_TYPE[f],1,f);return wallet.msg;}});
+  return o;}
 function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
   for(const r of RECIPES){if(!r.req())continue;
     const parts=Object.entries(r.need).map(([k,v])=>`${v} ${k==='whisk'?'WHISK':k.toUpperCase()}`).join('+');
     const has=Object.entries(r.need).every(([k,v])=>matN(k)>=v);
     o.push({label:`CRAFT ${r.name} (${parts})`,col:has?null:'#707890',act:has?()=>{for(const [k,v] of Object.entries(r.need))matTake(k,v);if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act()+(r.nft?' MINT IT BELOW.':'');}:()=>`NEED ${parts}. HUNT MORE.`});} // D-103
   // on-chain mint (D-019): crafted credits, starter wood+stone bag kit, or caught bag food can be minted
-  const fee=chainData.loaded?fromWei(chainData.fee)+' DOGE':'FEE';
-  if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT HAMMER NFT (1 WOOD+1 STONE) (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
-  for(const k in P.credits){const [t,l]=k.split(':').map(Number);if(!creditOk(t,l))continue;o.push({label:`MINT ${itemName({type:t,level:l})} NFT x${P.credits[k]} (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(t,l,'credit');return wallet.msg;}});}
-  for(const f in FOOD_TYPE)if(bagCount(f))o.push({label:`PRESERVE ${FOODS[f].name} AS NFT (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(FOOD_TYPE[f],1,f);return wallet.msg;}});
+  o.push(...mintRows());
   o.push({label:`HAVE: STEEL ${P.steel} WHISK ${P.whisk} WOOD ${bagCount('wood')} STONE ${bagCount('stone')}`,act:()=>'MATERIALS FOR CRAFTING. LOST ON DEATH.'});
   o.push({label:'LEAVE',act:null});return o;});ui.chain=true;}
 // ---- Phase 4 "The Grand Heist" (D-024): links, Sphinx DeFi hub + school, Elder heist lore + factions, partner NPCs ----
@@ -1030,14 +1030,12 @@ function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>{const o
   o.push({label:'LEAVE',act:null});return o;});}
 function dogeMasterMenu(n){openMenu(n,'DOGEMASTER: MEME FORGE & RE-ROLL',()=>{const o=[],inv=myFree();
   o.push({label:'DOGEMASTER: 420, 69 & 777 STATS! SACRIFICE CURSES.',act:()=>'ROLL THE ULTIMATE SHIBE GEAR. IF CURSED WITH NEGATIVE STATS, BURN IT HERE TO RE-ROLL!'});
-  o.push({label:`MINT RANDOM GEAR NFT (${fromWei(chainData.fee||10n**18n)} DOGE)`,isNft:true,act:()=>{const t=7+Math.floor(Math.random()*9);mintNft(t,1);return wallet.msg;}});
   if(inv.length){for(const it of inv){const r=itemRoll(it.id);o.push({label:`SACRIFICE #${it.id} ${itemName(it)} [${r.label}] -> RE-ROLL`,isNft:true,act:()=>{burnAndReroll(it);return wallet.msg;}});}}
   else{o.push({label:'NO GEAR NFTS IN WALLET TO RE-ROLL.',act:()=>'MINT OR CRAFT AN NFT FIRST TO RE-ROLL ITS MEME STATS.'});}
   o.push({label:'BACK',act:()=>{elderMenu(n);return '';}});return o;});}
 function modMenu(){openMenu(null,'MASTER MOD MENU (TEST SUITE)',()=>[
   {label:P.god?'GOD MODE: [ON] (INVINCIBLE)':'GOD MODE: [OFF]',act:()=>{P.god=!P.god;return `GOD MODE ${P.god?'ENABLED':'DISABLED'}.`;}},
   {label:'GIVE 99 ALL MATERIALS (STEEL/WOOD/STONE/WHISK)',act:()=>{matAdd('wood',40);matAdd('stone',40);P.whisk=99;P.steel=99;return '99 OF ALL MATS ADDED. (NO FAKE DOGE — MINTING USES REAL TESTNET DOGE.)';}},
-  {label:'GRANT NFT CRAFT CREDITS (HAMMER LV4+ARMOR LV2)',isNft:true,act:()=>{addCredit(1,2);addCredit(1,3);addCredit(1,4);addCredit(2,1);addCredit(2,2);return 'ALL NFT CRAFT CREDITS GRANTED. VISIT FORGE TO MINT.';}},
   {label:'SWITCH CLASS: WARRIOR',act:()=>{P.prof='warrior';syncMaxHp();syncMaxMp();return 'CLASS SET TO WARRIOR.';}},
   {label:'SWITCH CLASS: ARCHER',act:()=>{P.prof='archer';syncMaxHp();syncMaxMp();return 'CLASS SET TO ARCHER.';}},
   {label:'SWITCH CLASS: HEALER',act:()=>{P.prof='healer';syncMaxHp();syncMaxMp();return 'CLASS SET TO HEALER.';}},
@@ -1103,8 +1101,7 @@ function invMenu(){
         o.push({label:`${fd.name} x${s.qty} [EAT +${fd.heal} HP${mpStr}]`,act:()=>{if(P.hp>=P.maxHp&&(!fd.mp||P.mp>=P.maxMp))return 'HP IS FULL ALREADY.';bagRemove(s.kind,1);P.hp=Math.min(P.maxHp,P.hp+fd.heal);if(fd.mp)P.mp=Math.min(P.maxMp,P.mp+fd.mp);sfx(660,0.1,'triangle',0.05,200);return `ATE ${fd.name}. +${fd.heal} HP${mpStr}. YUM.`;}});
         if(s.kind==='raw_fish'&&nearFire)o.push({label:`COOK RAW FISH -> COOKED FISH`,act:()=>{if(!bagRemove('raw_fish',1))return 'NO RAW FISH.';if(!addToBag('cooked_fish',1)){addToBag('raw_fish',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED SARDINE (+25 HP)! MUCH DELICIOUS.';}});
         if(s.kind==='raw_salmon'&&nearFire)o.push({label:`COOK RAW SALMON -> COOKED SALMON`,act:()=>{if(!bagRemove('raw_salmon',1))return 'NO SALMON.';if(!addToBag('cooked_salmon',1)){addToBag('raw_salmon',1);return 'BAG FULL.';}sfx(440,0.15,'triangle',0.04);return 'COOKED SALMON (+50 HP/+25 MP)! MUCH DELICIOUS.';}});
-      }else{const names={wood:'WOOD',stone:'STONE',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'STARTER / CRAFTING MATERIAL. USE TO MINT AT FORGE OR BELOW.'});}}
-    if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT STARTER HAMMER NFT [1 WOOD+1 STONE]`,isNft:true,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
+      }else{const names={wood:'WOOD',stone:'STONE',steel:'STEEL',whisk:'WHISKER'};o.push({label:`${names[s.kind]||s.kind.toUpperCase()} x${s.qty}`,act:()=>'CRAFTING MATERIAL: CRAFT AT THE FORGE, THEN MINT (1 DOGE).'});}}
     const sk=P.skills,lv=k=>skillLv(sk[k],k);o.push({label:`SKILLS: COMBAT LV${lv('combat')} (${sk.combat}XP) BARK LV${lv('bark')} (${sk.bark}XP) FISH LV${lv('fishing')} (${sk.fishing}XP)`,act:()=>`COMBAT +${Math.round(lv('combat')*SKILL_BONUS*100)}% DMG  BARK +${Math.round(lv('bark')*SKILL_BONUS*100)}% DMG  FISH +${Math.round(lv('fishing')*SKILL_BONUS*100)}% SPD`});
     const nfts=chainReady()?chainData.inv:[]; // D-038: explicit off-chain bag (at risk) vs on-chain wallet NFTs (safe) boundary
     o.push({label:`ON-CHAIN ITEMS (${nfts.length}): ${nfts.length?'SAFE ON DEATH':'MINT AT SPHINX/FORGE'}`,act:()=>'WALLET NFTS SURVIVE DEATH. BAG ITEMS & MATERIALS DROP WHEN YOU FALL.'});
