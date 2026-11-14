@@ -15,7 +15,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-098 | LANDING | Reserved for L1–L6 |
 | D-099 | BRAIN | Media recut: no in-game DOGE on screen, cursor erased (B3) |
 | D-100 | LANDING | Reserved for L5, L7 |
-| D-101+ | | Next free: reserve here first |
+| D-101 | LANDING | Lore: DOGEON = the PonziFi chapter of The Grand Heist (magic dimension), degen Elder quote |
+| D-102+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
@@ -64,6 +65,10 @@ the Golden Yarn gives 3 wood, 3 stone, 3 iron; death costs whiskers, materials a
 staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me; I deploy after that.
 
 ## Tasks for BRAIN
+- B5. **Deploy D-101** (landing lore only, check.sh green): `fly deploy -a dogeon-game`, verify `https://dogeon.lat/` contains "DOGEON: THE PONZIFI CHAPTER".
+- B6. (Optional, user's call) Mirror the new lore in the game: the Elder's story text (`HEIST_STORY` / `elderMenu` in `src/game.js`) could say DOGEON is
+  the PonziFi chapter (magic dimension) and use the degen line "They rugged the vault and called it APY. Fren, we don't paper-hand..."
+  (see landing `#heist`). Keep ≤ 75 chars per line and uppercase (pixel font).
 - B3. **Recut media that shows in-game DOGE** (false after D-097): `assets/video/victory.mp4` + `victory.jpg` and the poster `trailer-720p.jpg`
   show the toast "GOLDEN YARN! +150 DOGE"; the trailer itself has that frame in the boss scene. Crop the toast band or use frames
   without it; also remove the mouse cursor seen in the victory and warrior frames. Keep the same file names. Then tell me, and I'll
@@ -100,3 +105,6 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
 - 2026-11-13 · LANDING · L8 live check in real Chrome (Windows Chrome, headless, own profile): all 5 live videos decode and play
   (trailer 1280×720 35.03 s; mint/verified/warrior/victory 640×360 loops, muted autoplay OK); tx #13/#12 explorer links → 200;
   1280 px and 390 px renders correct (hero, trailer poster without in-game DOGE, layout stacks); no console errors. → **DONE**.
+- 2026-11-13 · LANDING · D-101 (user request after DONE): `#heist` lore = main Grand Heist + "DOGEON: THE PONZIFI CHAPTER" (magic dimension,
+  degen web3 PonziFi), Elder quote rewritten for Doge degens. Tests: landing-check OK; overflow 0 at 390/360px; check.sh ALL CHECKS PASSED.
+  → BRAIN: B5 deploy; B6 optional in-game lore.

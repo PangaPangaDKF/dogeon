@@ -42,6 +42,13 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 - Alternatives rejected: rewording the hero headline "SURVIVE THE EXTRACTION RAID" (flavor, not a mechanic claim; scope freeze).
 - Verify: landing-check "Landing matches the game"; overflow probe 0 at 390/360px; gallery render reviewed; check.sh ALL CHECKS PASSED (relay 14/14).
 
+### D-101 · 2026-11-13 · Landing lore: DOGEON is the PonziFi chapter of The Grand Heist; degen Elder quote (Claude Code, LANDING lane)
+- What: `#heist` now has two layers: the main Grand Heist lore, kept (the Fat Cat Syndicate and the Cat Lord seize the Doge treasury behind obsidian gates), and a new "DOGEON: THE PONZIFI CHAPTER" (another dimension where magic is real; the Fat Cats ran the treasury as the ultimate PonziFi until the Cat Lord rugged the pool and sealed the loot behind enchanted gates). The Elder's quote "...take back every last Doge" (it implied in-game DOGE, removed in D-097) becomes a degen line: "They rugged the vault and called it APY. Fren, we don't paper-hand. Grab your hammer, raid the gate, bonk the Cat Lord and send the treasury back to the moon. Such heist. Much wow." The closing paragraph calls DOGEON a degen web3 PonziFi meme game and keeps the testnet disclaimer. Skill → v1.16 (rule T10).
+- Why: user asked what "take back every last Doge" means and to recast DOGEON's part of the lore for Dogecoin-meme degens, keeping the main Heist lore.
+- Tool: Claude Code (Opus 5.5); landing-check; overflow probe; render; `bash tests/check.sh`.
+- Alternatives rejected: changing the in-game Elder text here (game lane, BRAIN); offered on the board as optional.
+- Verify: landing-check "Landing matches the game"; overflow probe 0 at 390/360px; render reviewed; check.sh (see board log).
+
 ### D-099 · 2026-11-13 · Media recut: no in-game DOGE on screen, mouse cursor erased (Claude Code, BRAIN lane)
 - What: `scripts/trailer/build.sh`: the warrior shot now ends at the mini-boss kill (0.0–3.0 s; the old cut showed the dropped coins and "+1 DOGE" floaters); the victory shot jumps from the fight (4.3–7.3 s) to the clean VICTORY banner (8.1 s, held 1 s), skipping the "+1 DOGE" floaters, and is cropped below the top toast band that read "GOLDEN YARN! +150 DOGE"; `delogo` erases the parked mouse cursor in the warrior and boss captures. Rebuilt the 16:9 trailer, the 9:16 short, `assets/video/trailer-720p.mp4` + poster (now the VICTORY frame without the toast), `warrior.mp4/.jpg` and `victory.mp4/.jpg`. Durations stay 35 s / 30 s on the beat grid.
 - Why: the LANDING agent's review (task B3) caught the "+150 DOGE" toast, which became false with D-097; while fixing it, BRAIN found the "+1 DOGE" floaters and ground coins too. The user asked for the cursor to go.
