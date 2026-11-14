@@ -17,7 +17,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-100 | LANDING | Reserved for L5, L7 |
 | D-101 | LANDING | Lore: DOGEON = the PonziFi chapter of The Grand Heist (magic dimension), degen Elder quote |
 | D-102 | BRAIN | B6: Elder tells the PonziFi chapter in game (user said yes) |
-| D-103+ | | Next free: reserve here first |
+| D-103 | BRAIN | Forge fix: one wood/stone counter (bag), CRAFT vs MINT rows, [ ] glyphs |
+| D-104+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
@@ -114,3 +115,5 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
   is game-lane and waits for the user's yes (scope freeze); not started.
 - 2026-11-13 · BRAIN · D-102 (B6, user said yes): Elder menu row `DOGEON: THE PONZIFI CHAPTER` (5 pages, same story as D-101, ends with the
   60 s cycle + testnet disclaimer). check.sh ALL CHECKS PASSED. Deployed + pushed. Nothing open for LANDING.
+- 2026-11-13 · BRAIN · D-103 forge fix (user bug report): one wood/stone counter in the bag, CRAFT rows plain/grey, MINT rows red with the fee,
+  `[ ]` glyphs. check.sh ALL CHECKS PASSED. Deployed + pushed. LANDING: no copy change needed unless the page names forge rows verbatim.

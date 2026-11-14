@@ -44,7 +44,7 @@ const kp=(...ks)=>ks.some(k=>pressed[k]);
 // ================= PIXEL FONT 3x5 =================
 const FONT={A:[2,5,7,5,5],B:[6,5,6,5,6],C:[3,4,4,4,3],D:[6,5,5,5,6],E:[7,4,6,4,7],F:[7,4,6,4,4],G:[3,4,5,5,3],H:[5,5,7,5,5],I:[7,2,2,2,7],J:[1,1,1,5,2],K:[5,5,6,5,5],L:[4,4,4,4,7],M:[5,7,5,5,5],N:[6,5,5,5,5],O:[2,5,5,5,2],P:[6,5,6,4,4],Q:[2,5,5,6,3],R:[6,5,6,5,5],S:[3,4,2,1,6],T:[7,2,2,2,2],U:[5,5,5,5,7],V:[5,5,5,5,2],W:[5,5,7,7,5],X:[5,5,2,5,5],Y:[5,5,2,2,2],Z:[7,1,2,4,7],
 '0':[7,5,5,5,7],'1':[2,6,2,2,7],'2':[6,1,2,4,7],'3':[6,1,2,1,6],'4':[5,5,7,1,1],'5':[7,4,6,1,6],'6':[3,4,7,5,7],'7':[7,1,2,2,2],'8':[7,5,7,5,7],'9':[7,5,7,1,6],
-'.':[0,0,0,0,2],',':[0,0,0,2,4],'!':[2,2,2,0,2],'?':[6,1,2,0,2],':':[0,2,0,2,0],'-':[0,0,7,0,0],'+':[0,2,7,2,0],'/':[1,1,2,4,4],"'":[2,2,0,0,0],'(':[1,2,2,2,1],')':[4,2,2,2,4],'>':[4,2,1,2,4],'<':[1,2,4,2,1],'=':[0,7,0,7,0],'%':[5,1,2,4,5],'$':[3,6,2,3,6],'*':[0,5,2,5,0],'"':[5,5,0,0,0],'#':[5,7,5,7,5],'^':[2,5,0,0,0]};
+'.':[0,0,0,0,2],',':[0,0,0,2,4],'!':[2,2,2,0,2],'?':[6,1,2,0,2],':':[0,2,0,2,0],'-':[0,0,7,0,0],'+':[0,2,7,2,0],'/':[1,1,2,4,4],"'":[2,2,0,0,0],'(':[1,2,2,2,1],')':[4,2,2,2,4],'>':[4,2,1,2,4],'<':[1,2,4,2,1],'=':[0,7,0,7,0],'%':[5,1,2,4,5],'$':[3,6,2,3,6],'*':[0,5,2,5,0],'"':[5,5,0,0,0],'#':[5,7,5,7,5],'^':[2,5,0,0,0],'[':[3,2,2,2,3],']':[6,2,2,2,6]}; // D-103: brackets were blank in every menu label
 function textRaw(s,x,y,col,sc){ctx.fillStyle=col;let cx=x;for(const ch of s){const gl=FONT[ch];if(gl){for(let r=0;r<5;r++){const b=gl[r];for(let c=0;c<3;c++)if(b&(4>>c))ctx.fillRect(cx+c*sc,y+r*sc,sc,sc);}}cx+=4*sc;}}
 function text(s,x,y,col='#fff',sc=1,shadow='#000'){s=String(s).toUpperCase();x=Math.round(x);y=Math.round(y);if(shadow)textRaw(s,x+sc,y+sc,shadow,sc);textRaw(s,x,y,col,sc);}
 function textC(s,cx,y,col,sc=1,shadow='#000'){s=String(s);text(s,cx-(s.length*4*sc-sc)/2,y,col,sc,shadow);}
@@ -412,6 +412,8 @@ const FOODS={
 };
 function addToBag(kind,qty){qty=qty||1;for(const s of P.bag){if(s.kind===kind&&s.qty<(FOODS[kind]?5:20)){const add=Math.min(qty,((FOODS[kind]?5:20))-s.qty);s.qty+=add;qty-=add;if(!qty)return true;}}while(qty>0&&P.bag.length<BAG_SIZE){const add=Math.min(qty,FOODS[kind]?5:20);P.bag.push({kind,qty:add});qty-=add;}return qty===0;}
 function bagCount(kind){let n=0;for(const s of P.bag)if(s.kind===kind)n+=s.qty;return n;}
+const BAG_MATS={wood:1,stone:1}; // D-103: wood + stone exist ONLY in the bag (no hidden second counter)
+function matN(k){return BAG_MATS[k]?bagCount(k):(P[k]||0);}function matAdd(k,v){if(BAG_MATS[k])return addToBag(k,v);P[k]=(P[k]||0)+v;return true;}function matTake(k,v){if(BAG_MATS[k])bagRemove(k,v);else P[k]-=v;}
 function bagRemove(kind,qty){qty=qty||1;for(let i=P.bag.length-1;i>=0;i--){if(P.bag[i].kind===kind){const take=Math.min(qty,P.bag[i].qty);P.bag[i].qty-=take;qty-=take;if(P.bag[i].qty<=0)P.bag.splice(i,1);if(!qty)return true;}}return qty===0;}
 let mkt;
 function newMarket(){mkt={p:MARKET.start,hist:[MARKET.start],t:0,sent:0};}
@@ -430,7 +432,7 @@ const bearF=()=>Math.max(0,-mkt.sent),bullF=()=>Math.max(0,mkt.sent);
 // D-055 rare drops: dropP = chance to drop the material at all (user: "not every monster drops something; hard as fuck to
 // get resources"). D-097 (user): no in-game DOGE at all — monsters never drop coins; testnet DOGE is only for web3 (mint/DEX/stake/class).
 const YARN_MATS={wood:3,stone:3,steel:3}; // the Cat Lord's Golden Yarn pays mint materials, not DOGE (D-097)
-function giveMats(o){for(const [m,v] of Object.entries(o))if(m==='steel')P.steel+=v;else addToBag(m,v);}
+function giveMats(o){for(const [m,v] of Object.entries(o))matAdd(m,v);}
 const ETYPES={
   alley:{hp:30,spd:48,dmg:12,drop:1,dropP:0.2,hw:5,hh:4,chase:120,spr:'alley',mat:'whisk'},
   archer:{hp:24,spd:34,dmg:10,drop:1,dropP:0.2,hw:5,hh:4,chase:150,spr:'archer',mat:'whisk'},
@@ -483,7 +485,7 @@ const NPCS=[
 ];
 function newGame(){
   state={gateOpen:false,stage:0,won:false,bossT:0};
-  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,whisk:0,wood:3,stone:3,steel:2,orb:0,scrap:0,horn:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,gNode:null,credits:{},faction:null,prof:null,lazy:false,lazyT:0,idleT:0};
+  P={x:CX*16+8,y:(CY+3)*16+8,hw:5,hh:4,dir:'down',anim:0,moving:false,hp:60,maxHp:60,mp:30,maxMp:30,whisk:0,steel:2,orb:0,scrap:0,horn:0,sword:1,armor:0,hpUps:0,mpUps:0,iT:0,atkT:0,atkCd:0,kbx:0,kby:0,resting:false,dead:false,deathT:0,kills:0,bruteKills:0,bag:[{kind:'wood',qty:3},{kind:'stone',qty:3}],skills:{combat:0,fishing:0,bark:0},fishing:false,fishT:0,gNode:null,credits:{},faction:null,prof:null,lazy:false,lazyT:0,idleT:0};
   enemies=[];projs=[];items=[];parts=[];floats=[];ui=null;toastMsg=null;newMarket();
   for(const n of NPCS)n.met=false;
   for(let i=0;i<FIELD_POP;i++)spawnEnemy('field');
@@ -563,10 +565,10 @@ function hurtPlayer(d,src){
 }
 function respawn(){
   const lw=P.whisk,lf=P.bag.length;
-  if(netLive()){const drops=[];for(const k of NET_LOOT)for(let i=0;i<Math.min(3,P[k]||0);i++)drops.push({k,x:Math.round(P.x+R(-12,12)),y:Math.round(P.y+R(-12,12))});netSend({t:'loot',items:drops});} // D-076: everyone sees + can steal your pile
+  if(netLive()){const drops=[];for(const k of NET_LOOT)for(let i=0;i<Math.min(3,matN(k));i++)drops.push({k,x:Math.round(P.x+R(-12,12)),y:Math.round(P.y+R(-12,12))});netSend({t:'loot',items:drops});} // D-076: everyone sees + can steal your pile
   else{for(let i=0;i<Math.min(4,P.steel);i++)items.push({x:P.x+R(-12,12),y:P.y+R(-12,12),kind:'steel',life:30,t:0});
   for(let i=0;i<Math.min(4,lw);i++)items.push({x:P.x+R(-12,12),y:P.y+R(-12,12),kind:'whisk',life:30,t:0});}
-  P.whisk=0;P.wood=0;P.stone=0;P.steel=0;P.orb=0;P.scrap=0;P.horn=0;P.bag=[]; // carried food is lost too; NFTs live on chain (D-020)
+  P.whisk=0;P.steel=0;P.orb=0;P.scrap=0;P.horn=0;P.bag=[]; // carried food is lost too; NFTs live on chain (D-020)
   P.dead=false;P.fishing=false;P.hp=Math.ceil(P.maxHp*RESPAWN_FRAC);P.mp=Math.floor(P.maxMp*RESPAWN_FRAC);P.x=CX*16+8;P.y=(CY+3)*16+8;P.iT=1.5;P.kbx=P.kby=0;P.dir='down';
   projs=[];
   for(const e of enemies){if(e.boss){if(!netLive())e.hp=e.maxHp;e.x=CX*16+8;e.y=5*16+8;}} // MP: the relay owns boss HP
@@ -814,10 +816,10 @@ function mintNft(type,level,src){ // src 'credit' (crafted at the forge), 'start
   return chainAct(`MINTED ${itemName({type,level})} NFT! TO THE MOON.`,async()=>{
     const k=type+':'+level;
     if(src==='credit'){if(!creditOk(type,level))throw new Error('CRAFT IT FIRST AND KEEP IT EQUIPPED');P.credits[k]--;takeOffChain(type,level);}
-    else if(src==='starter'){if(bagCount('wood')<1||bagCount('stone')<1)throw new Error('NEED 1 WOOD + 1 STONE IN BAG');bagRemove('wood',1);bagRemove('stone',1);if(P.wood>0)P.wood--;if(P.stone>0)P.stone--;}
+    else if(src==='starter'){if(bagCount('wood')<1||bagCount('stone')<1)throw new Error('NEED 1 WOOD + 1 STONE IN BAG');bagRemove('wood',1);bagRemove('stone',1);}
     else if(src&&!bagRemove(src,1))throw new Error('NOT IN YOUR BAG');
     try{await etx(addrs().items,SEL.mint+A32(wallet.addr)+W32(type)+W32(level),chainData.fee);}
-    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else if(src==='starter'){addToBag('wood',1);addToBag('stone',1);P.wood++;P.stone++;}else if(src)addToBag(src,1);}throw e;} // unknown outcome: no refund (no dupes)
+    catch(e){if(!e.sent||e.reverted){if(src==='credit'){P.credits[k]++;putBack(type,level);}else if(src==='starter'){addToBag('wood',1);addToBag('stone',1);}else if(src)addToBag(src,1);}throw e;} // unknown outcome: no refund (no dupes)
   });}
 function useNft(it){ // eat food / drink charm: burns the NFT, then applies the effect
   const food=TYPE_FOOD[it.type];
@@ -930,15 +932,15 @@ const RECIPES=[
 ];
 function shopMenu(n){openMenu(n,'WRENCHPAW\'S FORGE',()=>{const o=[];
   for(const r of RECIPES){if(!r.req())continue;
-    const parts=Object.entries(r.need).map(([k,v])=>`${v} ${k.toUpperCase()}`).join('+');
-    const has=Object.entries(r.need).every(([k,v])=>P[k]>=v);
-    o.push({label:`${r.name} [${parts}]`,nft:r.nft,act:has?()=>{for(const [k,v] of Object.entries(r.need))P[k]-=v;if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act();}:()=>'NOT ENOUGH MATERIALS. HUNT MORE.'});}
+    const parts=Object.entries(r.need).map(([k,v])=>`${v} ${k==='whisk'?'WHISK':k.toUpperCase()}`).join('+');
+    const has=Object.entries(r.need).every(([k,v])=>matN(k)>=v);
+    o.push({label:`CRAFT ${r.name} (${parts})`,col:has?null:'#707890',act:has?()=>{for(const [k,v] of Object.entries(r.need))matTake(k,v);if(r.nft)addCredit(r.nft[0],r.nft[1]);return r.act()+(r.nft?' MINT IT BELOW.':'');}:()=>`NEED ${parts}. HUNT MORE.`});} // D-103
   // on-chain mint (D-019): crafted credits, starter wood+stone bag kit, or caught bag food can be minted
   const fee=chainData.loaded?fromWei(chainData.fee)+' DOGE':'FEE';
-  if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT HAMMER NFT [1 WOOD+1 STONE] (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
+  if(bagCount('wood')>0&&bagCount('stone')>0)o.push({label:`MINT HAMMER NFT (1 WOOD+1 STONE) (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(1,2,'starter');return wallet.msg;}});
   for(const k in P.credits){const [t,l]=k.split(':').map(Number);if(!creditOk(t,l))continue;o.push({label:`MINT ${itemName({type:t,level:l})} NFT x${P.credits[k]} (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(t,l,'credit');return wallet.msg;}});}
   for(const f in FOOD_TYPE)if(bagCount(f))o.push({label:`PRESERVE ${FOODS[f].name} AS NFT (${fee})`,act:()=>{const b=chainBlockRow();if(b)return b;mintNft(FOOD_TYPE[f],1,f);return wallet.msg;}});
-  o.push({label:`MATERIALS: STEEL ${P.steel} WHISKERS ${P.whisk} WOOD ${bagCount('wood')} STONE ${bagCount('stone')}`,act:()=>'MATERIALS FOR CRAFTING. LOST ON DEATH.'});
+  o.push({label:`HAVE: STEEL ${P.steel} WHISK ${P.whisk} WOOD ${bagCount('wood')} STONE ${bagCount('stone')}`,act:()=>'MATERIALS FOR CRAFTING. LOST ON DEATH.'});
   o.push({label:'LEAVE',act:null});return o;});ui.chain=true;}
 // ---- Phase 4 "The Grand Heist" (D-024): links, Sphinx DeFi hub + school, Elder heist lore + factions, partner NPCs ----
 const LINKS={bitgetCard:'https://web3.bitget.com/card',relottoApp:'https://app.relotto.app',dogeos:'https://www.dogeos.com/',docs:'https://docs.dogeos.com/en/getting-started/overview',faucet:'https://faucet.testnet.dogeos.com',
@@ -1034,7 +1036,7 @@ function dogeMasterMenu(n){openMenu(n,'DOGEMASTER: MEME FORGE & RE-ROLL',()=>{co
   o.push({label:'BACK',act:()=>{elderMenu(n);return '';}});return o;});}
 function modMenu(){openMenu(null,'MASTER MOD MENU (TEST SUITE)',()=>[
   {label:P.god?'GOD MODE: [ON] (INVINCIBLE)':'GOD MODE: [OFF]',act:()=>{P.god=!P.god;return `GOD MODE ${P.god?'ENABLED':'DISABLED'}.`;}},
-  {label:'GIVE 99 ALL MATERIALS (STEEL/WOOD/STONE/WHISK)',act:()=>{P.wood=99;P.stone=99;P.whisk=99;P.steel=99;return '99 OF ALL MATS ADDED. (NO FAKE DOGE — MINTING USES REAL TESTNET DOGE.)';}},
+  {label:'GIVE 99 ALL MATERIALS (STEEL/WOOD/STONE/WHISK)',act:()=>{matAdd('wood',40);matAdd('stone',40);P.whisk=99;P.steel=99;return '99 OF ALL MATS ADDED. (NO FAKE DOGE — MINTING USES REAL TESTNET DOGE.)';}},
   {label:'GRANT NFT CRAFT CREDITS (HAMMER LV4+ARMOR LV2)',isNft:true,act:()=>{addCredit(1,2);addCredit(1,3);addCredit(1,4);addCredit(2,1);addCredit(2,2);return 'ALL NFT CRAFT CREDITS GRANTED. VISIT FORGE TO MINT.';}},
   {label:'SWITCH CLASS: WARRIOR',act:()=>{P.prof='warrior';syncMaxHp();syncMaxMp();return 'CLASS SET TO WARRIOR.';}},
   {label:'SWITCH CLASS: ARCHER',act:()=>{P.prof='archer';syncMaxHp();syncMaxMp();return 'CLASS SET TO ARCHER.';}},
@@ -1094,7 +1096,7 @@ function questTalk(n){
 function invMenu(){
   openMenu(null,'INVENTORY',()=>{const o=[];
     o.push({label:`BAG ${P.bag.length}/${BAG_SIZE} SLOTS  WHISKERS x${P.whisk}`,act:()=>'FOOD STACKS TO 5. DEATH EMPTIES THE BAG. NFTS ARE SAFE.'});
-    o.push({label:`MATERIALS: STEEL ${P.steel} WHISKERS ${P.whisk} WOOD ${bagCount('wood')} STONE ${bagCount('stone')}`,act:()=>'CRAFT AT WRENCHPAW. LOST ON DEATH.'});
+    o.push({label:`HAVE: STEEL ${P.steel} WHISK ${P.whisk} WOOD ${bagCount('wood')} STONE ${bagCount('stone')}`,act:()=>'CRAFT AT WRENCHPAW. LOST ON DEATH.'});
     for(let i=0;i<P.bag.length;i++){const s=P.bag[i];const fd=FOODS[s.kind];
       if(fd){const nearFire=dist(P.x,P.y,CX*16+8,FY*16+8)<40;
         const mpStr=fd.mp?` +${fd.mp} MP`:'';
@@ -1176,7 +1178,7 @@ function netConnect(){
       if(m&&m.t==='hurt'&&Number.isFinite(m.dmg)){hurtPlayer(Math.min(40,Math.max(1,m.dmg|0)),{x:Number.isFinite(m.x)?m.x:P.x,y:Number.isFinite(m.y)?m.y:P.y});return;} // PvP hit (camp/god/iframes still protect)
       if(m&&m.t==='loot'&&Array.isArray(m.items)){for(const it of m.items.slice(0,12))if(it&&/^l\d{1,9}$/.test(it.lid)&&NET_LOOT.includes(it.k)&&Number.isFinite(it.x)&&Number.isFinite(it.y)&&Object.keys(net.loot).length<60)net.loot[it.lid]={k:it.k,x:it.x,y:it.y};return;}
       if(m&&m.t==='gone'){delete net.loot[m.lid];return;}
-      if(m&&m.t==='got'&&NET_LOOT.includes(m.k)){delete net.loot[m.lid];P[m.k]=(P[m.k]||0)+1;floater(P.x,P.y-24,'+1 '+(m.k==='whisk'?'WHISKER':m.k.toUpperCase()),LOOT_COL[m.k]);sfx(1100,0.05,'square',0.03,300);return;}
+      if(m&&m.t==='got'&&NET_LOOT.includes(m.k)){delete net.loot[m.lid];matAdd(m.k,1);floater(P.x,P.y-24,'+1 '+(m.k==='whisk'?'WHISKER':m.k.toUpperCase()),LOOT_COL[m.k]);sfx(1100,0.05,'square',0.03,300);return;}
       if(!m||typeof m.id!=='string'||!/^[a-z0-9]{1,12}$/.test(m.id)||m.id===net.id)return;
       if(m.t==='bye'){delete net.peers[m.id];return;}
       if(m.t==='heal'&&Number.isFinite(m.x)&&Number.isFinite(m.y)){
@@ -1271,7 +1273,7 @@ function update(dt){
     if(d<24){const s=130*dt/(d||1);it.x+=(P.x-it.x)*Math.min(1,s);it.y+=(P.y-it.y)*Math.min(1,s);}
     if(d<8){it.life=0;if(it.kind==='whisk'){P.whisk++;floater(P.x,P.y-24,'+1 WHISKER','#e0e0ff');sfx(1200,0.05,'square',0.03,400);}
       else if(it.kind==='yarn'){giveMats(YARN_MATS);floater(P.x,P.y-24,'+3 WOOD STONE IRON','#f0c030');toast('GOLDEN YARN! MINT MATERIALS: 3 WOOD, 3 STONE, 3 IRON',3);sfx(880,0.4,'triangle',0.06,600);}
-      else if(it.kind==='steel'||it.kind==='wood'||it.kind==='stone'){P[it.kind]=(P[it.kind]||0)+1;floater(P.x,P.y-24,'+1 '+it.kind.toUpperCase(),'#a0a8b0');sfx(1100,0.05,'square',0.03,300);}}}
+      else if(it.kind==='steel'||it.kind==='wood'||it.kind==='stone'){floater(P.x,P.y-24,matAdd(it.kind,1)?'+1 '+it.kind.toUpperCase():'BAG FULL','#a0a8b0');sfx(1100,0.05,'square',0.03,300);}}}
   items=items.filter(i=>i.life>0);
   // respawn
   spawnT-=dt;if(spawnT<=0){spawnT=SPAWN_EVERY;let f=0;for(const e of enemies)if(e.zone==='field')f++;if(f<FIELD_POP)spawnEnemy('field');}

@@ -291,17 +291,38 @@ scenario('market: bounded random price, sentiment drives multipliers', () => {
   else pass('bear damage', '10 -> 15 at sentiment -1');
 });
 
+scenario('D-103: forge reads the bag (one wood/stone counter); CRAFT rows lead to a MINT row with the fee', () => {
+  const api = boot(SEED + 103); startGame(api);
+  const g = api.get(); // the user's screenshot: STEEL 2, bag WOOD 3 + STONE 3 from the starter kit
+  if ('wood' in g.P || 'stone' in g.P) { fail('one counter', `hidden P.wood=${g.P.wood} P.stone=${g.P.stone}`); return; }
+  api.chainData.loaded = true; api.chainData.fee = 10n ** 18n;
+  const mech = g.NPCS.find(n => n.id === 'merchant'); mech.met = true; api.shopMenu(mech);
+  const rows = () => api.get().ui.build();
+  const craft = rows().find(r => /^CRAFT HAMMER LV2 \(2 STEEL\+1 WOOD\)$/.test(r.label));
+  if (!craft || craft.col) { fail('craft row', rows().map(r => r.label + (r.col ? '(grey)' : '')).join(' | ')); return; }
+  const msg = craft.act(), wood = api.get().P.bag.filter(b => b.kind === 'wood').reduce((a, b) => a + b.qty, 0);
+  if (g.P.sword !== 2 || g.P.steel !== 0 || wood !== 2 || !/MINT IT BELOW/.test(msg)) { fail('craft', `sword ${g.P.sword} steel ${g.P.steel} wood ${wood} msg ${msg}`); return; }
+  const mint = rows().find(r => /^MINT HAMMER LV2 NFT x1 \(1 DOGE\)$/.test(r.label));
+  const armor = rows().find(r => /^CRAFT DOGE ARMOR LV1/.test(r.label));
+  if (!mint || !armor || armor.col !== '#707890' || !/^NEED 2 STEEL\+2 WOOD/.test(armor.act())) { fail('mint row', rows().map(r => r.label).join(' | ')); return; }
+  g.items.length = 0; api.press('escape'); api.step(DT); g.items.push({ x: g.P.x, y: g.P.y, kind: 'wood', life: 9, t: 0 }); api.step(DT);
+  if (api.get().P.bag.filter(b => b.kind === 'wood').reduce((a, b) => a + b.qty, 0) !== 3) { fail('pickup to bag', `bag wood ${api.get().P.bag.filter(b => b.kind === 'wood').reduce((a, b) => a + b.qty, 0)}`); return; }
+  const lost = Object.keys(api.FONT).filter(ch => '[]'.includes(ch)).length;
+  if (lost !== 2) { fail('bracket glyphs', 'FONT lacks [ or ]'); return; }
+  pass('forge one counter', 'starter STEEL 2 + bag WOOD 3: CRAFT HAMMER LV2 works, burns bag wood, shows MINT HAMMER LV2 NFT x1 (1 DOGE); short rows grey with NEED; ground wood -> bag; [ ] glyphs exist');
+});
+
 scenario('forge: craft with materials, reject on insufficient', () => {
   const api = boot(SEED + 9);
   startGame(api);
   const g = api.get();
-  g.P.steel = 2; g.P.wood = 1; g.P.sword = 1; // enough for HAMMER LV2
+  g.P.steel = 2; g.P.bag = [{ kind: 'wood', qty: 1 }]; g.P.sword = 1; // enough for HAMMER LV2 (wood lives in the bag, D-103)
   const mech = g.NPCS.find(n => n.id === 'merchant');
   mech.met = true; api.talk(mech);
   api.press('e'); api.step(DT); // craft HAMMER LV2
   if (g.P.sword !== 2) fail('forge craft', `expected sword lv2, got ${g.P.sword}`);
   else pass('forge craft', 'HAMMER LV2 crafted from 2 STEEL + 1 WOOD');
-  if (g.P.steel !== 0 || g.P.wood !== 0) fail('forge burn', `materials not burned: steel=${g.P.steel} wood=${g.P.wood}`);
+  if (g.P.steel !== 0 || g.P.bag.length) fail('forge burn', `materials not burned: steel=${g.P.steel} bag=${JSON.stringify(g.P.bag)}`);
   else pass('forge burn', 'materials consumed');
   api.press('escape'); api.step(DT);
 });
@@ -507,7 +528,8 @@ scenario('D-066: DogeMaster meme buffs/debuffs (420/69/777/4.2/6.9), burn-to-rer
   const giveMatsRow = modOpts.find(r => /GIVE 99 ALL MATERIALS/.test(r.label));
   const dogeBefore = g.P.doge;
   giveMatsRow.act();
-  if (g.P.wood !== 99 || g.P.steel !== 99 || g.P.doge !== dogeBefore) { fail('give mats', `wood=${g.P.wood} steel=${g.P.steel} doge ${dogeBefore}->${g.P.doge} (must not add fake DOGE)`); return; }
+  const wd = api.get().P.bag.filter(b => b.kind === 'wood').reduce((a, b) => a + b.qty, 0);
+  if (wd < 40 || g.P.steel !== 99 || g.P.doge !== dogeBefore) { fail('give mats', `bag wood=${wd} steel=${g.P.steel} doge ${dogeBefore}->${g.P.doge} (must not add fake DOGE)`); return; }
   const switchRow = modOpts.find(r => /WARRIOR/.test(r.label));
   switchRow.act();
   if (g.P.prof !== 'warrior') { fail('switch class', `prof=${g.P.prof}`); return; }
@@ -567,8 +589,8 @@ scenario('D-067: hardcore gathering, iron drops, master chain permissions, red N
   const forge = g.NPCS.find(n => n.id === 'forge');
   api.shopMenu(forge);
   const forgeOpts = api.get().ui.build();
-  const nftCraft = forgeOpts.filter(o => o.nft || o.isNft);
-  if (!nftCraft.length) { fail('forge nft tag', 'no craft recipes marked with nft/isNft'); return; }
+  const nftCraft = forgeOpts.filter(o => /^MINT .* NFT/.test(o.label)); // D-103: only MINT rows are red NFT rows; CRAFT rows are plain
+  if (!nftCraft.length || forgeOpts.some(o => /^CRAFT /.test(o.label) && (o.nft || o.isNft))) { fail('forge nft tag', forgeOpts.map(o => o.label).join(' | ')); return; }
   api.press('escape'); api.step(DT);
 
   pass('hardcore systems', 'stone always drops iron, monsters drop iron, master wallet authenticated, red NFT styling active');
@@ -938,7 +960,7 @@ scenario('inventory: I/Tab open it, 12 slots, food stacks of 5, materials shown'
   let ui = api.get().ui;
   if (!ui || ui.title !== 'INVENTORY') throw new Error('I did not open the inventory');
   const rows = ui.build().map(r => r.label);
-  if (!rows.some(l => /BAG 2\/12 SLOTS/.test(l)) || !rows.some(l => /WOOD x3/.test(l)) || !rows.some(l => /STONE x3/.test(l)) || !rows.some(l => /MATERIALS:/.test(l))) fail('bag rows', rows.join(' | '));
+  if (!rows.some(l => /BAG 2\/12 SLOTS/.test(l)) || !rows.some(l => /WOOD x3/.test(l)) || !rows.some(l => /STONE x3/.test(l)) || !rows.some(l => /^HAVE: STEEL/.test(l))) fail('bag rows', rows.join(' | '));
   else pass('bag rows', 'starter bag (WOOD x3, STONE x3) + materials row visible');
   api.press('escape'); api.step(DT); api.press('tab'); api.step(DT);
   ui = api.get().ui;
@@ -1015,9 +1037,9 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   cd.loaded = true; cd.fee = 0n; // pretend the reads worked; txs go to the mock
 
   // craft BONE CHARM -> +15 max HP + credit; minting it moves the charm on chain (stat removed) => one craft = one charm
-  P.whisk = 3; P.stone = 2;
+  P.whisk = 3; P.bag = [{ kind: 'stone', qty: 2 }];
   api.shopMenu(api.get().NPCS.find(n => n.id === 'merchant'));
-  const craft = api.get().ui.build().find(r => /^BONE CHARM/.test(r.label)); craft.act();
+  const craft = api.get().ui.build().find(r => /^CRAFT BONE CHARM/.test(r.label)); craft.act();
   if (P.hpUps !== 1 || P.maxHp !== 75 || !api.creditOk(5, 1)) throw new Error(`craft: hpUps ${P.hpUps} maxHp ${P.maxHp}`);
   const mintRow = api.get().ui.build().find(r => /^MINT BONE CHARM NFT/.test(r.label));
   if (!mintRow) throw new Error('no MINT BONE CHARM row: ' + api.get().ui.build().map(r => r.label).join(' | '));
@@ -1026,9 +1048,9 @@ await scenarioAsync('D-021: no craft dupes, unknown tx = no refund, account swit
   else pass('charm dupe', 'mint moved the charm on chain: +15 max HP removed off-chain, credit spent');
 
   // hammer: crafted LV2 then minted -> off-chain hammer drops to LV1 (the NFT now carries LV2)
-  P.sword = 1; P.steel = 2; P.wood = 1; api.get().ui = null;
+  P.sword = 1; P.steel = 2; P.bag = [{ kind: 'wood', qty: 1 }]; api.get().ui = null;
   api.shopMenu(api.get().NPCS.find(n => n.id === 'merchant'));
-  api.get().ui.build().find(r => /^HAMMER LV2/.test(r.label)).act();
+  api.get().ui.build().find(r => /^CRAFT HAMMER LV2/.test(r.label)).act();
   api.get().ui.build().find(r => /^MINT HAMMER LV2 NFT/.test(r.label)).act(); await idle(api);
   if (P.sword !== 1 || api.creditOk(1, 2)) fail('hammer dupe', `P.sword ${P.sword} creditOk ${api.creditOk(1, 2)}`);
   else pass('hammer dupe', 'minted HAMMER LV2: off-chain hammer back to LV1, no second mint');
