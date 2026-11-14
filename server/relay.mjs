@@ -148,7 +148,12 @@ function onData(c, chunk) {
   }
 }
 
+// D-107: one bad request must never kill the process (audit 2026-11-13: GET /% crashed the relay)
 const server = createServer((req, res) => {
+  try { handle(req, res); }
+  catch { if (!res.headersSent) res.writeHead(500); res.end(); }
+});
+function handle(req, res) {
   const host = (req.headers.host || "").toLowerCase();
   const url = req.url || "/";
   const pathname = url.split("?")[0];
@@ -172,7 +177,8 @@ const server = createServer((req, res) => {
   }
 
   // Static landing assets under assets/
-  const p = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[\/\\])+/, "");
+  let dec; try { dec = decodeURIComponent(pathname); } catch { res.writeHead(400); return res.end("bad request"); } // malformed %-escape
+  const p = normalize(dec).replace(/^(\.\.[\/\\])+/, "");
   if (/^[\/\\]?assets[\/\\][\w.\-\/\\]+\.(png|jpg|jpeg|svg|css|js|json|mp4|webm)$/.test(p)) {
     const file = join(ROOT, p);
     if (file.startsWith(join(ROOT, "assets")) && existsSync(file)) {
@@ -183,10 +189,10 @@ const server = createServer((req, res) => {
         let start = r[1] ? +r[1] : Math.max(0, size - +r[2]), end = r[1] && r[2] ? Math.min(+r[2], size - 1) : size - 1;
         if (start > end || start >= size) { res.writeHead(416, { "content-range": `bytes */${size}` }); return res.end(); }
         res.writeHead(206, { "content-type": type, "accept-ranges": "bytes", "content-range": `bytes ${start}-${end}/${size}`, "content-length": end - start + 1 });
-        return createReadStream(file, { start, end }).pipe(res);
+        return createReadStream(file, { start, end }).on('error', () => res.destroy()).pipe(res);
       }
       res.writeHead(200, { "content-type": type, "accept-ranges": "bytes", "content-length": size });
-      return createReadStream(file).pipe(res);
+      return createReadStream(file).on('error', () => res.destroy()).pipe(res);
     }
   }
 
@@ -201,7 +207,7 @@ const server = createServer((req, res) => {
   }
 
   res.writeHead(404); res.end("not found");
-});
+}
 
 server.on('upgrade', (req, sock, head) => {
   const key = req.headers['sec-websocket-key'];

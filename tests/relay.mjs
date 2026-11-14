@@ -94,6 +94,11 @@ try {
       && part.status === 206 && (await part.arrayBuffer()).byteLength === 100 && part.headers.get('content-range') === `bytes 0-99/${len}` && bad.status === 416)
     pass('video range', `mp4 200 (${len} B), Range 0-99 -> 206, past-end -> 416`);
   else fail('video range', `full=${full.status} ${full.headers.get('content-type')} part=${part.status} ${part.headers.get('content-range')} bad=${bad.status}`);
+  // D-107: a malformed percent-escape must not crash the relay (audit 2026-11-13 S3: GET /% killed the process)
+  let bad400 = 0; for (const u of ['/%', '/assets/%E0%A4%A', '/src/%zz.js']) { try { const r = await fetch(`http://127.0.0.1:${PORT}${u}`); if (r.status === 400) bad400++; } catch {} }
+  const alive = await fetch(`http://127.0.0.1:${PORT}/health`).then(r => r.ok).catch(() => false);
+  if (bad400 === 3 && alive) pass('bad escape', 'GET /%, /assets/%E0%A4%A, /src/%zz.js -> 400; relay still up');
+  else fail('bad escape', `400s=${bad400}/3 alive=${alive}`);
   const trav = await fetch(`http://127.0.0.1:${PORT}/assets/..%2f..%2fserver%2frelay.mjs`);
   if (trav.status !== 200 || !(await trav.text()).includes('BOSS_HP')) pass('assets traversal', `status ${trav.status}`); else fail('assets traversal', 'served a file outside assets/');
   for (const cl of [a, c, x, d]) try { cl.ws.close(); } catch {}
