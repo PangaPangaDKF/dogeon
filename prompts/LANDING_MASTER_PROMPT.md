@@ -1,8 +1,9 @@
 # DOGEON — Landing & Trailer Master Prompt
 
-Version: 1.2 (2026-11-13) · Pairs with the `dogeon-landing-design` skill · Update both in the same commit (skill RULE L0).
+Version: 1.3 (2026-11-14) · Pairs with the `dogeon-landing-design` skill · Update both in the same commit (skill RULE L0).
 
-Paste the block below to open any session that touches the landing page, the trailer, key art or social assets
+Fastest path: start the `dogeon-landing` agent (`.claude/agents/dogeon-landing.md`, e.g. `claude --agent dogeon-landing` from the repo root);
+it preloads the skills and follows this workflow. Or paste the block below to open any session that touches the landing page, the trailer, key art or social assets
 (Claude Code, Antigravity, or TryNoah). Replace `<TASK>` with one concrete goal.
 
 ```markdown
@@ -19,7 +20,8 @@ Success means a visitor reaches the game in one click and trusts that the on-cha
 
 <context_to_load>
 Read only what the task needs, in this order:
-1. `.claude/skills/dogeon-landing-design/SKILL.md`: design system, truth rules T1–T6, checklist, backlog.
+1. `.claude/skills/dogeon-landing-design/SKILL.md` (protocol, lane, truth rules T1–T10, gates) and its `references/STATE.md`
+   (live status, page map, verified facts, open tasks). Use `references/RUNBOOK.md` for recipes.
 2. `.claude/skills/dogeon-mission/SKILL.md`: R1 (never alter the Dogecoin coin art) wins all conflicts.
 3. `docs/GAME_GUIDE.md` and the top 5 entries of `docs/DECISIONS.md`: what the game really does now.
 4. The relevant part of `landing.html` (use line ranges; don't read all 1500 lines unless you have to).
@@ -47,7 +49,8 @@ Read only what the task needs, in this order:
 3. Plan: list the exact edits and how you will verify each one. Wait for approval if the change spans more than one
    section or alters the page structure.
 4. Edit: make the smallest change that meets the goal.
-5. Verify: `node scripts/landing-check.mjs`, route curls, a 1280px screenshot, the 390/360px iframe overflow probe (skill §7), and `bash tests/check.sh`.
+5. Verify: `node scripts/landing-check.mjs`, `node scripts/landing-probe.mjs` (390/360 px), a 1280 px render
+   (`node scripts/landing-probe.mjs --shot '#id' --out <png>`), and `bash tests/check.sh`.
 6. Close out (RULE L0): bump the skill version and changelog, this prompt if the workflow changed, a `docs/DECISIONS.md` entry,
    `CONTEXT.md`, the `.agents/` mirror, then commit.
 </process>
@@ -67,6 +70,7 @@ DNS, wallet), and the next backlog item. Keep it short.
 - **The self-update closeout** turns every session's mistakes into rules, so the prompt improves with use.
 
 ## Changelog
+- 1.3 (2026-11-14, D-108): points to the `dogeon-landing` agent, `references/STATE.md` and `scripts/landing-probe.mjs`.
 - 1.2 (2026-11-13, D-090): positioning rule T8 (PonziFi meme game on testnet tokens, no price data).
 - 1.1 (2026-11-12, D-085): landing-check in the verify step; chain params from `CHAIN` (T7); two-agent collision rule.
 - 1.0 (2026-11-12, D-083): Created alongside the `dogeon-landing-design` skill v1.0.

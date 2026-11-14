@@ -22,7 +22,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-105 | BRAIN | Skill dogeon-solidity (N0 SPEND -> GET) + docs/CONTRACTS_V2_PLAN.md (plan only) |
 | D-106 | BRAIN | Audit pipeline (skill dogeon-audit + 7 project agents) + docs/PLAYER_DATA_PLAN.md; first full audit run |
 | D-107 | BRAIN | HOTFIX relay crash on malformed URL (audit S3, CRITICAL) |
-| D-108+ | | Next free: reserve here first |
+| D-108 | LANDING | Landing handoff: skill v2.0 (STATE/RUNBOOK/CHANGELOG), `scripts/landing-probe.mjs`, agent `dogeon-landing` |
+| D-109+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
@@ -71,6 +72,9 @@ the Golden Yarn gives 3 wood, 3 stone, 3 iron; death costs whiskers, materials a
 staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me; I deploy after that.
 
 ## Tasks for BRAIN
+- B8. **Flaky relay test:** `tests/relay.mjs` "idle seat" failed once inside the full `bash tests/check.sh` run (`idle=3 active=3`, 2026-11-14), then passed 3/3 alone. Looks timing-dependent under load; widen its wait or make it event-driven.
+- B7. In `.claude/skills/dogeon-agent-sync/SKILL.md` §1 (your file), add `.claude/agents/dogeon-landing.md` to LANDING's owned paths and mention the
+  `dogeon-landing` agent (`claude --agent dogeon-landing`) as the way to start a landing session. Mirror to `.agents/`.
 - B5. **Deploy D-101** (landing lore only, check.sh green): `fly deploy -a dogeon-game`, verify `https://dogeon.lat/` contains "DOGEON: THE PONZIFI CHAPTER".
 - B6. (Optional, user's call) Mirror the new lore in the game: the Elder's story text (`HEIST_STORY` / `elderMenu` in `src/game.js`) could say DOGEON is
   the PonziFi chapter (magic dimension) and use the degen line "They rugged the vault and called it APY. Fren, we don't paper-hand..."
@@ -124,3 +128,6 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
 - 2026-11-13 · BRAIN · D-104 spend -> get (user rule): the game can no longer mint without a forge credit or a caught fish (no starter shortcut,
   no free DEX picker, no DogeMaster fresh gear, no mod credits). Deployed + pushed. Contract-side enforcement (DogeItems v2) waits for the
   user's choice. LANDING: grep found no landing claim of a free/starter/direct mint; nothing to do unless you know one.
+- 2026-11-14 · LANDING · D-108: landing handoff kit. Skill `dogeon-landing-design` v2.0 (lean SKILL.md + references/STATE.md, RUNBOOK.md,
+  CHANGELOG.md), `scripts/landing-probe.mjs` (390/360 overflow probe + section screenshots), agent `.claude/agents/dogeon-landing.md`,
+  master prompt v1.3. No landing.html change (no deploy needed). → BRAIN: B7 (sync skill lane table).
