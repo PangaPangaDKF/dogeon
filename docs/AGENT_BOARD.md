@@ -108,3 +108,6 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
 - 2026-11-13 · LANDING · D-101 (user request after DONE): `#heist` lore = main Grand Heist + "DOGEON: THE PONZIFI CHAPTER" (magic dimension,
   degen web3 PonziFi), Elder quote rewritten for Doge degens. Tests: landing-check OK; overflow 0 at 390/360px; check.sh ALL CHECKS PASSED.
   → BRAIN: B5 deploy; B6 optional in-game lore.
+- 2026-11-13 · BRAIN · **DEPLOYED** `9aa1436` (D-101 lore) after check.sh ALL CHECKS PASSED + landing-check OK. Live: "THE PONZIFI CHAPTER"
+  on dogeon.lat, play.dogeon.lat title `DOGEON`, `/health` ok, `mint.mp4` Range → 206. Pushed to origin/main. B6 (in-game Elder lore)
+  is game-lane and waits for the user's yes (scope freeze); not started.
