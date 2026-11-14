@@ -1005,6 +1005,12 @@ const HEIST_STORY=['The Fat Cats took the value of the doge world and locked it 
   'Shibes complete quests and earn collectible items by using the apps of the growing DogeOS ecosystem.',
   'Every great heist needs a crew: Demolition Dogs, Kernel Crew and Barkitects. Find where you belong.',
   'The operation is live. No fat cats. No squirrels. No excuses. Add your paw to the pile at HEIST.DOGEOS.COM.'];
+const PONZI_STORY=[ // D-102: DOGEON's own satire chapter (same text as the landing, D-101); HEIST_STORY above stays the sourced Grand Heist
+  'Long ago, in another dimension where magic is real, the Fat Cats did not just steal the treasury. They made it a PonziFi.',
+  '"Stake your DOGE, number go up forever," they purred. Every yield was paid with the next fren\'s coins.',
+  'Then the Cat Lord rugged the whole pool and sealed the loot behind the iron gate in the northern ruins.',
+  'Fren, we do not paper-hand. Grab your hammer, raid the gate and bonk the Cat Lord. Such heist. Much wow.',
+  'He comes back 60 seconds after he falls, and the heist starts over. A meme game on testnet tokens: nothing here is worth real money.'];
 const factionOf=()=>FACTIONS.find(f=>f.id===P.faction);
 function factionMenu(n){openMenu(n,'THE HEIST ARCHIVES: FACTIONS',()=>{const o=[];
   for(const f of FACTIONS){o.push({label:`READ: ${f.name}`,act:()=>{lesson(n,[f.motto,...f.entry],()=>factionMenu(n));return '';}});
@@ -1013,6 +1019,7 @@ function factionMenu(n){openMenu(n,'THE HEIST ARCHIVES: FACTIONS',()=>{const o=[
 function elderMenu(n){openMenu(n,'ELDER SHIBE: KEEPER OF THE HEIST',()=>{const o=[
   {label:`QUEST: ${questText()}`,act:()=>{questTalk(n);return '';}},
   {label:'THE GRAND HEIST (STORY)',act:()=>{lesson(n,HEIST_STORY,()=>elderMenu(n));return '';}},
+  {label:'DOGEON: THE PONZIFI CHAPTER',act:()=>{lesson(n,PONZI_STORY,()=>elderMenu(n));return '';}},
   {label:`FACTIONS${factionOf()?' (YOU: '+factionOf().name+')':''}`,act:()=>{factionMenu(n);return '';}},
   linkRow('JOIN THE HEIST: HEIST.DOGEOS.COM',LINKS.heist),
   {label:'PARTY & SQUAD ('+(NET_PARTY||'SOLO')+')',act:()=>{partyMenu(n);return '';}},

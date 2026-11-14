@@ -574,6 +574,17 @@ scenario('D-067: hardcore gathering, iron drops, master chain permissions, red N
   pass('hardcore systems', 'stone always drops iron, monsters drop iron, master wallet authenticated, red NFT styling active');
 });
 
+scenario('D-102: Elder tells the PonziFi chapter (satire, testnet disclaimer) next to the sourced Grand Heist story', () => {
+  const api = boot(SEED + 102); startGame(api);
+  const g = api.get(), elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true; g.state.stage = 1; api.talk(elder);
+  const row = api.get().ui.build().find(r => r.label === 'DOGEON: THE PONZIFI CHAPTER');
+  if (!row) { fail('ponzi row', api.get().ui.build().map(r => r.label).join(' | ')); return; }
+  row.act(); const pages = api.get().ui && api.get().ui.pages || [];
+  const bad = pages.join('').split('').filter(ch => ch !== ' ' && !(ch.toUpperCase() in api.FONT));
+  if (pages.length !== 5 || !/testnet tokens/.test(pages.at(-1)) || !/60 seconds/.test(pages.at(-1)) || bad.length) { fail('ponzi pages', `${pages.length} pages, missing glyphs: ${[...new Set(bad)].join('')}`); return; }
+  pass('ponzi chapter', '5 pages, every glyph in FONT, ends with the 60 s raid cycle + testnet disclaimer');
+});
+
 scenario('D-097: the Victors Market (a DOGE shop) is gone after the boss falls', () => {
   const api = boot(SEED + 65); startGame(api);
   const g = api.get(), elder = g.NPCS.find(n => n.id === 'quest'); elder.met = true;

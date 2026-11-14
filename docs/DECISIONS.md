@@ -42,6 +42,14 @@ When an issue is fixed: strike it here, link the D-entry, and promote its sim WA
 - Alternatives rejected: rewording the hero headline "SURVIVE THE EXTRACTION RAID" (flavor, not a mechanic claim; scope freeze).
 - Verify: landing-check "Landing matches the game"; overflow probe 0 at 390/360px; gallery render reviewed; check.sh ALL CHECKS PASSED (relay 14/14).
 
+### D-102 · 2026-11-13 · In-game lore: Elder Shibe tells "DOGEON: THE PONZIFI CHAPTER" (Claude Code, BRAIN lane)
+- What: `PONZI_STORY` (5 pages) in `src/game.js` + a new Elder menu row `DOGEON: THE PONZIFI CHAPTER`, next to the unchanged, sourced `THE GRAND HEIST (STORY)`. Same story as the landing (D-101): another dimension where magic is real, the Fat Cats turn the treasury into a PonziFi, the Cat Lord rugs the pool and seals it behind the iron gate, the degen call to raid; the last page states the real loop (he returns 60 s after he falls, D-095) and the testnet disclaimer (nothing is worth real money, T8).
+- Why: user approved task B6 ("yes finish that") after the landing lore shipped, so the game and the page tell one story.
+- Tool: Claude Code (Opus 5.5); sim scenario D-102 (row exists, 5 pages, every glyph exists in `FONT`, ends with the 60 s cycle + disclaimer).
+- Alternatives rejected: rewriting `HEIST_STORY` (it is sourced from heist.dogeos.com, D-024; satire must stay separate from the official lore).
+- Verify: `bash tests/check.sh` → ALL CHECKS PASSED.
+- Commit: this commit.
+
 ### D-101 · 2026-11-13 · Landing lore: DOGEON is the PonziFi chapter of The Grand Heist; degen Elder quote (Claude Code, LANDING lane)
 - What: `#heist` now has two layers: the main Grand Heist lore, kept (the Fat Cat Syndicate and the Cat Lord seize the Doge treasury behind obsidian gates), and a new "DOGEON: THE PONZIFI CHAPTER" (another dimension where magic is real; the Fat Cats ran the treasury as the ultimate PonziFi until the Cat Lord rugged the pool and sealed the loot behind enchanted gates). The Elder's quote "...take back every last Doge" (it implied in-game DOGE, removed in D-097) becomes a degen line: "They rugged the vault and called it APY. Fren, we don't paper-hand. Grab your hammer, raid the gate, bonk the Cat Lord and send the treasury back to the moon. Such heist. Much wow." The closing paragraph calls DOGEON a degen web3 PonziFi meme game and keeps the testnet disclaimer. Skill → v1.16 (rule T10).
 - Why: user asked what "take back every last Doge" means and to recast DOGEON's part of the lore for Dogecoin-meme degens, keeping the main Heist lore.

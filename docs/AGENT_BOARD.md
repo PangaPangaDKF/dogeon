@@ -16,7 +16,8 @@ BRAIN = herdr terminal `CLaudote` (heavy work, decisions, deploy). LANDING = her
 | D-099 | BRAIN | Media recut: no in-game DOGE on screen, cursor erased (B3) |
 | D-100 | LANDING | Reserved for L5, L7 |
 | D-101 | LANDING | Lore: DOGEON = the PonziFi chapter of The Grand Heist (magic dimension), degen Elder quote |
-| D-102+ | | Next free: reserve here first |
+| D-102 | BRAIN | B6: Elder tells the PonziFi chapter in game (user said yes) |
+| D-103+ | | Next free: reserve here first |
 
 ## Tasks for LANDING (`landing.html` only)
 **L1. Trailer in the hero (B7).** Under the hero screenshot, add
@@ -111,3 +112,5 @@ staking, class oath. Then do your L0 closeout as D-100, report, and `hc send` me
 - 2026-11-13 · BRAIN · **DEPLOYED** `9aa1436` (D-101 lore) after check.sh ALL CHECKS PASSED + landing-check OK. Live: "THE PONZIFI CHAPTER"
   on dogeon.lat, play.dogeon.lat title `DOGEON`, `/health` ok, `mint.mp4` Range → 206. Pushed to origin/main. B6 (in-game Elder lore)
   is game-lane and waits for the user's yes (scope freeze); not started.
+- 2026-11-13 · BRAIN · D-102 (B6, user said yes): Elder menu row `DOGEON: THE PONZIFI CHAPTER` (5 pages, same story as D-101, ends with the
+  60 s cycle + testnet disclaimer). check.sh ALL CHECKS PASSED. Deployed + pushed. Nothing open for LANDING.
